@@ -45,6 +45,7 @@ Xem đầy đủ mục 12 (D1–D8) trong `plans/20260924-definitive-architectur
 - **D6:** CMIOExtension spike tuần 1 Phase 5.
 - **D7:** AudioServerPlugin phân phối qua PKG notarized + Homebrew cask.
 - **D8:** USB boost qua ADB + wizard; UVC native để dành v2.
+- **D9–D12 (bổ sung 2026-09-24, plan §13):** điều khiển cuộc gọi bằng API công khai, giữ máy/DTMF qua HFP (không `InCallService`); giữ Opus/WS + Shizuku với giới hạn khả thi được ghi rõ; âm thanh HFP dựa vào mã hóa Bluetooth; giữ Accessibility mặc định cho clipboard, dự phòng gửi thủ công.
 
 ## 7. Chỉ số thành công (đo được)
 

@@ -5,6 +5,7 @@
 > **Ngày:** 2026-09-24  
 > **Trạng thái:** Quyết định cuối cùng  
 > **Cơ sở:** Tổng hợp từ 3 đề xuất (A: Bluetooth-Native, B: Network-First, C: Plugin-Hybrid) qua 3 vòng phản biện (Technical Feasibility, Security & Privacy, UX & Reliability)
+> **Cập nhật 2026-09-24:** §13 (D9–D12) thay một số điểm ở §3.1, §6.1, §7, §10.3 sau kiểm chứng nền tảng — đọc §13 trước khi triển khai. Thiết kế chi tiết: `docs/detailed-design/`.
 
 ---
 
@@ -95,7 +96,7 @@ Fallback khi BT HFP không khả dụng:
 | `clipboard-sync` | `UIPasteboard.general` (foreground, iOS 16+ paste confirmation banner) |  Đồng bộ clipboard |
 | `sms-ui` | SwiftUI views | Hiển thị/trả lời SMS |
 | `call-metadata-ui` | SwiftUI views | Hiển thị caller ID, duration — KHÔNG có audio |
-| `push-handler` | APNs + `PushKit` (`PKPushTypeVoIP` chỉ cho metadata display, KHÔNG ring) | Background notification khi app suspended |
+| `push-handler` | APNs alert + Notification Service Extension (không PushKit/CallKit — §3.3, detailed design C7) | Background notification khi app suspended |
 | `crypto` | CryptoKit | E2E |
 
 **Giới hạn iOS rõ ràng:** Không có call audio relay. Apple không expose HFP HF role API. `CallKit` trên iOS yêu cầu VoIP provider, không phù hợp cho relay. Chấp nhận iOS là "notification + clipboard + SMS device".
@@ -354,8 +355,8 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 **Plan B:** CoreBluetooth BLE + custom GATT service + Opus stream. Chất lượng kém hơn SCO nhưng không phụ thuộc IOBluetooth legacy. Latency ước tính ~200-300ms — vẫn dùng được cho voice.  
 **Plan C:** Nếu cả IOBluetooth lẫn BLE custom đều fail → call audio chỉ qua Opus/WebSocket (đã có sẵn từ fallback path). Mất zero-network advantage nhưng feature vẫn hoạt động.
 
-### R2: `BluetoothHeadsetClient` @SystemApi bị khoá (Impact: Critical)
-**Xác suất:** Thấp-Trung bình (Microsoft Phone Link cũng dùng, Google khó khoá hoàn toàn)  
+### R2: `BluetoothHeadsetClient` @SystemApi bị khóa (Impact: Critical)
+**Xác suất:** Thấp-Trung bình (Microsoft Phone Link cũng dùng, Google khó khóa hoàn toàn)  
 **Giảm thiểu:** Dùng Shizuku (ADB-level permission). Monitor AOSP changes mỗi Android beta.  
 **Plan B:** `CompanionDeviceManager` API (Android 12+) — Google đang mở rộng API này. Nếu Google thêm call audio relay vào CDM → migrate.  
 **Plan C:** Opus/WebSocket fallback là permanent path — call audio vẫn hoạt động không cần BT HFP, chỉ tăng latency ~100ms.
@@ -636,3 +637,31 @@ Tất cả câu hỏi mở đã được giải quyết. Dưới đây là quy�
 - Detect USB via IOKit → show "Bạn muốn tăng tốc kết nối?" → wizard 3 bước (Settings → Developer Options → USB Debugging)
 - Sau setup lần đầu: auto-detect + auto-switch, không hỏi lại
 - Roadmap v2: evaluate UVC + AOA combo (video qua UVC, audio qua AOA bulk transfer)
+
+---
+
+## 13. Quyết định bổ sung sau kiểm chứng nền tảng (2026-09-24)
+
+Khi soạn tài liệu thiết kế chi tiết, các giả định ở §3.1, §6.1, §7 và §10.3 được kiểm chứng lại với tài liệu Android/Apple và mã nguồn AOSP. Chủ dự án đã quyết định từng điểm; chi tiết và bằng chứng: `docs/detailed-design/README.md` §5 (C7–C15). Khi mâu thuẫn với các mục trước, mục này thắng.
+
+### D9: Điều khiển cuộc gọi không dùng InCallService (thay §3.1 `call-controller`, §8 Phase 3)
+
+Telecom không gắn `InCallService` cho ứng dụng chỉ có `CALL_COMPANION_APP` (mã nguồn AOSP android10 → main). Qua Wi-Fi dùng API công khai: trạng thái và số gọi đến (`READ_PHONE_STATE`, `READ_CALL_LOG`), trả lời `TelecomManager.acceptRingingCall()`, từ chối/kết thúc `TelecomManager.endCall()` (`ANSWER_PHONE_CALLS`). Giữ máy, DTMF, tắt tiếng chỉ qua lệnh HFP khi Mac nối Bluetooth (Phase 4).
+
+### D10: Giữ D1/D3, ghi rõ giới hạn khả thi (bổ sung §7.2, D1, D3)
+
+Opus/WebSocket vẫn là đường dự phòng chính thức cho âm thanh cuộc gọi, chạy qua Shizuku (uid shell). Giới hạn: Android 10 không thu được; Android 11+ thu được trên một số máy; chèn giọng Mac vào cuộc gọi chỉ có qua `getCallUplinkInjectionAudioTrack()` (Android 13+, chưa kiểm chứng); Shizuku phải khởi động lại sau mỗi lần bật máy. `BluetoothHeadsetClient` là API vai trò HF, không dùng cho điện thoại ở vai trò AG; đường HFP dùng stack Bluetooth chuẩn của Android.
+
+### D11: Âm thanh HFP dựa vào mã hóa liên kết Bluetooth (thay yêu cầu "dual-layer mỗi SCO frame" ở §6.1)
+
+Ứng dụng không chạm được tới từng khung SCO của cuộc gọi di động nên không mã hóa tầng ứng dụng được. Đường HFP dựa vào mã hóa Bluetooth của hệ điều hành; rủi ro KNOB/BIAS còn lại được công bố khi bật tính năng. Đường Opus/WS vẫn mã hóa hai lớp (TLS + E2E).
+
+### D12: Giữ D4, làm rõ cơ chế (bổ sung D4)
+
+Accessibility phát hiện thao tác sao chép rồi mở Activity trong suốt để đọc clipboard (Accessibility không được miễn chặn đọc nền). Mặc định bật, có công bố và xin đồng ý; chấp nhận rủi ro chính sách Google Play. Dự phòng là gửi thủ công (nút thông báo, ô Cài đặt nhanh, menu Chia sẻ) thay cho Notification Listener.
+
+### Điều chỉnh kỹ thuật kèm theo (không đổi quyết định sản phẩm)
+
+- Micro ảo dùng mô hình loopback của BlackHole (thiết bị ra ẩn + thiết bị vào hiển thị, chung ring buffer) thay cho POSIX shm (§10.3).
+- Cài driver micro bằng PKG mở qua Installer, `postinstall` chạy `killall coreaudiod`; không cần `SMJobBless` (deprecated từ macOS 13) (D7).
+- iOS không dùng PushKit VoIP; dùng APNs alert + Notification Service Extension (§3.3).

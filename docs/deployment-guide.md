@@ -4,14 +4,14 @@
 
 ## Android app
 
-- **Play Store:** cần Permissions Declaration Form cho `READ_SMS`/`SEND_SMS`/`InCallService` — chuẩn bị video demo + use-case doc + privacy policy, nộp sớm (P1 milestone 2) để biết kết quả trước ship.
+- **Play Store:** cần Permissions Declaration Form cho `READ_SMS`/`SEND_SMS`/`READ_CALL_LOG` theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls", và khai báo dùng Accessibility API (D4/D12) — chuẩn bị video demo + use-case doc + privacy policy, nộp sớm (P1 milestone 2) để biết kết quả trước ship.
 - **Fallback phân phối** (nếu Play Store reject SMS): F-Droid + direct APK. Đọc SMS qua Notification Listener nếu mất `SEND_SMS`.
-- `BluetoothHeadsetClient` @SystemApi cần Shizuku (ADB-level grant) — wizard hướng dẫn cài Shizuku.
+- Shizuku (tùy chọn) cho đường âm thanh cuộc gọi Opus/WS — wizard hướng dẫn cài; phải khởi động lại Shizuku sau mỗi lần bật máy (plan §13 D10).
 
 ## macOS app
 
 - **Virtual mic (AudioServerPlugin):** không thể cài qua Mac App Store (sandbox chặn `/Library/Audio/Plug-Ins/HAL/`). Phân phối:
-  - PKG installer **signed + notarized** (`xcrun notarytool submit` + `stapler staple`), embed trong app; first-run detect thiếu plugin → `SMAppService`/`SMJobBless` privileged helper → copy + `killall -9 coreaudiod`.
+  - PKG installer **signed + notarized** (`xcrun notarytool submit` + `stapler staple`), embed trong app; first-run detect thiếu plugin → mở PKG bằng Installer (Installer tự xin quyền quản trị) → `postinstall` chạy `killall coreaudiod` với quyền root. Không cần privileged helper (`SMJobBless` deprecated từ macOS 13; `launchctl kickstart` bị chặn từ macOS 14.4).
   - Song song: `brew install --cask handlive` (cài cả app + plugin).
 - **Virtual camera (CMIOExtension):** system extension trong app bundle — App Store compatible. User approve trong System Settings > Login Items & Extensions.
 - macOS 13+.

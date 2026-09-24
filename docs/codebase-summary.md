@@ -11,6 +11,7 @@ HandLive/
 ├── CLAUDE.md                # Hướng dẫn Claude Code
 ├── README.md
 ├── docs/                    # Tài liệu dự án (file này + 6 file khác)
+│   └── detailed-design/     # Thiết kế chi tiết: 00-common-specs + 8 nhóm chức năng (33 chức năng lá)
 └── plans/                   # Kiến trúc & nghiên cứu (nguồn chân lý thiết kế)
     ├── 20260924-definitive-architecture/plan.md      # Kiến trúc đã CHỐT — đọc trước
     ├── 20260924-bluetooth-native-architecture/plan.md # Đề xuất Bluetooth-Native (bối cảnh)
@@ -28,7 +29,7 @@ Chưa quyết mono-repo hay tách repo theo nền tảng. Dự kiến 4 nhánh c
 | `macos/` | Swift 6 | Hands-Free: WS client, BT HFP, virtual cam/mic, UI |
 | `ios/` | Swift 6 | WS client: clipboard + SMS + call metadata |
 | `relay/` | Rust | Zero-knowledge cloud relay |
-| `shared/` | — | Định nghĩa protocol dùng chung (envelope, message types) |
+| `shared/` | — | Định nghĩa protocol dùng chung (envelope, message types) — nguồn: `docs/detailed-design/00-common-specs.md` |
 
 ## Điểm bắt đầu implement
 

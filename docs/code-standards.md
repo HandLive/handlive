@@ -21,12 +21,13 @@
 
 - minSdk 29, targetSdk 35. Foreground Service đúng type (`FOREGROUND_SERVICE_CONNECTED_DEVICE` / `camera|microphone`).
 - Crypto qua Tink; audio codec libopus qua JNI.
-- Mọi BT-HFP call sau abstraction `CallAudioRelay` (impl: `HfpCallAudioRelay`, `CdmCallAudioRelay` tương lai).
+- Mọi BT-HFP call sau abstraction `CallAudioRelay` (impl: `HfpCallAudioRelay`, `OpusWsCallAudioRelay` qua Shizuku, `CdmCallAudioRelay` tương lai).
+- Điều khiển cuộc gọi bằng API công khai (`TelecomManager`, `TelephonyCallback`), không dùng `InCallService` (plan §13 D9).
 - OEM fragmentation → strategy pattern (`BtAdapterStrategy`: Samsung/Pixel/Generic).
 
 ## macOS / iOS (Swift 6)
 
-- Crypto qua CryptoKit (`Curve25519`, `ChaChaPoly`).
+- Crypto qua CryptoKit (`Curve25519`, `ChaChaPoly`). XChaCha20-Poly1305 = HChaCha20 tự cài + `ChaChaPoly`, kiểm bằng test vector liên nền tảng (`docs/detailed-design/00-common-specs.md` §0.6.1).
 - Bọc mọi `IOBluetooth*` call trong protocol abstraction (API legacy, rủi ro deprecate).
 - CMIOExtension / AudioServerPlugin ký Developer ID (bắt buộc; ad-hoc bị reject).
 - Key vào Keychain với `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`.
@@ -39,5 +40,5 @@
 ## Test
 
 - Chạy test hẹp nhất trước, mở rộng khi đụng contract chung.
-- Audio: verify dual-layer encryption. BT: test matrix ≥6 device thật (Samsung/Pixel/Xiaomi/OPPO).
+- Audio: verify E2E trên đường Opus/WS; đường HFP dựa vào mã hóa Bluetooth (plan §13 D11). BT và Shizuku capture: test matrix ≥6 device thật (Samsung/Pixel/Xiaomi/OPPO).
 - Không giấu test/lint/type/build fail.

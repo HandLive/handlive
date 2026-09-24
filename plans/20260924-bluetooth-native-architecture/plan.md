@@ -162,7 +162,7 @@ Tận dụng AT commands chuẩn HFP 1.8:
 
 ### R1: `BluetoothHeadsetClient` là hidden API trên Android
 
-API này thuộc `@SystemApi` — chỉ system apps hoặc apps ký bằng platform key mới truy cập được. Giải pháp: dùng Shizuku (ADB-level permission grant) hoặc yêu cầu user cài qua ADB. **Nếu Google khoá luôn path này → dự án chết.**
+API này thuộc `@SystemApi` — chỉ system apps hoặc apps ký bằng platform key mới truy cập được. Giải pháp: dùng Shizuku (ADB-level permission grant) hoặc yêu cầu user cài qua ADB. **Nếu Google khóa luôn path này → dự án chết.**
 
 **Giảm thiểu:** Nghiên cứu sâu AIDL `IBluetoothHeadsetClient` qua reflection. Theo dõi thay đổi trong AOSP mỗi Android release. Chuẩn bị fallback dùng companion device profile (`CompanionDeviceManager`).
 
