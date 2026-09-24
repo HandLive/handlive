@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Android / Gradle
+*.iml
+.gradle/
+local.properties
+android/build/
+android/**/build/
+android/.idea/
+*.keystore
+*.jks
+
+# Xcode / Swift
+xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+.build/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Rust
+relay/target/
+target/
+
+# Secrets / config
+.env
+.env.*
+*.p12
+*.mobileprovision
+
+# Editor
+.vscode/
+.idea/
