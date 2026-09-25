@@ -181,7 +181,7 @@ Payload after base64 decoding:
 - **Business logic:**
   1. Order of checks in A-SVC: `protocol` (different major → 4426) → the pair exists (no →
      `PAIR_UNKNOWN`, 4401) → not revoked (4403) → `device_id` matches → `mac`.
-  2. Wrong `mac` 5 times/minute from the same IP address → block that IP for 5 minutes (connections
+  2. Wrong `mac` 5 times/minute from the same IP address (every `session/hello` rejected with `AUTH_FAILED` counts: wrong `mac`, wrong `device_id`, a low-order ephemeral key; `PAIR_UNKNOWN` and `PAIR_REVOKED` do not) → block that IP for 5 minutes (connections
      from a blocked IP are closed with 4429 `RATE_LIMITED` right after TLS).
   3. `nonce` is not stored; Android's ephemeral key is generated anew for every welcome, so a
      replayed hello never leads to a usable session.

@@ -31,7 +31,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive nối điện thoại này với Mac, iPhone, iPad của bạn. Dữ liệu được mã hóa đầu-cuối và chỉ đi giữa các thiết bị bạn đã ghép; máy chủ không đọc được nội dung. Không cần tài khoản." Kèm liên kết chính sách quyền riêng tư |
+| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive nối điện thoại này với Mac, iPhone, iPad của bạn. Dữ liệu được mã hóa đầu-cuối và chỉ đi giữa các thiết bị bạn đã ghép; máy chủ không đọc được nội dung. Không cần tài khoản." Kèm liên kết "HandLive và quyền riêng tư của bạn" mở trang theo ngôn ngữ đang hiển thị: https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (tiếng Việt), https://github.com/HandLive/handlive/blob/main/docs/privacy.md (tiếng Anh) |
 | 2 | Nút "Bắt đầu" | action | Input | — | Sang bước 3 |
 | 3 | Quyền thông báo | enum{granted\| denied\| not_required} | Input/Output | `not_required` (API 29–32) hoặc theo `checkSelfPermission` | Android 13+ hỏi ở bước 3; `denied` hiện dải cảnh báo và nút "Mở cài đặt thông báo" (E1) |
 | 4 | Trạng thái dịch vụ kết nối | enum{running\| stopped\| failed} | Output | `stopped` | `running` sau bước 5; `failed` theo E2 |
@@ -42,7 +42,7 @@ N/A — chưa có wireframe được duyệt.
 | 9 | Nút "Mở cài đặt của hãng", "Đã xong", "Bỏ qua" | action | Input | — | "Mở cài đặt của hãng" mở màn hình của hãng (API 5); "Đã xong" và "Bỏ qua" sang bước 7 |
 | 10 | Danh sách tính năng | array\<object> | Output | Theo khóa `feature.*` (0.9.5) và quyền hiện có | Mỗi thẻ: tên tính năng, trạng thái `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, quyền còn thiếu. Hiện sau PAIR-01 lần đầu và ở Cài đặt › Quyền và chạy nền |
 | 11 | Nút "Cấp quyền" trên thẻ tính năng | action | Input | Hiện khi thẻ ở `needs_permission` | Chạy phần B cho đúng tính năng đó |
-| 12 | Giải thích trước khi xin quyền | string | Output | Theo tính năng (API 2) | Ví dụ SMS: "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM." |
+| 12 | Giải thích trước khi xin quyền | string | Output | Theo tính năng (API 2) | Ví dụ SMS: "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM."<br>Tiêu đề: thông báo "Nhận thông báo về kết nối và yêu cầu", chạy nền "Chạy trong nền", tự khởi chạy của hãng "Giữ HandLive luôn chạy", camera "Quét mã ghép nối" (nội dung "HandLive dùng camera để quét mã QR trên Mac, iPhone hoặc iPad.") |
 | 13 | Công bố Hỗ trợ tiếp cận | string | Output | Văn bản CLIP-01 trường 2 | Hiện toàn màn hình, lựa chọn "Gửi thủ công" / "Đồng ý" theo CLIP-01 trường 3 |
 | 14 | Hướng dẫn "Chế độ cài đặt bị hạn chế" | string | Output | Ẩn | Hiện khi Android 13+ và nguồn cài không phải Google Play (API 6, E7) |
 | 15 | Trạng thái tự gửi clipboard | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` khi `clip.auto_send = true`, đã có `clip.a11y_consent_at` và dịch vụ Hỗ trợ tiếp cận đang chạy; `off` khi `clip.auto_send = false` |
@@ -127,7 +127,7 @@ flowchart TB
 - **URL:** N/A
 - **Method:** `KeyGenerator.getInstance("AES", "AndroidKeyStore")` với
   `KeyGenParameterSpec.Builder("hl_master", PURPOSE_ENCRYPT or PURPOSE_DECRYPT).setIsStrongBoxBacked(true)`;
-  `AndroidKeysetManager.Builder().withSharedPref(context, "hl_identity", "hl_keys").withMasterKeyUri("android-keystore://hl_master")`;
+  `AndroidKeysetManager.Builder().withSharedPref(context, "hl_secret_keyset", "handlive_keyset").withMasterKeyUri("android-keystore://hl_master")`;
   `Ed25519Sign.KeyPair.newKeyPair()`; `X25519.generatePrivateKey()`;
   `KeyPairGenerator.getInstance("EC")` với `ECGenParameterSpec("secp256r1")`.
 - **Request:**
@@ -135,7 +135,7 @@ flowchart TB
 | Thành phần | Thuật toán / thuộc tính | Nơi lưu |
 |-----------|------------------------|---------|
 | Khóa master | AES-256-GCM, alias `hl_master`; StrongBox khi có `FEATURE_STRONGBOX_KEYSTORE` | Android Keystore |
-| Keyset AEAD | Tink `AES256_GCM`, bọc bởi `hl_master` | SharedPreferences `hl_keys` |
+| Keyset AEAD | Tink `AES256_GCM`, bọc bởi `hl_master` | SharedPreferences `handlive_keyset` |
 | `ik_sig` | Ed25519 | Khóa riêng mã hóa bằng keyset AEAD |
 | `ik_dh` | X25519 | Như `ik_sig` |
 | Khóa TLS | ECDSA P-256, chứng chỉ X.509 tự ký `CN=HandLive`, hạn 20 năm | PKCS#12 trong bộ nhớ trong; mật khẩu 32 byte ngẫu nhiên mã hóa bằng keyset AEAD (0.6.1) |
@@ -366,11 +366,11 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Đồng bộ bảng nhớ tạm (`feature.clipboard`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.clipboard.enabled`. Tắt → ngừng theo dõi và gửi clipboard, hủy truyền ảnh đang dở (`clipboard/cancel`); `clipboard/*` đến bị trả `FEATURE_DISABLED` |
-| 2 | Tự gửi khi sao chép (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= khóa này và dịch vụ Hỗ trợ tiếp cận đang chạy). Bật khi chưa có đồng ý hoặc dịch vụ chưa chạy → CLIP-01 A1–A3 (SET-01 bước 12–14). Tắt → dịch vụ gọi `disableSelf()` |
+| 1 | Đồng bộ bảng nhớ tạm (`feature.clipboard`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.clipboard.enabled`. Tắt → ngừng theo dõi và gửi clipboard, hủy truyền ảnh đang dở (`clipboard/cancel`); `clipboard/*` đến bị trả `FEATURE_DISABLED`<br>Mô tả dưới công tắc (Android): "Sao chép trên một thiết bị, dán trên các thiết bị khác." |
+| 2 | Tự gửi khi sao chép (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= khóa này và dịch vụ Hỗ trợ tiếp cận đang chạy). Bật khi chưa có đồng ý hoặc dịch vụ chưa chạy → CLIP-01 A1–A3 (SET-01 bước 12–14). Tắt → dịch vụ gọi `disableSelf()`<br>Mô tả dưới công tắc (Android): "Gửi ngay nội dung vừa sao chép, qua một dịch vụ Hỗ trợ tiếp cận." |
 | 3 | Thời điểm đồng ý công bố (`clip.a11y_consent_at`) | timestamp | Output | Rỗng | Android. "Đã đồng ý lúc 14:05, 24/09/2026"; chỉ luồng công bố ghi khóa này |
-| 4 | Đồng bộ ảnh (`clip.send_images`) | bool | Input/Output | `true` | Tất cả. **Capability** `features.clipboard.mimes`: `false` → bỏ `image/png`, `image/jpeg`, chỉ còn `text/plain` (CLIP QC1) |
-| 5 | Chặn nội dung nhạy cảm (`clip.block_sensitive`) | bool | Input/Output | `true` | Tất cả, có tác dụng ở bên gửi Android và Mac. **Cục bộ** (CLIP QC3) |
+| 4 | Đồng bộ ảnh (`clip.send_images`) | bool | Input/Output | `true` | Tất cả. **Capability** `features.clipboard.mimes`: `false` → bỏ `image/png`, `image/jpeg`, chỉ còn `text/plain` (CLIP QC1)<br>Mô tả dưới công tắc (Android): "Gửi cả ảnh đã sao chép, tối đa 10 MB." |
+| 5 | Chặn nội dung nhạy cảm (`clip.block_sensitive`) | bool | Input/Output | `true` | Tất cả, có tác dụng ở bên gửi Android và Mac. **Cục bộ** (CLIP QC3)<br>Mô tả dưới công tắc (Android): "Nội dung có vẻ là mật khẩu hoặc số thẻ chỉ được gửi khi bạn chọn Vẫn gửi." |
 | 6 | Tự xóa bảng nhớ tạm đã nhận (`clip.auto_clear_s`) | int32 (enum{0\| 60\| 300}, giây) | Input/Output | `60` | Tất cả. **Cục bộ** ở bên nhận (CLIP-05); `0` = tắt |
 | 7 | Tin nhắn SMS (`feature.sms`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.sms.enabled`. Android bật khi thiếu quyền → SET-01 phần B; tắt → gỡ `ContentObserver`, `sms/*` bị trả `FEATURE_DISABLED`. Mac/iOS tắt → ẩn mục Tin nhắn, dừng SMS-01; dữ liệu đã đồng bộ giữ tới khi hủy ghép nối hoặc xóa toàn bộ |
 | 8 | Thông báo SMS mới (`sms.notify`) | bool | Input/Output | `true` | Mac, iOS. iOS: **Capability** `features.sms.notify` (Android chỉ push SMS mới khi `true`). Mac: **Cục bộ** |
@@ -386,9 +386,9 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 | 18 | Chất lượng mặc định (`cam.default_quality`) | enum{auto\| 480p\| 720p\| 1080p} | Input/Output | `auto` | Mac. **Cục bộ** (CAM-02, CAM-05) |
 | 19 | Tự chuyển USB khi cắm cáp (`cam.usb_boost`) | bool | Input/Output | `true` | Mac. **Cục bộ** (CAM-04) |
 | 20 | Không hỏi lại wizard USB (`cam.usb_wizard_dismissed`) | bool | Input/Output | `false` | Mac. **Cục bộ** (CAM-04); đặt lại `false` để wizard hiện lại |
-| 21 | Kết nối qua Internet (`relay.enabled`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.relay.enabled`. Tắt → sau `capability/update`, đóng phiên đi qua relay (`session/bye`, `reason = shutdown`) và kết nối `/v1/relay`; không gửi push. Bật → đăng ký relay (CONN-03 API 1) và các cặp còn `relay_registered = 0` (PAIR-01 API 8) |
+| 21 | Kết nối qua Internet (`relay.enabled`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.relay.enabled`. Tắt → sau `capability/update`, đóng phiên đi qua relay (`session/bye`, `reason = shutdown`) và kết nối `/v1/relay`; không gửi push. Bật → đăng ký relay (CONN-03 API 1) và các cặp còn `relay_registered = 0` (PAIR-01 API 8)<br>Mô tả dưới công tắc (Android): "Kết nối với thiết bị đã ghép nối khi không cùng mạng Wi-Fi; nội dung vẫn được mã hóa đầu cuối." |
 | 22 | Mở khi đăng nhập | bool | Input/Output | `SMAppService.mainApp.status == .enabled` | Mac. Không phải khóa cài đặt; đọc/ghi qua `SMAppService` (SET-03 API 3) |
-| 23 | Mục "Quyền và chạy nền" | action | Input | — | Android. Mở danh sách tính năng và quyền (SET-01 trường 10) cùng trạng thái chạy nền (SET-01 trường 6–9) |
+| 23 | Mục "Quyền và chạy nền" | action | Input | — | Android. Mở danh sách tính năng và quyền (SET-01 trường 10) cùng trạng thái chạy nền (SET-01 trường 6–9)<br>Gồm các dòng "Thông báo", "Chạy trong nền" và từng tính năng |
 | 24 | Tính năng hiệu lực theo thiết bị đã ghép | array\<object> | Output | Từ capability đã lưu (`features_json`) | Mỗi cặp: tính năng hiệu lực và lý do nếu không ("Tắt trên <thiết bị>", "Thiếu quyền trên điện thoại", "Kết nối qua Internet đang tắt trên điện thoại") |
 | 25 | Nút "Đồng bộ lại toàn bộ SMS" | action | Input | Vô hiệu khi không có phiên | Mac, iOS. Chạy SMS-01 A1–A2 (bước B1) |
 | 26 | Nút "Xóa thiết bị khỏi máy chủ" | action | Input | — | Tất cả. Luồng A1–A4, A6: gỡ đăng ký khỏi relay; giữ khóa định danh, cài đặt và mọi cặp ghép nối (vẫn dùng được trong LAN hoặc qua USB) |

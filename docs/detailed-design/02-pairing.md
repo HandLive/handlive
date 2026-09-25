@@ -30,13 +30,13 @@ N/A — no approved wireframe yet.
 | 1 | Pairing QR code | string (URI) | Output | Generated when the pairing screen opens | Mac/iOS shows `handlive://pair?v=1&pk=…&ps=…&d=…[&rv=…]`; error correction level M; refreshes automatically after 120 s |
 | 2 | Remaining validity | int32 (seconds) | Output | 120 | Countdown under the QR code; at 0 a new QR code is generated |
 | 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation |
-| 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ML Kit |
+| 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ZXing core (no ML Kit, plan decision I8) |
 | 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair With \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
-| 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned |
+| 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned<br>Hint on Android: "Type the 6-digit PIN shown on your Mac or iPhone." |
 | 7 | PIN attempts left | int32 | Output | 3 | Shown on Android after a wrong entry: "{count} attempts left" ("1 attempt left") |
 | 8 | Pairing status | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Shown on both devices |
 | 9 | Phone name | string(64) | Output | `Settings.Global.DEVICE_NAME` | Shown on Mac/iOS when pairing completes |
-| 10 | Error message | string | Output | Empty | Text per E1–E9 |
+| 10 | Error message | string | Output | Empty | Text per E1–E9; failures without their own text (lost connection, internal error): "Pairing didn't finish. Try again." |
 
 ### 2.1.4 Business flow
 
@@ -454,15 +454,15 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Device name | string(64) | Output | `peer_name` | The peer's name at pairing time |
 | 2 | Device type | enum{android\| macos\| ios\| ipados} | Output | `peer_platform` or `android` | With an icon |
-| 3 | Model | string(64) | Output | `peer_model` |  |
+| 3 | Model | string(64) | Output | `peer_model` | Label "Model" |
 | 4 | Connection status | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Per 0.11 | "Connected via Wi-Fi" (or "over the internet", "via USB"), "Connecting…", "Phone offline", "Disconnected" |
 | 5 | Connection channel | enum{lan\| relay\| usb} | Output | Empty when not connected | "LAN", "Internet", "USB" |
-| 6 | Last connected | timestamp | Output | `last_seen_at` | Shown as relative time ("2 minutes ago") |
-| 7 | Peer app version | string | Output | From `capability.app_version` | Warning if the protocol version differs |
-| 8 | Active features | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Intersection of the two capabilities | Each item carries a reason when it is inactive ("Off on Mac", "Missing SMS permission on the phone") |
+| 6 | Last connected | timestamp | Output | `last_seen_at` | Label "Last Connected"; shown as relative time ("2 minutes ago") |
+| 7 | Peer app version | string | Output | From `capability.app_version` | Label "App Version"; warning if the protocol version differs |
+| 8 | Active features | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Intersection of the two capabilities | Each item carries a reason when it is inactive ("Off on Mac", "Missing SMS permission on the phone")<br>Label "Features" |
 | 9 | Permissions missing on the phone | array\<string> | Output | `permissions_missing` | Mac/iOS only; select to see instructions |
-| 10 | Security Code | string(8) | Output | First 8 hex characters of SHA-256(`attestation`) | Identical on both devices of the same pair |
-| 11 | "Add Device" button | action | Input | — | Opens PAIR-01; hidden on Mac/iOS when a pair already exists |
+| 10 | Security Code | string(8) | Output | First 8 lowercase hex characters of SHA-256(`attestation`) | Identical on both devices of the same pair; exists once pairing finishes (it depends on the `pair_id` and `created_at` of `pair/confirm`), shown on the pairing result and in the device details |
+| 11 | "Add Device" button | action | Input | — | Opens PAIR-01; hidden on Mac/iOS when a pair already exists<br>Empty list on Android: "No Devices Yet" · "Pair a Mac, iPhone, or iPad to share the clipboard with this phone." |
 | 12 | "Unpair" button | action | Input | — | Opens PAIR-03 |
 
 ### 2.2.4 Business flow

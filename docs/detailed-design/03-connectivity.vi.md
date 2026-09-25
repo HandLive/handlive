@@ -178,7 +178,7 @@ Payload sau khi giải base64:
 - **Logic nghiệp vụ:**
   1. Thứ tự kiểm ở A-SVC: `protocol` (khác major → 4426) → cặp tồn tại (không → `PAIR_UNKNOWN`,
      4401) → chưa thu hồi (4403) → `device_id` khớp → `mac`.
-  2. Sai `mac` 5 lần/phút từ cùng địa chỉ IP → chặn IP đó 5 phút (kết nối từ IP bị chặn đóng 4429
+  2. Sai `mac` 5 lần/phút từ cùng địa chỉ IP (tính mọi `session/hello` bị từ chối với `AUTH_FAILED`: sai `mac`, sai `device_id`, khóa tạm bậc thấp; không tính `PAIR_UNKNOWN`, `PAIR_REVOKED`) → chặn IP đó 5 phút (kết nối từ IP bị chặn đóng 4429
      `RATE_LIMITED` ngay sau TLS).
   3. Không lưu `nonce`; khóa tạm của Android sinh mới cho mỗi lần welcome nên hello bị phát lại
      không dẫn tới phiên dùng được.

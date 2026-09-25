@@ -99,8 +99,8 @@ N/A — chưa có wireframe được duyệt.
 | 7 | Toast hệ thống khi đọc clipboard | string | Output | — | Android 12+: "HandLive đã dán từ bộ nhớ đệm" (nguyên văn theo ngôn ngữ hệ thống); hệ thống hiển thị, ứng dụng không tắt được |
 | 8 | Thông báo chặn nội dung nhạy cảm | string | Output | — | "Đã chặn nội dung nhạy cảm — HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ." (QC3). Android: thông báo kênh `clipboard` ("Bảng nhớ tạm", mô tả "Nội dung nhạy cảm bị chặn, xung đột bảng nhớ tạm và tiến trình gửi ảnh.", `IMPORTANCE_LOW` — không kêu, lỗi bảng nhớ tạm báo tại chỗ theo C19); Mac: thông báo hệ thống có nút |
 | 9 | Nút "Vẫn gửi" | action | Input | — | Trên thông báo trường 8; gửi với `sensitive = true`; hết hạn sau 120 s |
-| 10 | Báo nội dung quá lớn | string | Output | — | "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)" — toast (đường thủ công), không đẩy thông báo hệ thống |
-| 11 | Kết quả gửi thủ công | string | Output | — | Toast "Đã gửi tới <tên>", "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" hoặc "Bảng nhớ tạm trống hoặc không phải văn bản" |
+| 10 | Báo nội dung quá lớn | string | Output | — | "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)" — toast (cả đường tự động và thủ công), không đẩy thông báo hệ thống |
+| 11 | Kết quả gửi thủ công | string | Output | — | Toast "Đã gửi tới <tên>", "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" hoặc "Bảng nhớ tạm trống hoặc không phải văn bản"<br>Thiết bị kia từ chối (lỗi khác `FEATURE_DISABLED`, `CLIP_TOO_LARGE`): "Không cập nhật được bảng nhớ tạm trên <tên>". Bỏ qua vì trùng nội dung vừa nhận (QC4, E9): "Không gửi: nội dung này vừa nhận từ <tên>." |
 | 12 | Thông báo xung đột | string | Output | — | "Chưa ghi lên <tên thiết bị>: thiết bị này vừa có nội dung sao chép mới." Android: cùng kênh `clipboard` |
 | 13 | Nút "Gửi lại" | action | Input | — | Trên thông báo trường 12; gửi lại cùng nội dung thành clip mới; hết hạn sau 120 s |
 | 14 | Trạng thái tự gửi hiển thị trên Mac/iOS | string | Output | Theo `features.clipboard.auto_send` của điện thoại | `false` → "Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại" |

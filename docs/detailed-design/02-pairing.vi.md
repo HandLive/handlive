@@ -30,13 +30,13 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Mã QR ghép nối | string (URI) | Output | Sinh khi mở màn hình ghép nối | Mac/iOS hiển thị `handlive://pair?v=1&pk=…&ps=…&d=…[&rv=…]`; mức sửa lỗi M; tự làm mới sau 120 s |
 | 2 | Thời gian hiệu lực còn lại | int32 (giây) | Output | 120 | Đếm ngược dưới QR; về 0 thì sinh QR mới |
 | 3 | Tên thiết bị client | string(64) | Output | Tên máy (`Host.current().localizedName` / `UIDevice.current.name`) | Nằm trong QR (`d`), hiển thị trên Android khi xác nhận |
-| 4 | Khung quét QR | camera preview | Input | Camera sau | Android quét bằng CameraX + ML Kit |
+| 4 | Khung quét QR | camera preview | Input | Camera sau | Android quét bằng CameraX + ZXing core (không ML Kit, kế hoạch I8) |
 | 5 | Xác nhận ghép nối | enum{Ghép nối\| Hủy} | Input | — | Android hỏi "Ghép nối với <tên thiết bị client>?"; "Ghép nối" là nút mặc định, "Hủy" bên trái |
-| 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR |
+| 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR<br>Hướng dẫn trên Android: "Nhập mã PIN 6 chữ số đang hiện trên Mac hoặc iPhone." |
 | 7 | Số lần nhập PIN còn lại | int32 | Output | 3 | Hiển thị trên Android sau lần nhập sai: "Còn {count} lần thử" |
 | 8 | Trạng thái ghép nối | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Hiển thị trên cả hai thiết bị |
 | 9 | Tên điện thoại | string(64) | Output | `Settings.Global.DEVICE_NAME` | Hiển thị trên Mac/iOS khi ghép xong |
-| 10 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E9 |
+| 10 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E9; lỗi không có câu riêng (mất kết nối, lỗi nội bộ): "Không ghép nối được. Thử lại." |
 
 ### 2.1.4 Luồng nghiệp vụ
 
@@ -444,15 +444,15 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Tên thiết bị | string(64) | Output | `peer_name` | Tên đối phương lúc ghép nối |
 | 2 | Loại thiết bị | enum{android\| macos\| ios\| ipados} | Output | `peer_platform` hoặc `android` | Kèm biểu tượng |
-| 3 | Model | string(64) | Output | `peer_model` |  |
+| 3 | Model | string(64) | Output | `peer_model` | Nhãn "Kiểu máy" |
 | 4 | Trạng thái kết nối | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Theo 0.11 | "Đã kết nối qua Wi-Fi" (hoặc "qua Internet", "qua USB"), "Đang kết nối…", "Điện thoại ngoại tuyến", "Mất kết nối" |
 | 5 | Kênh kết nối | enum{lan\| relay\| usb} | Output | Rỗng khi chưa kết nối | "LAN", "Qua Internet", "USB" |
-| 6 | Lần kết nối cuối | timestamp | Output | `last_seen_at` | Hiển thị tương đối ("2 phút trước") |
-| 7 | Phiên bản ứng dụng đối phương | string | Output | Từ `capability.app_version` | Cảnh báo nếu khác phiên bản giao thức |
-| 8 | Tính năng hiệu lực | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Giao của hai capability | Mỗi mục kèm lý do nếu không hiệu lực ("Tắt trên Mac", "Thiếu quyền SMS trên điện thoại") |
+| 6 | Lần kết nối cuối | timestamp | Output | `last_seen_at` | Nhãn "Kết nối gần nhất"; hiển thị tương đối ("2 phút trước") |
+| 7 | Phiên bản ứng dụng đối phương | string | Output | Từ `capability.app_version` | Nhãn "Phiên bản ứng dụng"; cảnh báo nếu khác phiên bản giao thức |
+| 8 | Tính năng hiệu lực | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Giao của hai capability | Mỗi mục kèm lý do nếu không hiệu lực ("Tắt trên Mac", "Thiếu quyền SMS trên điện thoại")<br>Nhãn "Tính năng" |
 | 9 | Quyền còn thiếu trên điện thoại | array\<string> | Output | `permissions_missing` | Chỉ trên Mac/iOS; nhấn để xem hướng dẫn |
-| 10 | Mã an toàn | string(8) | Output | 8 hex đầu SHA-256(`attestation`) | Giống nhau trên hai thiết bị của cùng cặp |
-| 11 | Nút "Thêm thiết bị" | action | Input | — | Mở PAIR-01; ẩn trên Mac/iOS khi đã có cặp |
+| 10 | Mã an toàn | string(8) | Output | 8 hex đầu (chữ thường) SHA-256(`attestation`) | Giống nhau trên hai thiết bị của cùng cặp; có sau khi ghép nối xong (phụ thuộc `pair_id`, `created_at` của `pair/confirm`), hiện ở kết quả ghép nối và chi tiết thiết bị |
+| 11 | Nút "Thêm thiết bị" | action | Input | — | Mở PAIR-01; ẩn trên Mac/iOS khi đã có cặp<br>Danh sách trống trên Android: "Chưa có thiết bị nào" · "Ghép nối Mac, iPhone hoặc iPad để dùng chung bảng nhớ tạm với điện thoại này." |
 | 12 | Nút "Hủy ghép nối" | action | Input | — | Mở PAIR-03 |
 
 ### 2.2.4 Luồng nghiệp vụ

@@ -32,7 +32,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive connects this phone to your Mac, iPhone, and iPad. Data is end-to-end encrypted and travels only between devices you've paired; the server can't read it. No account needed." With a link to the privacy policy |
+| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive connects this phone to your Mac, iPhone, and iPad. Data is end-to-end encrypted and travels only between devices you've paired; the server can't read it. No account needed." With the link "HandLive and Your Privacy", which opens the page in the display language: https://github.com/HandLive/handlive/blob/main/docs/privacy.md (English), https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (Vietnamese) |
 | 2 | "Get Started" button | action | Input | — | Goes to step 3 |
 | 3 | Notification permission | enum{granted\| denied\| not_required} | Input/Output | `not_required` (API 29–32) or from `checkSelfPermission` | Android 13+ asks at step 3; `denied` shows a warning banner and an "Open Notification Settings" button (E1) |
 | 4 | Connection service status | enum{running\| stopped\| failed} | Output | `stopped` | `running` after step 5; `failed` per E2 |
@@ -43,7 +43,7 @@ N/A — no approved wireframe yet.
 | 9 | "Open Manufacturer Settings", "Done", "Skip" buttons | action | Input | — | "Open Manufacturer Settings" opens the manufacturer's screen (API 5); "Done" and "Skip" go to step 7 |
 | 10 | Feature list | array\<object> | Output | From the `feature.*` keys (0.9.5) and current permissions | Each card: feature name, status `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, missing permissions. Shown after the first PAIR-01 and in Settings › Permissions & Background |
 | 11 | "Grant Permission" button on a feature card | action | Input | Shown when the card is `needs_permission` | Runs part B for that feature only |
-| 12 | Explanation before the permission request | string | Output | Per feature (API 2) | SMS example: "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." |
+| 12 | Explanation before the permission request | string | Output | Per feature (API 2) | SMS example: "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM."<br>Titles: notifications "Get Notified About Connections and Requests", background "Run in the Background", manufacturer autostart "Keep HandLive Running", camera "Scan the Pairing Code" (body "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad.") |
 | 13 | Accessibility disclosure | string | Output | Text of CLIP-01 field 2 | Shown full screen, with the choices "Send Manually" / "Agree" per CLIP-01 field 3 |
 | 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when the install source is not Google Play (API 6, E7) |
 | 15 | Automatic clipboard sending status | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` when `clip.auto_send = true`, `clip.a11y_consent_at` is set and the Accessibility service is running; `off` when `clip.auto_send = false` |
@@ -128,7 +128,7 @@ flowchart TB
 - **URL:** N/A
 - **Method:** `KeyGenerator.getInstance("AES", "AndroidKeyStore")` with
   `KeyGenParameterSpec.Builder("hl_master", PURPOSE_ENCRYPT or PURPOSE_DECRYPT).setIsStrongBoxBacked(true)`;
-  `AndroidKeysetManager.Builder().withSharedPref(context, "hl_identity", "hl_keys").withMasterKeyUri("android-keystore://hl_master")`;
+  `AndroidKeysetManager.Builder().withSharedPref(context, "hl_secret_keyset", "handlive_keyset").withMasterKeyUri("android-keystore://hl_master")`;
   `Ed25519Sign.KeyPair.newKeyPair()`; `X25519.generatePrivateKey()`;
   `KeyPairGenerator.getInstance("EC")` with `ECGenParameterSpec("secp256r1")`.
 - **Request:**
@@ -136,7 +136,7 @@ flowchart TB
 | Item | Algorithm / attributes | Stored in |
 |-----------|------------------------|---------|
 | Master key | AES-256-GCM, alias `hl_master`; StrongBox when `FEATURE_STRONGBOX_KEYSTORE` is present | Android Keystore |
-| AEAD keyset | Tink `AES256_GCM`, wrapped by `hl_master` | SharedPreferences `hl_keys` |
+| AEAD keyset | Tink `AES256_GCM`, wrapped by `hl_master` | SharedPreferences `handlive_keyset` |
 | `ik_sig` | Ed25519 | Private key encrypted with the AEAD keyset |
 | `ik_dh` | X25519 | Same as `ik_sig` |
 | TLS key | ECDSA P-256, self-signed X.509 certificate `CN=HandLive`, valid for 20 years | PKCS#12 in internal storage; a 32-byte random password encrypted with the AEAD keyset (0.6.1) |
@@ -378,11 +378,11 @@ device).
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Sync Clipboard (`feature.clipboard`) | bool | Input/Output | `true` | All.<br>**Capability** `features.clipboard.enabled`. Off → stop watching and sending the clipboard, cancel an image transfer in progress (`clipboard/cancel`); incoming `clipboard/*` gets `FEATURE_DISABLED` |
-| 2 | Auto-Send on Copy (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= this key and the Accessibility service running). Turned on without consent yet or while the service is not running → CLIP-01 A1–A3 (SET-01 steps 12–14). Off → the service calls `disableSelf()` |
+| 1 | Sync Clipboard (`feature.clipboard`) | bool | Input/Output | `true` | All.<br>**Capability** `features.clipboard.enabled`. Off → stop watching and sending the clipboard, cancel an image transfer in progress (`clipboard/cancel`); incoming `clipboard/*` gets `FEATURE_DISABLED`<br>Description under the switch (Android): "Copy on one device and paste on the others." |
+| 2 | Auto-Send on Copy (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= this key and the Accessibility service running). Turned on without consent yet or while the service is not running → CLIP-01 A1–A3 (SET-01 steps 12–14). Off → the service calls `disableSelf()`<br>Description under the switch (Android): "Sends what you copy right away, through an Accessibility service." |
 | 3 | Disclosure consent time (`clip.a11y_consent_at`) | timestamp | Output | Empty | Android. "Agreed on Sep 24, 2026 at 2:05 PM"; only the disclosure flow writes this key |
-| 4 | Sync Images (`clip.send_images`) | bool | Input/Output | `true` | All. **Capability** `features.clipboard.mimes`: `false` → drop `image/png`, `image/jpeg`, leaving only `text/plain` (CLIP QC1) |
-| 5 | Block Sensitive Content (`clip.block_sensitive`) | bool | Input/Output | `true` | All; takes effect on the sending side on Android and Mac. **Local** (CLIP QC3) |
+| 4 | Sync Images (`clip.send_images`) | bool | Input/Output | `true` | All. **Capability** `features.clipboard.mimes`: `false` → drop `image/png`, `image/jpeg`, leaving only `text/plain` (CLIP QC1)<br>Description under the switch (Android): "Copied images up to 10 MB are sent too." |
+| 5 | Block Sensitive Content (`clip.block_sensitive`) | bool | Input/Output | `true` | All; takes effect on the sending side on Android and Mac. **Local** (CLIP QC3)<br>Description under the switch (Android): "Content that looks like a password or card number is sent only if you choose Send Anyway." |
 | 6 | Auto-Clear Received Clipboard (`clip.auto_clear_s`) | int32 (enum{0\| 60\| 300}, seconds) | Input/Output | `60` | All. **Local** on the receiving side (CLIP-05); `0` = off |
 | 7 | SMS Messages (`feature.sms`) | bool | Input/Output | `true` | All.<br>**Capability** `features.sms.enabled`. Android: turned on with permissions missing → SET-01 part B; off → unregister the `ContentObserver`, `sms/*` gets `FEATURE_DISABLED`. Mac/iOS off → hide the Messages section, stop SMS-01; synced data is kept until unpairing or deleting all data |
 | 8 | New SMS Notifications (`sms.notify`) | bool | Input/Output | `true` | Mac, iOS. iOS: **Capability** `features.sms.notify` (Android only pushes new SMS when `true`). Mac: **Local** |
@@ -398,9 +398,9 @@ device).
 | 18 | Default Quality (`cam.default_quality`) | enum{auto\| 480p\| 720p\| 1080p} | Input/Output | `auto` | Mac. **Local** (CAM-02, CAM-05) |
 | 19 | Switch to USB When Plugged In (`cam.usb_boost`) | bool | Input/Output | `true` | Mac. **Local** (CAM-04) |
 | 20 | Don't Show USB Wizard Again (`cam.usb_wizard_dismissed`) | bool | Input/Output | `false` | Mac. **Local** (CAM-04); reset to `false` to show the wizard again |
-| 21 | Internet Connection (`relay.enabled`) | bool | Input/Output | `true` | All.<br>**Capability** `features.relay.enabled`. Off → after `capability/update`, close the sessions that go through the relay (`session/bye`, `reason = shutdown`) and the `/v1/relay` connection; no push is sent. On → register with the relay (CONN-03 API 1) together with the pairs still at `relay_registered = 0` (PAIR-01 API 8) |
+| 21 | Internet Connection (`relay.enabled`) | bool | Input/Output | `true` | All.<br>**Capability** `features.relay.enabled`. Off → after `capability/update`, close the sessions that go through the relay (`session/bye`, `reason = shutdown`) and the `/v1/relay` connection; no push is sent. On → register with the relay (CONN-03 API 1) together with the pairs still at `relay_registered = 0` (PAIR-01 API 8)<br>Description under the switch (Android): "Reaches paired devices that aren't on the same Wi-Fi network; content stays end-to-end encrypted." |
 | 22 | Open at Login | bool | Input/Output | `SMAppService.mainApp.status == .enabled` | Mac. Not a settings key; read and written through `SMAppService` (SET-03 API 3) |
-| 23 | "Permissions & Background" row | action | Input | — | Android. Opens the feature and permission list (SET-01 field 10) together with the background running status (SET-01 fields 6–9) |
+| 23 | "Permissions & Background" row | action | Input | — | Android. Opens the feature and permission list (SET-01 field 10) together with the background running status (SET-01 fields 6–9)<br>Holds the rows "Notifications", "Run in Background" and one per feature |
 | 24 | Active features per paired device | array\<object> | Output | From the stored capability (`features_json`) | For each pair: the active features and, for an inactive one, the reason ("Off on \<device>", "Missing permission on the phone", "Internet connection is off on the phone") |
 | 25 | "Resync All SMS" button | action | Input | Disabled when there is no session | Mac, iOS. Runs SMS-01 A1–A2 (step B1) |
 | 26 | "Remove Device from Server" button | action | Input | — | All. Flow A1–A4, A6: deregister from the relay; keep the identity keys, settings and every pairing (still usable on the LAN or over USB) |
