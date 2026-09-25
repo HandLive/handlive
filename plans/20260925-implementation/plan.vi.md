@@ -2,8 +2,8 @@
 
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Sẵn sàng giao việc (25/09/2026) · **Nguồn:**
-`plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.1
+**Trạng thái:** Phase 0 xong; mã Phase 1 xong trên nhánh `feat/phase-01-clipboard` ở mọi kho, chờ cổng G1 trên máy thật (26/09/2026) · **Nguồn:**
+`plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.2
 (33 chức năng lá, C1–C20), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
 

@@ -2,8 +2,8 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Ready for hand-off (2026-09-25) · **Sources:**
-`plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.1
+**Status:** Phase 0 done; Phase 1 code complete on `feat/phase-01-clipboard` in every repository, waiting for gate G1 on real devices (2026-09-26) · **Sources:**
+`plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
 (33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
 
