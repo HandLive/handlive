@@ -77,7 +77,7 @@ flowchart TB
 | 3 | Người dùng | A-UI | Mở "Ghép nối thiết bị" và quét QR. | Không có quyền camera → E9, chuyển luồng PIN (A1). |
 | 4 | Hệ thống | A-UI | Kiểm scheme `handlive`, host `pair`, `v = 1`, `pk` và `ps` giải mã đủ 32 byte, `d` ≤ 64 ký tự, `rv` (nếu có) đủ 16 byte. Đếm cặp hiệu lực < 8. | Sai định dạng → E1. Đủ 8 cặp → E6. |
 | 5 | Người dùng | A-UI | Chọn "Ghép nối" hoặc "Hủy" ở hộp thoại "Ghép nối với \<d>?". | "Hủy" → E5. |
-| 6 | Hệ thống | A-SVC | Mở cửa sổ ghép nối 120 s: nhận kết nối `/v1/pair`; đăng ký lại dịch vụ mDNS với TXT `pr` = 8 hex đầu SHA-256(`pk`). Nếu có `rv`: kết nối relay, gửi `rv_join`. |  |
+| 6 | Hệ thống | A-SVC | Mở cửa sổ ghép nối 120 s: nhận kết nối `/v1/pair`; đăng ký lại dịch vụ mDNS với TXT `pr` = 8 hex đầu (chữ thường) của SHA-256 trên 32 byte `pk` đã giải b64u. Nếu có `rv`: kết nối relay, gửi `rv_join`. |  |
 | 7 | Hệ thống | M-APP / I-APP | Chờ tối đa 20 s: thấy instance có `pr` khớp → đi LAN; nhận `rv_joined` với `peer_present = true` → đi relay. LAN được ưu tiên nếu cả hai cùng có. | Không có đường nào → E3. |
 | 8 | Hệ thống | M-APP / I-APP | LAN: mở `wss://<ip>:<port>/v1/pair`, chấp nhận chứng chỉ tự ký nhưng ghi lại SHA-256 chứng chỉ thấy được. Relay: gói envelope `pair` trong `rv_msg`. |  |
 | 9 | Hệ thống | M-APP ↔ A-SVC | Client gửi `pair/hello`. Android kiểm `ik_dh_pub` trùng `pk` trong QR, sinh `nonce_s`, tính `K_pa`, trả `pair/offer` có `mac`. | `ik_dh_pub` khác `pk` → `pair/error AUTH_FAILED` (E4). |
@@ -214,8 +214,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 | `pair_id` | uuid | Có | UUIDv4 do client sinh |
 | `created_at` | timestamp | Có | Thời điểm tạo cặp (đồng hồ client) |
 | `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig` client, `attestation`) — cấu trúc `attestation` ở 0.6.2 |
-| `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1 | prk-check-c | "` ‖ `pair_id`) |
-| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1 | confirm | "` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) |
+| `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1\|prk-check-c\|"` ‖ `pair_id`) |
+| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|confirm\|"` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) |
 
 - **Response:** `WS pair/done` (API 5) hoặc `WS pair/error` (API 6).
 - **Ví dụ:**
@@ -242,8 +242,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig` Android, `attestation`) |
-| `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1 | prk-check-s | "` ‖ `pair_id`) |
-| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1 | done | "` ‖ `pair_id` ‖ `sig`) |
+| `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1\|prk-check-s\|"` ‖ `pair_id`) |
+| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) |
 
 - **Response:** N/A (kết thúc giao thức; client đóng kết nối với mã 1000).
 - **Ví dụ:**
