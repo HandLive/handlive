@@ -27,6 +27,8 @@ JSON Schema draft 2020-12 cho khung tin thiết bị ↔ thiết bị, sinh từ
 
 ## Quy ước chặt
 
+Schema kiểm **tin do bên gửi phát ra** (test của từng nền tảng validate tin mình sinh). Bên nhận không dùng schema để từ chối: theo 00-common-specs 0.5.1 quy tắc 6, trường lạ bị bỏ qua và giá trị enum lạ không làm hỏng tin.
+
 - `v` = 1; `type` đúng 10 giá trị của 0.7.1; `id`, `re` là UUIDv7 chữ thường 36 ký tự (nibble version `7`, variant `8|9|a|b`); `device_id` UUIDv8, `pair_id` UUIDv4.
 - `ts` int64 ≥ 0; `payload` Base64 chuẩn có padding; `eph`, `nonce`, `mac` là b64u đúng 32 byte (43 ký tự, dạng chuẩn tắc).
 - `additionalProperties: false` ở mọi đối tượng mà spec liệt kê đủ trường, gồm cả từng tính năng trong `features`.
