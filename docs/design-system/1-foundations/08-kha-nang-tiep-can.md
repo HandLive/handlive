@@ -1,135 +1,139 @@
-# Khả năng tiếp cận
+English | [Tiếng Việt](08-kha-nang-tiep-can.vi.md)
 
-HandLive phải dùng được bằng VoiceOver, TalkBack, bàn phím, cỡ chữ lớn và mọi cài đặt hiển thị của
-hệ thống trên cả ba nền tảng. Mục này gồm kích thước control, tương phản đã kiểm, cách gắn nhãn và
-danh sách kiểm thử.
+# Accessibility
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/accessibility ·
+HandLive must be usable with VoiceOver, TalkBack, the keyboard, large text sizes, and every system
+display setting on all three platforms. This section covers control sizes, verified contrast, how to
+label things, and a testing checklist.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/accessibility ·
 https://developer.apple.com/design/human-interface-guidelines/voiceover
 
-## Kích thước control
+## Control sizes
 
-| Nền tảng | Mặc định | Tối thiểu | Token |
+| Platform | Default | Minimum | Token |
 |---|---|---|---|
 | iOS, iPadOS | 44×44 pt | 28×28 pt | `size-hit-ios`, `size-hit-ios-min` |
 | macOS | 28×28 pt | 20×20 pt | `size-hit-mac`, `size-hit-mac-min` |
 | Android | 48×48 dp | 48×48 dp | `size-hit-android` |
 
-Khoảng trống quanh control: ~12 pt với control có viền, ~24 pt với control không viền (`space-12`,
+Space around controls: ~12 pt for bordered controls, ~24 pt for borderless controls (`space-12`,
 `space-24`).
 
-## Tương phản
+## Contrast
 
-| Nội dung | Tỉ lệ tối thiểu |
+| Content | Minimum ratio |
 |---|---|
-| Chữ đến 17 pt, mọi weight | 4.5:1 |
-| Chữ từ 18 pt | 3:1 |
-| Chữ đậm, mọi cỡ | 3:1 |
-| Biểu tượng trên nền đặc (quy tắc HandLive) | 3:1 |
+| Text up to 17 pt, any weight | 4.5:1 |
+| Text from 18 pt | 3:1 |
+| Bold text, any size | 3:1 |
+| Icons on solid backgrounds (HandLive rule) | 3:1 |
 
-Accessibility Inspector đo theo WCAG mức AA. Ở giao diện Tối, màu tự định nghĩa nhắm 7:1 (xem Chế độ
-Tối và tương phản cao).
+Accessibility Inspector measures against WCAG level AA. In the Dark appearance, custom colors aim for
+7:1 (see Dark Mode and increased contrast).
 
-## Tương phản token đã kiểm
+## Verified token contrast
 
-59 cặp × 4 giao diện = 236 phép đo, không cặp nào dưới ngưỡng. Màu có alpha được vẽ đè lên nền trước
-khi đo. Chữ được đo trên 7 nền: `system-background`, `secondary-system-background`,
-`tertiary-system-background`, `system-grouped-background`, `secondary-system-grouped-background`,
-`window-background`, `control-background`.
+59 pairs × 4 appearances = 236 measurements, none below the threshold. Colors with alpha are drawn
+over their background before measuring. Text is measured on 7 backgrounds: `system-background`,
+`secondary-system-background`, `tertiary-system-background`, `system-grouped-background`,
+`secondary-system-grouped-background`, `window-background`, `control-background`.
 
-| Cặp | Thấp nhất | Ngưỡng |
+| Pair | Lowest | Threshold |
 |---|---|---|
-| `label` trên mọi nền | 12.06:1 | 4.5 |
-| `secondary-label` trên mọi nền | 4.69:1 | 4.5 |
-| `accent` trên mọi nền | 4.65:1 | 4.5 |
+| `label` on every background | 12.06:1 | 4.5 |
+| `secondary-label` on every background | 4.69:1 | 4.5 |
+| `accent` on every background | 4.65:1 | 4.5 |
 | `text-red`, `text-orange`, `text-green` | 4.60, 4.68, 4.65:1 | 4.5 |
-| `on-accent` trên `accent-fill` (cũng là `bubble-outgoing`) | 4.63:1 | 4.5 |
-| `on-call-fill` trên `call-decline-fill` | 4.56:1 | 4.5 |
-| `on-call-fill` trên `call-accept-fill` | 3.52:1 | 3 (biểu tượng) |
-| `label` trên `bubble-incoming` | 13.14:1 | 4.5 |
-| `accent` trên `accent-tint` | 4.64:1 | 3 (chữ từ 13 pt) |
-| `brand-fire` trên `system-background`, `brand-glow` | 4.86, 4.15:1 | 3 (chữ lớn) |
+| `on-accent` on `accent-fill` (also `bubble-outgoing`) | 4.63:1 | 4.5 |
+| `on-call-fill` on `call-decline-fill` | 4.56:1 | 4.5 |
+| `on-call-fill` on `call-accept-fill` | 3.52:1 | 3 (icon) |
+| `label` on `bubble-incoming` | 13.14:1 | 4.5 |
+| `accent` on `accent-tint` | 4.64:1 | 3 (text from 13 pt) |
+| `brand-fire` on `system-background`, `brand-glow` | 4.86, 4.15:1 | 3 (large text) |
 
-Không đạt 4.5:1 ở giao diện Sáng nên không dùng làm chữ mang thông tin: `tertiary-label` (1.7:1),
-`system-green` (1.9–2.2:1), `system-orange` (2.0–2.3:1), `system-gray` (2.8–3.3:1), `system-red`
-(3.0–3.6:1).
+These don't reach 4.5:1 in the Light appearance, so they're never used for text that carries
+information: `tertiary-label` (1.7:1), `system-green` (1.9–2.2:1), `system-orange` (2.0–2.3:1),
+`system-gray` (2.8–3.3:1), `system-red` (3.0–3.6:1).
 
-## VoiceOver và TalkBack
+## VoiceOver and TalkBack
 
-Mọi control có nhãn. Nút chỉ có biểu tượng bắt buộc có nhãn, trên Mac có thêm tooltip:
+Every control has a label. Icon-only buttons must have a label, and on the Mac a tooltip too:
 
-| Biểu tượng | Nhãn |
+| Icon | Label |
 |---|---|
-| `phone.fill` | "Trả lời" |
-| `phone.down.fill` | "Từ chối" khi đổ chuông, "Kết thúc" khi đang gọi |
-| `mic.slash.fill` | "Tắt tiếng", kèm trạng thái đã chọn |
-| `pause.fill` | "Giữ máy", kèm trạng thái đã chọn |
-| `circle.grid.3x3.fill` | "Bàn phím số" |
-| `arrow.triangle.2.circlepath.camera` | "Đổi camera" |
-| `document.on.document` | "Gửi bảng nhớ tạm" |
-| `xmark` | "Đóng" |
+| `phone.fill` | "Answer" |
+| `phone.down.fill` | "Decline" while ringing, "End" during a call |
+| `mic.slash.fill` | "Mute", with a selected state |
+| `pause.fill` | "Hold", with a selected state |
+| `circle.grid.3x3.fill` | "Keypad" |
+| `arrow.triangle.2.circlepath.camera` | "Switch Camera" |
+| `document.on.document` | "Send Clipboard" |
+| `xmark` | "Close" |
 
-- Trạng thái đọc bằng chữ, không đọc màu: chấm trạng thái không có nhãn riêng mà gộp vào dòng.
-  `DeviceRow` đọc "Pixel 8 của Lan, Đã kết nối qua cùng mạng Wi-Fi". Gộp bằng
+- Status is read as text, not as color: status dots have no label of their own but are merged into
+  the row. `DeviceRow` reads "Lan's Pixel 8, connected via the same Wi-Fi network". Merge with
   `.accessibilityElement(children: .combine)`; Compose
   `Modifier.semantics(mergeDescendants = true)`.
-- Nút bật tắt (Tắt tiếng, Giữ máy) báo trạng thái bằng trait `.isSelected`; Compose
+- Toggle buttons (Mute, Hold) report their state with the `.isSelected` trait; Compose
   `Modifier.toggleable`.
-- Thời lượng "02:15" đọc thành "2 phút 15 giây" (`DateComponentsFormatter`, kiểu `.full`). Mã PIN
-  đọc từng chữ số (`.speechSpellsOutCharacters()`).
-- Mã QR có nhãn "Mã QR ghép nối" và luôn có đường thay thế: "Không quét được? Dùng mã PIN".
-- Báo thay đổi mà không dời focus ("Đã kết nối", "Đã gửi", "Cuộc gọi đã kết thúc"):
+- The duration "02:15" is read as "2 minutes, 15 seconds" (`DateComponentsFormatter`, `.full`
+  style). A PIN is read digit by digit (`.speechSpellsOutCharacters()`).
+- The QR code is labeled "Pairing QR code" and always has an alternative: "Can't Scan? Use a PIN".
+- Announce changes without moving focus ("Connected", "Sent", "Call ended"):
   `AccessibilityNotification.Announcement` (iOS 17, macOS 14),
-  `UIAccessibility.post(notification: .announcement, argument:)`, AppKit `NSAccessibility.post` với
+  `UIAccessibility.post(notification: .announcement, argument:)`, AppKit `NSAccessibility.post` with
   `.announcementRequested`, Compose `liveRegion = LiveRegionMode.Polite`.
-- Ẩn hình trang trí (`.accessibilityHidden(true)`; Compose `contentDescription = null`). Tiêu đề mục
-  mang trait heading (`.isHeader`; Compose `heading()`).
+- Hide decorative images (`.accessibilityHidden(true)`; Compose `contentDescription = null`). Section
+  titles carry the heading trait (`.isHeader`; Compose `heading()`).
 
-## Bàn phím trên Mac
+## Keyboard on the Mac
 
-- Truy cập bàn phím toàn phần: mọi control tới được bằng Tab; control tự dựng có vòng `focus-ring`,
-  control hệ thống giữ vòng focus của hệ thống.
-- Phím tắt chuẩn: ⌘, mở Cài đặt…, ⌘Q, ⌘W, ⌘M, ⌘F tìm trong Tin nhắn, Esc hủy sheet hoặc alert,
-  Return chọn nút mặc định. Không ghi đè phím tắt hệ thống.
-- Không gán phím tắt toàn cục cho Trả lời hay Từ chối, tránh bấm nhầm khi đang gõ.
+- Full Keyboard Access: every control can be reached with Tab; custom controls have a `focus-ring`,
+  system controls keep the system focus ring.
+- Standard shortcuts: ⌘, opens Settings…, ⌘Q, ⌘W, ⌘M, ⌘F searches in Messages, Esc cancels a sheet
+  or alert, Return chooses the default button. Don't override system shortcuts.
+- Don't assign global shortcuts to Answer or Decline, so they can't be pressed by accident while
+  typing.
 
-## Cỡ chữ lớn
+## Large text
 
-- iOS, iPadOS: Dynamic Type tới AX5, phóng được ít nhất 200%; ở cỡ trợ năng, dòng ngang chuyển thành
-  xếp dọc.
-- Android: font scale 200%, chữ tính bằng sp; kiểm Cỡ chữ và Kích thước hiển thị ở mức lớn nhất.
-- macOS: không có Dynamic Type; chữ không nhỏ hơn 10 pt; sidebar theo cỡ người dùng chọn.
+- iOS, iPadOS: Dynamic Type up to AX5, scaling to at least 200%; at accessibility sizes, horizontal
+  rows become vertical stacks.
+- Android: 200% font scale, text in sp; test Font size and Display size at their largest.
+- macOS: no Dynamic Type; text is never smaller than 10 pt; the sidebar follows the size the user
+  chooses.
 
-## Cài đặt hiển thị
+## Display settings
 
-| Cài đặt | SwiftUI | Android | HandLive làm |
+| Setting | SwiftUI | Android | HandLive does |
 |---|---|---|---|
-| Phân biệt không dùng màu | `accessibilityDifferentiateWithoutColor` | Không có, luôn áp dụng | Chấm trạng thái thêm hình; nút cuộc gọi khác hình |
-| Giảm chuyển động | `accessibilityReduceMotion` | `ANIMATOR_DURATION_SCALE` = 0 | Xem Chuyển động và xúc giác |
-| Giảm độ trong suốt | `accessibilityReduceTransparency` | Không có | Kính thành nền đục |
-| Tăng độ tương phản | `colorSchemeContrast` | `UiModeManager.getContrast()` | Bộ màu `-hc` |
-| Chữ đậm | `legibilityWeight` | `Configuration.fontWeightAdjustment` | Font thương hiệu tăng weight |
-| Chữ lớn hơn | `dynamicTypeSize` | `fontScale` | Bố cục xếp dọc |
+| Differentiate Without Color | `accessibilityDifferentiateWithoutColor` | Not available; always applied | Status dots get shapes; call buttons differ in shape |
+| Reduce Motion | `accessibilityReduceMotion` | `ANIMATOR_DURATION_SCALE` = 0 | See Motion and haptics |
+| Reduce Transparency | `accessibilityReduceTransparency` | Not available | Glass becomes an opaque background |
+| Increase Contrast | `colorSchemeContrast` | `UiModeManager.getContrast()` | The `-hc` color set |
+| Bold Text | `legibilityWeight` | `Configuration.fontWeightAdjustment` | The brand font goes up one weight |
+| Larger Text | `dynamicTypeSize` | `fontScale` | Vertical layouts |
 
-AppKit đọc các cài đặt tương ứng qua `NSWorkspace.shared.accessibilityDisplayShould…`.
+AppKit reads the corresponding settings through `NSWorkspace.shared.accessibilityDisplayShould…`.
 
-## Kiểm thử
+## Testing
 
-1. Accessibility Inspector: chạy Audit trên mọi màn Mac và iOS; sửa hết lỗi tương phản, thiếu nhãn,
-   vùng chạm nhỏ.
-2. VoiceOver, không nhìn màn hình: đi hết `Onboarding`, ghép nối bằng mã PIN, trả lời và kết thúc
-   cuộc gọi trên `CallPanel`, gửi bảng nhớ tạm, đọc và trả lời tin nhắn.
-3. Truy cập bàn phím toàn phần: làm xong Cài đặt và Tin nhắn trên Mac không dùng chuột.
-4. AX5 (iOS) và 200% (Android): không cắt dấu, không chồng chữ, không mất nút.
-5. Bốn giao diện, mỗi giao diện bật và tắt Giảm độ trong suốt; bật Giảm chuyển động.
-6. Android: TalkBack cho các luồng ở bước 2; Accessibility Scanner trên mọi màn.
-7. Khai báo Accessibility Nutrition Labels trên App Store đúng mức đã kiểm.
+1. Accessibility Inspector: run Audit on every Mac and iOS screen; fix every contrast problem, missing
+   label, and small hit target.
+2. VoiceOver, without looking at the screen: go through all of `Onboarding`, pair with a PIN, answer
+   and end a call on `CallPanel`, send the clipboard, read and reply to messages.
+3. Full Keyboard Access: complete Settings and Messages on the Mac without a mouse.
+4. AX5 (iOS) and 200% (Android): no clipped diacritics, no overlapping text, no missing buttons.
+5. The four appearances, each with Reduce Transparency on and off; with Reduce Motion on.
+6. Android: TalkBack for the flows in step 2; Accessibility Scanner on every screen.
+7. Declare the Accessibility Nutrition Labels on the App Store at exactly the level tested.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Nhãn cho mọi nút chỉ có biểu tượng | Để VoiceOver đọc tên symbol |
-| Đọc trạng thái bằng chữ | Chỉ đổi màu chấm |
-| Đọc thời lượng thành phút và giây | Để "02:15" bị đọc như giờ |
-| Kiểm bằng VoiceOver và TalkBack thật | Chỉ dựa vào công cụ tự động |
+| A label for every icon-only button | Let VoiceOver read the symbol name |
+| Read status as text | Change only the dot's color |
+| Read durations as minutes and seconds | Let "02:15" be read as a time of day |
+| Test with real VoiceOver and TalkBack | Rely only on automated tools |

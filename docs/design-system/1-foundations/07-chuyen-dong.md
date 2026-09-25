@@ -1,105 +1,110 @@
-# Chuyển động và xúc giác
+English | [Tiếng Việt](07-chuyen-dong.vi.md)
 
-Chuyển động trong HandLive chỉ để báo việc đang diễn ra và chỉ ra chỗ vừa thay đổi; xúc giác chỉ xác
-nhận kết quả quan trọng trên iPhone và Android. Mục này quy định spring, thời lượng, các chuyển động
-được phép và cách tôn trọng Giảm chuyển động.
+# Motion and haptics
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/motion ·
+In HandLive, motion only signals that something is in progress and points to what just changed;
+haptics only confirm important results on iPhone and Android. This section defines springs,
+durations, the motion that's allowed, and how to respect Reduce Motion.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/motion ·
 https://developer.apple.com/design/human-interface-guidelines/playing-haptics
 
-## Nguyên tắc
+## Principles
 
-- Có mục đích, không trang trí. Chuyển động không bao giờ là cách duy nhất để báo thông tin: luôn có
-  chữ hoặc biểu tượng đi kèm.
-- Không thêm chuyển động cho thao tác lặp nhiều lần, như gửi tin hay bật tắt trong danh sách.
-- Không bắt người dùng chờ animation: thao tác tiếp theo được nhận ngay, animation bị cắt ngang.
-- Phản hồi khớp cử chỉ: mở bằng vuốt lên thì đóng bằng vuốt xuống.
-- Control hệ thống đã có chuyển động và tự theo Giảm chuyển động; ưu tiên control hệ thống.
+- Purposeful, not decorative. Motion is never the only way to convey information: there's always text
+  or an icon alongside it.
+- Don't add motion to actions people repeat often, such as sending a message or toggling items in a
+  list.
+- Don't make people wait for an animation: the next action is accepted immediately and the animation
+  is interrupted.
+- Feedback matches the gesture: what opens with a swipe up closes with a swipe down.
+- System controls already have motion and follow Reduce Motion on their own; prefer system controls.
 
-## Spring trên Apple
+## Springs on Apple platforms
 
-| Kiểu | macOS 14+, iOS 17+ | macOS 13, iOS 16 | Dùng cho |
+| Type | macOS 14+, iOS 17+ | macOS 13, iOS 16 | Used for |
 |---|---|---|---|
-| Không nảy | `.smooth` | `.spring(response: 0.5, dampingFraction: 1)` | Sheet, `CallPanel`, đổi bố cục |
-| Nhanh, nảy rất nhẹ | `.snappy` | `.spring(response: 0.5, dampingFraction: 0.85)` | Đổi trạng thái nhỏ trong view tự dựng |
-| Nảy | `.bouncy` | — | Không dùng |
+| No bounce | `.smooth` | `.spring(response: 0.5, dampingFraction: 1)` | Sheets, `CallPanel`, layout changes |
+| Quick, very slight bounce | `.snappy` | `.spring(response: 0.5, dampingFraction: 0.85)` | Small state changes in custom views |
+| Bouncy | `.bouncy` | — | Not used |
 
-Liquid Glass tự có chuyển động (morph giữa các nút trong `GlassEffectContainer`, phản hồi chạm mạnh
-hơn trackpad); không thêm hiệu ứng riêng lên kính.
+Liquid Glass has its own motion (morphing between buttons in a `GlassEffectContainer`, a stronger
+response to touch than to the trackpad); don't add effects of your own on glass.
 
-## Thời lượng cho Android và web
+## Durations for Android and the web
 
-| Token | Giá trị | Dùng cho | Compose |
+| Token | Value | Used for | Compose |
 |---|---|---|---|
-| `duration-quick` | 150 ms | Nhấn, hover, đổi màu | `tween(150)` |
-| `duration-standard` | 250 ms | Công tắc, segmented, đổi trạng thái | `tween(250)` |
-| `duration-emphasized` | 400 ms | Sheet, panel, chuyển màn | `tween(400)` |
-| `duration-pulse` | 1500 ms | Nhịp chấm Đang kết nối, Đang phát camera | `infiniteRepeatable(tween(1500), RepeatMode.Reverse)` |
+| `duration-quick` | 150 ms | Press, hover, color changes | `tween(150)` |
+| `duration-standard` | 250 ms | Switches, segmented controls, state changes | `tween(250)` |
+| `duration-emphasized` | 400 ms | Sheets, panels, screen transitions | `tween(400)` |
+| `duration-pulse` | 1500 ms | Pulse of the Connecting and Camera live dots | `infiniteRepeatable(tween(1500), RepeatMode.Reverse)` |
 
-- Khi không cần thời lượng cố định, dùng `spring(dampingRatio = Spring.DampingRatioNoBouncy)` cho
-  gần cảm giác spring của Apple.
-- Cử chỉ quay lại và predictive back là của Android: giữ nguyên, không tự dựng lại.
+- When a fixed duration isn't needed, use `spring(dampingRatio = Spring.DampingRatioNoBouncy)` to get
+  close to the feel of Apple's springs.
+- The back gesture and predictive back belong to Android: keep them as they are, don't rebuild them.
 
-## Chuyển động HandLive dùng
+## Motion HandLive uses
 
-| Chuyển động | Mô tả | Khi bật Giảm chuyển động |
+| Motion | Description | With Reduce Motion on |
 |---|---|---|
-| Nhịp Đang kết nối | Chấm `status-connecting` mờ rồi rõ theo `duration-pulse`; biểu tượng thanh menu chạy variable color. Dừng khi đã kết nối hoặc lỗi | Chấm và biểu tượng đứng yên, chữ "Đang kết nối…" giữ nguyên |
-| Nhịp Đang phát camera | Chấm cạnh chữ "Đang phát" trên `CameraPreview`, cùng nhịp | Chấm đứng yên |
-| Biểu tượng thanh menu | Gửi bảng nhớ tạm xong, biểu tượng chuyển sang `checkmark` bằng Magic Replace, giữ khoảng 1 giây rồi trở lại. Magic Replace là kiểu mặc định của Replace từ macOS 15; với hai symbol khác họ, hệ thống tự lùi về kiểu thay thường. Đổi giữa có và không `.slash` cũng dùng hiệu ứng này | Đổi ngay, không animation |
-| Sheet, `CallPanel` xuất hiện | Sheet dùng chuyển động hệ thống. `CallPanel` trượt nhẹ vào từ góc trên bên phải và hiện dần, như thông báo | Chỉ hiện dần |
-| Đổi trạng thái | Chấm và chữ trạng thái đổi trong `duration-standard` | Đổi ngay |
+| Connecting pulse | The `status-connecting` dot fades out and back in with `duration-pulse`; the menu bar icon runs variable color. Stops once connected or on an error | The dot and icon stay still; the text "Connecting…" stays |
+| Camera live pulse | The dot next to "Live" on `CameraPreview`, with the same rhythm | The dot stays still |
+| Menu bar icon | After the clipboard is sent, the icon changes to `checkmark` with Magic Replace, holds for about 1 second, then changes back. Magic Replace is the default style of Replace from macOS 15; for two symbols from different families, the system falls back to a regular replace on its own. Switching between a symbol with and without `.slash` also uses this effect | Changes immediately, no animation |
+| Sheet, `CallPanel` appearing | Sheets use the system transition. `CallPanel` slides in gently from the top-right corner and fades in, like a notification | Fade in only |
+| State change | The status dot and text change within `duration-standard` | Change immediately |
 
-- Đổi symbol: SwiftUI `.contentTransition(.symbolEffect(.replace))`, AppKit
-  `NSImageView.setSymbolImage(_:contentTransition:)` (macOS 14, iOS 17). macOS 14 chạy Replace
-  thường; macOS 13 đổi ảnh ngay.
-- Không dùng: chuyển động nền, parallax, pháo giấy, nhấp nháy, phóng theo chiều sâu, animate độ mờ
-  (blur), animation lặp khi không có việc đang diễn ra.
+- Changing symbols: SwiftUI `.contentTransition(.symbolEffect(.replace))`, AppKit
+  `NSImageView.setSymbolImage(_:contentTransition:)` (macOS 14, iOS 17). macOS 14 runs the regular
+  Replace; macOS 13 swaps the image immediately.
+- Not used: background motion, parallax, confetti, flashing, depth zooms, animated blur, looping
+  animations when nothing is in progress.
 
-## Giảm chuyển động
+## Reduce Motion
 
-| Nền tảng | Đọc cài đặt |
+| Platform | Reading the setting |
 |---|---|
 | SwiftUI | `@Environment(\.accessibilityReduceMotion)` |
 | UIKit | `UIAccessibility.isReduceMotionEnabled` |
 | AppKit | `NSWorkspace.shared.accessibilityDisplayShouldReduceMotion` |
-| Android | `Settings.Global.ANIMATOR_DURATION_SCALE` bằng 0 (người dùng tắt ảnh động trong Hỗ trợ tiếp cận) |
+| Android | `Settings.Global.ANIMATOR_DURATION_SCALE` equals 0 (the user turned off animations in Accessibility) |
 
-Khi bật, theo HIG: bỏ animation tự chạy và lặp lại; siết spring cho hết nảy; chuyển cảnh trượt hay
-phóng thay bằng hiện dần; không animate độ mờ; chuyển động bám theo tay vẫn giữ. Trạng thái vẫn đổi
-đầy đủ, chỉ bỏ phần chuyển động.
+When it's on, per the HIG: remove animations that play and repeat on their own; tighten springs so
+they don't bounce; replace sliding or zooming transitions with fades; don't animate blur; motion that
+follows the user's finger stays. States still change fully; only the motion is removed.
 
-## Không tự đóng theo giờ
+## No timed dismissal
 
-- `CallPanel` đóng khi cuộc gọi kết thúc, không theo giờ. `Alert`, `ConsentSheet` và mọi thông báo
-  lỗi có nút chỉ đóng khi người dùng chọn.
-- Chỉ báo xác nhận không có nút (`checkmark` trên thanh menu, `Feedback` dạng HUD "Đã gửi") được tự
-  trở lại sau khoảng 1 giây (thanh menu) hoặc 1,5 giây (HUD), vì không chứa hành động và không phải
-  nơi duy nhất có thông tin đó.
-- Cần nút (Thử lại, Vẫn gửi) thì dùng thông báo hoặc dòng trạng thái, không dùng HUD tự ẩn.
+- `CallPanel` closes when the call ends, not on a timer. `Alert`, `ConsentSheet`, and every error
+  message with buttons close only when the user makes a choice.
+- Confirmation indicators without buttons (the `checkmark` in the menu bar, the HUD-style `Feedback`
+  "Sent") may revert on their own after about 1 second (menu bar) or 1.5 seconds (HUD), because they
+  hold no actions and aren't the only place that information appears.
+- When buttons are needed (Try Again, Send Anyway), use a notification or a status line, not a
+  self-hiding HUD.
 
-## Xúc giác
+## Haptics
 
-| Sự kiện | iOS | Android API 30+ | Android API 29 |
+| Event | iOS | Android API 30+ | Android API 29 |
 |---|---|---|---|
-| Thành công: gửi bảng nhớ tạm bằng `PasteButton`, ghép nối xong | `UINotificationFeedbackGenerator` `.success` | `HapticFeedbackConstants.CONFIRM` | `VIRTUAL_KEY` |
-| Cần chú ý: chưa kết nối, sẽ gửi khi kết nối lại | `.warning` | Không rung | Không rung |
-| Lỗi: gửi không thành công, mã PIN không đúng | `.error` | `HapticFeedbackConstants.REJECT` | `LONG_PRESS` |
+| Success: clipboard sent with `PasteButton`, pairing complete | `UINotificationFeedbackGenerator` `.success` | `HapticFeedbackConstants.CONFIRM` | `VIRTUAL_KEY` |
+| Needs attention: not connected, will send after reconnecting | `.warning` | No vibration | No vibration |
+| Error: sending failed, incorrect PIN | `.error` | `HapticFeedbackConstants.REJECT` | `LONG_PRESS` |
 
-- iOS 17+ có thể dùng `.sensoryFeedback(.success, trigger:)`; iOS 16 dùng
-  `UINotificationFeedbackGenerator`, gọi `prepare()` trước.
-- Android: `View.performHapticFeedback` tôn trọng cài đặt rung của hệ thống;
-  `HapticFeedbackConstantsCompat` của AndroidX Core tự lùi về hằng số cũ trên API 29.
-- macOS: HandLive không phát xúc giác; trackpad Force Touch dành cho phản hồi khi căn chỉnh, kéo
-  thả.
-- Xúc giác luôn đi cùng thay đổi nhìn thấy được. Không rung cho mỗi tin gửi đi. Không tự rung khi có
-  cuộc gọi đến: thông báo của hệ thống lo chuông và rung.
+- iOS 17+ can use `.sensoryFeedback(.success, trigger:)`; iOS 16 uses
+  `UINotificationFeedbackGenerator`, calling `prepare()` first.
+- Android: `View.performHapticFeedback` respects the system vibration settings;
+  AndroidX Core's `HapticFeedbackConstantsCompat` falls back to the older constants on API 29.
+- macOS: HandLive plays no haptics; Force Touch trackpad feedback is reserved for alignment and drag
+  and drop.
+- Haptics always come with a visible change. No vibration for each message sent. Don't vibrate for
+  incoming calls yourself: the system notification takes care of the ringtone and vibration.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Nhịp chậm cho việc đang diễn ra | Nhấp nháy để gây chú ý |
-| Hiện dần thay trượt khi bật Giảm chuyển động | Bỏ luôn việc đổi trạng thái |
-| Rung một lần khi ghép nối xong | Rung cho mỗi thao tác |
-| Đóng `CallPanel` khi cuộc gọi kết thúc | Tự đóng `CallPanel` sau vài giây |
+| A slow pulse for things in progress | Flashing to get attention |
+| Fade instead of slide when Reduce Motion is on | Drop the state change altogether |
+| Vibrate once when pairing completes | Vibrate for every action |
+| Close `CallPanel` when the call ends | Auto-close `CallPanel` after a few seconds |
