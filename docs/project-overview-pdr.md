@@ -1,70 +1,61 @@
-# HandLive — Product Definition & Requirements
+# HandLive: Định nghĩa sản phẩm
 
-> **Ngày:** 2026-09-24 · **Trạng thái:** Pre-implementation
+> **Ngày:** 2026-09-24. **Trạng thái:** chưa triển khai tính năng người dùng.
 
 ## 1. Vấn đề
 
-Người dùng Android không có trải nghiệm liền mạch giữa điện thoại và máy tính như Apple Continuity
-hay Microsoft Phone Link (Android↔Windows). HandLive lấp khoảng trống này cho
-**Android ↔ macOS/iOS**, tập trung vào ba luồng bị thiếu nhất: audio cuộc gọi, camera/mic, và đồng
-bộ dữ liệu thời gian thực — tất cả với E2E encryption.
+Người dùng Android không có sự liền mạch giữa điện thoại và máy tính như Apple Continuity, hay như Microsoft Phone Link giữa Android và Windows. HandLive lấp chỗ trống đó cho **Android với macOS và iOS**. Trọng tâm là ba luồng còn thiếu: âm thanh cuộc gọi, camera và mic, đồng bộ dữ liệu ngay lúc phát sinh. Mọi luồng đều mã hóa đầu-cuối.
 
 ## 2. Mục tiêu
 
-- Đồng bộ clipboard 2 chiều, độ trễ text <50ms LAN.
-- Nhận/gửi SMS từ macOS và iOS.
-- Nhận, điều khiển, và **nghe/nói cuộc gọi** ngay trên macOS.
-- Dùng camera + mic của Android như thiết bị ảo trong Zoom/Meet/FaceTime/OBS.
-- Bảo mật E2E không thể tắt; không có server nào đọc được nội dung.
+- Đồng bộ clipboard hai chiều. Văn bản trễ dưới 50 ms trong mạng nội bộ.
+- Nhận và gửi SMS từ macOS và iOS.
+- Nhận cuộc gọi, điều khiển, rồi **nghe và nói** ngay trên macOS.
+- Dùng camera và mic Android như thiết bị ảo trong Zoom, Meet, FaceTime, OBS.
+- Mã hóa đầu-cuối luôn bật. Không máy chủ nào đọc được nội dung.
 
-## 3. Phi mục tiêu (Non-goals)
+## 3. Ngoài phạm vi
 
-- Call audio relay trên iOS (Apple không có public HFP HF API) — iOS chỉ clipboard + SMS + call
-  metadata.
-- Ghi âm cuộc gọi — chỉ relay realtime, không lưu.
-- Stream media/nhạc chất lượng cao qua HFP (kênh này mono 8/16kHz).
+- Không chuyển âm thanh cuộc gọi lên iOS. Apple không mở API HFP phía tai nghe. iOS chỉ có clipboard, SMS và thông tin cuộc gọi.
+- Không ghi âm cuộc gọi. Hệ thống chỉ chuyển âm thanh lúc đang gọi, không lưu.
+- Không phát nhạc chất lượng cao qua HFP. Kênh này là mono, 8 hoặc 16 kHz.
 
-## 4. Người dùng mục tiêu
+## 4. Người dùng
 
-Mass-market (không phải chỉ dev). Hệ quả thiết kế then chốt: **zero-config, hoàn toàn không dây** là
-mặc định. Mọi thứ đòi hỏi setup ADB/USB/Shizuku chỉ là tùy chọn "boost" cho power user, không bao
-giờ bắt buộc để dùng tính năng cốt lõi.
+Người dùng phổ thông, không chỉ lập trình viên. Mặc định là **dùng được ngay, không dây, không cấu hình thêm**. ADB, cáp USB và Shizuku chỉ là lối tăng tốc cho người muốn tinh chỉnh. Tính năng cốt lõi không phụ thuộc các lối đó.
 
-## 5. Ràng buộc & nền tảng
+## 5. Nền tảng
 
 | Nền tảng | Yêu cầu tối thiểu |
 |----------|-------------------|
 | Android | minSdk 29 (Android 10), targetSdk 35 |
 | macOS | 13+ |
 | iOS/iPadOS | 16+ |
-| Cloud relay | Rust/Actix-web, tự host VPS ban đầu |
+| Cloud relay | Rust/Actix-web, tự host một VPS lúc đầu |
 
-## 6. Quyết định sản phẩm đã chốt
+## 6. Quyết định đã chốt
 
-Xem đầy đủ mục 12 (D1–D8) trong `plans/20260924-definitive-architecture/plan.md`. Tóm tắt:
+Đủ ở mục 12 (D1 đến D8) trong `plans/20260924-definitive-architecture/plan.md`. Tóm tắt:
 
-- **D1:** Call audio dùng dual-path — spike HFP 1 tuần; fail → Opus/WS permanent.
-- **D2:** Disclosure-first cho call relay (two-party consent), không block ship chờ legal.
-- **D3:** `BluetoothHeadsetClient` @SystemApi + Shizuku ngay; monitor CompanionDeviceManager.
-- **D4:** Clipboard background dùng Accessibility Service (Plan B: gửi thủ công — nút trên thông
-  báo, ô Cài đặt nhanh, Chia sẻ; C15).
-- **D5:** Cloud relay self-host 1 VPS; migrate managed khi >500 concurrent users.
-- **D6:** CMIOExtension spike tuần 1 Phase 5.
-- **D7:** AudioServerPlugin phân phối qua PKG notarized + Homebrew cask.
-- **D8:** USB boost qua ADB + wizard; UVC native để dành v2.
-- **D9–D12 (bổ sung 2026-09-24, plan §13):** điều khiển cuộc gọi bằng API công khai, giữ máy/DTMF
-  qua HFP (không `InCallService`); giữ Opus/WS + Shizuku với giới hạn khả thi được ghi rõ; âm thanh
-  HFP dựa vào mã hóa Bluetooth; giữ Accessibility mặc định cho clipboard, dự phòng gửi thủ công.
+- **D1:** Âm thanh cuộc gọi có hai đường. Thử HFP một tuần. Nếu không đi được, chuyển hẳn sang Opus qua WebSocket.
+- **D2:** Nói rõ với người dùng trước khi chuyển âm thanh cuộc gọi (hai bên cùng biết). Việc này không chặn lịch phát hành để chờ kết luận pháp lý.
+- **D3:** Dùng `BluetoothHeadsetClient` (SystemApi) cùng Shizuku ngay. Theo dõi CompanionDeviceManager.
+- **D4:** Clipboard chạy nền qua Accessibility Service. Dự phòng: gửi thủ công bằng nút trên thông báo, ô Cài đặt nhanh, hoặc Chia sẻ (C15).
+- **D5:** Cloud relay tự host một VPS. Chuyển sang dịch vụ có người vận hành khi quá 500 người dùng cùng lúc.
+- **D6:** Thử CMIOExtension trong tuần đầu của Phase 5.
+- **D7:** Phân phối AudioServerPlugin bằng PKG đã notarized và Homebrew cask.
+- **D8:** Tăng tốc USB qua ADB, có hướng dẫn từng bước. UVC native để dành cho v2.
+- **D9 đến D12** (bổ sung 2026-09-24, plan §13): điều khiển cuộc gọi bằng API công khai. Giữ máy, DTMF và tắt tiếng đi qua HFP, không dùng `InCallService`. Giữ Opus/WebSocket cùng Shizuku, kèm giới hạn đã ghi. Âm thanh HFP dựa vào mã hóa Bluetooth. Clipboard mặc định dùng Accessibility, vẫn có đường gửi thủ công.
 
-## 7. Chỉ số thành công (đo được)
+## 7. Chỉ số thành công
 
-- Clipboard text <50ms LAN; ảnh 5MB <2s; reconnect <3s.
-- SMS notification lên macOS <500ms; reply confirmed <2s.
-- Incoming call notification <200ms; answer latency <500ms E2E.
-- Call audio MOS ≥3.5 (BT) / ≥3.0 (WebSocket); echo return loss >40dB.
-- Camera/mic latency <120ms WiFi / <70ms USB.
+- Clipboard: văn bản dưới 50 ms trong mạng nội bộ, ảnh 5 MB dưới 2 giây, kết nối lại dưới 3 giây.
+- SMS: thông báo lên macOS dưới 500 ms, xác nhận trả lời dưới 2 giây.
+- Cuộc gọi: thông báo cuộc gọi đến dưới 200 ms, thời gian nghe máy dưới 500 ms tính từ đầu đến cuối.
+- Âm thanh: MOS từ 3.5 với Bluetooth, từ 3.0 với WebSocket. Echo return loss trên 40 dB.
+- Camera và mic: trễ dưới 120 ms qua Wi-Fi, dưới 70 ms qua USB.
 
-## Câu hỏi mở
+## Câu hỏi còn mở
 
-- Cấu trúc repo mono-repo hay tách theo nền tảng (chưa quyết) — ảnh hưởng build tooling.
-- Legal review wording cho disclosure call-audio (thuê luật sư, song song dev).
+- Cấu trúc kho đã chốt: năm kho trong một workspace (hub, android, apple, relay, shared). Xem README.
+- Câu chữ công bố khi chuyển âm thanh cuộc gọi còn cần luật sư rà. Việc này chạy song song với lập trình.
