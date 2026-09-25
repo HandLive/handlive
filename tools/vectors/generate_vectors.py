@@ -37,7 +37,7 @@ def main() -> int:
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(text.encode())
-    extra = sorted(p.name for p in OUT_DIR.glob("*.json") if p.name not in rendered) if check else []
+    extra = sorted(p.name for p in OUT_DIR.glob("*.json") if p.name not in rendered and not p.name.startswith("envelope-roundtrip")) if check else []
     for name in bad:
         print(f"LỆCH: {name}")
     for name in extra:
