@@ -26,6 +26,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  commit-policy:
+    name: commit đứng tên người thật
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Không có danh tính hay trailer của công cụ AI trong commit mới
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            .githooks/check-commits.sh "$BASE..$HEAD_SHA"
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            .githooks/check-commits.sh --max-count=200 "$HEAD_SHA"   # nhánh mới hoặc force-push: kiểm 200 commit gần nhất
+          else
+            .githooks/check-commits.sh "$BEFORE..$HEAD_SHA"
+          fi
+
   check:
     name: tài liệu + schema
     runs-on: ubuntu-latest

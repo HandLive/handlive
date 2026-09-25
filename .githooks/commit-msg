@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Hook commit-msg: từ chối commit ghi tên công cụ AI (tác giả, committer, đồng tác giả, trailer, "generated with").
+# Quy tắc dự án: mọi commit đứng tên người thật. Bật cho kho này: git config core.hooksPath .githooks
+# (từ kho hub: tools/workspace.sh hooks bật cho cả năm kho). Cùng mẫu với check-commits.sh (CI).
+set -u
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+pattern="$(sed -n '1p' "$dir/ai-identity.pattern")"
+if grep -iqE "$pattern" "$1"; then
+  echo "commit-msg: thông điệp commit nhắc tới công cụ AI làm tác giả/đồng tác giả — bị từ chối." >&2
+  echo "Bỏ dòng Co-Authored-By / Generated with của công cụ AI; commit dưới tên người thật." >&2
+  exit 1
+fi
+ident="$(git var GIT_AUTHOR_IDENT 2>/dev/null; git var GIT_COMMITTER_IDENT 2>/dev/null)"
+if printf '%s' "$ident" | grep -iqE 'claude|anthropic|copilot|noreply@anthropic'; then
+  echo "commit-msg: danh tính tác giả/committer là công cụ AI — bị từ chối. Đặt git config user.name và user.email là người thật." >&2
+  exit 1
+fi
