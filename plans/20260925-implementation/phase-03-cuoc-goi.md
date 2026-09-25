@@ -1,43 +1,46 @@
-# Phase 3 — Thông tin và điều khiển cuộc gọi
+English | [Tiếng Việt](phase-03-cuoc-goi.vi.md)
 
-**Mục tiêu:** Mac và iPhone/iPad biết ai đang gọi; Mac trả lời, từ chối, từ chối kèm tin nhắn, kết
-thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Giữ máy, DTMF, tắt tiếng để Phase 4 (HFP).
+# Phase 3 — Call information and control
 
-## Ngữ cảnh
+**Goal:** the Mac and iPhone/iPad know who is calling; the Mac answers, declines, declines with a
+message and ends calls over Wi-Fi; the call log and missed calls are synced. Hold, DTMF and mute wait
+for Phase 4 (HFP).
 
-- Chức năng lá: `06-call-control.md` CALL-01 (kể cả API 7 thông báo liên lạc trên Mac), CALL-02,
-  CALL-03 (phần qua WebSocket), CALL-04.
-- Design system: thành phần `CallPanel`, `Notification`, `MenuBarMenu`;
-  `2-patterns/03-thong-bao.md`; `3-platforms/01-macos.md` (Tập trung, phím tắt).
-- Quyết định: D9/C12 (API Telecom công khai, không `InCallService`), C19 (Tập trung → không panel;
-  panel là lệch có chủ đích so với HIG).
+## Context
 
-## Yêu cầu và tiêu chí đo
+- Leaf functions: `06-call-control.md` CALL-01 (including API 7, the communication notification on
+  the Mac), CALL-02, CALL-03 (the WebSocket part), CALL-04.
+- Design system: components `CallPanel`, `Notification`, `MenuBarMenu`;
+  `2-patterns/03-thong-bao.md`; `3-platforms/01-macos.md` (Focus, keyboard shortcuts).
+- Decisions: D9/C12 (public Telecom APIs, no `InCallService`), C19 (Focus → no panel; the panel is a
+  deliberate deviation from the HIG).
 
-- `call_event/state` tới Mac < 200 ms trong LAN; trả lời < 500 ms đầu-cuối.
-- Không đổ chuông khi chưa đọc được trạng thái Tập trung; Tập trung bật → chỉ thông báo liên lạc.
-- Không log số điện thoại, tên.
+## Requirements and measurable criteria
 
-## Thẻ việc
+- `call_event/state` reaches the Mac in < 200 ms on the LAN; answer < 500 ms end to end.
+- No ringing while the Focus status cannot be read; Focus on → communication notification only.
+- Never log phone numbers or names.
 
-| Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
-|----|------|--------|--------------------|
-| A3.1 [android] | `TelephonyCallback`/`PhoneStateListener` + broadcast `PHONE_STATE`, ngữ cảnh `call_id`, tra tên `PhoneLookup` (cache LRU), `controls` theo quyền, `call_event/state` cho từng phiên (CALL-01); `acceptRingingCall`/`endCall` (CALL-02, CALL-03 E2 `CALL_HFP_REQUIRED`); nhật ký `CallLog` (CALL-04) | `android/feature/call` | Số đến sau lượt `RINGING` đầu vẫn gửi lại (E10); hai SIM có nhãn; test giả lập Telephony |
-| A3.2 [android] | Push `call_incoming` và `call_missed` qua relay cho iPhone (CALL-01 bước 5, CALL-04 API 5); mở relay chờ lệnh từ chối | `android/feature/call` | Push trong < 300 ms sau khi có số |
-| M3.1 [macOS] | `CallPanel`: `NSPanel` non-activating nổi trên mọi Space, trạng thái đổ chuông/đang gọi/kết thúc, phím Return/⌘⌫/Esc, chuông `NSSound` theo `call.ringtone`, `INFocusStatusCenter` (`NSFocusStatusUsageDescription`), VoiceOver | `apple/macOS/HandLive` | Panel < 300 ms sau `RINGING`; Tập trung bật → không panel, không chuông |
-| M3.2 [macOS] | Thông báo liên lạc `INStartCallIntent` (CALL-01 API 7): passive khi có panel, time-sensitive khi Tập trung; hành động "Trả lời", "Từ chối"; gỡ khi `state` đổi; cuộc gọi nhỡ với "Nhắn tin" (CALL-04 API 6) | app | Không hiện hai lớp cho một cuộc gọi; hành động chạy không cần mở cửa sổ |
-| M3.3 [macOS] | Từ chối kèm tin nhắn (mẫu `call.quick_replies`, CALL-02 API 5), mục Cuộc gọi trong thanh bên cửa sổ Tin nhắn (CALL-04), cài đặt pane Cuộc gọi, mục cuộc gọi trong menu thanh menu khi "Bỏ qua" | app | Chuỗi và vị trí nút theo `CallPanel` README |
-| I3.1 [iOS] | Thông báo cuộc gọi đến: I-NSE dựng `INStartCallIntent`, danh mục `HL_CALL_INCOMING` với "Từ chối" (CALL-02 B), banner trong app khi đang mở; tab Cuộc gọi với nhật ký và cuộc gọi nhỡ | `apple/iOS` | Từ chối từ thông báo tới điện thoại < 2 s qua relay; máy khóa hiện nội dung chung |
-| T3.1 [test] | Bench trễ `RINGING → panel` và `answer → OFFHOOK`; kịch bản cuộc gọi chờ (E9), hai SIM, Tập trung bật | `tools/bench/`, `reports/` | Đạt mục tiêu trên Pixel và Samsung |
+## Task cards
 
-## Kiểm thử
+| Code | Task | Outputs | Acceptance criteria |
+|------|------|---------|---------------------|
+| A3.1 [android] | `TelephonyCallback`/`PhoneStateListener` + the `PHONE_STATE` broadcast, the `call_id` context, `PhoneLookup` name lookup (LRU cache), `controls` by permission, `call_event/state` per session (CALL-01); `acceptRingingCall`/`endCall` (CALL-02, CALL-03 E2 `CALL_HFP_REQUIRED`); `CallLog` call log (CALL-04) | `android/feature/call` | A number that arrives after the first `RINGING` is still re-sent (E10); both SIMs labeled; tests with a fake Telephony |
+| A3.2 [android] | Push `call_incoming` and `call_missed` via the relay for iPhone (CALL-01 step 5, CALL-04 API 5); open the relay to wait for a decline command | `android/feature/call` | Push within < 300 ms after the number is known |
+| M3.1 [macOS] | `CallPanel`: a non-activating `NSPanel` floating on every Space, ringing/in-call/ended states, Return/⌘⌫/Esc keys, `NSSound` ringtone per `call.ringtone`, `INFocusStatusCenter` (`NSFocusStatusUsageDescription`), VoiceOver | `apple/macOS/HandLive` | Panel < 300 ms after `RINGING`; Focus on → no panel, no ringtone |
+| M3.2 [macOS] | `INStartCallIntent` communication notification (CALL-01 API 7): passive while the panel shows, time-sensitive during Focus; "Answer" and "Decline" actions; removed when `state` changes; missed calls with "Message" (CALL-04 API 6) | app | Never two alert layers for one call; actions run without opening a window |
+| M3.3 [macOS] | Decline with a message (`call.quick_replies` templates, CALL-02 API 5), the Calls item in the Messages window sidebar (CALL-04), the Calls settings pane, the call item in the menu bar menu after "Ignore" | app | Strings and button positions per the `CallPanel` README |
+| I3.1 [iOS] | Incoming-call notification: I-NSE builds `INStartCallIntent`, category `HL_CALL_INCOMING` with "Decline" (CALL-02 B), an in-app banner while the app is open; a Calls tab with the call log and missed calls | `apple/iOS` | Decline from the notification reaches the phone in < 2 s via the relay; a locked device shows generic content |
+| T3.1 [test] | Bench the `RINGING → panel` and `answer → OFFHOOK` latency; scenarios: call waiting (E9), two SIMs, Focus on | `tools/bench/`, `reports/` | Targets met on Pixel and Samsung |
 
-- Đơn vị: máy trạng thái ngữ cảnh cuộc gọi (`ringing → offhook → idle`, `waiting`), tính `controls`,
-  chống trùng `call_id`.
-- Tay: cuộc gọi thật giữa hai SIM; AirPods đang nối (không ảnh hưởng ở phase này).
+## Testing
 
-## Rủi ro và quay lui
+- Unit: the call-context state machine (`ringing → offhook → idle`, `waiting`), computing `controls`,
+  `call_id` deduplication.
+- Manual: real calls between two SIMs; AirPods connected (no effect in this phase).
 
-- `acceptRingingCall` /`endCall` đã deprecated từ API 29 nhưng vẫn hoạt động; nếu OEM chặn → chỉ còn
-  từ chối/kết thúc qua HFP (Phase 4), ghi vào deployment-guide theo máy.
-- Thiếu `READ_CALL_LOG` (Play từ chối) → "Không rõ số" (E2), vẫn dùng được.
+## Risks and rollback
+
+- `acceptRingingCall` /`endCall` are deprecated since API 29 but still work; if an OEM blocks them →
+  only decline/end over HFP remain (Phase 4); record it per device in deployment-guide.
+- No `READ_CALL_LOG` (Play rejects it) → "Unknown Number" (E2), still usable.
