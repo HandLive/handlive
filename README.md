@@ -4,7 +4,7 @@
 >
 > **Phương châm thiết kế:** *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 
-**Trạng thái:** Giai đoạn thiết kế (pre-implementation) — hiện chỉ có tài liệu kiến trúc, chưa có code.
+**Trạng thái:** Phase 0 xong (khung, giao thức, mã hóa, token, CI) — chưa có tính năng người dùng. Mã nguồn nằm ở bốn kho riêng clone vào trong thư mục này (xem Cấu trúc).
 
 ## HandLive giải quyết gì
 
@@ -37,19 +37,30 @@ Chi tiết đầy đủ: [`docs/system-architecture.md`](docs/system-architectur
 
 Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.md).
 
-## Cấu trúc repo
+## Cấu trúc: năm kho, một workspace
+
+Kho này (`handlive`) là **hub**: chỉ giữ tài liệu, kế hoạch và công cụ tài liệu. Mã nguồn nằm ở bốn kho riêng, clone vào bên trong thư mục hub (hub git-ignore chúng) — bố cục bắt buộc vì build và test đọc `../shared`, test Apple đọc `../docs`:
 
 ```
-HandLive/
-├── CLAUDE.md            # Hướng dẫn cho Claude Code
+HandLive/                # kho hub "handlive"
+├── CLAUDE.md            # Hướng dẫn cho Claude Code (đọc trước)
 ├── README.md
 ├── docs/                # Tài liệu dự án (xem docs/codebase-summary.md)
-│   └── detailed-design/ # Tài liệu thiết kế chi tiết theo nhóm chức năng
-└── plans/               # Tài liệu kiến trúc & nghiên cứu (nguồn chân lý thiết kế)
-    ├── 20260924-definitive-architecture/    # Kiến trúc đã chốt — ĐỌC TRƯỚC
-    ├── 20260924-bluetooth-native-architecture/
-    ├── 20260924-ipc-research/
-    └── 20260924-virtual-camera-mic-research/
+│   ├── detailed-design/ # Thiết kế chi tiết — hợp đồng cho mọi mã
+│   └── design-system/   # Design system (bản sao nguồn của artifact)
+├── plans/               # Kiến trúc, nghiên cứu, kế hoạch triển khai + reports/
+├── tools/docs/          # validate_design_docs.py, apple_diacritics.py, build_design_html.py
+├── tools/workspace.sh   # clone <group-url> | status | run <git…>
+├── android/             # kho "handlive-android"  (Kotlin, Gradle)
+├── apple/               # kho "handlive-apple"    (Swift, macOS + iOS)
+├── relay/               # kho "handlive-relay"    (Rust)
+└── shared/              # kho "handlive-shared"   (test vector, JSON Schema, design tokens, tools/vectors, tools/schemas)
+```
+
+```sh
+git clone <group-url>/handlive.git HandLive && cd HandLive
+tools/workspace.sh clone <group-url>      # ví dụ git@github.com:handlive
+tools/workspace.sh status
 ```
 
 ## Tài liệu

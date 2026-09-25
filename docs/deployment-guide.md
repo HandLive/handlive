@@ -33,7 +33,7 @@
 
 ## CI
 
-Bốn workflow GitHub Actions (`.github/workflows/`): `ci-android` (`./gradlew check`), `ci-apple` (`xcodebuild test` từng package và build app), `ci-relay` (fmt, clippy, test; service PostgreSQL 16 và Redis 7 cho test tích hợp), `ci-shared` (script kiểm vector, schema, tài liệu). Cần remote GitHub; bật branch protection bắt buộc bốn check trên `main`.
+Mỗi kho một workflow GitHub Actions trong `.github/workflows/` của kho đó: `ci-android` (`./gradlew check`), `ci-apple` (`xcodebuild test` từng package, SwiftLint, build app), `ci-relay` (fmt, clippy, test; service PostgreSQL 16 và Redis 7 cho test tích hợp), `ci-shared` (kiểm vector, vector sinh lại, schema đối chiếu ví dụ tài liệu) và `ci-docs` ở hub (khuôn tài liệu, schema). Mỗi workflow dựng lại bố cục workspace bằng `actions/checkout`: hub ở gốc (khi cần tài liệu, checkout trước), phần vào `<phần>/`, `handlive-shared` vào `shared/`; tên kho lấy theo `${{ github.repository_owner }}/handlive-<phần>` nên cả năm kho phải nằm cùng một group/organization và giữ đúng tên (`handlive`, `handlive-android`, `handlive-apple`, `handlive-relay`, `handlive-shared`). Kho private: tạo secret `HANDLIVE_REPOS_TOKEN` (fine-grained PAT hoặc token GitHub App, quyền Contents: read trên năm kho) ở cấp organization; kho public thì `github.token` đủ. Sửa `shared/` hay tài liệu không tự kích hoạt CI nền tảng — chạy tay bằng `workflow_dispatch`. Bật branch protection bắt buộc check tương ứng trên `main` của từng kho.
 
 ## USB boost (tùy chọn)
 
