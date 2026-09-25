@@ -1,6 +1,6 @@
 # HandLive — Roadmap
 
-> **Nguồn:** `plans/20260924-definitive-architecture/plan.md` mục 8 & 11.
+> **Nguồn:** `plans/20260924-definitive-architecture/plan.md` mục 8 & 11. **Kế hoạch triển khai** (thẻ việc cho agent, Phase 0 khung và dùng chung, cổng, ma trận máy): `plans/20260925-implementation/plan.md`.
 
 Xây **theo thứ tự** — mỗi phase là một sản phẩm dùng được, phase sau phụ thuộc hạ tầng phase trước (WebSocket + pairing + crypto từ Phase 1 dùng lại cho tất cả).
 
@@ -16,12 +16,12 @@ Android SMS receiver + sender, macOS/iOS chat UI, history sync (50 msg/contact),
 
 ## Phase 3 — Call Metadata + Control
 
-Android `InCallService`, macOS floating `NSPanel`, answer/reject/hold/DTMF, call history, iOS metadata display.
+Android dùng API Telecom công khai (`TelephonyCallback`, `acceptRingingCall`/`endCall` — không `InCallService`, D9), macOS floating `NSPanel` kèm thông báo liên lạc, answer/reject qua Wi-Fi; hold/DTMF/mute qua HFP ở Phase 4; call history; iOS metadata display.
 **Đo:** incoming notification <200ms, answer <500ms E2E. **Effort:** ~3 pm.
 
 ## Phase 4 — Call Audio Relay
 
-**Bắt đầu bằng spike HFP 1 tuần.** BT HFP AG↔HF + SCO routing + `AUVoiceProcessingIO` AEC, Opus/WS fallback, adaptive jitter buffer, HFP conflict detection, app-level E2E cho audio (bắt buộc), disclosure UI (legal).
+**Bắt đầu bằng spike HFP 1 tuần.** BT HFP AG↔HF + SCO routing + `AUVoiceProcessingIO` AEC, Opus/WS fallback (E2E hai lớp), adaptive jitter buffer, HFP conflict detection; đường HFP dựa vào mã hóa liên kết Bluetooth (D11); disclosure UI (legal).
 **Đo:** MOS ≥3.5 BT / ≥3.0 WS; echo return loss >40dB. **Effort:** ~6 pm.
 
 ## Phase 5 — Camera & Mic Virtual Devices

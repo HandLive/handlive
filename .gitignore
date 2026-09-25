@@ -31,3 +31,9 @@ target/
 # Editor
 .vscode/
 .idea/
+
+# Doc exports
+build/
+
+# Rust
+relay/target/

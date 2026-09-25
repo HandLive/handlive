@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status: pre-implementation
 
-There is **no code yet**. The repository holds architecture/research documents under `plans/`, project docs under `docs/`, and the implementation-level spec under `docs/detailed-design/`. Everything below describes the *decided* design that future code must implement, not existing code. When you start implementing, treat the "Definitive Architecture" plan as the source of truth and the three research plans as supporting detail.
+There is **no code yet**. The repository holds architecture/research documents under `plans/`, project docs under `docs/`, and the implementation-level spec under `docs/detailed-design/`. The implementation plan with per-phase task cards for coding agents is `plans/20260925-implementation/plan.md` (see the hand-off section below); the UI design system is mirrored in `docs/design-system/`. Everything below describes the *decided* design that future code must implement, not existing code. When you start implementing, treat the "Definitive Architecture" plan as the source of truth and the three research plans as supporting detail.
 
 Planning docs are written in **Vietnamese** (with diacritics). Keep that convention for new plans, reports, and user-facing communication.
 
@@ -45,7 +45,16 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 - **Plans** live in `plans/<YYYYMMDD>-<slug>/plan.md`. Reports go under a `reports/` subdirectory. Prefer updating the relevant existing plan over creating parallel ones.
 - **Message protocol wire format** (already specified — match it): JSON envelope `{v, type, id (uuid-v7), ts (ms), payload (base64 encrypted)}`; audio uses a raw binary frame `[0x48 0x4C][ver:1B][seq:4B][ts:4B][encrypted_opus:NB]` instead of JSON wrapping. The `type` set is extended with `session` and `camera`; the fine-grained `op` lives inside the encrypted payload — see `docs/detailed-design/00-common-specs.md`.
 - **Detailed design** lives in `docs/detailed-design/` (one file per function group, each leaf function with 5 sections; shared protocol, error codes and data model in `00-common-specs.md`). Implement against it; add new message types, error codes or tables there first.
-- **UI follows the HandLive Design System** (Apple Human Interface Guidelines on every platform, Android included; see `docs/design-guidelines.md` and `plans/20260924-apple-hig-design-system/`). Vietnamese UI strings use Apple-style diacritics (hủy, xóa, tùy, mã hóa) and the design system's terminology ("bảng nhớ tạm", not "clipboard").
+- **UI follows the HandLive Design System** (Apple Human Interface Guidelines on every platform, Android included; source mirrored in `docs/design-system/`, tokens in `shared/design-tokens/tokens.json`; decisions in `plans/20260924-apple-hig-design-system/`). Vietnamese UI strings use Apple-style diacritics (hủy, xóa, tùy, mã hóa) and the design system's terminology ("bảng nhớ tạm", not "clipboard").
+
+## Implementation hand-off (coding agents start here)
+
+- **Plan:** `plans/20260925-implementation/plan.md` — monorepo layout (`android/`, `apple/`, `relay/`, `shared/`, `tools/`), phase files `phase-00`…`phase-05` with task cards (owner prefix A/M/I/R/S/T, inputs, outputs, acceptance criteria, tests), gates (G0 test vectors, G1 latency targets, G2 Play Console, G4 HFP spike, G5 CMIOExtension spike). Reports go to `plans/20260925-implementation/reports/` and end with the status block from `~/.claude/rules/orchestration-protocol.md`.
+- **Read in this order before coding a task:** this file → `docs/detailed-design/README.md` (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C19) → `docs/detailed-design/00-common-specs.md` (protocol, errors, data model, settings keys) → the phase file → the leaf functions it names → `docs/code-standards.md`. UI work also reads `docs/design-system/README.md`, the platform section in `docs/design-system/3-platforms/` and the component READMEs.
+- **Contracts:** wire format, error codes, settings keys and tables live in `00-common-specs.md`; change them there first, then the leaf spec (run `python3 tools/docs/validate_design_docs.py`, must print `problems=0`), then code. Never invent message types, error codes or UI strings in code — UI strings come verbatim from the leaf specs.
+- **File ownership:** Android agents edit `android/` + `shared/`; Apple agents `apple/` + `shared/`; relay agents `relay/` + `shared/`. Any change under `shared/` (test vectors, schemas, tokens) is called out in the report so the other platforms re-run their tests.
+- **Branches:** one branch per phase (`feat/phase-0N-<slug>`), conventional commits, no AI references in messages.
+- **Doc tools:** `tools/docs/validate_design_docs.py` (template + Mermaid check), `tools/docs/apple_diacritics.py` (Apple-style tone marks; dry run by default, `--write` to apply), `tools/docs/build_design_html.py` (HTML export to `build/docs/`; needs the `markdown` package: `$HOME/.claude/skills/.venv/bin/python3`). Design-system edits go to `docs/design-system/` first, then the artifact is republished.
 
 ## Key risks the design already commits to mitigating
 
