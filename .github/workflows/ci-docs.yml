@@ -7,14 +7,20 @@ on:
   push:
     branches: [main, "feat/**"]
     paths:
-      - "docs/detailed-design/**"
       - "tools/docs/**"
+      - "README.md"
+      - "README.vi.md"
+      - "docs/**"
+      - "plans/20260925-implementation/**"
       - ".github/workflows/ci-docs.yml"
   pull_request:
     branches: [main, "feat/**"]
     paths:
-      - "docs/detailed-design/**"
       - "tools/docs/**"
+      - "README.md"
+      - "README.vi.md"
+      - "docs/**"
+      - "plans/20260925-implementation/**"
       - ".github/workflows/ci-docs.yml"
   workflow_dispatch:
 
@@ -56,6 +62,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Resolve matching branches of the hub and handlive-shared
+        id: refs
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+        run: |
+          resolve() {
+            if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/$1.git" "$BRANCH" >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
+          }
+          hub="$(resolve handlive)"; shared="$(resolve handlive-shared)"
+          echo "hub=$hub" >> "$GITHUB_OUTPUT"; echo "shared=$shared" >> "$GITHUB_OUTPUT"
+          echo "hub → $hub, handlive-shared → $shared"
+
       - uses: actions/checkout@v5
 
       - name: Kho handlive-shared cạnh docs/
@@ -63,6 +83,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/handlive-shared
           path: shared
+          ref: ${{ steps.refs.outputs.shared }}
           token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
 
       - uses: actions/setup-python@v6
@@ -76,6 +97,10 @@ jobs:
 
       - name: Khuôn tài liệu thiết kế chi tiết
         run: python tools/docs/validate_design_docs.py
+
+      # Bỏ --allow-missing khi mọi tài liệu đã có bản tiếng Việt X.vi.md (C20).
+      - name: Tài liệu song ngữ X.md / X.vi.md
+        run: python tools/docs/check_bilingual_docs.py --allow-missing
 
       - name: JSON Schema + ví dụ tài liệu
         run: python shared/tools/schemas/check_schemas.py
