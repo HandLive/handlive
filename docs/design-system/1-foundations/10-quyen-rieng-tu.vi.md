@@ -23,8 +23,8 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/priva
 |---|---|---|
 | Thông báo | `Onboarding`, sau màn giải thích | Không có, hộp thoại của hệ thống |
 | Mạng cục bộ (macOS 15+) | `Onboarding`, lần duyệt Bonjour đầu tiên | `NSLocalNetworkUsageDescription`: "HandLive tìm điện thoại Android của bạn trong mạng Wi-Fi để kết nối trực tiếp, không qua Internet." |
-| Bluetooth | Bật "Nghe gọi trên Mac", sau `ConsentSheet` | `NSBluetoothAlwaysUsageDescription`, đề xuất: "HandLive dùng Bluetooth để nghe và nói cuộc gọi của điện thoại trên Mac." |
-| Micro | Ngay sau Bluetooth, cùng luồng | `NSMicrophoneUsageDescription`, đề xuất: "HandLive dùng micro của Mac để người ở đầu dây bên kia nghe được bạn." |
+| Bluetooth | Bật "Nghe gọi trên Mac", sau `ConsentSheet` | `NSBluetoothAlwaysUsageDescription`: "HandLive kết nối Bluetooth với điện thoại của bạn để nghe và nói cuộc gọi trên Mac." |
+| Micro | Ngay sau Bluetooth, cùng luồng | `NSMicrophoneUsageDescription`: "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại." |
 | Camera | Bật "Dùng điện thoại làm webcam" | `NSCameraUsageDescription`: "HandLive đưa hình từ điện thoại vào camera ảo HandLive Camera." |
 | Duyệt tiện ích camera | Cùng luồng webcam, khi hệ thống cần người dùng duyệt | Không có; HandLive chỉ đường tới đúng trang trong Cài đặt hệ thống |
 | Driver micro ảo | Cùng luồng webcam, khi cần tiếng | Nói trước: macOS sẽ hỏi mật khẩu quản trị, âm thanh ngắt khoảng 1–2 giây |

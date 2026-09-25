@@ -24,8 +24,8 @@ HIG source: https://developer.apple.com/design/human-interface-guidelines/privac
 |---|---|---|
 | Notifications | `Onboarding`, after the explanation screen | None; the system dialog |
 | Local network (macOS 15+) | `Onboarding`, the first Bonjour browse | `NSLocalNetworkUsageDescription`: "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet." |
-| Bluetooth | Turning on "Call Audio on Mac", after `ConsentSheet` | `NSBluetoothAlwaysUsageDescription`, proposed: "HandLive uses Bluetooth so you can listen and talk on your phone's calls from your Mac." |
-| Microphone | Right after Bluetooth, in the same flow | `NSMicrophoneUsageDescription`, proposed: "HandLive uses your Mac's microphone so the person on the other end of the call can hear you." |
+| Bluetooth | Turning on "Take Calls on Mac", after `ConsentSheet` | `NSBluetoothAlwaysUsageDescription`: "HandLive connects to your phone over Bluetooth so you can listen and talk during calls on this Mac." |
+| Microphone | Right after Bluetooth, in the same flow | `NSMicrophoneUsageDescription`: "HandLive uses the microphone so you can talk during calls transferred from your phone." |
 | Camera | Turning on "Use Phone as Webcam" | `NSCameraUsageDescription`: "HandLive brings the picture from your phone into the HandLive Camera virtual camera." |
 | Camera extension approval | In the same webcam flow, when the system needs the user to approve it | None; HandLive points the way to the right page in System Settings |
 | Virtual microphone driver | In the same webcam flow, when audio is needed | Say beforehand: macOS will ask for an administrator password, and audio cuts out for about 1–2 seconds |
@@ -61,7 +61,7 @@ permissions of one feature.
 | Pairing | `CAMERA` | When the QR code scan screen opens |
 | Messages | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` | When Messages is turned on |
 | Calls | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` | When Calls is turned on |
-| Call Audio on Mac | `BLUETOOTH_CONNECT` (Android 12+); Shizuku for the fallback path | When the feature is turned on |
+| Take Calls on Mac | `BLUETOOTH_CONNECT` (Android 12+); Shizuku for the fallback path | When the feature is turned on |
 | Webcam | `CAMERA`, `RECORD_AUDIO` | When Use Phone as Webcam is turned on |
 | Auto-sending the clipboard | Accessibility service | After `ConsentSheet` |
 
@@ -84,7 +84,7 @@ goes to the app info page; don't keep calling the dialog.
   people for agreeing: App Review rejects screens like that.
 - Synced with the detailed design (September 25, 2026): SET-03 field 14 now has only "Continue".
 - Exception: disclosures that need legal consent (`ConsentSheet`) have two choices.
-  - Call Audio on Mac (disclosure version `call-audio-v1`): "Cancel" and "Agree"; "Agree" is the
+  - Take Calls on Mac (disclosure version `call-audio-v1`): "Cancel" and "Agree"; "Agree" is the
     default button and isn't red.
   - Accessibility on Android (auto-sending the clipboard): "Agree" and "Send Manually".
 - After a denial: the feature shows the reason in `text-orange` text with an "Open Settings" button;
@@ -126,7 +126,7 @@ goes to the app info page; don't keep calling the dialog.
 
 | Do | Don't |
 |---|---|
-| Request Bluetooth when Call Audio on Mac is turned on | Request every permission when the app first opens |
+| Request Bluetooth when Take Calls on Mac is turned on | Request every permission when the app first opens |
 | One "Continue" button on the primer | Add "Skip" to get around the system dialog |
 | A specific explanation that ends with a period | "Needs permission for a better experience" |
 | Be clear about the limits of Bluetooth | A switch that turns off encryption |

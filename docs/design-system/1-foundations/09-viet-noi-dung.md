@@ -140,8 +140,7 @@ every string has a Vietnamese version that follows the sections above (C20).
 
 - Title-style capitalization for buttons, menu items, window and sheet titles, tabs, settings row
   labels, and alert titles: "Send Clipboard to Phone", "Unpair", "Add Phone…". Capitalize every word
-  except articles (a, an, the), coordinating conjunctions (and, but, or, nor), and prepositions of
-  three letters or fewer (to, in, on, via, for) unless they come first or last.
+  except articles (a, an, the), coordinating conjunctions (and, but, or, nor), and prepositions of four letters or fewer (at, by, for, from, in, into, of, off, on, onto, out, over, to, up, via, with) unless they come first or last.
 - Sentence-style capitalization for descriptions, captions, alert messages, notification bodies,
   status strings, and tooltips: "Connected via Wi-Fi", "Keep the phone and this Mac on the same Wi-Fi
   network."

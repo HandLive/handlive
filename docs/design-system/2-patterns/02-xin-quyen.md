@@ -37,9 +37,9 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-
 | SMS | Android | The feature card after the first pairing, or when "SMS Messages" is turned on | "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
 | Calls | Android | Like SMS, when "Calls" is turned on | Proposed: "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
 | Auto-sending the clipboard | Android | Turning on "Auto-Send on Copy" | `ConsentSheet` (CLIP-01 field 2) | The service in Settings › Accessibility |
-| Bluetooth, microphone | macOS | Turning on "Call Audio on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive uses Bluetooth to receive call audio from your phone." · `NSMicrophoneUsageDescription` (proposed): "HandLive uses the microphone so you can talk during calls transferred from your phone." |
-| Nearby devices | Android 12+ | Turning on "Call Audio on Mac" on the phone | Proposed: "To move call audio to your Mac, HandLive needs to connect to the Mac over Bluetooth." | `BLUETOOTH_CONNECT` (granted at install time on Android 10–11) |
-| Focus status | macOS | Turning on "Ring on Mac" | Not needed | `NSFocusStatusUsageDescription` (proposed): "HandLive checks whether you have a Focus on so it doesn't ring during that time." Until it's allowed, the Mac doesn't ring |
+| Bluetooth, microphone | macOS | Turning on "Take Calls on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive connects to your phone over Bluetooth so you can listen and talk during calls on this Mac." · `NSMicrophoneUsageDescription`: "HandLive uses the microphone so you can talk during calls transferred from your phone." |
+| Nearby devices | Android 12+ | Turning on "Take Calls on Mac" on the phone | Proposed: "To move call audio to your Mac, HandLive needs to connect to the Mac over Bluetooth." | `BLUETOOTH_CONNECT` (granted at install time on Android 10–11) |
+| Focus status | macOS | Turning on "Ring on Mac" | Not needed | `NSFocusStatusUsageDescription`: "HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on." Until it's allowed, the Mac doesn't ring |
 | Camera | macOS | Turning on "Use Phone as Webcam" (CAM-01 step 3) | The CAM-01 checklist | `NSCameraUsageDescription`: "HandLive brings the picture from your phone into the HandLive Camera virtual camera." |
 | Camera, microphone | Android | Turning on "Use Phone as Webcam" on the phone (usually right after the Mac turns it on) | "Use the Camera for Meetings on Your Mac" | `CAMERA`, `RECORD_AUDIO` |
 
@@ -80,7 +80,7 @@ Shizuku permission (AUDIO-01 step 10).
 
 | Disclosure | Platform | Choices | Recorded in |
 |---|---|---|---|
-| Call Audio on Mac (`call-audio-v1`) | macOS | "Cancel" (left) · "Agree" (right, default, not red) | `consent_record` |
+| Take Calls on Mac (`call-audio-v1`) | macOS | "Cancel" (left) · "Agree" (right, default, not red) | `consent_record` |
 | Auto-Send on Copy (CLIP-01 field 3) | Android | "Send Manually" · "Agree" (the detailed design says "No, I'll send manually"; a button should start with a verb) | `clip.a11y_consent_at` |
 
 Nothing is preselected. When the disclosure's content changes, bump the text version and ask again.

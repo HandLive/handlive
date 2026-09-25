@@ -20,7 +20,7 @@ run.
 |-------|---------|---------|------------|
 | Local network | macOS, iOS | Initial setup | "Find Your Phone on Wi-Fi" |
 | Notifications | macOS, iOS | Initial setup | "Get Notified About Messages and Calls" |
-| Bluetooth, microphone | macOS | When Call Audio on Mac is turned on, after `ConsentSheet` | "Connect to Your Phone over Bluetooth" |
+| Bluetooth, microphone | macOS | When Take Calls on Mac is turned on, after `ConsentSheet` | "Connect to Your Phone over Bluetooth" |
 | SMS, phone, contacts, notifications | Android | When the corresponding feature is turned on (during initial setup if the user chooses to turn it on) | "Read and Send Messages from Your Computer"… |
 | Camera, microphone | Android | The first time the Mac asks to use the camera | "Use the Camera for Meetings on Your Mac" |
 

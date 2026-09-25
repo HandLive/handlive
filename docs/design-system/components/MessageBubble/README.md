@@ -25,7 +25,7 @@ The status of an outgoing message only moves forward, and each status has its ow
 | `sending` | "Sending…" | A small `ProgressView` |
 | `sent` | "Sent" | `checkmark` ↔ `check` |
 | `delivered` | "Delivered" | `checkmark.circle` ↔ `done_all` |
-| `failed` | "Not sent · <reason>" + a "Try Again" button; a red `exclamationmark.circle.fill` icon next to the bubble | ↔ `error` |
+| `failed` | "Not sent · \<reason>" + a "Try Again" button; a red `exclamationmark.circle.fill` icon next to the bubble | ↔ `error` |
 
 Reasons by error code: `SMS_NO_SERVICE` "No service" · `SMS_RADIO_OFF` "The phone is in Airplane
 Mode" · `SMS_LIMIT_EXCEEDED` "Too many messages sent, try again later" · `SMS_INVALID_ADDRESS` "Invalid

@@ -8,15 +8,15 @@ allows this when legal consent is needed). The choice and the version of the tex
 
 | Where it's used | Platform | Recorded in |
 |----------|---------|---------|
-| Call Audio on Mac (AUDIO-01, text `call-audio-v1`) | macOS — a sheet attached to the Settings window | `consent_record` |
+| Take Calls on Mac (AUDIO-01, text `call-audio-v1`) | macOS — a sheet attached to the Settings window | `consent_record` |
 | Auto-Send on Copy, through Accessibility (CLIP-01) | Android — a sheet that rises from the bottom | `clip.a11y_consent_at` |
 
 ## Content
 
-- The title is the feature's name ("Call Audio on Mac"), not "Warning".
+- The title is the feature's name ("Take Calls on Mac"), not "Warning".
 - Three to five feature rows, each with an SF Symbol in `accent` and one sentence: what HandLive does,
   what HandLive doesn't do, and the user's responsibility.
-- For Call Audio on Mac, it must say: audio travels only between your devices; nothing is recorded; you
+- For Take Calls on Mac, it must say: audio travels only between your devices; nothing is recorded; you
   tell the other person where the law requires consent from both parties (California, Florida,
   Illinois…); over Bluetooth there's only Bluetooth's encryption, while over Wi-Fi it's end-to-end
   encrypted.

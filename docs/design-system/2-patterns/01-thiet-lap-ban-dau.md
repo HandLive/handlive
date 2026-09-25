@@ -18,7 +18,7 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting
   17 and macOS 14 or later) take the place of a series of tutorial screens.
 - Ask here only for the permissions needed to run: notifications and local network (Mac, iPhone);
   notifications and background activity (Android). The Mac's Bluetooth and microphone permissions are
-  requested when "Call Audio on Mac" is turned on; the camera permission and the Camera Extension when
+  requested when "Take Calls on Mac" is turned on; the camera permission and the Camera Extension when
   "Use Phone as Webcam" is turned on; Android's SMS and call permissions on the feature cards after the
   first pairing. Details in Requesting permission.
 - Permission primers have no "Skip"; people decline in the system dialog. "Skip" appears only on steps
@@ -88,7 +88,7 @@ Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a 
   groups of three digits "482 915"; after more than 3 wrong attempts, a new code is generated.
 - Errors show right inside the sheet, not as an alert: "Pairing isn't secure — try again" (E4). When
   the code expires, a new one replaces it automatically, with no error.
-- Once paired: the sheet closes itself, and both devices show "Paired with <name>". This is a Delight
+- Once paired: the sheet closes itself, and both devices show "Paired with \<name>". This is a Delight
   moment: an illustration on `brand-glow`, a `success` haptic on iPhone; with Reduce Motion on, drop
   the motion but keep the content. During onboarding, the Paired screen takes the place of the
   `Feedback` HUD; pairing again from Settings shows only the HUD.

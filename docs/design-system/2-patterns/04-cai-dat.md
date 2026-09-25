@@ -17,7 +17,7 @@ https://developer.apple.com/design/human-interface-guidelines/toggles
   `capability/update`; the other side applies them within ≤ 1 s on the same Wi-Fi network.
 - The label says what happens when the setting is on; the caption under the group states the
   consequences.
-- Turning on a feature that needs an activation flow (`ConsentSheet` for Call Audio on Mac, CAM-01,
+- Turning on a feature that needs an activation flow (`ConsentSheet` for Take Calls on Mac, CAM-01,
   the Accessibility disclosure): the switch only turns fully on once the flow is complete. Turning off
   a feature that's running (the camera is streaming, call audio is on the Mac) asks for confirmation
   with an `Alert` (SET-02 E9).
@@ -38,11 +38,11 @@ https://developer.apple.com/design/human-interface-guidelines/toggles
 
 | Pane | Rows (type · key) |
 |---|---|
-| General `gearshape` | Switch "Show HandLive in Menu Bar" (when off, the app has a Dock icon) · switch "Open HandLive at Login" (`SMAppService`) · switch "Internet Connection" (`relay.enabled`) · button "Remove Device from Server…" · destructive button "Erase All HandLive Data…" |
+| General `gearshape` | Switch "Show HandLive in Menu Bar" (when off, the app has a Dock icon) · switch "Open HandLive at Login" (`SMAppService`) · switch "Internet Connection" (`relay.enabled`) · button "Remove Device from Server…" · destructive button "Delete All HandLive Data…" |
 | Devices `candybarphone` | The phone's `DeviceRow` with "Details…" and "Unpair…"; if there's none yet, "Pair Phone…" (PAIR-02) |
 | Clipboard `doc.on.clipboard` | Switch "Sync Clipboard" (`feature.clipboard`) › checkboxes "Sync Images" (`clip.send_images`), "Block Sensitive Content" (`clip.block_sensitive`) · pop-up "Auto-Clear Received Clipboard": Off, After 1 Minute, After 5 Minutes (`clip.auto_clear_s`), caption "Clears only content received from other devices, and only if you haven't copied anything new." · macOS 15.4+: a "Paste from Other Apps" row with "Open System Settings" (CLIP-02 fields 2–3) |
 | Messages `message` | Switch "SMS Messages" (`feature.sms`) › checkbox "New SMS Notifications" (`sms.notify`) › checkbox "Show Content in Notifications" (`sms.preview`) · "Last synced: 5 minutes ago" and the button "Resync All SMS…" · caption "Marking messages as read on this device doesn't change their status on the phone." |
-| Calls `phone` | Switch "Calls" (`feature.call`) › checkboxes "Call Notifications" (`call.notify`), "Ring on Mac" (`call.ringtone`) · the "Quick Replies" list, up to 6 templates (`call.quick_replies`) · switch "Call Audio on Mac" (`feature.call_audio`) › pop-up "Phone for Bluetooth" (`call_audio.phone_bt_address`), checkbox "Wi-Fi Fallback (Requires Shizuku)" (`call_audio.allow_opus_fallback`), the AUDIO-01 step 12 checklist |
+| Calls `phone` | Switch "Calls" (`feature.call`) › checkboxes "Call Notifications" (`call.notify`), "Ring on Mac" (`call.ringtone`) · the "Quick Replies" list, up to 6 templates (`call.quick_replies`) · switch "Take Calls on Mac" (`feature.call_audio`) › pop-up "Phone for Bluetooth" (`call_audio.phone_bt_address`), checkbox "Wi-Fi Fallback (Requires Shizuku)" (`call_audio.allow_opus_fallback`), the AUDIO-01 step 12 checklist |
 | Camera `web.camera` | Switch "Use Phone as Webcam" (`feature.camera`) › the CAM-01 checklist with "Install Microphone Driver" · pop-up "Default Camera": Front Camera, Back Camera (`cam.default_camera`) · pop-up "Default Quality": Automatic, 480p, 720p, 1080p (`cam.default_quality`) · checkbox "Automatic USB Boost" (`cam.usb_boost`) · button "Show USB Debugging Guide Again" (`cam.usb_wizard_dismissed`) · button "Remove Virtual Camera and Microphone…" |
 
 Confirmation for "Resync All SMS…": "Delete the messages stored on Lan's MacBook and load them again from
@@ -56,7 +56,7 @@ the phone? Messages waiting to be sent are kept." with "Cancel" and "Resync" (SM
   Images", "Auto-Clear Received Clipboard" opening a choice list with checkmarks) · Messages ("SMS
   Messages", "New SMS Notifications", "Show Content in Notifications", "Resync All SMS") · Calls
   ("Calls", "Call Notifications") · "Internet Connection" · Permissions ("Notifications", "Local
-  Network", values On/Off) · Data ("Remove Device from Server", "Erase All HandLive Data").
+  Network", values On/Off) · Data ("Remove Device from Server", "Delete All HandLive Data").
 - No "Block Sensitive Content": the iPhone only sends when the user taps Paste (QC3).
 - Permission turned off: the row shows a reason in `text-orange` and "Open Settings"
   (`UIApplication.openSettingsURLString`). Time-sensitive turned off: "Focus may silence call
@@ -67,7 +67,7 @@ the phone? Messages waiting to be sent are kept." with "Cancel" and "Resync" (SM
 - The same Apple-style grouped list (`HLGroupedList`, `HLSwitch` in `system-green`) with Android's
   keys: "Sync Clipboard", "Auto-Send on Copy" (`clip.auto_send`, caption "Agreed on Sep 24, 2026
   at 2:05 PM"), "Sync Images", "Block Sensitive Content", "Auto-Clear Received Clipboard", "SMS
-  Messages", "Calls", "Call Audio on Mac" and "Wi-Fi Fallback (Requires Shizuku)" with the Shizuku
+  Messages", "Calls", "Take Calls on Mac" and "Wi-Fi Fallback (Requires Shizuku)" with the Shizuku
   status, "Use Phone as Webcam", "Internet Connection", the Data group.
 - The "Permissions & Background" row opens the per-feature cards (SET-01 field 10) and the
   background status (fields 6–9).
@@ -96,10 +96,10 @@ reason sits under the row title in `text-orange`; the switch is disabled but sta
   "Auto-Clear Received Clipboard".
 - Synced with the detailed design (September 25, 2026): SET-02 field 14 "Wi-Fi Fallback, Requires
   Shizuku". Still to sync: AUDIO-01 step 1 names the pane "Call Audio" (design system: the Calls pane);
-  "Switch to USB When a Cable Is Connected" (field 19) should follow CAM-04: "Automatic USB Boost".
+  "Switch to USB When Plugged In" (field 19) should follow CAM-04: "Automatic USB Boost".
 - Synced with the detailed design (September 25, 2026): the `mac.menu_bar_extra` key (SET-02 field 31,
   0.9.5). Still to sync: the confirmation button "Delete" (field 28) becomes a specific verb ("Remove
-  from Server", "Erase All"), paired with "Cancel".
+  from Server", "Delete All"), paired with "Cancel".
 
 ## Dos and don'ts
 

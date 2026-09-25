@@ -17,7 +17,7 @@ when a Focus is on and the panel isn't shown.
 | State | Content | Controls |
 |-----------|---------|-----------|
 | Ringing | Avatar, name or number ("No Caller ID", "Unknown Caller"), "Incoming call · SIM 1" (the SIM label when there are two SIMs) | Decline (`call-decline-fill`, left) · Answer (`call-accept-fill`, right); text buttons "Decline with Message…", "Ignore" |
-| Ringing, with Call Audio on Mac turned on | Same as above | Answer splits into "Answer on Phone" and "Answer on Mac" |
+| Ringing, with Take Calls on Mac turned on | Same as above | Answer splits into "Answer on Phone" and "Answer on Mac" |
 | In a call | "In call · 02:15" (`timer`), "Audio: Phone" or "Audio: Mac" | "Switch to Mac" / "Switch to Phone"; End (red) |
 | In a call, with the Mac connected to the phone over Bluetooth | Same as above | Adds Mute, Hold / Resume, Keypad (toggle buttons, not switches) |
 | Call waiting | A lower line: the name or number of the waiting caller | Over Bluetooth: "Decline Waiting Call", "End & Answer", "Hold & Answer"; without it: "Handle it on the phone or connect Bluetooth" |

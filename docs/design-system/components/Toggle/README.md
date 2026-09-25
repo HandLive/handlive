@@ -7,7 +7,7 @@ checkboxes (secondary options); iPhone/iPad and Android use only switches in lis
 
 ## Choosing the type
 
-| Platform | Main feature ("Sync Clipboard", "SMS Messages", "Call Audio on Mac") | Secondary option ("Block Sensitive Content", "Ring on Mac") |
+| Platform | Main feature ("Sync Clipboard", "SMS Messages", "Take Calls on Mac") | Secondary option ("Block Sensitive Content", "Ring on Mac") |
 |----------|------|------|
 | macOS | A mini switch in a grouped form: `Toggle` + `.toggleStyle(.switch)` + `.controlSize(.mini)` | A checkbox indented under the main feature: `.toggleStyle(.checkbox)` |
 | iOS/iPadOS | A switch at the end of the list row: `Toggle` in `Form`/`List` | A switch in its own row, with a caption under the group |
@@ -28,7 +28,7 @@ checkboxes (secondary options); iPhone/iPad and Android use only switches in lis
 If the feature is off on the other device or a permission is missing (comparing the capabilities of
 the two sides, SET-02), the switch is disabled and the row shows a reason in `text-orange` with the
 fix: "Missing SMS permission on the phone · Grant Permission". When turning on a feature that needs a
-disclosure (Call Audio on Mac, Accessibility on Android), the switch only turns on once `ConsentSheet`
+disclosure (Take Calls on Mac, Accessibility on Android), the switch only turns on once `ConsentSheet`
 is complete.
 
 ## Dos and don'ts

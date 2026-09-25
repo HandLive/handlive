@@ -132,8 +132,7 @@ Việt theo các mục trên (C20).
 
 - Viết hoa kiểu tiêu đề (title-style) cho nút, mục menu, tiêu đề cửa sổ và sheet, tab, nhãn dòng
   cài đặt, tiêu đề alert: "Send Clipboard to Phone", "Unpair", "Add Phone…". Viết hoa mọi từ trừ mạo
-  từ (a, an, the), liên từ (and, but, or, nor) và giới từ từ ba chữ cái trở xuống (to, in, on, via,
-  for) khi không đứng đầu hay cuối.
+  từ (a, an, the), liên từ (and, but, or, nor) và giới từ từ bốn chữ cái trở xuống (at, by, for, from, in, into, of, off, on, onto, out, over, to, up, via, with) khi không đứng đầu hay cuối.
 - Viết hoa kiểu câu (sentence-style) cho mô tả, chú thích, nội dung alert, nội dung thông báo, chuỗi
   trạng thái, tooltip: "Connected via Wi-Fi", "Keep the phone and this Mac on the same Wi-Fi
   network."
