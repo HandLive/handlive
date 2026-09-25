@@ -40,7 +40,7 @@ Xem đầy đủ mục 12 (D1–D8) trong `plans/20260924-definitive-architectur
 - **D1:** Call audio dùng dual-path — spike HFP 1 tuần; fail → Opus/WS permanent.
 - **D2:** Disclosure-first cho call relay (two-party consent), không block ship chờ legal.
 - **D3:** `BluetoothHeadsetClient` @SystemApi + Shizuku ngay; monitor CompanionDeviceManager.
-- **D4:** Clipboard background dùng Accessibility Service (Plan B: Notification Listener).
+- **D4:** Clipboard background dùng Accessibility Service (Plan B: gửi thủ công — nút trên thông báo, ô Cài đặt nhanh, Chia sẻ; C15).
 - **D5:** Cloud relay self-host 1 VPS; migrate managed khi >500 concurrent users.
 - **D6:** CMIOExtension spike tuần 1 Phase 5.
 - **D7:** AudioServerPlugin phân phối qua PKG notarized + Homebrew cask.

@@ -1,0 +1,60 @@
+<!-- @dsCard group="Nội dung" height=520 subtitle="Cửa sổ Xem trước camera trên Mac với thanh điều khiển kính trong trên video" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>CameraPreview — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .win.cam { width: 560px; max-width: 100%; }
+  .content { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .video svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fig { fill: var(--on-video); opacity: .14; }
+  .live { position: absolute; top: 12px; left: 12px; height: 26px; padding: 0 10px; border-radius: var(--radius-capsule); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--on-video); background: var(--glass-dim); border: 1px solid var(--glass-stroke); }
+  .live .dot { width: 8px; height: 8px; border-radius: var(--radius-capsule); background: var(--status-connected); }
+  @media (prefers-reduced-motion: no-preference) { .live .dot { animation: hl-pulse var(--duration-pulse) ease-in-out infinite; } }
+  .bar { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: var(--radius-capsule); background: var(--glass-dim); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); border: 1px solid var(--glass-stroke); color: var(--on-video); }
+  .bar .seg { background: var(--glass-dim); }
+  .bar .seg button { color: var(--on-video); }
+  .bar .seg button[aria-pressed="true"] { background: var(--on-video); color: var(--video-background); box-shadow: none; }
+  .ibtn { width: 32px; height: 32px; border-radius: var(--radius-capsule); border: none; display: grid; place-items: center; background: transparent; color: var(--on-video); cursor: pointer; }
+  .ibtn.on { background: var(--on-video); color: var(--video-background); }
+  .ibtn .sym { font-size: 19px; }
+  .pop { font: inherit; font-size: 13px; height: 28px; padding: 0 8px 0 12px; border-radius: var(--radius-capsule); border: none; background: transparent; color: var(--on-video); display: inline-flex; align-items: center; gap: 2px; cursor: pointer; }
+  .pop .sym { font-size: 18px; }
+  .bar .grow { flex: 1; }
+  .bar .stop { height: 28px; padding: 0 14px; border-radius: var(--radius-capsule); border: none; font: inherit; font-size: 13px; font-weight: 600; background: var(--on-video); color: var(--video-background); cursor: pointer; }
+  .stats { font-size: 11px; line-height: 14px; color: var(--secondary-label); font-variant-numeric: tabular-nums; }
+  .warn { display: flex; gap: 6px; align-items: center; font-size: 12px; line-height: 15px; color: var(--text-orange); }
+  .warn .sym { font-size: 16px; }
+  .use { font-size: 11px; line-height: 14px; color: var(--secondary-label); }
+  .meta-row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="desk">
+    <section class="win cam" aria-label="Xem trước camera">
+      <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><span class="title">Xem trước camera</span></div>
+      <div class="content">
+        <div class="video" role="img" aria-label="Hình từ camera trước của điện thoại">
+          <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle class="fig" cx="80" cy="38" r="16"/><rect class="fig" x="46" y="60" width="68" height="44" rx="28"/></svg>
+          <span class="live"><span class="dot"></span>Đang phát · Qua Wi-Fi</span>
+          <div class="bar">
+            <div class="seg mac" role="group" aria-label="Camera"><button type="button" aria-pressed="true">Trước</button><button type="button" aria-pressed="false">Sau</button></div>
+            <button class="ibtn on" type="button" aria-label="Micro điện thoại đang bật" aria-pressed="true" title="Tắt micro điện thoại"><span class="sym fill">mic</span></button>
+            <button class="ibtn" type="button" aria-label="Tạm dừng hình" aria-pressed="false" title="Tạm dừng hình"><span class="sym">videocam_off</span></button>
+            <button class="pop" type="button" aria-label="Chất lượng: Tự động">Tự động<span class="sym">unfold_more</span></button>
+            <span class="grow"></span>
+            <button class="stop" type="button">Dừng</button>
+          </div>
+        </div>
+        <div class="meta-row"><span class="stats">Camera trước · 1280×720 · 24 fps · 1,9 Mbps</span><span class="warn"><span class="sym">thermostat</span>Đang hạ chất lượng · Điện thoại nóng</span></div>
+        <span class="use">Có ứng dụng đang dùng HandLive Camera và HandLive Microphone</span>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

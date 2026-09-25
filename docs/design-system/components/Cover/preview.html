@@ -1,0 +1,56 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>HandLive Design System — cover</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap">
+<style>
+  body { margin: 0; background: var(--system-grouped-background); }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--system-grouped-background); }
+  .band { position: absolute; left: 0; top: 0; width: 960px; height: 112px; display: block; }
+  .fire { fill: var(--brand-fire); }
+  .leaf { fill: var(--accent); }
+  .ember { fill: var(--brand-ember); }
+  .flame { fill: var(--brand-flame); }
+  .slab { rx: var(--radius-sheet); }
+  .cv-pill { rx: 28px; }
+  .peak { fill: var(--system-grouped-background); }
+  .wave { fill: none; stroke: var(--system-grouped-background); stroke-width: var(--space-4); stroke-linecap: round; }
+  .text { position: absolute; left: var(--space-40); bottom: var(--space-32); }
+  .name { margin: 0; font-family: var(--font-brand); font-weight: 700; font-size: 64px; line-height: .95; letter-spacing: -.01em; color: var(--label); white-space: nowrap; }
+  .tag { margin: var(--space-8) 0 0; max-width: 440px; font-family: var(--font-system); font-size: 14px; line-height: 20px; color: var(--secondary-label); }
+</style>
+</head>
+<body>
+<div class="cover">
+  <!--
+    blocks: brand-fire 468×140, accent 184×116, brand-ember 168×140 (all radius-sheet, bleeding off the top), brand-flame 148×56 pill (rx 28, half the short side) bleeding off the right; brand-glow left out because it sits within a few percent of the light ground
+    arrangement: top-band strip of unequal slabs — the name (22 characters) is too wide for the 440px zone at 64px, so it sits beneath at 64px on one line
+    pattern: literal motif "Sơn Đầu Hỏa" — mountain skylines cut from the ground into the fire and ember slabs, a flame disc above each summit and two signal arcs facing each other across the green (Mộc) slab: beacon fires relaying a message, which is what HandLive does between devices
+    scales: gaps space-16, mountain radii space-40 / size-call-button (48) / space-32, flame r space-8, arc radii space-16 and space-24, stroke space-4, corners radius-sheet
+  -->
+  <svg class="band" viewBox="0 0 960 112" aria-hidden="true">
+    <rect class="fire slab" x="-28" y="-28" width="468" height="140"/>
+    <rect class="leaf slab" x="456" y="-28" width="184" height="116"/>
+    <rect class="ember slab" x="656" y="-28" width="168" height="140"/>
+    <rect class="flame cv-pill" x="840" y="24" width="148" height="56"/>
+    <circle class="peak" cx="120" cy="112" r="40"/>
+    <circle class="peak" cx="232" cy="112" r="48"/>
+    <circle class="peak" cx="336" cy="112" r="32"/>
+    <circle class="flame" cx="232" cy="44" r="8"/>
+    <path class="wave" d="M243.31 32.69 A16 16 0 0 1 243.31 55.31"/>
+    <path class="wave" d="M248.97 27.03 A24 24 0 0 1 248.97 60.97"/>
+    <circle class="peak" cx="740" cy="112" r="40"/>
+    <circle class="flame" cx="740" cy="52" r="8"/>
+    <path class="wave" d="M728.69 40.69 A16 16 0 0 0 728.69 63.31"/>
+    <path class="wave" d="M723.03 35.03 A24 24 0 0 0 723.03 68.97"/>
+  </svg>
+  <div class="text">
+    <h1 class="name">HandLive Design System</h1>
+    <p class="tag">Theo Apple HIG cho Mac, iPhone, iPad và Android.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Design system HandLive theo Apple HIG
 
-**Trạng thái:** Hoàn tất (artifact phiên bản 5; tài liệu chi tiết đã đồng bộ 25/09/2026) · **Ngày:** 24/09/2026 · **Kết quả:** artifact Design System https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (thay bản Material 3 + HIG trước đó)
+**Trạng thái:** Hoàn tất (artifact phiên bản 6; bản sao trong `docs/design-system/`; tài liệu chi tiết đã đồng bộ 25/09/2026) · **Ngày:** 24/09/2026 · **Kết quả:** artifact Design System https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (thay bản Material 3 + HIG trước đó)
 
 ## Quyết định của chủ dự án
 

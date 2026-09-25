@@ -50,8 +50,8 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Công tắc "Dùng điện thoại làm webcam" | bool | Input/Output | `feature.camera` (`false`) | Bật → chạy luồng cài đặt. Tắt → M-APP ngừng phục vụ nhu cầu camera/micro, không gỡ thành phần (gỡ ở trường 10) |
 | 2 | Trạng thái camera ảo | enum{not_installed\|awaiting_approval\|activating\|active\|needs_reboot\|failed} | Output | `not_installed` | "Chưa cài", "Chờ bạn cho phép", "Đang kích hoạt…", "Đã sẵn sàng", "Cần khởi động lại Mac", "Lỗi" |
 | 3 | Trạng thái micro ảo | enum{not_installed\|installing\|installed\|outdated\|failed} | Output | Theo kết quả dò thiết bị (bước 8) | "Chưa cài", "Đang cài…", "Đã sẵn sàng", "Cần cập nhật", "Lỗi" |
-| 4 | Quyền camera của HandLive trên Mac | enum{not_determined\|authorized\|denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` hiển thị kèm nút mở Cài đặt › Quyền riêng tư và bảo mật › Camera |
-| 5 | Hướng dẫn cho phép extension | string | Output | Theo phiên bản macOS | macOS 15+: "Cài đặt chung › Mục đăng nhập và tiện ích mở rộng › Tiện ích mở rộng camera → bật HandLive". macOS 13–14: "Quyền riêng tư và bảo mật → bấm Cho phép cạnh HandLive" |
+| 4 | Quyền camera của HandLive trên Mac | enum{not_determined\|authorized\|denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` hiển thị kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Camera |
+| 5 | Hướng dẫn cho phép extension | string | Output | Theo phiên bản macOS | macOS 15+: "Cài đặt chung › Mục đăng nhập và tiện ích mở rộng › Tiện ích mở rộng camera → bật HandLive". macOS 13–14: "Quyền riêng tư & Bảo mật → bấm Cho phép cạnh HandLive" |
 | 6 | Nút "Mở Cài đặt hệ thống" | action | Input | Hiện khi trường 2 = `awaiting_approval` | Mở System Settings tới trang tương ứng |
 | 7 | Nút "Cài driver micro" / "Cập nhật driver micro" | action | Input | Hiện khi trường 3 = `not_installed` hoặc `outdated` | Mở PKG (bước 9) |
 | 8 | Giải thích trước khi cài driver | string | Output | "HandLive cần cài driver micro ảo vào hệ thống. macOS sẽ hỏi mật khẩu quản trị và âm thanh trên Mac sẽ ngắt khoảng 1–2 giây." | Hiển thị trước khi mở Installer |

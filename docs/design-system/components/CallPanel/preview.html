@@ -1,0 +1,64 @@
+<!-- @dsCard group="Trình bày" height=440 subtitle="Cuộc gọi đến và đang gọi trên Mac — kính nổi kiểu Continuity" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>CallPanel — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .cp { width: 340px; max-width: 100%; padding: 14px; box-sizing: border-box; border-radius: var(--radius-panel); display: flex; flex-direction: column; gap: 12px; font-size: 13px; line-height: 16px; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .who .nm { font-size: 15px; line-height: 20px; font-weight: 600; }
+  .who .sub { font-size: 12px; line-height: 15px; color: var(--secondary-label); }
+  .who .grow { flex: 1; min-width: 0; }
+  .who .round { width: 40px; height: 40px; }
+  .who .round .sym { font-size: 21px; }
+  .links { display: flex; justify-content: space-between; border-top: 1px solid var(--separator); margin: 0 -14px -4px; padding: 6px 8px 0; }
+  .ctrls { display: flex; justify-content: space-between; align-items: flex-end; }
+  .grp { display: flex; gap: 14px; }
+  .ctrls .round { width: 40px; height: 40px; }
+  .ctrls .round .sym { font-size: 20px; }
+  .hint { display: flex; gap: 6px; font-size: 12px; line-height: 15px; color: var(--secondary-label); }
+  .hint .sym { font-size: 15px; }
+  .timer { font-size: 12px; line-height: 15px; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="desk" style="display:flex; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+    <div class="hl-col">
+      <span class="hl-cap">Cuộc gọi đến</span>
+      <section class="cp glass" role="dialog" aria-label="Cuộc gọi đến từ Nguyễn Văn A, SIM 1">
+        <div class="who"><span class="av">NA</span><div class="grow"><div class="nm">Nguyễn Văn A</div><div class="sub">Cuộc gọi đến · SIM 1</div></div>
+          <button class="round decline" type="button" aria-label="Từ chối" title="Từ chối"><span class="sym fill">call_end</span></button>
+          <button class="round accept" type="button" aria-label="Trả lời" title="Trả lời"><span class="sym fill">call</span></button></div>
+        <div class="links"><button class="btn s-mac plain" type="button">Từ chối kèm tin nhắn…</button><button class="btn s-mac plain" type="button">Bỏ qua</button></div>
+      </section>
+      <span class="hl-cap" style="margin-top:6px">Đang gọi, chưa nối Bluetooth</span>
+      <section class="cp glass" role="dialog" aria-label="Đang gọi với Nguyễn Văn A">
+        <div class="who"><span class="av">NA</span><div class="grow"><div class="nm">Nguyễn Văn A</div><div class="sub">Đang gọi · <span class="timer">02:15</span> · Âm thanh: Điện thoại</div></div>
+          <button class="round decline" type="button" aria-label="Kết thúc" title="Kết thúc"><span class="sym fill">call_end</span></button></div>
+        <div class="ctrls"><button class="btn s-mac glass" type="button"><span class="sym">laptop_mac</span>Nghe trên Mac</button></div>
+        <div class="hint"><span class="sym">info</span>Nối Bluetooth với điện thoại để giữ máy, bấm số, tắt tiếng</div>
+      </section>
+    </div>
+    <div class="hl-col">
+      <span class="hl-cap">Đang gọi qua Bluetooth</span>
+      <section class="cp glass" role="dialog" aria-label="Đang gọi với Nguyễn Văn A qua Bluetooth">
+        <div class="who"><span class="av">NA</span><div class="grow"><div class="nm">Nguyễn Văn A</div><div class="sub">Đang gọi · <span class="timer">12:48</span> · Âm thanh: Mac</div></div></div>
+        <div class="ctrls">
+          <div class="grp">
+            <div class="round-l"><button class="round neutral on" type="button" aria-label="Tắt tiếng" aria-pressed="true" title="Tắt tiếng micro trên Mac"><span class="sym fill">mic_off</span></button>Tắt tiếng</div>
+            <div class="round-l"><button class="round neutral" type="button" aria-label="Giữ máy" title="Giữ máy"><span class="sym fill">pause</span></button>Giữ máy</div>
+            <div class="round-l"><button class="round neutral" type="button" aria-label="Bàn phím" title="Mở bàn phím số"><span class="sym">dialpad</span></button>Bàn phím</div>
+          </div>
+          <div class="round-l"><button class="round decline" type="button" aria-label="Kết thúc" title="Kết thúc"><span class="sym fill">call_end</span></button>Kết thúc</div>
+        </div>
+        <div class="links"><button class="btn s-mac plain" type="button"><span class="sym">smartphone</span>Chuyển về điện thoại</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

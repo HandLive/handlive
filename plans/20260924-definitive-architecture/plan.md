@@ -60,18 +60,18 @@ Fallback khi BT HFP không khả dụng:
 
 | Module | API/Thư viện | Chức năng |
 |--------|-------------|-----------|
-| `clipboard-monitor` | `ClipboardManager.OnPrimaryClipChangedListener` | Detect clipboard change, gửi qua WebSocket. Foreground service với persistent notification |
-| `sms-bridge` | `BroadcastReceiver` (`SMS_RECEIVED`), `ContentResolver` (`Telephony.Sms`), `SmsManager` | Nhận/gửi SMS, đọc history |
-| `call-controller` | `TelecomManager`, `InCallService` (Android 10+) | Answer, reject, hold, DTMF. Gửi call metadata qua WebSocket |
-| `audio-capture` | `AudioRecord` (SCO source), `MediaCodec` (Opus encoder) | Capture call audio từ SCO, encode Opus cho WebSocket fallback |
-| `bt-hfp-manager` | `BluetoothAdapter`, `BluetoothHeadsetClient` (@SystemApi qua Shizuku) | Quản lý HFP AG role, mở SCO link |
+| `clipboard-monitor` | `ClipboardAccessibilityService` nhận biết thao tác Sao chép → `ClipboardReadActivity` trong suốt đọc `getPrimaryClip` (D4/D12, C15, C17); đường thủ công: nút trên thông báo, ô Cài đặt nhanh, Chia sẻ | Detect clipboard change, gửi qua WebSocket. Foreground service với persistent notification |
+| `sms-bridge` | `ContentObserver` trên `Telephony.Sms` (không `RECEIVE_SMS` — C18), `ContentResolver`, `SmsManager` | Nhận/gửi SMS, đọc history |
+| `call-controller` | `TelephonyCallback`/`PhoneStateListener`, `TelecomManager.acceptRingingCall`/`endCall` (API công khai — D9, không `InCallService`) | Answer, reject, end qua WebSocket; hold, DTMF, mute chỉ qua HFP (Phase 4). Gửi call metadata qua WebSocket |
+| `audio-capture` | `AudioRecord` (`VOICE_CALL`/`VOICE_DOWNLINK`) chạy dưới uid shell qua Shizuku, libopus JNI; chỉ Android 11+ và một số máy (D10, C13) | Capture call audio cho đường Opus/WS dự phòng |
+| `bt-hfp-manager` | `BluetoothHeadset` proxy và broadcast (API công khai) để theo dõi trạng thái HFP/SCO; vai trò AG do stack Bluetooth chuẩn của Android đảm nhiệm (C13) | Báo `hfp_status`, so khớp Mac theo địa chỉ Bluetooth |
 | `ws-server` | Ktor 3.x WebSocket server | Serve tất cả data channels. mDNS via `NsdManager` |
 | `crypto` | Tink 1.14+ (`XChaCha20Poly1305`, `X25519`) | E2E encryption mọi payload |
 | `capability-negotiator` | Custom protocol handler | Trao đổi feature set khi kết nối, version negotiation |
 
 **Foreground Service:** Chạy dạng `FOREGROUND_SERVICE_CONNECTED_DEVICE` (Android 14+). Notification hiển thị trạng thái kết nối.
 
-**Clipboard background access (Android 10+):** Foreground-only là mặc định. Power users có thể dùng Shizuku (`INTERACT_ACROSS_USERS_FULL` grant) hoặc Accessibility Service (backup, UX kém hơn). MVP: chỉ foreground.
+**Clipboard background access (Android 10+):** mặc định là Accessibility Service phát hiện thao tác Sao chép rồi mở `ClipboardReadActivity` trong suốt để đọc (D4/D12, C15, C17), có công bố và xin đồng ý; dự phòng là gửi thủ công. Chi tiết: `docs/detailed-design/04-clipboard.md` CLIP-01.
 
 ### 3.2 macOS App (Swift 6, AppKit, macOS 13+)
 
@@ -80,7 +80,7 @@ Fallback khi BT HFP không khả dụng:
 | `ws-client` | `URLSessionWebSocketTask`, `NWBrowser` (Bonjour) | Kết nối WebSocket tới Android, auto-discovery LAN |
 | `bt-hfp-client` | `IOBluetoothHandsFreeDevice`, `IOBluetoothDevice` | HFP HF role, nhận SCO audio |
 | `audio-engine` | `AUVoiceProcessingIO`, `AVAudioEngine` | Echo cancellation, mic capture, speaker output. Opus decode cho WS fallback |
-| `call-ui` | Custom `NSPanel` (level `.floating`, `styleMask: [.titled, .closable]`) | Floating call panel: caller ID, accept/reject, mute, dialpad |
+| `call-ui` | `NSPanel` non-activating (level `.floating`, mọi Space) kèm thông báo liên lạc `INStartCallIntent`; theo design system `CallPanel` | Floating call panel: caller ID, accept/reject; mute, hold, dialpad qua HFP |
 | `clipboard-sync` | `NSPasteboard.general`, polling `changeCount` mỗi 500ms | Bidirectional sync |
 | `sms-ui` | SwiftUI `NSWindow` | Chat-style SMS view, reply |
 | `notification-center` | `UNUserNotificationCenter` | Native macOS notifications cho incoming call, SMS |
@@ -237,12 +237,12 @@ Call audio relay giữa devices CỦA CÙNG MỘT USER (tương tự Microsoft P
 
 ```
 Cuộc gọi đến
-  → Android InCallService detect CALL_STATE_RINGING
+  → Android TelephonyCallback detect CALL_STATE_RINGING
   → Gửi call_event {type: "incoming", number: "+84...", name: "..."} qua WebSocket
   → macOS hiển thị NSPanel floating notification
   → User nhấn Accept trên macOS
   → macOS gửi call_event {type: "answer"} qua WebSocket
-  → Android InCallService.answer()
+  → Android TelecomManager.acceptRingingCall()
   → Android route audio sang BT SCO (BluetoothHeadsetClient.connectAudio())
   → SCO bidirectional: Android mic ↔ macOS speaker, macOS mic ↔ Android earpiece
   → macOS AUVoiceProcessingIO xử lý echo cancellation
@@ -324,7 +324,7 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 ### Phase 3: Call Metadata + Control
 **Mục tiêu:** Nhận/quản lý cuộc gọi từ macOS  
 **Deliverables:**
-- Android `InCallService` integration
+- Android Telecom public API integration (D9: không `InCallService`)
 - macOS floating call panel (`NSPanel`)
 - Answer/reject/hold/DTMF từ macOS
 - Call history sync
@@ -340,8 +340,8 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 - Opus/WebSocket fallback khi HFP unavailable
 - Adaptive jitter buffer
 - HFP conflict detection + automatic fallback
-- App-level E2E encryption cho audio (bắt buộc)
-- Dual-layer encryption verification tests
+- Đường HFP dựa vào mã hóa liên kết Bluetooth (D11, C14); đường Opus/WS mã hóa hai lớp (TLS + E2E) kèm test
+- Công bố rủi ro KNOB/BIAS trong AUDIO-01
 
 **Kết quả đo được:** Call audio MOS score >=3.5 (BT), >=3.0 (WebSocket). Echo cancellation: echo return loss >40dB.
 
@@ -548,7 +548,7 @@ Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên U
 |-------|-------|---------|-------|-----|--------|------|------|
 | **P1: Clipboard** | WS + mDNS + QR pair + crypto + clipboard | 1.5 pm | 1.5 pm | — | — | 0.5 pm | **3.5 pm** |
 | **P2: SMS** | SMS bridge + chat UI + cloud relay + push | 1 pm | 0.5 pm | 1 pm | 1 pm | 0.5 pm | **4 pm** |
-| **P3: Call Meta** | InCallService + call panel + control | 1 pm | 1 pm | 0.5 pm | — | 0.5 pm | **3 pm** |
+| **P3: Call Meta** | Telecom public API + call panel + control | 1 pm | 1 pm | 0.5 pm | — | 0.5 pm | **3 pm** |
 | **P4: Call Audio** | HFP + SCO + Opus fallback + AEC | 2 pm | 2 pm | — | 0.5 pm | 1.5 pm | **6 pm** |
 | **P5: Camera/Mic** | Camera2 + MediaCodec + CMIOExtension + AudioServerPlugin | 2 pm | 2.5 pm | — | — | 1 pm | **5.5 pm** |
 | **Tổng** | | **7.5 pm** | **7.5 pm** | **1.5 pm** | **1.5 pm** | **4 pm** | **22 pm** |

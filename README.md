@@ -31,7 +31,7 @@ Chi tiết đầy đủ: [`docs/system-architecture.md`](docs/system-architectur
 
 1. **Clipboard sync** (MVP) — Android ↔ macOS qua WebSocket LAN
 2. **SMS bridge** — + app iOS + cloud relay + push
-3. **Call metadata + control** — `InCallService` + floating call panel
+3. **Call metadata + control** — API Telecom công khai (không `InCallService`, D9) + floating call panel
 4. **Call audio relay** — HFP/SCO + Opus fallback + echo cancellation
 5. **Camera/mic virtual devices** — CMIOExtension + AudioServerPlugin
 

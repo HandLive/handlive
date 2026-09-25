@@ -1,0 +1,32 @@
+<!-- @dsCard group="Chọn và nhập" height=150 subtitle="Camera Trước/Sau trên Mac; lọc hội thoại trên iOS và Android" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>SegmentedControl — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  .box { padding: var(--space-16); border-radius: var(--radius-card); border: 1px solid var(--separator); display: flex; align-items: center; gap: var(--space-12); }
+  .box.mac { background: var(--window-background); }
+  .box.touch { background: var(--system-background); width: 250px; max-width: 100%; box-sizing: border-box; }
+  .box.touch .seg { width: 100%; }
+  .box.touch .seg button { flex: 1; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · Xem trước camera</span>
+    <div class="box mac"><span>Camera:</span><div class="seg mac" role="group" aria-label="Camera"><button type="button" aria-pressed="true">Trước</button><button type="button" aria-pressed="false">Sau</button></div></div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS · Tin nhắn</span>
+    <div class="box touch"><div class="seg touch" role="group" aria-label="Lọc hội thoại"><button type="button" aria-pressed="true">Tất cả</button><button type="button" aria-pressed="false">Chưa đọc</button></div></div>
+  </div>
+  <div class="hl-col android">
+    <span class="hl-cap">Android · Thiết bị</span>
+    <div class="box touch"><div class="seg touch" role="group" aria-label="Lọc thiết bị"><button type="button" aria-pressed="false">Đang kết nối</button><button type="button" aria-pressed="true">Tất cả</button></div></div>
+  </div>
+</div>
+</body>
+</html>

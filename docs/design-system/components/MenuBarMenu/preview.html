@@ -1,0 +1,66 @@
+<!-- @dsCard group="Nút và menu" height=560 subtitle="Menu của biểu tượng HandLive trên thanh menu Mac, kèm các trạng thái của biểu tượng" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>MenuBarMenu — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .screen { width: 420px; max-width: 100%; }
+  .menubar { height: var(--size-menu-bar); display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 0 12px; font-size: 13px; border-radius: 8px 8px 0 0; }
+  .menubar .sym { font-size: 16px; }
+  .mb-item { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 5px; font-weight: 500; }
+  .mb-item.open { background: var(--tertiary-system-fill); }
+  .drop { display: flex; justify-content: flex-end; padding: 6px 60px 12px 12px; }
+  .menu { width: 290px; }
+  .mi .status { font-size: 13px; }
+  .mi.status-row .sym { color: var(--status-connected); }
+  .mi .sub { margin-left: auto; color: var(--secondary-label); }
+  .states { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; font-size: 12px; line-height: 16px; color: var(--secondary-label); }
+  .states .sym { font-size: 17px; color: var(--label); }
+  .states .ico { display: inline-flex; align-items: center; gap: 3px; color: var(--label); font-weight: 600; }
+  .dimsym { opacity: .45; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="desk screen" style="padding: 0; overflow: hidden">
+    <div class="menubar glass"><span class="sym">wifi</span><span class="sym">battery_full</span><span class="mb-item open" aria-label="HandLive, 2 hội thoại chưa đọc"><span class="sym">cell_tower</span>2</span><span>Th 5 24 thg 9 14:05</span></div>
+    <div class="drop">
+      <div class="menu glass" role="menu" aria-label="HandLive">
+        <div class="mh">Pixel 8 của Lan</div>
+        <div class="mi status-row" role="menuitem" aria-disabled="true"><span class="sym fill">wifi</span><span>Đã kết nối qua Wi-Fi</span></div>
+        <div class="msep"></div>
+        <div class="mi sel" role="menuitem"><span class="sym">content_paste</span><span>Gửi bảng nhớ tạm sang điện thoại</span></div>
+        <div class="mi" role="menuitem"><span class="sym">chat_bubble</span><span>Tin nhắn</span><span class="sub">2 chưa đọc</span></div>
+        <div class="mi" role="menuitem"><span class="sym">videocam</span><span>Xem trước camera</span></div>
+        <div class="msep"></div>
+        <div class="mh">Camera · Đang phát qua Wi-Fi</div>
+        <div class="mi" role="menuitemcheckbox" aria-checked="true"><span class="check">✓</span><span>Micro điện thoại</span></div>
+        <div class="mi" role="menuitemcheckbox" aria-checked="false"><span class="check"></span><span>Tạm dừng hình</span></div>
+        <div class="mi" role="menuitem"><span class="check"></span><span>Chất lượng</span><span class="sub">Tự động</span><span class="sym" style="width:auto">chevron_right</span></div>
+        <div class="mi" role="menuitem"><span class="check"></span><span>Dừng camera</span></div>
+        <div class="msep"></div>
+        <div class="mh">Gần đây</div>
+        <div class="mi" role="menuitem"><span class="sym">phone_missed</span><span>Cuộc gọi nhỡ · Nguyễn Văn A</span><span class="sub">14:01</span></div>
+        <div class="msep"></div>
+        <div class="mi" role="menuitem"><span>Cài đặt…</span><span class="k">⌘,</span></div>
+        <div class="mi" role="menuitem"><span>Thoát HandLive</span><span class="k">⌘Q</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">Biểu tượng trên thanh menu</span>
+    <div class="states">
+      <span class="ico"><span class="sym">cell_tower</span></span><span>Đã kết nối</span>
+      <span class="ico dimsym"><span class="sym">cell_tower</span></span><span>Đang kết nối</span>
+      <span class="ico"><span class="sym">signal_disconnected</span></span><span>Ngoại tuyến</span>
+      <span class="ico"><span class="sym fill">call</span></span><span>Có cuộc gọi đến</span>
+      <span class="ico"><span class="sym">cell_tower</span>2</span><span>2 hội thoại chưa đọc</span>
+    </div>
+    <p class="hl-note">Preview dùng biểu tượng thay thế; app dùng SF Symbol trong bảng của README.</p>
+  </div>
+</div>
+</body>
+</html>

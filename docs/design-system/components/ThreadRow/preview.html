@@ -1,0 +1,55 @@
+<!-- @dsCard group="Bố cục và tổ chức" height=330 subtitle="Danh sách hội thoại: sidebar Mac và danh sách iPhone" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>ThreadRow — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .side { width: 300px; max-width: 100%; padding: 8px; box-sizing: border-box; border-radius: var(--radius-panel); display: flex; flex-direction: column; gap: 2px; }
+  .tr { display: grid; grid-template-columns: 10px auto 1fr auto; gap: 0 8px; align-items: start; padding: 8px 10px 8px 4px; border-radius: 10px; }
+  .tr .u { grid-column: 1; grid-row: 1 / 3; width: 10px; height: 10px; border-radius: var(--radius-capsule); margin-top: 11px; }
+  .tr.unread .u { background: var(--unread); }
+  .tr .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr .tm { color: var(--secondary-label); white-space: nowrap; display: flex; align-items: center; gap: 2px; }
+  .tr .tx { grid-column: 3 / 5; color: var(--secondary-label); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tr .fail { color: var(--destructive-text); display: flex; gap: 4px; align-items: center; }
+  .tr .av { grid-column: 2; grid-row: 1 / 3; }
+  .tr .nm { grid-column: 3; } .tr .tm { grid-column: 4; }
+  .list-mac .tr { font-size: 13px; line-height: 16px; }
+  .list-mac .tr .tx, .list-mac .tr .tm { font-size: 11px; line-height: 14px; }
+  .list-mac .tr .fail .sym { font-size: 14px; }
+  .tr.sel { background: var(--accent-fill); color: var(--on-accent); }
+  .tr.sel .tm, .tr.sel .tx { color: var(--on-accent); }
+  .list-ios { width: 320px; max-width: 100%; background: var(--system-background); border-radius: var(--radius-card); border: 1px solid var(--separator); padding: 4px 0; }
+  .list-ios .tr { font-size: 17px; line-height: 22px; padding: 10px 12px 10px 6px; border-radius: 0; position: relative; }
+  .list-ios .tr + .tr::before { content: ""; position: absolute; top: 0; left: 70px; right: 0; border-top: 1px solid var(--separator); }
+  .list-ios .tr .tx, .list-ios .tr .tm { font-size: 15px; line-height: 20px; }
+  .list-ios .tr .tm .sym { font-size: 18px; color: var(--tertiary-label); }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · Tin nhắn (sidebar)</span>
+    <div class="desk" style="padding: 12px">
+      <nav class="side glass list-mac" aria-label="Hội thoại">
+        <div class="tr unread"><span class="u"></span><span class="av sm">TB</span><span class="nm">Trần Thị B</span><span class="tm">14:05</span><span class="tx">Mai họp lúc 9 giờ nhé, anh nhớ mang theo bản in hợp đồng</span></div>
+        <div class="tr sel" aria-current="true"><span class="u"></span><span class="av sm">NA</span><span class="nm">Nguyễn Văn A</span><span class="tm">14:01</span><span class="tx">Được, khoảng 3 giờ nhé</span></div>
+        <div class="tr"><span class="u"></span><span class="av sm"><span class="sym fill" style="font-size:20px">person</span></span><span class="nm">090 000 0123</span><span class="tm">Hôm qua</span><span class="tx fail"><span class="sym fill">error</span>Gửi lỗi</span></div>
+        <div class="tr"><span class="u"></span><span class="av sm"><span class="sym fill" style="font-size:18px">group</span></span><span class="nm">Lan, Minh, Hà</span><span class="tm">12/09</span><span class="tx">Tối nay 7 giờ ở chỗ cũ nhé</span></div>
+      </nav>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS · Tin nhắn</span>
+    <div class="list-ios" role="list">
+      <div class="tr unread" role="listitem"><span class="u"></span><span class="av">TB</span><span class="nm">Trần Thị B</span><span class="tm">14:05<span class="sym">chevron_right</span></span><span class="tx">Mai họp lúc 9 giờ nhé, anh nhớ mang theo bản in hợp đồng</span></div>
+      <div class="tr" role="listitem"><span class="u"></span><span class="av">NA</span><span class="nm">Nguyễn Văn A</span><span class="tm">14:01<span class="sym">chevron_right</span></span><span class="tx">Được, khoảng 3 giờ nhé</span></div>
+      <div class="tr" role="listitem"><span class="u"></span><span class="av"><span class="sym fill" style="font-size:24px">person</span></span><span class="nm">090 000 0123</span><span class="tm">Hôm qua<span class="sym">chevron_right</span></span><span class="tx fail"><span class="sym fill" style="font-size:18px">error</span>Gửi lỗi</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

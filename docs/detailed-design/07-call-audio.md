@@ -36,7 +36,7 @@ N/A — chưa có wireframe được duyệt.
 | 2 | Nội dung công bố | string | Output | Văn bản bản `call-audio-v1` | Nêu: chỉ giữa thiết bị của bạn; không ghi âm; bạn chịu trách nhiệm báo bên kia ở nơi luật đòi hai bên đồng ý (California, Florida, Illinois…); HFP chỉ có mã hóa liên kết Bluetooth (rủi ro KNOB/BIAS còn lại); Wi-Fi mã hóa đầu cuối |
 | 3 | Chấp thuận công bố | enum{Đồng ý\|Hủy} | Input | — | "Đồng ý" mới bật tính năng |
 | 4 | Phiên bản văn bản công bố | string | Output | `call-audio-v1` | Ghi vào `consent_record.text_version` |
-| 5 | Quyền Bluetooth của Mac | enum{not_determined\|authorized\|denied} | Output | Theo `CBManager.authorization` | `denied` kèm nút mở Cài đặt › Quyền riêng tư và bảo mật › Bluetooth |
+| 5 | Quyền Bluetooth của Mac | enum{not_determined\|authorized\|denied} | Output | Theo `CBManager.authorization` | `denied` kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Bluetooth |
 | 6 | Danh sách điện thoại đã ghép (HFP AG) | array<object{name, bt_address}> | Output | Từ IOBluetooth (bước 7) | Chỉ liệt kê thiết bị đã ghép ở tầng hệ điều hành công bố hồ sơ HFP AG |
 | 7 | Điện thoại chọn cho HFP | string (bt_address) | Input/Output | `call_audio.phone_bt_address` (rỗng) | Người dùng chọn; lưu để Android nhận ra Mac và để M-HFP kết nối đúng máy |
 | 8 | Bật đường Opus/WS dự phòng | bool | Input/Output | `call_audio.allow_opus_fallback` (`true`) | Cho phép dùng Opus/WS khi HFP không dùng được (cần Shizuku) |
@@ -163,7 +163,7 @@ flowchart TB
 
 - **URL:** N/A
 - **Method:** `CBManager.authorization` (đọc), khởi tạo `CBCentralManager` để kích hoạt hộp thoại TCC; `Info.plist` có `NSBluetoothAlwaysUsageDescription`. Micro: `AVCaptureDevice.authorizationStatus(for: .audio)`, `requestAccess(for: .audio)`; `Info.plist` có `NSMicrophoneUsageDescription` ("HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại."). Micro bị từ chối → tính năng vẫn bật nhưng chỉ nghe, không nói (AUDIO-02 E7, AUDIO-04 điều kiện 6); hướng dẫn Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Micrô.
-- **Request:** không tham số; chuỗi mô tả quyền = "HandLive dùng Bluetooth để nhận âm thanh cuộc gọi từ điện thoại của bạn."
+- **Request:** không tham số; chuỗi mô tả quyền = "HandLive kết nối Bluetooth với điện thoại của bạn để nghe và nói cuộc gọi trên Mac."
 - **Response:** `CBManagerAuthorization` = `.notDetermined` \| `.allowedAlways` \| `.denied` \| `.restricted`.
 - **Ví dụ:** lần đầu → hộp thoại hệ thống → `.allowedAlways` → trường 5 = `authorized`.
 - **Logic nghiệp vụ:**

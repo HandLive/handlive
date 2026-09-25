@@ -1,0 +1,49 @@
+<!-- @dsCard group="Trình bày" height=360 subtitle="Xác nhận Hủy ghép nối: alert trên Mac, hộp chọn hành động trên iPhone" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Alert — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  .stage-mac { position: relative; width: 380px; max-width: 100%; height: 300px; border-radius: var(--radius-card); overflow: hidden; background: var(--window-background); border: 1px solid var(--separator); display: grid; place-items: center; }
+  .stage-mac .alert { position: relative; }
+  .alert.mac .acts { flex-direction: row; }
+  .alert .appmark { width: 56px; height: 56px; border-radius: 13px; }
+  .stage-ios { position: relative; width: 300px; max-width: 100%; height: 300px; border-radius: var(--radius-card); overflow: hidden; background: var(--system-grouped-background); border: 1px solid var(--separator); display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; box-sizing: border-box; gap: 8px; }
+  .sheet-grp { position: relative; border-radius: var(--radius-sheet); overflow: hidden; }
+  .sheet-grp .hd { padding: 14px 16px 12px; text-align: center; font-size: 13px; line-height: 18px; color: var(--secondary-label); }
+  .sheet-grp .hd b { display: block; color: var(--label); font-size: 13px; }
+  .sheet-grp .it { display: block; width: 100%; font: inherit; font-size: 17px; line-height: 22px; padding: 16px; border: none; background: transparent; border-top: 1px solid var(--separator); cursor: pointer; }
+  .sheet-grp .it.danger { color: var(--destructive-text); }
+  .sheet-grp .it.cancel { font-weight: 600; color: var(--accent); border-top: none; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · Cài đặt › Thiết bị</span>
+    <div class="stage-mac">
+      <div class="scrim"></div>
+      <div class="alert mac glass" role="alertdialog" aria-labelledby="t1">
+        <span class="appmark" aria-hidden="true"></span>
+        <h3 id="t1">Hủy ghép nối với Pixel 8 của Lan?</h3>
+        <p>Hai máy sẽ ngừng đồng bộ ngay. Muốn dùng lại, bạn cần quét mã QR mới.</p>
+        <div class="acts"><button class="btn s-mac glass" type="button">Hủy</button><button class="btn s-mac prominent" type="button">Hủy ghép nối</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS · hộp chọn hành động</span>
+    <div class="stage-ios">
+      <div class="scrim"></div>
+      <div class="sheet-grp glass" role="dialog" aria-labelledby="t2">
+        <div class="hd" id="t2"><b>Hủy ghép nối với Pixel 8 của Lan?</b>Muốn dùng lại, bạn cần quét mã QR mới.</div>
+        <button class="it danger" type="button">Hủy ghép nối</button>
+      </div>
+      <div class="sheet-grp glass"><button class="it cancel" type="button">Hủy</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

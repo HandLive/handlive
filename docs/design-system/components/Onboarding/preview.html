@@ -1,0 +1,74 @@
+<!-- @dsCard group="Trình bày" height=620 subtitle="Màn chào trên iPhone và cửa sổ chào trên Mac" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Onboarding — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .dev { height: 580px; background: var(--system-background); }
+  .welcome { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 28px 24px 12px; }
+  .welcome h1 { margin: 0 0 22px; text-align: center; }
+  .welcome h1 em { font-style: normal; color: var(--brand-fire); }
+  .feats { display: flex; flex-direction: column; gap: 18px; }
+  .ft { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+  .ft .sym { font-size: 32px; color: var(--brand-fire); justify-self: center; }
+  .ft b { display: block; font-size: 15px; line-height: 20px; }
+  .ft span.d { font-size: 15px; line-height: 20px; color: var(--secondary-label); }
+  .foot { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .foot .btn.plain { font-size: 13px; }
+  .win.hello { width: 460px; max-width: 100%; }
+  .win.hello .welcome { padding: 8px 40px 24px; gap: 20px; }
+  .win.hello h1 { font-size: 28px; line-height: 34px; margin-bottom: 4px; }
+  .win.hello .ft b, .win.hello .ft span.d { font-size: 13px; line-height: 17px; }
+  .win.hello .ft .sym { font-size: 28px; }
+  .win.hello .foot { flex-direction: row; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">iOS</span>
+    <div class="dev brand-glow-bg">
+      <div class="sb"><span>9:41</span><span><span class="sym">signal_cellular_alt</span> <span class="sym">battery_full</span></span></div>
+      <div class="welcome">
+        <div>
+          <h1 class="brand-large-title" style="font-size:30px;line-height:37px">Chào mừng đến với <em>HandLive</em></h1>
+          <div class="feats">
+            <div class="ft"><span class="sym">content_paste</span><span><b>Bảng nhớ tạm chung</b><span class="d">Sao chép trên điện thoại, dán trên iPhone và ngược lại.</span></span></div>
+            <div class="ft"><span class="sym">chat_bubble</span><span><b>Tin nhắn SMS</b><span class="d">Đọc và trả lời tin của điện thoại Android ngay trên iPhone.</span></span></div>
+            <div class="ft"><span class="sym">call</span><span><b>Biết ai đang gọi</b><span class="d">Thông báo cuộc gọi đến và từ chối nhanh.</span></span></div>
+            <div class="ft"><span class="sym">lock</span><span><b>Riêng tư từ đầu</b><span class="d">Mọi thứ được mã hóa giữa các thiết bị của bạn.</span></span></div>
+          </div>
+        </div>
+        <div class="foot">
+          <button class="btn s-touch prominent block" type="button">Bắt đầu</button>
+          <button class="btn plain" type="button">HandLive và quyền riêng tư của bạn</button>
+        </div>
+      </div>
+      <div class="home"></div>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">macOS · cửa sổ chào</span>
+    <div class="desk">
+      <div class="win hello brand-glow-bg" style="background-color: var(--window-background)">
+        <div class="win-bar"><span class="lights dim"><i></i><i></i><i></i></span></div>
+        <div class="welcome">
+          <h1 class="brand-large-title">Chào mừng đến với <em>HandLive</em></h1>
+          <div class="feats">
+            <div class="ft"><span class="sym">content_paste</span><span><b>Bảng nhớ tạm chung</b><span class="d">Sao chép trên điện thoại, dán trên Mac và ngược lại.</span></span></div>
+            <div class="ft"><span class="sym">call</span><span><b>Tin nhắn và cuộc gọi</b><span class="d">Trả lời SMS, nghe máy ngay trên Mac.</span></span></div>
+            <div class="ft"><span class="sym">videocam</span><span><b>Điện thoại làm webcam</b><span class="d">Dùng camera điện thoại cho cuộc họp.</span></span></div>
+            <div class="ft"><span class="sym">lock</span><span><b>Riêng tư từ đầu</b><span class="d">Mã hóa đầu-cuối, không tắt được.</span></span></div>
+          </div>
+          <div class="foot"><button class="btn plain s-mac" type="button">Quyền riêng tư của bạn</button><button class="btn s-mac-lg prominent" type="button">Bắt đầu</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

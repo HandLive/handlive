@@ -1,0 +1,43 @@
+<!-- @dsCard group="Trình bày" height=500 subtitle="Công bố Nghe gọi trên Mac: sheet có hai lựa chọn" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>ConsentSheet — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .host { position: relative; width: 520px; max-width: 100%; padding: 24px 0 24px; border-radius: var(--radius-card); background: var(--window-background); border: 1px solid var(--separator); display: flex; justify-content: center; overflow: hidden; }
+  .sheet { position: relative; width: 460px; max-width: calc(100% - 24px); border-radius: var(--radius-sheet); padding: 24px 28px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; }
+  .sheet h2 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 700; text-align: center; }
+  .sheet .lead { margin: 0; text-align: center; color: var(--secondary-label); font-size: 13px; line-height: 17px; }
+  .pts { display: flex; flex-direction: column; gap: 12px; margin: 4px 0; }
+  .pt { display: grid; grid-template-columns: 28px 1fr; gap: 10px; font-size: 13px; line-height: 17px; }
+  .pt .sym { font-size: 22px; color: var(--accent); }
+  .pt b { display: block; }
+  .pt span.d { color: var(--secondary-label); }
+  .acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · Cài đặt › Cuộc gọi</span>
+    <div class="host">
+      <div class="scrim"></div>
+      <section class="sheet glass" role="dialog" aria-labelledby="t">
+        <h2 id="t">Nghe gọi trên Mac</h2>
+        <p class="lead">Nghe và nói cuộc gọi của điện thoại ngay trên Mac.</p>
+        <div class="pts">
+          <div class="pt"><span class="sym">devices</span><span><b>Chỉ giữa các thiết bị của bạn</b><span class="d">Âm thanh đi thẳng từ điện thoại sang Mac, không qua người khác.</span></span></div>
+          <div class="pt"><span class="sym">mic_off</span><span><b>Không ghi âm</b><span class="d">HandLive không ghi, không lưu và không gửi âm thanh đi nơi khác.</span></span></div>
+          <div class="pt"><span class="sym">gavel</span><span><b>Bạn báo cho người bên kia khi luật yêu cầu</b><span class="d">Ở nơi luật đòi hai bên cùng đồng ý (California, Florida, Illinois…).</span></span></div>
+          <div class="pt"><span class="sym">lock</span><span><b>Mã hóa theo đường truyền</b><span class="d">Qua Wi-Fi: mã hóa đầu-cuối. Qua Bluetooth: chỉ có mã hóa của Bluetooth, vẫn còn rủi ro với máy đời cũ.</span></span></div>
+        </div>
+        <div class="acts"><button class="btn s-mac-lg glass" type="button">Hủy</button><button class="btn s-mac-lg prominent" type="button">Đồng ý</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -41,7 +41,7 @@ N/A — chưa có wireframe được duyệt.
 | 8 | Nút "Từ chối kèm tin nhắn" | action | Input | Ẩn | Chỉ Mac; khi `controls.reject = true`, `number` khác `null`, SMS hiệu lực và `features.sms.can_send = true` → CALL-02 |
 | 9 | Nút "Bỏ qua" | action | Input | — | Chỉ Mac: đóng panel và tắt chuông trên Mac; cuộc gọi vẫn đổ chuông trên điện thoại, vẫn nằm trong menu của biểu tượng menu bar |
 | 10 | Chuông trên Mac | âm thanh | Output | Tắt | Phát lặp khi panel hiện, `call.notify = true`, `call.ringtone = true` và Focus không bật; dừng khi `state` đổi, khi bấm trường 6, 7, 8, 9, hoặc sau 60 s |
-| 11 | Thông báo iOS | string | Output | Tiêu đề "HandLive", nội dung "Cuộc gọi đến trên điện thoại" | I-NSE thay tiêu đề bằng trường 2 (hoặc 3), nội dung "Cuộc gọi đến" kèm nhãn SIM; gắn nút "Từ chối" |
+| 11 | Thông báo iOS | string | Output | Không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" | I-NSE thay tiêu đề bằng trường 2 (hoặc 3), nội dung "Cuộc gọi đến" kèm nhãn SIM; gắn nút "Từ chối" |
 | 12 | Gợi ý cấp quyền | string | Output | Ẩn | "Cho phép HandLive đọc nhật ký cuộc gọi trên điện thoại để hiện số gọi đến" khi `permissions_missing` có `READ_CALL_LOG` (E2) |
 | 13 | Tùy chọn "Thông báo cuộc gọi" | bool | Input/Output | `call.notify` = `true` | Cài đặt → Cuộc gọi (SET-02), Mac và iOS |
 | 14 | Tùy chọn "Đổ chuông trên Mac" | bool | Input/Output | `call.ringtone` = `true` | Cài đặt → Cuộc gọi, chỉ Mac; khóa mới, đề xuất bổ sung vào 0.9.5 |
@@ -224,7 +224,7 @@ Content-Type: application/json
 - **Logic nghiệp vụ:**
   1. Chỉ push khi đủ điều kiện ở bước 5; mỗi `call_id` tối đa một push `call_incoming`; cuộc gọi chờ không push.
   2. Chờ có số tối đa 300 ms sau `RINGING` để push mang đủ số và tên (push không sửa được sau khi gửi); quá hạn thì gửi với `number = null`.
-  3. Relay đặt `interruption-level = time-sensitive`, `thread-id = calls` và nội dung mặc định: tiêu đề "HandLive", nội dung "Cuộc gọi đến trên điện thoại" (CONN-04 API 4); nội dung thật chỉ nằm trong envelope.
+  3. Relay đặt `interruption-level = time-sensitive`, `thread-id = calls` và nội dung mặc định: không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" (CONN-04 API 4); nội dung thật chỉ nằm trong envelope.
   4. Sau khi push, A-SVC mở kết nối relay (CONN-03) nếu chưa có và giữ ít nhất tới khi cuộc gọi hết đổ chuông, sau đó theo `RELAY_IDLE_DISCONNECT`; nhờ vậy I-APP từ chối từ thông báo thường không cần wake push.
 
 #### API 5 — Panel cuộc gọi trên Mac
@@ -1012,7 +1012,7 @@ Content-Type: application/json
 - **Logic nghiệp vụ:**
   1. Chỉ push khi: đối phương là iOS/iPadOS, không có phiên `/v1/ctl`, `relay_registered = 1`, capability gần nhất có `features.call.enabled = true` và `features.call.notify = true`, và là cuộc gọi nhỡ (`type = missed`, hoặc `end_reason = missed` ở luồng A).
   2. Mỗi cuộc gọi nhỡ một push; khi có `READ_CALL_LOG` thì không push từ `state` (API 2, logic 3).
-  3. Relay đặt nội dung mặc định: tiêu đề "HandLive", nội dung "Cuộc gọi nhỡ", `thread-id = calls`, `interruption-level = active` (CONN-04 API 4).
+  3. Relay đặt nội dung mặc định: không đặt tiêu đề, nội dung "Cuộc gọi nhỡ", `thread-id = calls`, `interruption-level = active` (CONN-04 API 4).
   4. Mac không nhận push (0.4.4); Mac thấy cuộc gọi nhỡ qua `log_sync` khi kết nối lại (không thông báo, chỉ huy hiệu).
 
 #### Query

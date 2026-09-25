@@ -1,0 +1,46 @@
+<!-- @dsCard group="Nút và menu" height=300 subtitle="Nổi bật, kính, nhạt màu, chữ, phá hủy — trên ba nền tảng" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Button — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .panel { width: 250px; max-width: 100%; padding: var(--space-16); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-12); border-radius: var(--radius-card); }
+  .panel.mac { background: var(--window-background); border: 1px solid var(--separator); }
+  .panel.touch { background: var(--system-background); border: 1px solid var(--separator); }
+  .r { display: flex; gap: var(--space-8); align-items: center; flex-wrap: wrap; }
+  .r.end { justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS</span>
+    <div class="panel mac">
+      <div class="r end"><button class="btn s-mac glass" type="button">Hủy</button><button class="btn s-mac prominent" type="button">Ghép nối</button></div>
+      <div class="r"><button class="btn s-mac tinted" type="button">Mở Cài đặt hệ thống…</button></div>
+      <div class="r"><button class="btn s-mac plain" type="button">Không quét được? Dùng mã PIN</button></div>
+      <div class="r"><button class="btn s-mac destructive" type="button">Hủy ghép nối…</button><button class="btn s-mac glass" type="button" disabled>Gửi lại</button></div>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS và iPadOS</span>
+    <div class="panel touch">
+      <button class="btn s-touch prominent block" type="button">Gửi bảng nhớ tạm</button>
+      <button class="btn s-touch glass block" type="button">Để sau</button>
+      <div class="r"><button class="btn s-touch-sm tinted" type="button">Mở cài đặt</button><button class="btn s-touch-sm plain" type="button">Nhập mã PIN</button></div>
+    </div>
+  </div>
+  <div class="hl-col android">
+    <span class="hl-cap">Android</span>
+    <div class="panel touch">
+      <button class="btn s-touch prominent block" type="button"><span class="sym">qr_code_scanner</span>Quét mã QR</button>
+      <button class="btn s-touch destructive block" type="button">Hủy ghép nối</button>
+      <div class="r"><button class="btn s-touch-sm tinted" type="button">Cấp quyền</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

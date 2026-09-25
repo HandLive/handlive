@@ -1,0 +1,37 @@
+<!-- @dsCard group="Trạng thái" height=250 subtitle="HUD trên iPhone và Android; biểu tượng thanh menu đổi dấu kiểm trên Mac" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Feedback — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .menubar { width: 360px; max-width: 100%; height: var(--size-menu-bar); border-radius: 8px; display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding: 0 12px; box-sizing: border-box; font-size: 13px; }
+  .menubar .sym { font-size: 16px; }
+  .mb-item { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 5px; }
+  .mb-item.hl { background: var(--tertiary-system-fill); }
+  .seq { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--secondary-label); }
+  .huds { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · thanh menu sau khi gửi</span>
+    <div class="desk" style="padding: 12px">
+      <div class="menubar glass"><span class="sym">wifi</span><span class="sym">battery_full</span><span class="mb-item hl" aria-label="HandLive, đã gửi"><span class="sym bold" style="color: var(--status-connected)">check</span></span><span>14:05</span></div>
+    </div>
+    <div class="seq"><span class="sym">cell_tower</span>→<span class="sym bold" style="color: var(--status-connected)">check</span>→<span class="sym">cell_tower</span><span>khoảng 1 giây, không chuyển động khi bật Giảm chuyển động</span></div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS và Android · HUD</span>
+    <div class="huds">
+      <span class="hud glass" role="status"><span class="sym fill">check_circle</span>Đã gửi tới Pixel 8 của Lan</span>
+      <span class="hud glass android" role="status" style="--c: var(--status-connecting)"><span class="sym">schedule</span>Chưa kết nối — sẽ gửi trong 2 phút</span>
+      <span class="hud glass" role="status" style="--c: var(--status-offline)"><span class="sym">error</span>Bảng nhớ tạm trống</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

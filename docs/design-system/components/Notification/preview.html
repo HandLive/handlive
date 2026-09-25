@@ -1,0 +1,53 @@
+<!-- @dsCard group="Trải nghiệm hệ thống" height=430 subtitle="Thông báo liên lạc trên iPhone và Mac; thông báo Android theo kiểu của Android" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Notification — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .ios .notif { font-size: 15px; line-height: 20px; }
+  .ios .notif b { font-size: 15px; }
+  .ios .notif .msg { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .mac .notif { width: 330px; font-size: 13px; line-height: 16px; padding: 10px 12px; }
+  .mac .notif .when { font-size: 11px; }
+  .mac .notif .acts { display: flex; gap: 6px; margin-top: 8px; }
+  .andr { width: 330px; max-width: 100%; background: var(--secondary-system-grouped-background); border-radius: 22px; padding: 12px 16px; box-sizing: border-box; font-family: Roboto, var(--font-android); display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow-card); }
+  .andr .hd { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--secondary-label); }
+  .andr .hd .sym { font-size: 16px; color: var(--brand-fire); }
+  .andr b { font-size: 15px; font-weight: 500; }
+  .andr .msg { font-size: 14px; color: var(--secondary-label); }
+  .andr .acts { display: flex; gap: 18px; margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--accent); }
+  .note { font-size: 11px; color: var(--secondary-label); max-width: 330px; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col ios">
+    <span class="hl-cap">iOS · tin nhắn và cuộc gọi</span>
+    <div class="notif glass"><span class="av">TB<span class="badge-app"></span></span><div class="body"><div class="top"><b>Trần Thị B</b><span class="when">bây giờ</span></div><span class="msg">Mai họp lúc 9 giờ nhé, anh nhớ mang theo bản in hợp đồng</span></div></div>
+    <div class="notif glass"><span class="av">NA<span class="badge-app"></span></span><div class="body"><div class="top"><b>Nguyễn Văn A</b><span class="when">bây giờ</span></div><span class="msg">Cuộc gọi đến · SIM 1</span></div></div>
+    <div class="notif-acts glass"><div class="na danger">Từ chối<span class="sym">call_end</span></div></div>
+  </div>
+  <div class="hl-col">
+    <div class="hl-col mac">
+      <span class="hl-cap">macOS · chặn nội dung nhạy cảm</span>
+      <div class="desk" style="padding:12px">
+        <div class="notif glass"><span class="appmark"></span><div class="body"><div class="top"><b>Đã chặn nội dung nhạy cảm</b><span class="when">bây giờ</span></div><span class="msg">HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ.</span><div class="acts"><button class="btn s-mac glass" type="button">Vẫn gửi</button></div></div></div>
+      </div>
+    </div>
+    <div class="hl-col">
+      <span class="hl-cap">Android · thông báo của hệ thống</span>
+      <div class="andr" role="group" aria-label="Thông báo Android">
+        <div class="hd"><span class="sym fill">videocam</span>HandLive · bây giờ</div>
+        <b>MacBook của Lan muốn dùng camera và micro</b>
+        <span class="msg">Chạm Bật để bắt đầu. Yêu cầu tự hủy sau 60 giây.</span>
+        <div class="acts"><span>Bật</span><span>Từ chối</span></div>
+      </div>
+      <span class="note">Android giữ giao diện thông báo của hệ thống; HandLive chỉ quyết định nội dung, kênh và hành động.</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

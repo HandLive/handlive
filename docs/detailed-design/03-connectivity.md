@@ -29,7 +29,7 @@ N/A — chưa có wireframe được duyệt.
 | 3 | Tên điện thoại | string(64) | Output | `peer_name` | |
 | 4 | Thông báo lỗi kết nối | string | Output | Rỗng | Theo E3–E8 |
 | 5 | Nút "Kết nối lại ngay" | action | Input | Ẩn khi đã kết nối | Bỏ qua thời gian chờ backoff, chạy lại từ bước 2 |
-| 6 | Thông báo foreground service (Android) | string | Output | "HandLive đang chờ kết nối" | "Đã kết nối với <tên client>"; nhiều client: "Đã kết nối với 2 thiết bị" |
+| 6 | Thông báo foreground service (Android) | string | Output | "Đang chờ kết nối" | "Đã kết nối với <tên client>"; nhiều client: "Đã kết nối với 2 thiết bị" |
 | 7 | Tính năng hiệu lực | array<string> | Output | Rỗng | Hiển thị trong PAIR-02; cập nhật sau bước 9 |
 
 ### 3.1.4 Luồng nghiệp vụ
@@ -775,7 +775,7 @@ flowchart TB
 - **Request:**
 
 ```json
-{"aps":{"alert":{"title":"HandLive","body":"Có thông báo mới từ điện thoại"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
+{"aps":{"alert":{"body":"Có thông báo mới từ điện thoại"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
 ```
 
 - **Response:** 200 (header `apns-id`); 410 `Unregistered` → xóa token (E3); 400/403 → ghi lỗi cấu hình; 429/5xx → 502.
@@ -786,9 +786,9 @@ flowchart TB
 
 | `reason` | `aps.alert.title` | `aps.alert.body` | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | HandLive | Tin nhắn SMS mới | `active` | `sms:<message_key>` / `sms:<thread_id>` |
-| `call_incoming` | HandLive | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
-| `call_missed` | HandLive | Cuộc gọi nhỡ trên điện thoại | `active` | `calllog:<entry_id>` (không có `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
+| `sms_new` | — (không đặt; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | `sms:<message_key>` / `sms:<thread_id>` |
+| `call_incoming` | — | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
+| `call_missed` | — | Cuộc gọi nhỡ trên điện thoại | `active` | `calllog:<entry_id>` (không có `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
 
 #### Query
 

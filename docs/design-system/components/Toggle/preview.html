@@ -1,0 +1,56 @@
+<!-- @dsCard group="Chọn và nhập" height=340 subtitle="Switch và checkbox trong Cài đặt Mac; switch trong danh sách iOS và Android" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Toggle — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .hl-stage { gap: var(--space-16); }
+  .pane { width: 300px; max-width: 100%; padding: var(--space-16); box-sizing: border-box; background: var(--window-background); border: 1px solid var(--separator); border-radius: var(--radius-card); }
+  .mrow.sub { padding-left: 34px; min-height: 30px; }
+  .mrow.sub + .mrow.sub::before { display: none; }
+  .touch { width: 240px; max-width: 100%; display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-12) 0; background: var(--system-grouped-background); border-radius: var(--radius-card); }
+  .touch .list, .touch .list-f { margin: 0 var(--space-12); }
+  .touch .row { font-size: 15px; line-height: 20px; gap: var(--space-8); }
+  .touch .row .s { font-size: 13px; line-height: 18px; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · Cài đặt › Bảng nhớ tạm</span>
+    <div class="pane">
+      <div class="mform">
+        <div class="mrow"><span class="txt"><span>Đồng bộ bảng nhớ tạm</span><span class="s">Nội dung sao chép trên máy này xuất hiện trên điện thoại và ngược lại.</span></span><span class="sw mac on" role="switch" aria-checked="true" aria-label="Đồng bộ bảng nhớ tạm"></span></div>
+        <div class="mrow sub"><span class="cb on" role="checkbox" aria-checked="true"></span><span class="txt">Chặn nội dung nhạy cảm</span></div>
+        <div class="mrow sub"><span class="cb on" role="checkbox" aria-checked="true"></span><span class="txt">Đồng bộ ảnh</span></div>
+        <div class="mrow sub"><span class="cb" role="checkbox" aria-checked="false"></span><span class="txt">Tự xóa nội dung đã nhận sau 5 phút</span></div>
+      </div>
+      <p class="mform-f">Mật khẩu và số thẻ không bao giờ được gửi.</p>
+    </div>
+  </div>
+  <div class="hl-col">
+    <span class="hl-cap">iOS · Cài đặt</span>
+    <div class="touch">
+      <div class="list">
+        <div class="row"><span class="txt"><span class="t wrap">Tin nhắn SMS</span></span><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="row"><span class="txt"><span class="t wrap">Thông báo SMS mới</span></span><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="row"><span class="txt"><span class="t wrap">Hiện nội dung trong thông báo</span></span><span class="sw" role="switch" aria-checked="false"></span></div>
+      </div>
+      <p class="list-f">Khi tắt, thông báo chỉ ghi "Tin nhắn SMS mới".</p>
+    </div>
+  </div>
+  <div class="hl-col android">
+    <span class="hl-cap">Android · Cài đặt</span>
+    <div class="touch">
+      <div class="list">
+        <div class="row"><span class="txt"><span class="t wrap">Tự gửi khi sao chép</span><span class="s why"><span class="sym">info</span>Cần bật trong Hỗ trợ tiếp cận</span></span><span class="sw" role="switch" aria-checked="false" aria-disabled="true" style="opacity:.4"></span></div>
+        <div class="row"><span class="txt"><span class="t wrap">Kết nối qua Internet</span></span><span class="sw on" role="switch" aria-checked="true"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

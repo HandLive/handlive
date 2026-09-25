@@ -1,0 +1,67 @@
+<!-- @dsCard group="Nội dung" height=620 subtitle="Tab Bảng nhớ tạm trên iPhone với nút Dán của hệ thống và thanh tab kính; ô Cài đặt nhanh trên Android" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>PasteCard — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .dev { height: 590px; }
+  .card { background: var(--secondary-system-grouped-background); border-radius: var(--radius-sheet); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 600; }
+  .card p { margin: 0; font-size: 13px; line-height: 18px; color: var(--secondary-label); }
+  .clip { font-size: 15px; line-height: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .from { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--secondary-label); }
+  .tabbar { position: absolute; left: 10px; right: 10px; bottom: 26px; height: 60px; border-radius: var(--radius-capsule); display: flex; padding: 4px; box-sizing: border-box; gap: 2px; }
+  .tab { flex: 1; min-width: 0; white-space: nowrap; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; line-height: 12px; font-weight: 600; color: var(--label); border-radius: var(--radius-capsule); position: relative; }
+  .tab .sym { font-size: 22px; }
+  .tab.on { background: var(--tertiary-system-fill); color: var(--accent); }
+  .tab .bdg { position: absolute; top: 4px; left: 52%; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: var(--radius-capsule); background: var(--badge); color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+  .qs { width: 300px; max-width: 100%; border-radius: 30px; padding: 14px; box-sizing: border-box; background: var(--secondary-system-grouped-background); font-family: Roboto, var(--font-android); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { border-radius: 22px; padding: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 16px; font-weight: 500; background: var(--tertiary-system-fill); }
+  .tile.hl { background: var(--accent-fill); color: var(--on-accent); }
+  .tile .sym { font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">iOS · tab Bảng nhớ tạm</span>
+    <div class="dev">
+      <div class="sb"><span>9:41</span><span><span class="sym">signal_cellular_alt</span> <span class="sym">battery_full</span></span></div>
+      <div class="body">
+        <div class="nav-title">Bảng nhớ tạm</div>
+        <div class="card">
+          <h3>Gửi sang Pixel 8 của Lan</h3>
+          <button class="btn s-touch prominent block" type="button"><span class="sym">content_paste</span>Dán</button>
+          <p>Chạm Dán để gửi nội dung bạn vừa sao chép trên iPhone.</p>
+        </div>
+        <div class="card">
+          <h3>Nhận gần nhất</h3>
+          <span class="clip">12 Lý Thái Tổ, Hoàn Kiếm, Hà Nội — gửi xe ở cổng sau</span>
+          <div class="from"><span>Từ Pixel 8 của Lan · 14:05</span><button class="btn s-touch-sm glass" type="button"><span class="sym">content_copy</span>Sao chép</button></div>
+        </div>
+      </div>
+      <nav class="tabbar glass" aria-label="Tab">
+        <span class="tab on"><span class="sym fill">content_paste</span>Bảng nhớ tạm</span>
+        <span class="tab"><span class="sym fill">chat_bubble</span>Tin nhắn<span class="bdg">2</span></span>
+        <span class="tab"><span class="sym fill">call</span>Cuộc gọi</span>
+        <span class="tab"><span class="sym fill">settings</span>Cài đặt</span>
+      </nav>
+      <div class="home" style="position:absolute;left:0;right:0;bottom:4px"></div>
+    </div>
+  </div>
+  <div class="hl-col android">
+    <span class="hl-cap">Android · ô Cài đặt nhanh (giao diện hệ thống)</span>
+    <div class="qs" role="group" aria-label="Cài đặt nhanh">
+      <span class="tile"><span class="sym fill">wifi</span>Wi-Fi</span>
+      <span class="tile"><span class="sym">bluetooth</span>Bluetooth</span>
+      <span class="tile hl"><span class="sym">content_paste</span>Gửi bảng nhớ tạm</span>
+      <span class="tile"><span class="sym">flashlight_on</span>Đèn pin</span>
+    </div>
+    <p class="hl-note">Android là máy trung tâm: gửi thủ công qua ô Cài đặt nhanh, nút trong thông báo hoặc bảng chia sẻ; kết quả hiện bằng toast của hệ thống.</p>
+  </div>
+</div>
+</body>
+</html>

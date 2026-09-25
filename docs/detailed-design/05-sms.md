@@ -433,7 +433,7 @@ Content-Type: application/json
 
 - **Logic nghiệp vụ:**
   1. Chỉ push khi đủ mọi điều kiện: đối phương là iOS/iPadOS, không có phiên `/v1/ctl`, `relay_registered = 1`, capability gần nhất có `features.sms.enabled = true` và `features.sms.notify = true`, tin có `box = inbox`.
-  2. Nội dung APNs mặc định (hiện khi I-NSE không giải mã được) là tiêu đề "HandLive", nội dung "Tin nhắn SMS mới"; không chứa số điện thoại hay nội dung tin.
+  2. Nội dung APNs mặc định (hiện khi I-NSE không giải mã được) là không đặt tiêu đề (hệ thống hiện tên app), nội dung "Tin nhắn SMS mới"; không chứa số điện thoại hay nội dung tin.
   3. Payload APNs ≤ 4 KB (0.4.4): Android cắt `body` trong envelope push theo byte UTF-8 và thêm "…"; nội dung đầy đủ đến qua SMS-01 khi I-APP kết nối.
   4. Push lỗi tạm thời → ghi `push_outbox` (0.9.1), thử lại theo CONN-04; quá hạn thì bỏ.
   5. Mac không bao giờ nhận push (0.4.4).
@@ -467,7 +467,7 @@ Content-Type: application/json
 | `subtitle` | Trường 3, rỗng nếu chỉ có 1 SIM |
 | `body` | Trường 2 |
 | `threadIdentifier` | `sms:<pair_id>:<thread_id>` — gom thông báo theo hội thoại |
-| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi") |
+| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi") và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — dùng cho trả lời nhanh (SMS-04) và gỡ thông báo (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
 

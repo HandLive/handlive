@@ -1,0 +1,73 @@
+<!-- @dsCard group="Nội dung" height=560 subtitle="Mac hiện mã QR, Android quét" -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>PairingCard — preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..600,0..1,0&display=block">
+<style>
+  .sheet-mac { width: 380px; max-width: 100%; border-radius: var(--radius-sheet); padding: 24px 28px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; background-color: var(--window-background); border: 1px solid var(--separator); box-shadow: var(--shadow-glass); }
+  .sheet-mac h2 { margin: 0; }
+  .sheet-mac p { margin: 0; color: var(--secondary-label); font-size: 13px; line-height: 17px; max-width: 32ch; }
+  .qr-paper svg { display: block; width: 190px; height: 190px; }
+  .who { font-size: 13px; line-height: 16px; font-weight: 700; }
+  .count { font-size: 12px; color: var(--secondary-label); }
+  .count .timer { font-size: 12px; line-height: 15px; }
+  .row-acts { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 4px; }
+  .scan { width: 250px; max-width: 100%; height: 500px; position: relative; border-radius: 40px; overflow: hidden; background: var(--video-background); color: var(--on-video); }
+  .scan .vf { position: absolute; left: 38px; right: 38px; top: 170px; aspect-ratio: 1; box-shadow: 0 0 0 999px var(--glass-dim); border-radius: 24px; }
+  .scan .c { position: absolute; width: 34px; height: 34px; border: 4px solid var(--on-video); }
+  .scan .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 24px; }
+  .scan .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 24px; }
+  .scan .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 24px; }
+  .scan .br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 24px; }
+  .scan .close { position: absolute; left: 18px; top: 44px; width: 40px; height: 40px; border-radius: var(--radius-capsule); display: grid; place-items: center; color: var(--label); }
+  .scan .hint { position: absolute; left: 24px; right: 24px; top: 96px; text-align: center; font-size: 17px; line-height: 22px; font-weight: 600; }
+  .scan .pin { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; }
+  .scan .pin .btn { color: var(--label); }
+</style>
+</head>
+<body>
+<div class="hl-stage">
+  <div class="hl-col">
+    <span class="hl-cap">macOS · sheet ghép nối</span>
+    <section class="sheet-mac brand-glow-bg" aria-labelledby="pt">
+      <h2 id="pt" class="brand-title">Ghép nối điện thoại</h2>
+      <p>Mở HandLive trên điện thoại Android, chạm Thêm thiết bị rồi quét mã này.</p>
+      <div class="qr-paper"><svg id="qr" viewBox="0 0 25 25" role="img" aria-label="Mã QR ghép nối (minh họa)" shape-rendering="crispEdges"></svg></div>
+      <span class="who">MacBook của Lan</span>
+      <span class="count">Mã đổi sau <span class="timer">1:42</span></span>
+      <div class="row-acts"><button class="btn s-mac plain" type="button">Không quét được? Dùng mã PIN</button><button class="btn s-mac glass" type="button">Hủy</button></div>
+    </section>
+  </div>
+  <div class="hl-col android">
+    <span class="hl-cap">Android · quét mã</span>
+    <section class="scan" aria-label="Quét mã QR">
+      <div class="vf"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></div>
+      <button class="close glass" type="button" aria-label="Đóng"><span class="sym">close</span></button>
+      <div class="hint">Quét mã QR trên Mac hoặc iPhone</div>
+      <div class="pin"><button class="btn s-touch-sm glass" type="button"><span class="sym">dialpad</span>Nhập mã PIN</button></div>
+    </section>
+  </div>
+</div>
+<script>
+  (function () {
+    var svg = document.getElementById('qr'), ns = 'http://www.w3.org/2000/svg', n = 25, seed = 20260924;
+    function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+    function inBox(x, y) { return x >= 0 && x < 7 && y >= 0 && y < 7; }
+    function finder(x, y) { return inBox(x, y) || inBox(x - 18, y) || inBox(x, y - 18); }
+    function ring(x, y) { var fx = x >= 18 ? x - 18 : x, fy = y >= 18 ? y - 18 : y; return Math.max(Math.abs(fx - 3), Math.abs(fy - 3)) !== 2; }
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+      var quiet = (x === 7 || y === 7 || x === 17 || y === 17) && (x < 8 || y < 8 || x > 16 || y > 16);
+      var on = finder(x, y) ? ring(x, y) : quiet ? false : rnd() > 0.52;
+      if (!on) continue;
+      var r = document.createElementNS(ns, 'rect');
+      r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', 1); r.setAttribute('height', 1); r.setAttribute('class', 'q');
+      svg.appendChild(r);
+    }
+  })();
+</script>
+</body>
+</html>
