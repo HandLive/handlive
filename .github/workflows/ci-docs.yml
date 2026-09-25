@@ -98,9 +98,8 @@ jobs:
       - name: Khuôn tài liệu thiết kế chi tiết
         run: python tools/docs/validate_design_docs.py
 
-      # Bỏ --allow-missing khi mọi tài liệu đã có bản tiếng Việt X.vi.md (C20).
       - name: Tài liệu song ngữ X.md / X.vi.md
-        run: python tools/docs/check_bilingual_docs.py --allow-missing
+        run: python tools/docs/check_bilingual_docs.py
 
       - name: JSON Schema + ví dụ tài liệu
         run: python shared/tools/schemas/check_schemas.py
