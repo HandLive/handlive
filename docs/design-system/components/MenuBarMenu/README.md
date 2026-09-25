@@ -1,50 +1,54 @@
+English | [Tiếng Việt](README.vi.md)
+
 # MenuBarMenu
 
-Biểu tượng HandLive trên thanh menu Mac và **menu** mở ra khi bấm vào — theo HIG, menu bar extra mở
-menu chứ không mở popover. Nội dung giống các menu Wi-Fi, Bluetooth của macOS: trạng thái ở trên,
-lệnh ở giữa, Cài đặt và Thoát ở cuối.
+The HandLive icon in the Mac menu bar and the **menu** that opens when you click it — per the HIG, a
+menu bar extra opens a menu, not a popover. Its content is like the Wi-Fi and Bluetooth menus of macOS:
+status at the top, commands in the middle, Settings and Quit at the bottom.
 
-## Biểu tượng trên thanh menu
+## Menu bar icon
 
-Ảnh template đơn sắc (hệ thống tự tô theo nền thanh menu), cao theo thanh menu 24 pt.
+A monochrome template image (the system tints it to match the menu bar background), sized to the 24 pt
+menu bar.
 
-| Trạng thái | SF Symbol |
+| State | SF Symbol |
 |-----------|-----------|
-| Đã kết nối | `antenna.radiowaves.left.and.right` |
-| Đang kết nối | như trên, hiệu ứng variable color (tắt khi Giảm chuyển động) |
-| Ngoại tuyến, mất kết nối | `antenna.radiowaves.left.and.right.slash` |
-| Có cuộc gọi đến | `phone.fill` |
-| Vừa gửi bảng nhớ tạm | `checkmark` ~1 giây (Magic Replace) — xem `Feedback` |
-| Có tin chưa đọc | Số hội thoại chưa đọc ngay sau biểu tượng ("2", trên 99 là "99+") |
+| Connected | `antenna.radiowaves.left.and.right` |
+| Connecting | same as above, with the variable color effect (off with Reduce Motion) |
+| Offline, disconnected | `antenna.radiowaves.left.and.right.slash` |
+| Incoming call | `phone.fill` |
+| Clipboard just sent | `checkmark` for ~1 second (Magic Replace) — see `Feedback` |
+| Unread messages | The number of unread conversations right after the icon ("2"; above 99, "99+") |
 
-## Nội dung menu
+## Menu content
 
-1. **Điện thoại:** tên máy làm tiêu đề nhóm; dòng trạng thái không bấm được có biểu tượng màu trạng
-   thái; khi mất kết nối thêm "Kết nối lại ngay".
-2. **Cuộc gọi đang đổ chuông** (nếu có, kể cả khi đã "Bỏ qua" panel): "Trả lời", "Từ chối".
-3. **Lệnh:** "Gửi bảng nhớ tạm sang điện thoại", "Tin nhắn" (số chưa đọc ở bên phải), "Xem trước
-   camera".
-4. **Camera** (khi đang phát): trạng thái, dấu kiểm "Micro điện thoại" và "Tạm dừng hình", menu con
-   "Chất lượng" (Tự động, 480p, 720p, 1080p), "Đổi camera", "Dừng camera".
-5. **Gần đây:** tối đa ba mục (cuộc gọi nhỡ, tin mới); chọn mục mở đúng chỗ.
-6. "Cài đặt…" ⌘, · "Thoát HandLive" ⌘Q.
+1. **Phone:** the device's name as the group header; a status row that can't be clicked, with an icon
+   in the status color; when disconnected, "Reconnect Now" is added.
+2. **Ringing call** (if any, including after the panel was dismissed with "Ignore"): "Answer",
+   "Decline".
+3. **Commands:** "Send Clipboard to Phone", "Messages" (the unread count on the right), "Camera
+   Preview".
+4. **Camera** (while streaming): the status, checkmark items "Phone Microphone" and "Pause Video", the
+   "Quality" submenu (Automatic, 480p, 720p, 1080p), "Switch Camera", "Stop Camera".
+5. **Recent:** up to three items (missed calls, new messages); choosing an item opens the right place.
+6. "Settings…" ⌘, · "Quit HandLive" ⌘Q.
 
-Menu con sâu một cấp. Trong một nhóm, hoặc mọi mục có biểu tượng, hoặc không mục nào có. Mục chưa
-dùng được thì mờ đi, không ẩn.
+Submenus go one level deep. Within a group, either every item has an icon or none does. Items that
+can't be used yet are dimmed, not hidden.
 
-## Hiện hay ẩn
+## Show or hide
 
-Người dùng quyết định: cài đặt "Hiện HandLive trên thanh menu" (Chung), hỏi lúc thiết lập, mặc định
-bật. Khi ẩn — hoặc khi hệ thống giấu bớt biểu tượng vì chật — app có biểu tượng Dock, Dock menu và
-thanh menu riêng để vẫn vào được mọi chức năng.
+The user decides: the "Show HandLive in Menu Bar" setting (General), asked during setup, on by default.
+When the icon is hidden — or when the system hides some icons because the menu bar is crowded — the app
+has a Dock icon, a Dock menu, and its own menu bar, so every function stays reachable.
 
 ## API
 
-`MenuBarExtra(_:systemImage:isInserted:content:)` (macOS 13) với `.menuBarExtraStyle(.menu)`;
-`Section`, `Toggle` (hiện thành dấu kiểm), `Picker` (menu con), `Divider`, `.keyboardShortcut`. Cần
-dòng hai tầng hoặc biểu tượng màu → `NSStatusItem` + `NSMenu`.
+`MenuBarExtra(_:systemImage:isInserted:content:)` (macOS 13) with `.menuBarExtraStyle(.menu)`;
+`Section`, `Toggle` (shown as a checkmark), `Picker` (a submenu), `Divider`, `.keyboardShortcut`. For
+two-line rows or colored icons → `NSStatusItem` + `NSMenu`.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên để mọi lệnh trong menu cũng có ở cửa sổ app hoặc thanh menu của app.
-- Không nhét panel cuộc gọi, xem trước camera hay ô soạn tin vào menu.
+- Do make every command in the menu also available in an app window or the app's menu bar.
+- Don't cram the call panel, the camera preview, or a compose field into the menu.

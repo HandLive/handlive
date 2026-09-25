@@ -1,30 +1,35 @@
+English | [Tiếng Việt](README.vi.md)
+
 # CameraPreview
 
-Cửa sổ "Xem trước camera" trên Mac khi điện thoại làm webcam (CAM-02…05): hình từ điện thoại, trạng
-thái phiên, kênh truyền và các điều khiển. Điều khiển nhanh cũng có trong `MenuBarMenu`.
+The "Camera Preview" window on the Mac while the phone works as a webcam (CAM-02…05): the picture from
+the phone, the session status, the transport, and the controls. The quick controls are also in
+`MenuBarMenu`.
 
-## Cấu tạo
+## Anatomy
 
-| Phần | Quy cách |
+| Part | Specification |
 |------|---------|
-| Khung hình | `video-background`, 16:9, bo `radius-card`; khi chờ: "Đang chờ điện thoại…"; tạm dừng hình: "Đã tạm dừng hình" |
-| Trạng thái (góc trên trái) | Viên kính: chấm nhấp nháy + "Đang phát" · "Qua Wi-Fi" hoặc "Qua USB"; các trạng thái khác: "Đang yêu cầu…", "Chạm Bật trên điện thoại", "Đang khởi động…", "Đang dừng…", "Lỗi" |
-| Thanh điều khiển (dưới, nổi trên hình) | Kính **clear** với lớp tối 35% (`glass-dim`) vì nằm trên video: `SegmentedControl` "Trước / Sau" (ẩn khi máy có một camera), nút bật tắt micro, nút tạm dừng hình, pop-up "Chất lượng" (Tự động, 480p, 720p, 1080p; mục vượt khả năng thì mờ kèm lý do), nút "Dừng" |
-| Thông số | "Camera trước · 1280×720 · 24 fps · 1,9 Mbps", `mac-caption-2`, số dạng bảng |
-| Hạ chất lượng | Dòng `text-orange` có biểu tượng: "Đang hạ chất lượng · Điện thoại nóng" (lý do khác: "Mạng Wi-Fi chậm", "Pin điện thoại yếu (18 %)", "Theo ứng dụng họp", "Theo lựa chọn của bạn") |
-| Dùng bởi | "Có ứng dụng đang dùng HandLive Camera và HandLive Microphone" |
+| Video frame | `video-background`, 16:9, `radius-card` corners; while waiting: "Waiting for phone…"; with the video paused: "Video paused" |
+| Status (top left) | A glass pill: a pulsing dot + "Live" · "Via Wi-Fi" or "Via USB"; other states: "Requesting…", "Tap Turn On on the phone", "Starting…", "Stopping…", "Error" |
+| Control bar (bottom, floating over the picture) | **Clear** glass with a 35% dark layer (`glass-dim`), because it sits over video: `SegmentedControl` "Front / Back" (hidden when the phone has one camera), a microphone on/off button, a pause video button, a "Quality" pop-up (Automatic, 480p, 720p, 1080p; levels beyond the phone's capability are dimmed with a reason), a "Stop" button |
+| Stats | "Front camera · 1280×720 · 24 fps · 1.9 Mbps", `mac-caption-2`, tabular digits |
+| Lower quality | A `text-orange` line with an icon: "Lowering quality · Phone is hot" (other reasons: "Slow Wi-Fi network", "Low phone battery (18%)", "Requested by the meeting app", "Your choice") |
+| In use by | "An app is using HandLive Camera and HandLive Microphone" |
 
-"Dừng" là nút thường, không phải phá hủy: dừng camera không mất dữ liệu. Không có tùy chọn lật
-gương.
+"Stop" is a regular button, not a destructive one: stopping the camera loses no data. There's no mirror
+option.
 
-## Theo nền tảng
+## By platform
 
-- **macOS:** cửa sổ thường, co giãn giữ tỉ lệ; ⌘W đóng (không dừng camera nếu ứng dụng họp đang
-  dùng); từ macOS 26 thanh điều khiển là `GlassEffectContainer` với `.clear`, trước đó `.hudWindow`.
-- **Android:** không có cửa sổ này; trong lúc phát, thông báo kênh `camera_live` có "Đổi camera",
-  "Tắt micro" / "Bật micro", "Dừng", cùng chỉ báo quyền riêng tư của Android.
+- **macOS:** a regular window that resizes while keeping its aspect ratio; ⌘W closes it (without
+  stopping the camera if a meeting app is using it); from macOS 26 the control bar is a
+  `GlassEffectContainer` with `.clear`, before that `.hudWindow`.
+- **Android:** doesn't have this window; while streaming, the `camera_live` channel notification has
+  "Switch Camera", "Turn Off Microphone" / "Turn On Microphone", "Stop", along with Android's privacy
+  indicators.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên để chữ nói trạng thái; khung tối không đủ để biết đang phát hay đang chờ.
-- Không tự chuyển Wi-Fi ↔ USB mà không đổi nhãn kênh truyền.
+- Do let text state the status; a dark frame alone doesn't tell whether the camera is live or waiting.
+- Don't switch Wi-Fi ↔ USB on your own without changing the transport label.

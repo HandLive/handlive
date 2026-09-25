@@ -1,43 +1,47 @@
+English | [Tiếng Việt](README.vi.md)
+
 # MessageBubble
 
-Bong bóng một tin SMS trong hội thoại và ô soạn tin ở cuối (SMS-03, SMS-04). Theo quy ước Tin nhắn
-của Apple: tin SMS mình gửi màu xanh lá — ở HandLive là `bubble-outgoing` (đậm hơn xanh SMS của
-Apple để chữ trắng đạt 4.5:1), tin đến màu `bubble-incoming`.
+The bubble of a single SMS in a conversation, and the compose field at the bottom (SMS-03, SMS-04).
+Following the convention of Apple's Messages, SMS you send are green — in HandLive that's
+`bubble-outgoing` (darker than Apple's SMS green so white text reaches 4.5:1) — and incoming messages
+use `bubble-incoming`.
 
-## Bong bóng
+## Bubbles
 
-| Phần | Quy cách |
+| Part | Specification |
 |------|---------|
-| Tin đến | Trái, nền `bubble-incoming`, chữ `label`, bo 18 pt |
-| Tin gửi | Phải, nền `bubble-outgoing`, chữ `on-bubble-outgoing` |
-| Liên kết, số điện thoại | Nhận diện tự động, gạch chân, cùng màu chữ; số không ngắt dòng |
-| Mốc ngày | "Hôm nay", "Hôm qua", "12/09" ở giữa, khi sang ngày khác |
-| Giờ và trạng thái | Dưới tin cuối của một cụm, `ios-caption-1` / `mac-caption-2` |
+| Incoming message | Left, `bubble-incoming` background, `label` text, 18 pt corners |
+| Outgoing message | Right, `bubble-outgoing` background, `on-bubble-outgoing` text |
+| Links, phone numbers | Detected automatically, underlined, in the same color as the text; numbers never break across lines |
+| Date markers | "Today", "Yesterday", "Sep 12", centered, when the day changes |
+| Time and status | Under the last message of a cluster, `ios-caption-1` / `mac-caption-2` |
 
-Trạng thái tin gửi chỉ đi tiến, mỗi trạng thái có biểu tượng riêng:
+The status of an outgoing message only moves forward, and each status has its own icon:
 
-| Trạng thái | Chữ | SF Symbol ↔ Material |
+| Status | Text | SF Symbol ↔ Material |
 |-----------|-----|----------------------|
-| `pending` | "Đang chờ điện thoại" | `clock` ↔ `schedule` |
-| `sending` | "Đang gửi…" | `ProgressView` nhỏ |
-| `sent` | "Đã gửi" | `checkmark` ↔ `check` |
-| `delivered` | "Đã nhận" | `checkmark.circle` ↔ `done_all` |
-| `failed` | "Gửi lỗi · <lý do>" + nút "Thử lại"; biểu tượng `exclamationmark.circle.fill` đỏ cạnh bong bóng | ↔ `error` |
+| `pending` | "Waiting for phone" | `clock` ↔ `schedule` |
+| `sending` | "Sending…" | A small `ProgressView` |
+| `sent` | "Sent" | `checkmark` ↔ `check` |
+| `delivered` | "Delivered" | `checkmark.circle` ↔ `done_all` |
+| `failed` | "Not sent · <reason>" + a "Try Again" button; a red `exclamationmark.circle.fill` icon next to the bubble | ↔ `error` |
 
-Lý do theo mã lỗi: `SMS_NO_SERVICE` "Không có sóng" · `SMS_RADIO_OFF` "Điện thoại đang ở chế độ máy
-bay" · `SMS_LIMIT_EXCEEDED` "Đã gửi quá nhiều tin, thử lại sau" · `SMS_INVALID_ADDRESS` "Số nhận
-không hợp lệ" · `SMS_SIM_UNAVAILABLE` "SIM này không hoạt động, hãy chọn SIM khác" · `NOT_CONNECTED`
-"Không kết nối được điện thoại trong 24 giờ" · khác "Không gửi được".
+Reasons by error code: `SMS_NO_SERVICE` "No service" · `SMS_RADIO_OFF` "The phone is in Airplane
+Mode" · `SMS_LIMIT_EXCEEDED` "Too many messages sent, try again later" · `SMS_INVALID_ADDRESS` "Invalid
+recipient number" · `SMS_SIM_UNAVAILABLE` "This SIM isn't working, choose another SIM" ·
+`NOT_CONNECTED` "Couldn't reach the phone within 24 hours" · anything else "Couldn't send".
 
-## Ô soạn tin
+## Compose field
 
-Ô nhập capsule "Tin nhắn SMS" trên nền kính, nút gửi tròn `accent-fill` (`arrow.up`). Máy hai SIM:
-chip "SIM 1" mở menu chọn SIM. Tin dài hơn một phần: hiện "2 tin SMS" (mỗi phần tính cước). Tối đa 1
-600 ký tự. Mac: Return gửi, ⇧Return xuống dòng. Hội thoại nhiều người nhận: không có ô soạn, thay
-bằng dòng "Trả lời hội thoại nhóm trên điện thoại". Điện thoại không cho gửi SMS: ẩn ô soạn.
+A capsule text field "SMS Message" on glass, with a round `accent-fill` send button (`arrow.up`).
+Dual-SIM phones: a "SIM 1" chip opens a menu to choose the SIM. A message longer than one part: show
+"2 SMS messages" (each part is charged). At most 1,600 characters. Mac: Return sends, ⇧Return adds a
+new line. Conversations with several recipients: no compose field; the line "Reply to group
+conversations on the phone" takes its place. If the phone can't send SMS: hide the compose field.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên hiện bong bóng tạm ngay khi bấm gửi (≤ 100 ms) với "Đang chờ điện thoại".
-- Không tự gửi lại tin lỗi; người dùng quyết định bằng "Thử lại".
-- Không đổi màu bong bóng theo màu nhấn của hệ thống.
+- Do show a temporary bubble as soon as the user sends (≤ 100 ms), with "Waiting for phone".
+- Don't resend failed messages automatically; the user decides with "Try Again".
+- Don't change bubble colors to follow the system accent color.

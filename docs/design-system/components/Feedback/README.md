@@ -1,33 +1,36 @@
+English | [Tiếng Việt](README.vi.md)
+
 # Feedback
 
-Phản hồi nhẹ sau một thao tác — đã gửi, đang chờ, bị chặn — đặt ngay chỗ người dùng đang nhìn, không
-bằng alert hay thông báo. Dùng nhiều kênh cùng lúc: biểu tượng, chữ, rung (iPhone, Android).
+Lightweight feedback after an action — sent, waiting, blocked — shown right where the user is looking,
+not as an alert or a notification. It uses several channels at once: icon, text, and haptics (iPhone,
+Android).
 
-## Theo nền tảng
+## By platform
 
-| Nền tảng | Hình thức | Ví dụ |
+| Platform | Form | Example |
 |---------|-----------|-------|
-| macOS | Biểu tượng thanh menu đổi sang `checkmark` trong ~1 giây (SF Symbols Magic Replace), rồi trở lại; dòng trạng thái trong menu ở lần mở tiếp | Gửi bảng nhớ tạm từ menu: không cửa sổ, không thông báo |
-| macOS | Dòng trạng thái nhỏ trong cửa sổ đang mở | "Bảng nhớ tạm đang chờ gửi · còn 1:45" |
-| iOS/iPadOS | HUD dạng viên kính ở đỉnh màn hình ~1,5 giây + rung `success` | "Đã gửi tới Pixel 8 của Lan" |
-| Android (app mở) | Như iOS, HUD kính + rung `CONFIRM` | "Đã gửi tới MacBook của Lan" |
-| Android (app ở nền: ô Cài đặt nhanh, nút trong thông báo) | Toast của hệ thống | "Đã gửi tới MacBook của Lan" |
+| macOS | The menu bar icon changes to `checkmark` for ~1 second (SF Symbols Magic Replace), then changes back; a status line in the menu the next time it opens | Sending the clipboard from the menu: no window, no notification |
+| macOS | A small status line in the open window | "Clipboard waiting to send · 1:45 left" |
+| iOS/iPadOS | A glass pill HUD at the top of the screen for ~1.5 seconds + a `success` haptic | "Sent to Lan's Pixel 8" |
+| Android (app open) | Like iOS, a glass HUD + a `CONFIRM` haptic | "Sent to Lan's MacBook" |
+| Android (app in the background: Quick Settings tile, notification button) | The system toast | "Sent to Lan's MacBook" |
 
-HUD không có nút và không chứa việc cần làm. Việc cần làm (ví dụ "Vẫn gửi", "Gửi lại") đi bằng
-`Notification` hoặc nằm trong màn đang mở.
+The HUD has no buttons and holds no tasks. Tasks (for example "Send Anyway", "Send Again") go through
+`Notification` or live in the screen that's open.
 
-## Câu chữ (CLIP-01)
+## Wording (CLIP-01)
 
-| Kết quả | Chữ | Biểu tượng |
+| Result | Text | Icon |
 |---------|-----|-----------|
-| Thành công | "Đã gửi tới <tên thiết bị>" | `checkmark.circle.fill` ↔ `check_circle` (`status-connected`) |
-| Chưa kết nối | "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" | `clock` ↔ `schedule` (`status-connecting`) |
-| Không đọc được | "Bảng nhớ tạm trống hoặc không phải văn bản" | `exclamationmark.circle` ↔ `error` (`status-offline`) |
+| Success | "Sent to <device name>" | `checkmark.circle.fill` ↔ `check_circle` (`status-connected`) |
+| Not connected | "Not connected — will send if reconnected within 2 minutes" | `clock` ↔ `schedule` (`status-connecting`) |
+| Couldn't read | "Clipboard is empty or isn't text" | `exclamationmark.circle` ↔ `error` (`status-offline`) |
 
-Đã đồng bộ với tài liệu chi tiết (25/09/2026): CLIP-01 trường 11 viết "Bảng nhớ tạm trống…".
+Synced with the detailed design (September 25, 2026): CLIP-01 field 11 says "Clipboard is empty…".
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên tắt chuyển động trượt của HUD khi bật Giảm chuyển động (chỉ hiện/ẩn mờ).
-- Không đưa nội dung vừa sao chép vào HUD hay thông báo.
-- Không xác nhận những việc hiển nhiên (tự đồng bộ khi mọi thứ bình thường là im lặng).
+- Do turn off the HUD's sliding motion when Reduce Motion is on (fade in and out only).
+- Don't put the content that was just copied into the HUD or a notification.
+- Don't confirm the obvious (automatic sync stays silent when everything is normal).

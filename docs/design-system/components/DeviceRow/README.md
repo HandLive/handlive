@@ -1,31 +1,34 @@
+English | [Tiếng Việt](README.vi.md)
+
 # DeviceRow
 
-Một thiết bị đã ghép nối: loại máy, tên, trạng thái liên kết và lối vào chi tiết (PAIR-02). Android
-thấy danh sách tối đa tám máy; Mac và iPhone/iPad chỉ thấy một điện thoại.
+One paired device: its type, its name, the link status, and the way into its details (PAIR-02). Android
+sees a list of up to eight devices; the Mac and iPhone/iPad see only one phone.
 
-## Cấu tạo
+## Anatomy
 
-| Phần | Nội dung | Nguồn |
+| Part | Content | Source |
 |------|----------|-------|
-| Biểu tượng | `laptopcomputer` ↔ `laptop_mac`, `iphone` ↔ `phone_iphone`, `ipad` ↔ `tablet_mac`, điện thoại Android `candybarphone` ↔ `smartphone`; ô tròn `tertiary-system-fill` | `peer_platform` |
-| Tên | Đúng như người dùng đặt, một dòng, cắt cuối bằng "…" | `peer_name` |
-| Trạng thái | `StatusIndicator` cỡ nhỏ: "Đã kết nối qua Wi-Fi", "Điện thoại ngoại tuyến · lần cuối 14:05" | máy trạng thái kết nối, `last_seen_at` |
-| Cuối dòng | Mũi tên mở chi tiết (iOS/Android); trên Mac là nút "Chi tiết…" | — |
+| Icon | `laptopcomputer` ↔ `laptop_mac`, `iphone` ↔ `phone_iphone`, `ipad` ↔ `tablet_mac`, Android phone `candybarphone` ↔ `smartphone`; round `tertiary-system-fill` tile | `peer_platform` |
+| Name | Exactly as the user named it, one line, truncated at the end with "…" | `peer_name` |
+| Status | A small `StatusIndicator`: "Connected via Wi-Fi", "Phone offline · last seen 2:05 PM" | The connection state machine, `last_seen_at` |
+| Trailing end | A chevron that opens the details (iOS/Android); on the Mac, a "Details…" button | — |
 
-Màn chi tiết có: tính năng đang dùng và lý do tính năng chưa dùng được, quyền còn thiếu trên điện
-thoại, **Mã an toàn** 8 ký tự hex (hiển thị hai nhóm "7F3A 9C21", kiểu `code-pin` cỡ nhỏ, chọn và
-sao chép được), nút "Hủy ghép nối" ở nhóm cuối.
+The details screen has: the features in use and the reasons a feature isn't available yet, the
+permissions missing on the phone, the **Security Code** of 8 hex characters (shown in two groups, "7F3A
+9C21", in a small `code-pin` style, selectable and copyable), and the "Unpair" button in the last group.
 
-## Theo nền tảng
+## By platform
 
-- **macOS:** Cài đặt › Thiết bị: một dòng trong `Form` nhóm, biểu tượng 32 pt, tên `mac-headline`,
-  trạng thái `mac-subheadline`, nút "Chi tiết…" và "Hủy ghép nối…" bên phải.
-- **iOS/iPadOS:** Cài đặt › Điện thoại, dòng 60 pt trong `GroupedList`.
-- **Android:** màn Thiết bị (tab chính), dòng 72 dp; trạng thái trống có tiêu đề `brand-title` "Chưa
-  có thiết bị nào" và nút "Thêm thiết bị".
+- **macOS:** Settings › Devices: one row in a grouped `Form`, a 32 pt icon, the name in `mac-headline`,
+  the status in `mac-subheadline`, the "Details…" and "Unpair…" buttons on the right.
+- **iOS/iPadOS:** Settings › Phone, a 60 pt row in `GroupedList`.
+- **Android:** the Devices screen (the main tab), 72 dp rows; the empty state has the `brand-title`
+  title "No Devices" and the "Add Device" button.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên cập nhật trạng thái trong ≤ 1 giây khi kết nối đổi, không cần kéo để làm mới.
-- Không hiển thị `pair_id`, khóa, địa chỉ IP trên dòng.
-- Không đặt "Hủy ghép nối" trực tiếp trên dòng; luôn qua màn chi tiết và `Alert` xác nhận.
+- Do update the status within ≤ 1 second when the connection changes, with no need to pull to refresh.
+- Don't show `pair_id`, keys, or IP addresses in the row.
+- Don't put "Unpair" directly on the row; always go through the details screen and a confirmation
+  `Alert`.

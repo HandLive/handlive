@@ -1,38 +1,42 @@
+English | [Tiếng Việt](README.vi.md)
+
 # GroupedList
 
-Danh sách nhóm kiểu Cài đặt của iPhone — các nhóm bo góc trên nền `system-grouped-background`, có
-tiêu đề và chú thích — dùng cho Cài đặt, Thiết bị và các màn quyền trên iOS/iPadOS và Android. Trên
-Mac, cùng cấu trúc là `Form` kiểu `.grouped` (xem `Toggle`).
+An iPhone Settings–style grouped list — rounded groups on a `system-grouped-background` background, with
+headers and captions — used for Settings, Devices, and the permission screens on iOS/iPadOS and
+Android. On the Mac, the same structure is a `Form` with the `.grouped` style (see `Toggle`).
 
-## Cấu tạo
+## Anatomy
 
-| Phần | Quy cách | Token |
+| Part | Specification | Token |
 |------|---------|-------|
-| Tiêu đề nhóm | Sentence case (không còn viết hoa toàn bộ từ Liquid Glass), 13 pt Semibold | `secondary-label` |
-| Nhóm | Nền ô, góc bo đồng tâm (`radius-sheet` từ iOS 26, `radius-row` trên iOS 16–18) | `secondary-system-grouped-background` |
-| Dòng | Cao ≥ 44 pt (Android 56 dp); biểu tượng vuông `size-row-icon` (30 pt) bo `radius-row-icon` (8 pt), glyph `on-icon-fill` trên màu; chữ `ios-body` | `label`, `separator` |
-| Giá trị | Bên phải, trước mũi tên | `secondary-label` |
-| Mũi tên | `chevron.forward` ↔ `chevron_right` khi dòng mở màn con | `tertiary-label` |
-| Chú thích nhóm | Câu hoàn chỉnh giải thích hệ quả | `secondary-label` |
-| Lý do chưa dùng được | Dưới tiêu đề dòng, có biểu tượng thông tin | `text-orange` |
+| Group header | Sentence case (no longer all caps since Liquid Glass), 13 pt Semibold | `secondary-label` |
+| Group | Cell background, concentric corners (`radius-sheet` from iOS 26, `radius-row` on iOS 16–18) | `secondary-system-grouped-background` |
+| Row | ≥ 44 pt tall (Android 56 dp); a square `size-row-icon` icon (30 pt) with `radius-row-icon` (8 pt) corners and an `on-icon-fill` glyph on the color; `ios-body` text | `label`, `separator` |
+| Value | On the right, before the chevron | `secondary-label` |
+| Chevron | `chevron.forward` ↔ `chevron_right` when the row opens a subscreen | `tertiary-label` |
+| Group caption | A complete sentence explaining the consequences | `secondary-label` |
+| Reason it isn't available yet | Under the row title, with an info icon | `text-orange` |
 
-Loại dòng: điều hướng (tiêu đề + giá trị + mũi tên), công tắc (`Toggle`), hành động (chữ `accent`,
-ví dụ "Đồng bộ lại toàn bộ SMS"), phá hủy (chữ `destructive-text`, luôn ở nhóm cuối, luôn hỏi xác
-nhận bằng `Alert`).
+Row types: navigation (title + value + chevron), switch (`Toggle`), action (`accent` text, for example
+"Resync All SMS"), destructive (`destructive-text` text, always in the last group, always confirmed with
+an `Alert`).
 
-Màu ô biểu tượng theo nhóm chức năng, tránh xanh dương: Thiết bị `system-gray`, Bảng nhớ tạm
-`system-orange`, Tin nhắn `system-green`, Cuộc gọi `call-accept-fill`, Thông báo `system-red`, Kết
-nối qua Internet `system-purple`.
+The icon tile's color follows the function group and avoids blue: Devices `system-gray`, Clipboard
+`system-orange`, Messages `system-green`, Calls `call-accept-fill`, Notifications `system-red`, Internet
+Connection `system-purple`.
 
 ## API
 
-SwiftUI `Form` hoặc `List` với `.listStyle(.insetGrouped)`, `Section(header:footer:)`,
+SwiftUI `Form` or `List` with `.listStyle(.insetGrouped)`, `Section(header:footer:)`,
 `LabeledContent`, `NavigationLink`. Android: `HLGroupedList { section(title, footer) { row(...) } }`
-dựng bằng `LazyColumn`; dòng là một vùng chạm, có `Modifier.semantics { role = Role.Switch }` cho
-dòng công tắc.
+built with `LazyColumn`; each row is a single hit target, with `Modifier.semantics { role = Role.Switch }`
+for switch rows.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên để nhãn nói điều sẽ xảy ra khi bật; để chú thích nói hệ quả khi tắt nếu không hiển nhiên.
-- Không đặt hai hành động phá hủy trong một nhóm; không đặt hành động phá hủy ở đầu danh sách.
-- Không lặp lại cài đặt của hệ thống; dẫn tới đó bằng nút "Mở cài đặt".
+- Do make the label say what happens when the setting is on; let the caption state the consequence of
+  turning it off when that isn't obvious.
+- Don't put two destructive actions in one group; don't put a destructive action at the top of the
+  list.
+- Don't duplicate system settings; link to them with an "Open Settings" button.

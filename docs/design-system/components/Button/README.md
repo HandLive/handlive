@@ -1,41 +1,46 @@
+English | [Tiếng Việt](README.vi.md)
+
 # Button
 
-Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ, biểu tượng hoặc cả hai) và vai trò
-(role) — cho Mac, iPhone/iPad và Android.
+A button defined by the HIG's three attributes — style, content (text, an icon, or both), and role —
+for Mac, iPhone/iPad, and Android.
 
-## Kiểu và vai trò
+## Styles and roles
 
-| Kiểu | Khi dùng | macOS / iOS (SwiftUI) | Android (Compose) | Token |
+| Style | When to use | macOS / iOS (SwiftUI) | Android (Compose) | Token |
 |------|----------|----------------------|-------------------|-------|
-| Nổi bật (prominent) | Hành động chính của màn, tối đa một (hiếm khi hai) | `.borderedProminent`; từ 26: `.glassProminent` | `HLButton(style = Prominent)` | `accent-fill`, `on-accent` |
-| Kính / viền | Hành động phụ đứng cạnh nút chính | `.bordered`; từ 26: `.glass` | `HLButton(style = Glass)` | `glass-fill`, `glass-stroke`, chữ `label` |
-| Nhạt màu nhấn (tinted) | Hành động nên thấy nhưng không phải chính ("Mở cài đặt") | `.bordered` + `.tint(.accentColor)` | `style = Tinted` | `accent-tint`, `accent` |
-| Chữ (plain) | Liên kết, lệnh phụ trong câu | `.borderless` / `.plain` | `style = Plain` | `accent` |
-| Phá hủy (destructive) | Hủy ghép nối, xóa lịch sử | `role: .destructive` | `style = Destructive` | `destructive-text` trên nền kính (`glass-fill`, `glass-stroke`); nền đỏ đặc `call-decline-fill` chỉ cho nút tròn Từ chối, Kết thúc trong `CallPanel` |
+| Prominent | The screen's primary action, at most one (rarely two) | `.borderedProminent`; from 26: `.glassProminent` | `HLButton(style = Prominent)` | `accent-fill`, `on-accent` |
+| Glass / bordered | Secondary actions next to the primary button | `.bordered`; from 26: `.glass` | `HLButton(style = Glass)` | `glass-fill`, `glass-stroke`, `label` text |
+| Tinted | Actions that should be seen but aren't the primary one ("Open Settings") | `.bordered` + `.tint(.accentColor)` | `style = Tinted` | `accent-tint`, `accent` |
+| Plain | Links, secondary commands within a sentence | `.borderless` / `.plain` | `style = Plain` | `accent` |
+| Destructive | Unpair, delete history | `role: .destructive` | `style = Destructive` | `destructive-text` on a glass background (`glass-fill`, `glass-stroke`); the solid red `call-decline-fill` background is only for the round Decline and End buttons in `CallPanel` |
 
-- Vai trò: bình thường, chính (phản hồi Return), hủy (phản hồi Esc), phá hủy. **Không** gán vai trò
-  chính cho nút phá hủy.
-- Phân biệt mức ưu tiên bằng kiểu, không bằng cỡ. Mỗi màn một nút nổi bật.
-- Nhãn bắt đầu bằng động từ, sentence case: "Ghép nối", "Gửi bảng nhớ tạm", "Hủy ghép nối". Nút mở
-  cửa sổ hay bước khác kết thúc bằng "…": "Cài đặt…", "Từ chối kèm tin nhắn…".
-- Nút chỉ có biểu tượng phải có nhãn trợ năng và (trên Mac) tooltip bắt đầu bằng động từ.
+- Roles: normal, primary (responds to Return), cancel (responds to Esc), destructive. **Never** give a
+  destructive button the primary role.
+- Distinguish priority by style, not by size. One prominent button per screen.
+- Labels start with a verb, with title-style capitalization in English (sentence case in Vietnamese):
+  "Pair", "Send Clipboard", "Unpair". Buttons that open a window or another step end with "…":
+  "Settings…", "Decline with Message…".
+- Icon-only buttons must have an accessibility label and (on the Mac) a tooltip that starts with a
+  verb.
 
-## Cỡ
+## Sizes
 
-| Nền tảng | Cỡ dùng trong HandLive | Vùng bấm |
+| Platform | Size used in HandLive | Hit area |
 |----------|------------------------|----------|
-| macOS | `.controlSize(.regular)` cao ~24 pt trong form và sheet; `.large` cho nút cuối cửa sổ chào | ≥ `size-hit-mac` (28 pt), tối thiểu 20 pt |
-| iOS/iPadOS | `.controlSize(.large)` + `.buttonBorderShape(.capsule)`, cao 50 pt, rộng hết lề cho hành động chính của màn | ≥ `size-hit-ios` (44 pt) |
-| Android | Capsule cao 50 dp (chính) hoặc 48 dp (phụ), chữ Inter 17 sp Semibold | ≥ `size-hit-android` (48 dp) |
+| macOS | `.controlSize(.regular)`, ~24 pt tall, in forms and sheets; `.large` for the final button of the welcome window | ≥ `size-hit-mac` (28 pt), 20 pt minimum |
+| iOS/iPadOS | `.controlSize(.large)` + `.buttonBorderShape(.capsule)`, 50 pt tall, full width between the margins for the screen's primary action | ≥ `size-hit-ios` (44 pt) |
+| Android | Capsule 50 dp tall (primary) or 48 dp (secondary), Inter 17 sp Semibold text | ≥ `size-hit-android` (48 dp) |
 
-## Trạng thái
+## States
 
-Nhấn: tối đi 8%, không gợn sóng (ripple) trên Android. Vô hiệu: độ mờ 40% và luôn có dòng lý do gần
-đó. Đang xử lý: đổi nhãn sang tiến trình ("Đang ghép nối…") kèm `ProgressView` nhỏ, không đổi cỡ
-nút.
+Pressed: darkens by 8%, with no ripple on Android. Disabled: 40% opacity, always with a line nearby
+explaining why. Working: the label changes to show progress ("Pairing…") with a small `ProgressView`,
+without changing the button's size.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên đặt nút chính ở cạnh phải (Mac) hoặc dưới cùng trong vùng dễ với (iPhone, Android).
-- Không đặt hai nút nổi bật cạnh nhau; không dùng đỏ son `brand-fire` cho nút.
-- Không dùng "OK", "Có", "Không" làm nhãn; "Hủy" chỉ dành cho nút hủy.
+- Do put the primary button at the right edge (Mac) or at the bottom within easy reach (iPhone,
+  Android).
+- Don't put two prominent buttons side by side; don't use vermilion `brand-fire` for buttons.
+- Don't use "OK", "Yes", or "No" as labels; "Cancel" is only for cancel buttons.
