@@ -248,7 +248,7 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
 |------|-----------|---------|----------|
 | `ik_sig` | Ed25519 | Android: the private key bytes encrypted with a Tink AEAD keyset (AES256-GCM); the keyset is wrapped by the AES-256 key `hl_master` in the Android Keystore (StrongBox if available) — Tink has no keyset type for raw X25519, so `ik_sig`, `ik_dh` and `PRK` are all stored the same way. Mac/iOS: Keychain | Created on first run; lost when the app is uninstalled |
 | `ik_dh` | X25519 | Like `ik_sig` | Like `ik_sig` |
-| TLS key | ECDSA P-256 + self-signed certificate | Android: PKCS#12, password wrapped by the Keystore | At install time. A corrupted PKCS#12 store or a lost password → regenerate the key and certificate; every client sees `TLS_PIN_MISMATCH` on every instance → shows "Needs re-pairing" (CONN-01 E2) |
+| TLS key | ECDSA P-256 + self-signed certificate | Android: PKCS#12, password wrapped by the Keystore | At install time. A corrupted PKCS#12 store or a lost password → regenerate the key and certificate; every client sees `TLS_PIN_MISMATCH` on every instance → shows "Needs to be paired again" (CONN-01 E2) |
 | `pairing_secret` | 32 random bytes | Only in Mac/iOS memory and in the QR | 120 s |
 | `PRK` | 32 bytes | Android: column `prk_enc` (Tink AEAD, key in the Keystore). Mac/iOS: Keychain, account = `pair_id` | Per pair |
 | `K_push` | HKDF(`PRK`, info = `"handlive/v1/push"`) | Computed when needed | Per pair |
@@ -495,7 +495,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `BAD_REQUEST` | General | Missing or invalid field | Fix the programming error; do not retry |
 | `UNSUPPORTED_TYPE` | General | `type`/`op` not supported | Hide the feature |
 | `UNSUPPORTED_VERSION` | General | Different protocol version | Prompt to update the app |
-| `FEATURE_DISABLED` | General | The feature is off on the receiving side | Show "This feature is turned off on <device>" |
+| `FEATURE_DISABLED` | General | The feature is off on the receiving side | Show "This feature is off on <device>" |
 | `PERMISSION_MISSING` | General | Missing Android permission; `details.permission` | Guide the user to grant the permission (SET-01) |
 | `TIMEOUT` | General | No ack within the deadline | Retry according to each function's policy |
 | `RATE_LIMITED` | General | Quota exceeded | Wait `details.retry_after_ms` |
@@ -913,7 +913,7 @@ stateDiagram-v2
   Handshaking --> Connected: valid welcome + capability
   Handshaking --> Backoff: error or 4408
   ConnectingLAN --> Backoff: network or TLS error (not a pin mismatch)
-  ConnectingLAN --> Idle: every instance of the pair fails the pin (Needs re-pairing)
+  ConnectingLAN --> Idle: every instance of the pair fails the pin (Needs to be paired again)
   ConnectingRelay --> Backoff: relay unreachable, 401 or 404 after re-registering
   WaitingPeer --> Backoff: relay connection lost
   Discovering --> Backoff: past LAN_DISCOVERY_GRACE and relay.enabled = false
@@ -932,7 +932,7 @@ stateDiagram-v2
 Status shown to the user (PAIR-02): `Idle` /`Backoff` → "Disconnected"; `Discovering`
 /`Connecting*`/`Handshaking` → "Connecting…"; `WaitingPeer` → "Phone offline";
 `Connected` → "Connected via Wi-Fi" or "Connected over the internet" ("Connected via USB" while the
-camera channel uses USB); every instance fails the pin → "Needs re-pairing".
+camera channel uses USB); every instance fails the pin → "Needs to be paired again".
 
 ## 0.12 Localization and the UI string catalog
 
