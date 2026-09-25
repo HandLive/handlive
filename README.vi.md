@@ -78,6 +78,7 @@ tools/workspace.sh status
 | [`docs/design-guidelines.md`](docs/design-guidelines.vi.md) | Nguyên tắc trải nghiệm và bảo mật |
 | [`docs/code-standards.md`](docs/code-standards.vi.md) | Quy ước code từng nền tảng |
 | [`docs/deployment-guide.md`](docs/deployment-guide.vi.md) | Đóng gói và phân phối (App Store, PKG, cloud relay) |
+| [`docs/privacy.md`](docs/privacy.vi.md) | HandLive và quyền riêng tư: dữ liệu ở lại trên thiết bị, máy chủ relay thấy gì, xóa dữ liệu |
 | [`docs/codebase-summary.md`](docs/codebase-summary.vi.md) | Bản đồ codebase, cập nhật khi code đổi |
 | [`docs/detailed-design/README.md`](docs/detailed-design/README.vi.md) | Thiết kế chi tiết: 33 chức năng, giao thức, mã lỗi, mô hình dữ liệu |
 

@@ -78,6 +78,7 @@ tools/workspace.sh status
 | [`docs/design-guidelines.md`](docs/design-guidelines.md) | Experience and security principles |
 | [`docs/code-standards.md`](docs/code-standards.md) | Code conventions per platform |
 | [`docs/deployment-guide.md`](docs/deployment-guide.md) | Packaging and distribution (App Store, PKG, cloud relay) |
+| [`docs/privacy.md`](docs/privacy.md) | HandLive and your privacy: what stays on the devices, what the relay sees, deleting data |
 | [`docs/codebase-summary.md`](docs/codebase-summary.md) | Map of the code base, updated when code changes |
 | [`docs/detailed-design/README.md`](docs/detailed-design/README.md) | Detailed design: 33 functions, protocol, error codes, data model, localization |
 
