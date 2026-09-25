@@ -1,0 +1,30 @@
+{
+  "description": "device_id = UUIDv8 từ 16 byte đầu SHA-256(ik_sig_pub): byte 6 = (b6 & 0x0f) | 0x80, byte 8 = (b8 & 0x3f) | 0x80. ik_sig_seed là khóa bí mật Ed25519 32 byte (seed).",
+  "source": "docs/detailed-design/00-common-specs.md 0.2; khóa từ RFC 8032 §7.1 TEST 1–3",
+  "vectors": [
+    {
+      "name": "RFC 8032 7.1 TEST 1",
+      "ik_sig_seed": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "ik_sig_pub": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "sha256": "21fe31dfa154a261626bf854046fd2271b7bed4b6abe45aa58877ef47f9721b9",
+      "device_id_bytes": "21fe31dfa1548261a26bf854046fd227",
+      "device_id": "21fe31df-a154-8261-a26b-f854046fd227"
+    },
+    {
+      "name": "RFC 8032 7.1 TEST 2",
+      "ik_sig_seed": "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+      "ik_sig_pub": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+      "sha256": "39f713d0a644253f04529421b9f51b9b08979d08295959c4f3990ee617f5139f",
+      "device_id_bytes": "39f713d0a644853f84529421b9f51b9b",
+      "device_id": "39f713d0-a644-853f-8452-9421b9f51b9b"
+    },
+    {
+      "name": "RFC 8032 7.1 TEST 3",
+      "ik_sig_seed": "c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7",
+      "ik_sig_pub": "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025",
+      "sha256": "dac073e0123bdea59dd9b3bda9cf6037f63aca82627d7abcd5c4ac29dd74003e",
+      "device_id_bytes": "dac073e0123b8ea59dd9b3bda9cf6037",
+      "device_id": "dac073e0-123b-8ea5-9dd9-b3bda9cf6037"
+    }
+  ]
+}

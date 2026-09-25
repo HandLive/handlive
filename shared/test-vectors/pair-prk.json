@@ -1,0 +1,48 @@
+{
+  "description": "PRK = HKDF-SHA256(ikm = X25519(ik_dh mình, ik_dh đối phương) ‖ pairing_secret, salt = SHA-256(device_id nhỏ hơn ‖ lớn hơn, 16 byte), info = \"handlive/v1/pair\", L = 32).",
+  "source": "docs/detailed-design/00-common-specs.md 0.6.2; ik_dh từ RFC 7748 §6.1",
+  "vectors": [
+    {
+      "name": "cặp 1",
+      "pair_id": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "client_ik_sig_pub": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "client_device_id": "21fe31df-a154-8261-a26b-f854046fd227",
+      "android_ik_sig_pub": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+      "android_device_id": "39f713d0-a644-853f-8452-9421b9f51b9b",
+      "client_ik_dh_priv": "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a",
+      "client_ik_dh_pub": "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a",
+      "android_ik_dh_priv": "5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb",
+      "android_ik_dh_pub": "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f",
+      "dh_shared": "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742",
+      "pairing_secret": "ded3ceb0d81908fe595a576826471c0cdcbedb8807c46e2e78ca4f1ab1499581",
+      "ikm": "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742ded3ceb0d81908fe595a576826471c0cdcbedb8807c46e2e78ca4f1ab1499581",
+      "client_id_is_smaller": true,
+      "salt_input": "21fe31dfa1548261a26bf854046fd22739f713d0a644853f84529421b9f51b9b",
+      "salt": "13113113d84a6f6cc06c41c2013aa34beea626991c428e7b820f3ca15f58d190",
+      "info": "handlive/v1/pair",
+      "length": 32,
+      "prk": "d9e9827d49f7db11a88ac107ed6fb22b761c723c35449fc798694867fe55c209"
+    },
+    {
+      "name": "cặp 2",
+      "pair_id": "9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d",
+      "client_ik_sig_pub": "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025",
+      "client_device_id": "dac073e0-123b-8ea5-9dd9-b3bda9cf6037",
+      "android_ik_sig_pub": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "android_device_id": "21fe31df-a154-8261-a26b-f854046fd227",
+      "client_ik_dh_priv": "5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb",
+      "client_ik_dh_pub": "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f",
+      "android_ik_dh_priv": "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a",
+      "android_ik_dh_pub": "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a",
+      "dh_shared": "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742",
+      "pairing_secret": "d6d0ab47c7cd93b2fd17308fc91509a0f1f334c50f2703c22228a27fa5d230e9",
+      "ikm": "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742d6d0ab47c7cd93b2fd17308fc91509a0f1f334c50f2703c22228a27fa5d230e9",
+      "client_id_is_smaller": false,
+      "salt_input": "21fe31dfa1548261a26bf854046fd227dac073e0123b8ea59dd9b3bda9cf6037",
+      "salt": "aeb2964bf2ae18342c2565320aa08f1b42cc29f810dc6d73f71987b3bcd4f4ab",
+      "info": "handlive/v1/pair",
+      "length": 32,
+      "prk": "8d3109350469af80c3db25ff2c1867ab56112623020d829301236ed7251411cc"
+    }
+  ]
+}

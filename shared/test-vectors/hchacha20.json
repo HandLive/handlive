@@ -1,0 +1,27 @@
+{
+  "description": "HChaCha20: (key 32 byte, nonce 16 byte) → subkey 32 byte.",
+  "source": "draft-irtf-cfrg-xchacha-03 §2.2.1; vector 2 dẫn từ input §A.3.1; vector 3 tự sinh",
+  "vectors": [
+    {
+      "name": "draft §2.2.1",
+      "source": "draft-irtf-cfrg-xchacha-03 §2.2.1",
+      "key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "nonce": "000000090000004a0000000031415927",
+      "subkey": "82413b4227b27bfed30e42508a877d73a0f9e4d58a74a853c12ec41326d3ecdc"
+    },
+    {
+      "name": "draft A.3.1 key/nonce[0:16]",
+      "source": "dẫn từ draft-irtf-cfrg-xchacha-03 §A.3.1 (subkey tự tính)",
+      "key": "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+      "nonce": "404142434445464748494a4b4c4d4e4f",
+      "subkey": "4a8ac0c0296222bafe959faabe06a45b89a3cee444fef6e3d77659a53f49ee32"
+    },
+    {
+      "name": "tự sinh",
+      "source": "tự sinh",
+      "key": "488435dd3467bd01e65829655ba8c1240df9cf8c64bb6a1622515ae93fce8519",
+      "nonce": "d3df325461502666f71400f3de03c11c",
+      "subkey": "343fbe5e25e01eebbb57337b23e8990c5c275a5336faaa28ff5e66208cf7521b"
+    }
+  ]
+}

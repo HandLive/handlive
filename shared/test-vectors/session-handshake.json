@@ -1,0 +1,90 @@
+{
+  "description": "Bắt tay /v1/ctl. K_auth = HKDF(PRK, salt rỗng, info \"handlive/v1/session-auth\", L 32). T1/T2 ghép BYTE thô (uuid 16 byte, eph 32, nonce 32). mac = HMAC-SHA256(K_auth, T). secret = HKDF(X25519(eph) ‖ PRK, salt SHA-256(T2), info \"handlive/v1/session\", L 64).",
+  "source": "docs/detailed-design/00-common-specs.md 0.6.3 bước 1–3, 0.5.1; 03-connectivity.md CONN-01 API 4–5",
+  "vectors": [
+    {
+      "name": "bắt tay cặp 1",
+      "prk": "d9e9827d49f7db11a88ac107ed6fb22b761c723c35449fc798694867fe55c209",
+      "pair_id": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "client_device_id": "21fe31df-a154-8261-a26b-f854046fd227",
+      "server_device_id": "39f713d0-a644-853f-8452-9421b9f51b9b",
+      "k_auth": "d4e9066c5ade5605aca8842eabfc18e44c987a957719e8ad344c403381228e9a",
+      "client_eph_priv": "9ea73583da69db7022d952ece6b6836bda9e71209edcdfcf75581fa4b8845210",
+      "client_eph_pub": "2728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d",
+      "client_nonce": "2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e",
+      "t1": "484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e",
+      "hello_mac": "6658f385ed6c90fb55feba6973ae473b42fb06e91f1c283f76e5a7928374984d",
+      "server_eph_priv": "e2b99ded5ece206b28884bd1b14ef1d8936257c1bc6bdc724f190c082bfa53e3",
+      "server_eph_pub": "cf024eceb18c6981b3135c12e4285649588dc2bdde5618e26e0c09fe1dea8652",
+      "server_nonce": "881b4fc5163f173c937f3cb22ca52390d859a8d6c9467c4b2d249ad4ff0a38c4",
+      "t2": "484c317c77656c636f6d657c484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e39f713d0a644853f84529421b9f51b9bcf024eceb18c6981b3135c12e4285649588dc2bdde5618e26e0c09fe1dea8652881b4fc5163f173c937f3cb22ca52390d859a8d6c9467c4b2d249ad4ff0a38c4",
+      "welcome_mac": "b934401e2023055e220600659dd672342da0b558ff580dfdafdd9831d0f086a8",
+      "eph_shared": "9ec84ec04b517b920e656bad410da714abfa8b7da87f7c6549e614a6a159d527",
+      "secret_salt": "40ded04113ec6fb742c61f402d5dd83b22f09ce03b65e80250879922fc819d46",
+      "secret": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e172758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "k_c2s": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "k_s2c": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "hello_plaintext": "{\"op\":\"hello\",\"data\":{\"protocol\":1,\"pair_id\":\"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\"device_id\":\"21fe31df-a154-8261-a26b-f854046fd227\",\"eph\":\"JyjwqwZwJ7TtITYKBuNmMC4EQ7YAWxmqrykcJd7khR0\",\"nonce\":\"LOxKHzPsZr18Psg7ySI5HJwemW28k3zRQ1bPhttQ224\",\"mac\":\"Zljzhe1skPtV_rppc65HO0L7BukfHCg_duWnkoN0mE0\"}}",
+      "hello_envelope": "{\"v\":1,\"type\":\"session\",\"id\":\"0192f400-11aa-7b2c-9d3e-4f5a6b7c8d9e\",\"ts\":1727151000000,\"payload\":\"eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJwcm90b2NvbCI6MSwicGFpcl9pZCI6IjNmMmIxYzRkLTVlNmYtNGE3Yi04YzlkLTBlMWYyYTNiNGM1ZCIsImRldmljZV9pZCI6IjIxZmUzMWRmLWExNTQtODI2MS1hMjZiLWY4NTQwNDZmZDIyNyIsImVwaCI6Ikp5andxd1p3SjdUdElUWUtCdU5tTUM0RVE3WUFXeG1xcnlrY0pkN2toUjAiLCJub25jZSI6IkxPeEtIelBzWnIxOFBzZzd5U0k1SEp3ZW1XMjhrM3pSUTFiUGh0dFEyMjQiLCJtYWMiOiJabGp6aGUxc2tQdFZfcnBwYzY1SE8wTDdCdWtmSENnX2R1V25rb04wbUUwIn19\"}",
+      "welcome_plaintext": "{\"op\":\"welcome\",\"data\":{\"device_id\":\"39f713d0-a644-853f-8452-9421b9f51b9b\",\"eph\":\"zwJOzrGMaYGzE1wS5ChWSViNwr3eVhjibgwJ_h3qhlI\",\"nonce\":\"iBtPxRY_FzyTfzyyLKUjkNhZqNbJRnxLLSSa1P8KOMQ\",\"mac\":\"uTRAHiAjBV4iBgBlndZyNC2gtVj_WA39r92YMdDwhqg\"}}",
+      "welcome_envelope": "{\"v\":1,\"type\":\"session\",\"id\":\"0192f400-11b4-7c3d-8e4f-5a6b7c8d9e0f\",\"ts\":1727151000041,\"payload\":\"eyJvcCI6IndlbGNvbWUiLCJkYXRhIjp7ImRldmljZV9pZCI6IjM5ZjcxM2QwLWE2NDQtODUzZi04NDUyLTk0MjFiOWY1MWI5YiIsImVwaCI6Inp3Sk96ckdNYVlHekUxd1M1Q2hXU1ZpTndyM2VWaGppYmd3Sl9oM3FobEkiLCJub25jZSI6ImlCdFB4UllfRnp5VGZ6eXlMS1Vqa05oWnFOYkpSbnhMTFNTYTFQOEtPTVEiLCJtYWMiOiJ1VFJBSGlBakJWNGlCZ0JsbmRaeU5DMmd0VmpfV0EzOXI5MllNZER3aHFnIn19\"}"
+    },
+    {
+      "name": "bắt tay cặp 2",
+      "prk": "8d3109350469af80c3db25ff2c1867ab56112623020d829301236ed7251411cc",
+      "pair_id": "9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d",
+      "client_device_id": "dac073e0-123b-8ea5-9dd9-b3bda9cf6037",
+      "server_device_id": "21fe31df-a154-8261-a26b-f854046fd227",
+      "k_auth": "d8e0c2387885d88046f1b84f912a23b946cf68ccfdd518f522d2fe398d88c9e5",
+      "client_eph_priv": "138a2f5939d7fd2fdde1f433d76d050a3d4b67f37ce46b08c04921a8b12fdf14",
+      "client_eph_pub": "a4a51c115376e785dbcb05991041b3e3aacfcb45ff95679ab04daf80865c5404",
+      "client_nonce": "0f45221075ba0687efdeac942037d7b5d7ca5d2be46e38c7140201d4f0098309",
+      "t1": "484c317c68656c6c6f7c9a8b7c6d5e4f4a3b9c2d1e0f2a3b4c5ddac073e0123b8ea59dd9b3bda9cf6037a4a51c115376e785dbcb05991041b3e3aacfcb45ff95679ab04daf80865c54040f45221075ba0687efdeac942037d7b5d7ca5d2be46e38c7140201d4f0098309",
+      "hello_mac": "595b20230d42a2b0006c7179897c65eaccdf4534e46961af378aa991a04e6814",
+      "server_eph_priv": "552660744b26c9e62d87555ce3a618f7b1f8b670755edb67070e0c9504d52d33",
+      "server_eph_pub": "272fac92e1a33e78e4211d6d20b9b11fae81bd5ac0d967ab05c38bc32693d25b",
+      "server_nonce": "0a8600e775f05c8b37c77d23b3b496dd0ebd643a9e9cf6363050a254c21ee874",
+      "t2": "484c317c77656c636f6d657c484c317c68656c6c6f7c9a8b7c6d5e4f4a3b9c2d1e0f2a3b4c5ddac073e0123b8ea59dd9b3bda9cf6037a4a51c115376e785dbcb05991041b3e3aacfcb45ff95679ab04daf80865c54040f45221075ba0687efdeac942037d7b5d7ca5d2be46e38c7140201d4f009830921fe31dfa1548261a26bf854046fd227272fac92e1a33e78e4211d6d20b9b11fae81bd5ac0d967ab05c38bc32693d25b0a8600e775f05c8b37c77d23b3b496dd0ebd643a9e9cf6363050a254c21ee874",
+      "welcome_mac": "aefd10fb6c9a0e2af52324f12c06e8e20a27c385cb52cae95853125a3c3dc796",
+      "eph_shared": "96d76b35b82cb8786ee625204a8ad51c001f6a346abd1233f77069fbeeaa3f18",
+      "secret_salt": "f40419b4feee02a57c41c58831ed603ec425a01550c2be2ecb9db0226321414e",
+      "secret": "74009d59ad841d6f12c2cfaf2ddc49de923f1949c51f1dbf78fd900b3cce568d547e92c53d4dd6323c44612126dea69acb07aaf9f9901682a4628909ba6c69a7",
+      "k_c2s": "74009d59ad841d6f12c2cfaf2ddc49de923f1949c51f1dbf78fd900b3cce568d",
+      "k_s2c": "547e92c53d4dd6323c44612126dea69acb07aaf9f9901682a4628909ba6c69a7",
+      "hello_plaintext": "{\"op\":\"hello\",\"data\":{\"protocol\":1,\"pair_id\":\"9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d\",\"device_id\":\"dac073e0-123b-8ea5-9dd9-b3bda9cf6037\",\"eph\":\"pKUcEVN254XbywWZEEGz46rPy0X_lWeasE2vgIZcVAQ\",\"nonce\":\"D0UiEHW6Bofv3qyUIDfXtdfKXSvkbjjHFAIB1PAJgwk\",\"mac\":\"WVsgIw1CorAAbHF5iXxl6szfRTTkaWGvN4qpkaBOaBQ\"}}",
+      "hello_envelope": "{\"v\":1,\"type\":\"session\",\"id\":\"0192f410-2a3b-7c4d-9e5f-6a7b8c9d0e1f\",\"ts\":1727152000000,\"payload\":\"eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJwcm90b2NvbCI6MSwicGFpcl9pZCI6IjlhOGI3YzZkLTVlNGYtNGEzYi05YzJkLTFlMGYyYTNiNGM1ZCIsImRldmljZV9pZCI6ImRhYzA3M2UwLTEyM2ItOGVhNS05ZGQ5LWIzYmRhOWNmNjAzNyIsImVwaCI6InBLVWNFVk4yNTRYYnl3V1pFRUd6NDZyUHkwWF9sV2Vhc0UydmdJWmNWQVEiLCJub25jZSI6IkQwVWlFSFc2Qm9mdjNxeVVJRGZYdGRmS1hTdmtiampIRkFJQjFQQUpnd2siLCJtYWMiOiJXVnNnSXcxQ29yQUFiSEY1aVh4bDZzemZSVFRrYVdHdk40cXBrYUJPYUJRIn19\"}",
+      "welcome_plaintext": "{\"op\":\"welcome\",\"data\":{\"device_id\":\"21fe31df-a154-8261-a26b-f854046fd227\",\"eph\":\"Jy-skuGjPnjkIR1tILmxH66BvVrA2WerBcOLwyaT0ls\",\"nonce\":\"CoYA53XwXIs3x30js7SW3Q69ZDqenPY2MFCiVMIe6HQ\",\"mac\":\"rv0Q-2yaDir1IyTxLAbo4gonw4XLUsrpWFMSWjw9x5Y\"}}",
+      "welcome_envelope": "{\"v\":1,\"type\":\"session\",\"id\":\"0192f410-2a45-7d5e-8f60-7b8c9d0e1f2a\",\"ts\":1727152000057,\"payload\":\"eyJvcCI6IndlbGNvbWUiLCJkYXRhIjp7ImRldmljZV9pZCI6IjIxZmUzMWRmLWExNTQtODI2MS1hMjZiLWY4NTQwNDZmZDIyNyIsImVwaCI6Ikp5LXNrdUdqUG5qa0lSMXRJTG14SDY2QnZWckEyV2VyQmNPTHd5YVQwbHMiLCJub25jZSI6IkNvWUE1M1h3WElzM3gzMGpzN1NXM1E2OVpEcWVuUFkyTUZDaVZNSWU2SFEiLCJtYWMiOiJydjBRLTJ5YURpcjFJeVR4TEFibzRnb253NFhMVXNycFdGTVNXanc5eDVZIn19\"}"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "hello cặp 1 / mac sai",
+      "reason": "mac_mismatch",
+      "key": "d4e9066c5ade5605aca8842eabfc18e44c987a957719e8ad344c403381228e9a",
+      "message": "484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e",
+      "mac": "e658f385ed6c90fb55feba6973ae473b42fb06e91f1c283f76e5a7928374984d"
+    },
+    {
+      "name": "hello cặp 1 / thông điệp bị sửa",
+      "reason": "message_tampered",
+      "key": "d4e9066c5ade5605aca8842eabfc18e44c987a957719e8ad344c403381228e9a",
+      "message": "484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6f",
+      "mac": "6658f385ed6c90fb55feba6973ae473b42fb06e91f1c283f76e5a7928374984d"
+    },
+    {
+      "name": "welcome cặp 1 / mac sai",
+      "reason": "mac_mismatch",
+      "key": "d4e9066c5ade5605aca8842eabfc18e44c987a957719e8ad344c403381228e9a",
+      "message": "484c317c77656c636f6d657c484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e39f713d0a644853f84529421b9f51b9bcf024eceb18c6981b3135c12e4285649588dc2bdde5618e26e0c09fe1dea8652881b4fc5163f173c937f3cb22ca52390d859a8d6c9467c4b2d249ad4ff0a38c4",
+      "mac": "3934401e2023055e220600659dd672342da0b558ff580dfdafdd9831d0f086a8"
+    },
+    {
+      "name": "welcome cặp 1 / thông điệp bị sửa",
+      "reason": "message_tampered",
+      "key": "d4e9066c5ade5605aca8842eabfc18e44c987a957719e8ad344c403381228e9a",
+      "message": "484c317c77656c636f6d657c484c317c68656c6c6f7c3f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d21fe31dfa1548261a26bf854046fd2272728f0ab067027b4ed21360a06e366302e0443b6005b19aaaf291c25dee4851d2cec4a1f33ec66bd7c3ec83bc922391c9c1e996dbc937cd14356cf86db50db6e39f713d0a644853f84529421b9f51b9bcf024eceb18c6981b3135c12e4285649588dc2bdde5618e26e0c09fe1dea8652881b4fc5163f173c937f3cb22ca52390d859a8d6c9467c4b2d249ad4ff0a38c5",
+      "mac": "b934401e2023055e220600659dd672342da0b558ff580dfdafdd9831d0f086a8"
+    }
+  ]
+}

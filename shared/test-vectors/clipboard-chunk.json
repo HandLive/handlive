@@ -1,0 +1,68 @@
+{
+  "description": "clipboard op chunk: plaintext NHỊ PHÂN = hdr_len (uint16 BE) ‖ JSON header UTF-8 ‖ byte khối; mã hóa như envelope thường. Khối trong vector ngắn hơn CHUNK_SIZE cho gọn.",
+  "source": "docs/detailed-design/00-common-specs.md 0.5.1; 04-clipboard.md CLIP-03 API 4",
+  "vectors": [
+    {
+      "name": "chunk index 0",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "clipboard",
+      "id": "0192f3f1-2c40-7c21-9d32-e43f54a65b76",
+      "ts": 1727150200470,
+      "aad": "1|clipboard|0192f3f1-2c40-7c21-9d32-e43f54a65b76|1727150200470",
+      "aad_hex": "317c636c6970626f6172647c30313932663366312d326334302d376332312d396433322d6534336635346136356237367c31373237313530323030343730",
+      "plaintext_hex": "00567b226f70223a226368756e6b222c2264617461223a7b227472616e736665725f6964223a2230313932663366312d326333652d376131302d396232302d633330643430653530663630222c22696e646578223a307d7d89504e470d0a1a0a0000000d49484452f4e17e4a36255934e042c6e22b60014db8af971bd61ffa84cd3d26dae84a61aa544a1997159253b76acee06a34612b10",
+      "nonce": "00fd3554a7fb45121c1e1520ef841818f8cc6095a983f074",
+      "ciphertext": "5f2c1c20bc0a8c4295cdf7cd78247dc1593a95159172b95ff0e0a38b097141ead11915e74542bbd5a2c642c98f8af773aa689682e2b6ec8fc85041841644dbb674fb1b6e9b68211a885d086d78e0dee99136dbcd0e5d88b9dc6ce4a131a7c64421999167f9a9fd09f7251b8f8f6ddfc8eb00d367e8cfbf0b3c4b34ea30a65a982e6f8e7f114e5ba35d2ba97c9240c602f4ebb62267d4c8de",
+      "tag": "1e777d9582521d5dbecd355640d6d71c",
+      "payload_b64": "AP01VKf7RRIcHhUg74QYGPjMYJWpg/B0XywcILwKjEKVzffNeCR9wVk6lRWRcrlf8OCjiwlxQerRGRXnRUK71aLGQsmPivdzqmiWguK27I/IUEGEFkTbtnT7G26baCEaiF0IbXjg3umRNtvNDl2Iudxs5KExp8ZEIZmRZ/mp/Qn3JRuPj23fyOsA02foz78LPEs06jCmWpgub45/EU5bo10rqXySQMYC9Ou2ImfUyN4ed32VglIdXb7NNVZA1tcc",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3f1-2c40-7c21-9d32-e43f54a65b76\",\"ts\":1727150200470,\"payload\":\"AP01VKf7RRIcHhUg74QYGPjMYJWpg/B0XywcILwKjEKVzffNeCR9wVk6lRWRcrlf8OCjiwlxQerRGRXnRUK71aLGQsmPivdzqmiWguK27I/IUEGEFkTbtnT7G26baCEaiF0IbXjg3umRNtvNDl2Iudxs5KExp8ZEIZmRZ/mp/Qn3JRuPj23fyOsA02foz78LPEs06jCmWpgub45/EU5bo10rqXySQMYC9Ou2ImfUyN4ed32VglIdXb7NNVZA1tcc\"}",
+      "transfer_id": "0192f3f1-2c3e-7a10-9b20-c30d40e50f60",
+      "index": 0,
+      "header_json": "{\"op\":\"chunk\",\"data\":{\"transfer_id\":\"0192f3f1-2c3e-7a10-9b20-c30d40e50f60\",\"index\":0}}",
+      "hdr_len": 86,
+      "chunk_data": "89504e470d0a1a0a0000000d49484452f4e17e4a36255934e042c6e22b60014db8af971bd61ffa84cd3d26dae84a61aa544a1997159253b76acee06a34612b10"
+    },
+    {
+      "name": "chunk index 1",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "clipboard",
+      "id": "0192f3f1-2c41-7d32-8e43-f54a65b76c87",
+      "ts": 1727150200475,
+      "aad": "1|clipboard|0192f3f1-2c41-7d32-8e43-f54a65b76c87|1727150200475",
+      "aad_hex": "317c636c6970626f6172647c30313932663366312d326334312d376433322d386534332d6635346136356237366338377c31373237313530323030343735",
+      "plaintext_hex": "00567b226f70223a226368756e6b222c2264617461223a7b227472616e736665725f6964223a2230313932663366312d326333652d376131302d396232302d633330643430653530663630222c22696e646578223a317d7d52962b38860b9971783d5ccae1",
+      "nonce": "e6ada52845f3bdb16de7f772afb0b6e4057b7ef3637546d5",
+      "ciphertext": "a953a2e462daa2a235a882d60d3afd2291418abccdbf2bb2184e2369f40f12fc4f7a638895888c29375ce7b7a08d0552cfac088dd44000f7655643956ca3cb3fc33fdca53f8c7e6fa5412d55e9020c41b587e07c9dabec4b00cc0934d55ed6d98514e4a0d8",
+      "tag": "8196062d065f08a4d34fbf9bf1d32df1",
+      "payload_b64": "5q2lKEXzvbFt5/dyr7C25AV7fvNjdUbVqVOi5GLaoqI1qILWDTr9IpFBirzNvyuyGE4jafQPEvxPemOIlYiMKTdc57egjQVSz6wIjdRAAPdlVkOVbKPLP8M/3KU/jH5vpUEtVekCDEG1h+B8navsSwDMCTTVXtbZhRTkoNiBlgYtBl8IpNNPv5vx0y3x",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3f1-2c41-7d32-8e43-f54a65b76c87\",\"ts\":1727150200475,\"payload\":\"5q2lKEXzvbFt5/dyr7C25AV7fvNjdUbVqVOi5GLaoqI1qILWDTr9IpFBirzNvyuyGE4jafQPEvxPemOIlYiMKTdc57egjQVSz6wIjdRAAPdlVkOVbKPLP8M/3KU/jH5vpUEtVekCDEG1h+B8navsSwDMCTTVXtbZhRTkoNiBlgYtBl8IpNNPv5vx0y3x\"}",
+      "transfer_id": "0192f3f1-2c3e-7a10-9b20-c30d40e50f60",
+      "index": 1,
+      "header_json": "{\"op\":\"chunk\",\"data\":{\"transfer_id\":\"0192f3f1-2c3e-7a10-9b20-c30d40e50f60\",\"index\":1}}",
+      "hdr_len": 86,
+      "chunk_data": "52962b38860b9971783d5ccae1"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "chunk index 0 / tag sai",
+      "reason": "tag_mismatch",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3f1-2c40-7c21-9d32-e43f54a65b76\",\"ts\":1727150200470,\"payload\":\"AP01VKf7RRIcHhUg74QYGPjMYJWpg/B0XywcILwKjEKVzffNeCR9wVk6lRWRcrlf8OCjiwlxQerRGRXnRUK71aLGQsmPivdzqmiWguK27I/IUEGEFkTbtnT7G26baCEaiF0IbXjg3umRNtvNDl2Iudxs5KExp8ZEIZmRZ/mp/Qn3JRuPj23fyOsA02foz78LPEs06jCmWpgub45/EU5bo10rqXySQMYC9Ou2ImfUyN4ed32VglIdXb7NNVZA1tcd\"}"
+    },
+    {
+      "name": "chunk index 0 / ts bị sửa (AAD sai)",
+      "reason": "aad_mismatch",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3f1-2c40-7c21-9d32-e43f54a65b76\",\"ts\":1727150200471,\"payload\":\"AP01VKf7RRIcHhUg74QYGPjMYJWpg/B0XywcILwKjEKVzffNeCR9wVk6lRWRcrlf8OCjiwlxQerRGRXnRUK71aLGQsmPivdzqmiWguK27I/IUEGEFkTbtnT7G26baCEaiF0IbXjg3umRNtvNDl2Iudxs5KExp8ZEIZmRZ/mp/Qn3JRuPj23fyOsA02foz78LPEs06jCmWpgub45/EU5bo10rqXySQMYC9Ou2ImfUyN4ed32VglIdXb7NNVZA1tcc\"}"
+    }
+  ]
+}

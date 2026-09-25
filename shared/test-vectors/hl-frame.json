@@ -1,0 +1,92 @@
+{
+  "description": "Khung nhị phân HL: 'HL' ‖ ver 0x01 ‖ seq uint32 BE ‖ ts uint32 BE ‖ nonce(24) ‖ ciphertext ‖ tag(16); AAD = 11 byte đầu. Camera plaintext = track(1) ‖ flags(1) ‖ pts_us int64 BE ‖ dữ liệu.",
+  "source": "docs/detailed-design/00-common-specs.md 0.5.2",
+  "vectors": [
+    {
+      "name": "call-audio Android→Mac seq 0",
+      "channel": "call-audio",
+      "direction": "s2c",
+      "key": "ddec30896a3ddf2a606229f3d8762db0ae4fe4465c2ff706620b2fad381ab929",
+      "key_source": "stream-keys kênh call-audio k_s2c",
+      "seq": 0,
+      "ts": 0,
+      "header": "484c010000000000000000",
+      "plaintext": "785124b45898f2e964ff3a96059d3b10ddfe5ffb467f1e5089ae59c399301dbf8102e7424cd76e44",
+      "nonce": "4799739b38ee8262a3ef9cac03988364f11c5fd002b27716",
+      "ciphertext": "2f6c4fc3f2eb7094d2b80821c0c239c650f237a8908884008ed8e7fce96291f131f2a97a48538708",
+      "tag": "9725ca84b19dd464c7f5aa0be4f43ca6",
+      "encrypted_part": "4799739b38ee8262a3ef9cac03988364f11c5fd002b277162f6c4fc3f2eb7094d2b80821c0c239c650f237a8908884008ed8e7fce96291f131f2a97a485387089725ca84b19dd464c7f5aa0be4f43ca6",
+      "frame": "484c0100000000000000004799739b38ee8262a3ef9cac03988364f11c5fd002b277162f6c4fc3f2eb7094d2b80821c0c239c650f237a8908884008ed8e7fce96291f131f2a97a485387089725ca84b19dd464c7f5aa0be4f43ca6"
+    },
+    {
+      "name": "call-audio Mac→Android seq 1",
+      "channel": "call-audio",
+      "direction": "c2s",
+      "key": "054974ecb4ea2772601b24f9c04125df69d188beaae01e1d25a0ffb0de8bdf26",
+      "key_source": "stream-keys kênh call-audio k_c2s",
+      "seq": 1,
+      "ts": 20,
+      "header": "484c010000000100000014",
+      "plaintext": "78c5f518dc9e2d23457bda95024f4dbc3402d55f4808d239b879cace970df89f2d",
+      "nonce": "43faafc5d2439927997d1a66aa111e6e2ee5165320fca4d2",
+      "ciphertext": "673ca1778ca1091fe686384831c3ccd2936b88d8550157d18fdd0d564b2cd2bf43",
+      "tag": "5f0998b67155a406dcb92f69ea230113",
+      "encrypted_part": "43faafc5d2439927997d1a66aa111e6e2ee5165320fca4d2673ca1778ca1091fe686384831c3ccd2936b88d8550157d18fdd0d564b2cd2bf435f0998b67155a406dcb92f69ea230113",
+      "frame": "484c01000000010000001443faafc5d2439927997d1a66aa111e6e2ee5165320fca4d2673ca1778ca1091fe686384831c3ccd2936b88d8550157d18fdd0d564b2cd2bf435f0998b67155a406dcb92f69ea230113"
+    },
+    {
+      "name": "camera video keyframe + SPS/PPS",
+      "channel": "camera",
+      "direction": "s2c",
+      "key": "6f5a72b2c47465c862f9f2ef4cdff21b030e0d09c78ad2b49bdfb170f6612630",
+      "key_source": "stream-keys kênh camera k_s2c",
+      "seq": 7,
+      "ts": 233,
+      "header": "484c0100000007000000e9",
+      "plaintext": "01030000000000038f75000000016798085ee0be4b2ae090a1d300000001687f10a1090000000165c19caa6445d20027984ea8862cad4a69559dc530760d166df94bff4656efa6fb9d487fb0bf0506f7",
+      "track": 1,
+      "flags": 3,
+      "pts_us": 233333,
+      "data": "000000016798085ee0be4b2ae090a1d300000001687f10a1090000000165c19caa6445d20027984ea8862cad4a69559dc530760d166df94bff4656efa6fb9d487fb0bf0506f7",
+      "nonce": "4258e051afb7ddb67ab720fdac229492bda63a7801f70a7c",
+      "ciphertext": "5f78ccc2672b94ca1cf0b0cae86364bce4e462cfa98c1ad18c278541b3c5e425a3cef48f1b59d0fa64ef304a74af09ec2f4cda59d381e8be22aa14f4583e18f427006e4ad0a6cf344dcf4a86ffba3170",
+      "tag": "fb8e781953c73c99cf6f8a7908bd0d0c",
+      "encrypted_part": "4258e051afb7ddb67ab720fdac229492bda63a7801f70a7c5f78ccc2672b94ca1cf0b0cae86364bce4e462cfa98c1ad18c278541b3c5e425a3cef48f1b59d0fa64ef304a74af09ec2f4cda59d381e8be22aa14f4583e18f427006e4ad0a6cf344dcf4a86ffba3170fb8e781953c73c99cf6f8a7908bd0d0c",
+      "frame": "484c0100000007000000e94258e051afb7ddb67ab720fdac229492bda63a7801f70a7c5f78ccc2672b94ca1cf0b0cae86364bce4e462cfa98c1ad18c278541b3c5e425a3cef48f1b59d0fa64ef304a74af09ec2f4cda59d381e8be22aa14f4583e18f427006e4ad0a6cf344dcf4a86ffba3170fb8e781953c73c99cf6f8a7908bd0d0c"
+    },
+    {
+      "name": "camera audio Opus",
+      "channel": "camera",
+      "direction": "s2c",
+      "key": "6f5a72b2c47465c862f9f2ef4cdff21b030e0d09c78ad2b49bdfb170f6612630",
+      "key_source": "stream-keys kênh camera k_s2c",
+      "seq": 4294967295,
+      "ts": 4294967295,
+      "header": "484c01ffffffffffffffff",
+      "plaintext": "0200000000000003a9807805f301639ebc2aa4d871a9d4ec76fc32a2afa4",
+      "track": 2,
+      "flags": 0,
+      "pts_us": 240000,
+      "data": "7805f301639ebc2aa4d871a9d4ec76fc32a2afa4",
+      "nonce": "4096534707b12ecdaf045093948cf2ed42d069a484478a66",
+      "ciphertext": "d31fddd23efbff77fc377e9037cb4eabbdbae32d967c934932651efd2ac0",
+      "tag": "d7afb5a49ac1b16d5b4e00de7e2a775f",
+      "encrypted_part": "4096534707b12ecdaf045093948cf2ed42d069a484478a66d31fddd23efbff77fc377e9037cb4eabbdbae32d967c934932651efd2ac0d7afb5a49ac1b16d5b4e00de7e2a775f",
+      "frame": "484c01ffffffffffffffff4096534707b12ecdaf045093948cf2ed42d069a484478a66d31fddd23efbff77fc377e9037cb4eabbdbae32d967c934932651efd2ac0d7afb5a49ac1b16d5b4e00de7e2a775f"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "call-audio Android→Mac seq 0 / seq bị sửa (AAD sai)",
+      "reason": "aad_mismatch",
+      "key": "ddec30896a3ddf2a606229f3d8762db0ae4fe4465c2ff706620b2fad381ab929",
+      "frame": "484c0100000001000000004799739b38ee8262a3ef9cac03988364f11c5fd002b277162f6c4fc3f2eb7094d2b80821c0c239c650f237a8908884008ed8e7fce96291f131f2a97a485387089725ca84b19dd464c7f5aa0be4f43ca6"
+    },
+    {
+      "name": "call-audio Android→Mac seq 0 / tag sai",
+      "reason": "tag_mismatch",
+      "key": "ddec30896a3ddf2a606229f3d8762db0ae4fe4465c2ff706620b2fad381ab929",
+      "frame": "484c0100000000000000004799739b38ee8262a3ef9cac03988364f11c5fd002b277162f6c4fc3f2eb7094d2b80821c0c239c650f237a8908884008ed8e7fce96291f131f2a97a485387089725ca84b19dd464c7f5aa0be4f43ca7"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "description": "Envelope type = ack (mã hóa như envelope thường). Plaintext {re, ok, data} hoặc {re, ok:false, error:{code, message, details}}.",
+  "source": "docs/detailed-design/00-common-specs.md 0.5.1, 0.8.1; 03-connectivity.md CONN-02 API 2",
+  "vectors": [
+    {
+      "name": "ack ok ping",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "ack",
+      "id": "0192f4a0-1b40-7e4f-9051-6b7c8d9e0f10",
+      "ts": 1727151030002,
+      "aad": "1|ack|0192f4a0-1b40-7e4f-9051-6b7c8d9e0f10|1727151030002",
+      "aad_hex": "317c61636b7c30313932663461302d316234302d376534662d393035312d3662376338643965306631307c31373237313531303330303032",
+      "plaintext": "{\"re\":\"0192f4a0-1b2c-7d3e-8f40-5a6b7c8d9e0f\",\"ok\":true,\"data\":{\"seq\":42,\"server_ts\":1727151030000}}",
+      "nonce": "891078cf8ee54fef894a3c913d97ba6221c03297757866a9",
+      "ciphertext": "2e180fcfe4f4fcd858b7f98c4e90d2e0ff1ea49451a50b63b21fd77e091e7c544860b6d68ce8d259b3a1df4a1415ef2f735fe52cdd2b5c991ae39625ed00dacc46491af1866bee071241ee6f099f95ebc29428f1f2987c047eca33c2c6ecf096a21331",
+      "tag": "3501f70e8cd82a5c0455bdf182496ff8",
+      "payload_b64": "iRB4z47lT++JSjyRPZe6YiHAMpd1eGapLhgPz+T0/NhYt/mMTpDS4P8epJRRpQtjsh/XfgkefFRIYLbWjOjSWbOh30oUFe8vc1/lLN0rXJka45Yl7QDazEZJGvGGa+4HEkHubwmflevClCjx8ph8BH7KM8LG7PCWohMxNQH3DozYKlwEVb3xgklv+A==",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"0192f4a0-1b40-7e4f-9051-6b7c8d9e0f10\",\"ts\":1727151030002,\"payload\":\"iRB4z47lT++JSjyRPZe6YiHAMpd1eGapLhgPz+T0/NhYt/mMTpDS4P8epJRRpQtjsh/XfgkefFRIYLbWjOjSWbOh30oUFe8vc1/lLN0rXJka45Yl7QDazEZJGvGGa+4HEkHubwmflevClCjx8ph8BH7KM8LG7PCWohMxNQH3DozYKlwEVb3xgklv+A==\"}",
+      "re": "0192f4a0-1b2c-7d3e-8f40-5a6b7c8d9e0f",
+      "ok": true
+    },
+    {
+      "name": "ack ok data rỗng (clipboard push)",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "ack",
+      "id": "0192f3e8-1c00-7a11-8b22-9c33ad44be55",
+      "ts": 1727150160470,
+      "aad": "1|ack|0192f3e8-1c00-7a11-8b22-9c33ad44be55|1727150160470",
+      "aad_hex": "317c61636b7c30313932663365382d316330302d376131312d386232322d3963333361643434626535357c31373237313530313630343730",
+      "plaintext": "{\"re\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ok\":true,\"data\":{}}",
+      "nonce": "c1b1172da934d355531bce873799f2f278d0d0b57e770811",
+      "ciphertext": "bb8f21ed80e66d779307b52990af5294e67c328156c8c1b5afc3fd49f2a93f57d31107f0e9c7e2e12a1d352d871ec12acaa7be4fed96663f36e3e94478d69f3ba9",
+      "tag": "b7ce0fe65ee94f95a5d519c115caddd9",
+      "payload_b64": "wbEXLak001VTG86HN5ny8njQ0LV+dwgRu48h7YDmbXeTB7UpkK9SlOZ8MoFWyMG1r8P9SfKpP1fTEQfw6cfi4SodNS2HHsEqyqe+T+2WZj824+lEeNafO6m3zg/mXulPlaXVGcEVyt3Z",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"0192f3e8-1c00-7a11-8b22-9c33ad44be55\",\"ts\":1727150160470,\"payload\":\"wbEXLak001VTG86HN5ny8njQ0LV+dwgRu48h7YDmbXeTB7UpkK9SlOZ8MoFWyMG1r8P9SfKpP1fTEQfw6cfi4SodNS2HHsEqyqe+T+2WZj824+lEeNafO6m3zg/mXulPlaXVGcEVyt3Z\"}",
+      "re": "0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10",
+      "ok": true
+    },
+    {
+      "name": "ack lỗi SMS_NO_SERVICE",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "ack",
+      "id": "0192f3e2-4c00-7b12-8c23-9d34ae45bf56",
+      "ts": 1727150170300,
+      "aad": "1|ack|0192f3e2-4c00-7b12-8c23-9d34ae45bf56|1727150170300",
+      "aad_hex": "317c61636b7c30313932663365322d346330302d376231322d386332332d3964333461653435626635367c31373237313530313730333030",
+      "plaintext": "{\"re\":\"0192f3e2-4b5d-7e6f-8a70-9b0c1d2e3f40\",\"ok\":false,\"error\":{\"code\":\"SMS_NO_SERVICE\",\"message\":\"Không có sóng\",\"details\":{}}}",
+      "nonce": "2edde5999649ca37376d1821179bbcf5778caa7e2f7001a0",
+      "ciphertext": "8017cff2dd333b5ff1c86c247f36ed45f2c2ba1d4900ad4740d862b75e23df31e994efa4f024de7e546a96ad7370fd36e1061a70a51bad8c627d54d7f0c2bf12572edd6d7622c6a97fd932fa070551c15c44d1c7cd1cdf140d2509885f8a2338e5cfd18467338d966f111a38995a5724fa71549e4923ef083a11b817b752e923269e45a2",
+      "tag": "28a484ca3c5b4a578439b8c7b028ed46",
+      "payload_b64": "Lt3lmZZJyjc3bRghF5u89XeMqn4vcAGggBfP8t0zO1/xyGwkfzbtRfLCuh1JAK1HQNhit14j3zHplO+k8CTeflRqlq1zcP024QYacKUbrYxifVTX8MK/Elcu3W12Isapf9ky+gcFUcFcRNHHzRzfFA0lCYhfiiM45c/RhGczjZZvERo4mVpXJPpxVJ5JI+8IOhG4F7dS6SMmnkWiKKSEyjxbSleEObjHsCjtRg==",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"0192f3e2-4c00-7b12-8c23-9d34ae45bf56\",\"ts\":1727150170300,\"payload\":\"Lt3lmZZJyjc3bRghF5u89XeMqn4vcAGggBfP8t0zO1/xyGwkfzbtRfLCuh1JAK1HQNhit14j3zHplO+k8CTeflRqlq1zcP024QYacKUbrYxifVTX8MK/Elcu3W12Isapf9ky+gcFUcFcRNHHzRzfFA0lCYhfiiM45c/RhGczjZZvERo4mVpXJPpxVJ5JI+8IOhG4F7dS6SMmnkWiKKSEyjxbSleEObjHsCjtRg==\"}",
+      "re": "0192f3e2-4b5d-7e6f-8a70-9b0c1d2e3f40",
+      "ok": false
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "ack lỗi SMS_NO_SERVICE / tag sai",
+      "reason": "tag_mismatch",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"0192f3e2-4c00-7b12-8c23-9d34ae45bf56\",\"ts\":1727150170300,\"payload\":\"Lt3lmZZJyjc3bRghF5u89XeMqn4vcAGggBfP8t0zO1/xyGwkfzbtRfLCuh1JAK1HQNhit14j3zHplO+k8CTeflRqlq1zcP024QYacKUbrYxifVTX8MK/Elcu3W12Isapf9ky+gcFUcFcRNHHzRzfFA0lCYhfiiM45c/RhGczjZZvERo4mVpXJPpxVJ5JI+8IOhG4F7dS6SMmnkWiKKSEyjxbSleEObjHsCjtRw==\"}"
+    },
+    {
+      "name": "ack lỗi SMS_NO_SERVICE / ts bị sửa (AAD sai)",
+      "reason": "aad_mismatch",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"0192f3e2-4c00-7b12-8c23-9d34ae45bf56\",\"ts\":1727150170301,\"payload\":\"Lt3lmZZJyjc3bRghF5u89XeMqn4vcAGggBfP8t0zO1/xyGwkfzbtRfLCuh1JAK1HQNhit14j3zHplO+k8CTeflRqlq1zcP024QYacKUbrYxifVTX8MK/Elcu3W12Isapf9ky+gcFUcFcRNHHzRzfFA0lCYhfiiM45c/RhGczjZZvERo4mVpXJPpxVJ5JI+8IOhG4F7dS6SMmnkWiKKSEyjxbSleEObjHsCjtRg==\"}"
+    }
+  ]
+}

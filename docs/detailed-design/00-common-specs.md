@@ -240,6 +240,12 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 5. Bắt tay quá 5 s (`HANDSHAKE_TIMEOUT`) → đóng 4408.
 6. **Rekey**: sau 24 h hoặc 10 000 envelope một chiều, bên phát hiện trước gửi `session` op `rekey` `{epoch, eph, nonce}` (`epoch` = thế hệ khóa hiện tại + 1; có ack chứa `{epoch, eph, nonce}` của bên kia, xem CONN-02); khóa mới = HKDF(ikm = X25519(eph mới) ‖ `secret` cũ, salt = SHA-256(hai nonce), info = `"handlive/v1/rekey"`, L = 64). Bên nhận `ack` chuyển khóa ngay; bên gửi `ack` chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
 7. **Khóa kênh stream** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info = `"handlive/v1/stream/" ‖ <kênh> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth`(32) ‖ `k_c2s`(32) ‖ `k_s2c`(32). Tin đầu tiên trên kênh stream là envelope `camera`/`call_audio` op `stream_hello` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖ `session_id` ‖ `nonce_c`); S trả `stream_welcome` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — gắn cả hai nonce nên không phát lại được. Sai `mac` → đóng 4401.
+8. **Mã hóa byte (chuẩn tắc, khớp `shared/test-vectors/`)**:
+   - `T1`, `T2`, chuỗi MAC `HLSTREAM1` ghép **byte thô** như `T_offer` (PAIR-01): nhãn ASCII ‖ uuid 16 byte ‖ `eph` 32 byte ‖ `nonce` 32 byte (giá trị đã giải b64u). `T1` = 106 byte, `T2` = 198 byte. `protocol` không vào `T1`; phiên bản được xác thực lại trong `capability` op `hello` (đã mã hóa).
+   - HKDF không ghi salt thì salt rỗng; không ghi L thì L = 32 (vd. `K_auth`).
+   - Salt của `PRK`: hai `device_id` so theo 16 byte, thứ tự byte không dấu.
+   - `info` của `K_stream`: UTF-8 `"handlive/v1/stream/<kênh>/<session_id 36 ký tự chữ thường>"`, `<kênh>` ∈ {`camera`, `call-audio`}. `K_stream` luôn dẫn từ `secret` của bắt tay đầu (epoch 0) trong suốt kết nối, kể cả sau rekey.
+   - Rekey: shared = X25519(eph bên khởi tạo, eph bên nhận); salt = SHA-256(`nonce` bên khởi tạo ‖ `nonce` bên nhận); 64 byte kết quả chia `k_c2s` ‖ `k_s2c` theo vai C/S (không theo bên khởi tạo) và thay `secret` cho lần rekey sau; `epoch` không vào KDF.
 
 ### 0.6.4 Xác thực thiết bị với relay
 

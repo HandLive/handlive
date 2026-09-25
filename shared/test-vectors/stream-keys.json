@@ -1,0 +1,75 @@
+{
+  "description": "K_stream = HKDF(secret, salt rỗng, info \"handlive/v1/stream/<kênh>/<session_id 36 ký tự>\", L 96) = k_auth ‖ k_c2s ‖ k_s2c. MAC hello = HMAC(k_auth, \"HLSTREAM1|\" ‖ session_id(16) ‖ nonce_c(32)); welcome = HMAC(k_auth, \"HLSTREAM1|welcome|\" ‖ session_id(16) ‖ nonce_c ‖ nonce_s).",
+  "source": "docs/detailed-design/00-common-specs.md 0.6.3 bước 7; 08-camera-mic.md CAM-02; 07-call-audio.md AUDIO-04",
+  "vectors": [
+    {
+      "name": "kênh camera",
+      "channel": "camera",
+      "envelope_type": "camera",
+      "session_id": "0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b",
+      "secret": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e172758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "info": "handlive/v1/stream/camera/0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b",
+      "length": 96,
+      "k_stream": "50a08230cdbdd454108d68f3574ae50d6e729ce7ba7a30432b75acb29eb4f33ebe64ebbbdf2f105262fc9cb02a0c1ddbd62962328f95903c18220f98a9c681636f5a72b2c47465c862f9f2ef4cdff21b030e0d09c78ad2b49bdfb170f6612630",
+      "k_auth": "50a08230cdbdd454108d68f3574ae50d6e729ce7ba7a30432b75acb29eb4f33e",
+      "k_c2s": "be64ebbbdf2f105262fc9cb02a0c1ddbd62962328f95903c18220f98a9c68163",
+      "k_s2c": "6f5a72b2c47465c862f9f2ef4cdff21b030e0d09c78ad2b49bdfb170f6612630",
+      "nonce_c": "44b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63964",
+      "nonce_s": "b1cc1144dad2abaf6c3ee6cd3caa9bbb0c9485e8fb5245819764882498ed8912",
+      "hello_message": "484c53545245414d317c0192f5a03c4d7e8f9a0b1c2d3e4f5a6b44b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63964",
+      "hello_mac": "7763888988e3f5240f41ec9d5fded566aae1dab0a3ad239799c7dd57f75b6edb",
+      "welcome_message": "484c53545245414d317c77656c636f6d657c0192f5a03c4d7e8f9a0b1c2d3e4f5a6b44b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63964b1cc1144dad2abaf6c3ee6cd3caa9bbb0c9485e8fb5245819764882498ed8912",
+      "welcome_mac": "cd0ef7f84b5983abbc9179ea6c781d00bd1b1ef879eee17c40b42d08641ef9ac",
+      "stream_hello_plaintext": "{\"op\":\"stream_hello\",\"data\":{\"session_id\":\"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b\",\"nonce\":\"RLFNR4WBQ9_-eeoc2bbxFZx-u1RSssvCLLbs_KDmOWQ\",\"mac\":\"d2OIiYjj9SQPQeydX97VZqrh2rCjrSOXmcfdV_dbbts\"}}",
+      "stream_hello_envelope": "{\"v\":1,\"type\":\"camera\",\"id\":\"0192f5a0-4a00-7b11-8c22-9d33ae44bf55\",\"ts\":1727151100000,\"payload\":\"eyJvcCI6InN0cmVhbV9oZWxsbyIsImRhdGEiOnsic2Vzc2lvbl9pZCI6IjAxOTJmNWEwLTNjNGQtN2U4Zi05YTBiLTFjMmQzZTRmNWE2YiIsIm5vbmNlIjoiUkxGTlI0V0JROV8tZWVvYzJiYnhGWngtdTFSU3NzdkNMTGJzX0tEbU9XUSIsIm1hYyI6ImQyT0lpWWpqOVNRUFFleWRYOTdWWnFyaDJyQ2pyU09YbWNmZFZfZGJidHMifX0=\"}",
+      "stream_welcome_plaintext": "{\"op\":\"stream_welcome\",\"data\":{\"session_id\":\"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b\",\"nonce\":\"scwRRNrSq69sPubNPKqbuwyUhej7UkWBl2SIJJjtiRI\",\"mac\":\"zQ73-EtZg6u8kXnqbHgdAL0bHvh57uF8QLQtCGQe-aw\"}}",
+      "stream_welcome_envelope": "{\"v\":1,\"type\":\"camera\",\"id\":\"0192f5a0-4a0c-7c22-9d33-ae44bf55c066\",\"ts\":1727151100012,\"payload\":\"eyJvcCI6InN0cmVhbV93ZWxjb21lIiwiZGF0YSI6eyJzZXNzaW9uX2lkIjoiMDE5MmY1YTAtM2M0ZC03ZThmLTlhMGItMWMyZDNlNGY1YTZiIiwibm9uY2UiOiJzY3dSUk5yU3E2OXNQdWJOUEtxYnV3eVVoZWo3VWtXQmwyU0lKSmp0aVJJIiwibWFjIjoielE3My1FdFpnNnU4a1hucWJIZ2RBTDBiSHZoNTd1RjhRTFF0Q0dRZS1hdyJ9fQ==\"}"
+    },
+    {
+      "name": "kênh call-audio",
+      "channel": "call-audio",
+      "envelope_type": "call_audio",
+      "session_id": "0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10",
+      "secret": "74009d59ad841d6f12c2cfaf2ddc49de923f1949c51f1dbf78fd900b3cce568d547e92c53d4dd6323c44612126dea69acb07aaf9f9901682a4628909ba6c69a7",
+      "info": "handlive/v1/stream/call-audio/0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10",
+      "length": 96,
+      "k_stream": "6260d647604394fe03e183c8bdfce0c191920853e2c547e26a1b3b427aa68e6e054974ecb4ea2772601b24f9c04125df69d188beaae01e1d25a0ffb0de8bdf26ddec30896a3ddf2a606229f3d8762db0ae4fe4465c2ff706620b2fad381ab929",
+      "k_auth": "6260d647604394fe03e183c8bdfce0c191920853e2c547e26a1b3b427aa68e6e",
+      "k_c2s": "054974ecb4ea2772601b24f9c04125df69d188beaae01e1d25a0ffb0de8bdf26",
+      "k_s2c": "ddec30896a3ddf2a606229f3d8762db0ae4fe4465c2ff706620b2fad381ab929",
+      "nonce_c": "c99828eb6de9a6c4a71a42154c8704d55d8297146d41d2eae528db0f934b9479",
+      "nonce_s": "17a4b9bbc49d13c5f6a81e43313d3c12c3279d81d4ee743607a6b74d7371a5f9",
+      "hello_message": "484c53545245414d317c0192f5a27c1e7a559d0b3f4c2a1b9e10c99828eb6de9a6c4a71a42154c8704d55d8297146d41d2eae528db0f934b9479",
+      "hello_mac": "22ccd91dd97cc2c767ef31795d49e311f5e524819010297e381116a8ef3acfc8",
+      "welcome_message": "484c53545245414d317c77656c636f6d657c0192f5a27c1e7a559d0b3f4c2a1b9e10c99828eb6de9a6c4a71a42154c8704d55d8297146d41d2eae528db0f934b947917a4b9bbc49d13c5f6a81e43313d3c12c3279d81d4ee743607a6b74d7371a5f9",
+      "welcome_mac": "5249731e7dcb890092d80cfcecafa9497be7560d7cc1eae20b40cfae5ac5468e",
+      "stream_hello_plaintext": "{\"op\":\"stream_hello\",\"data\":{\"session_id\":\"0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10\",\"nonce\":\"yZgo623ppsSnGkIVTIcE1V2ClxRtQdLq5SjbD5NLlHk\",\"mac\":\"IszZHdl8wsdn7zF5XUnjEfXlJIGQECl-OBEWqO86z8g\"}}",
+      "stream_hello_envelope": "{\"v\":1,\"type\":\"call_audio\",\"id\":\"0192f5a2-8000-7a01-8b02-9c03ad04be05\",\"ts\":1727152100000,\"payload\":\"eyJvcCI6InN0cmVhbV9oZWxsbyIsImRhdGEiOnsic2Vzc2lvbl9pZCI6IjAxOTJmNWEyLTdjMWUtN2E1NS05ZDBiLTNmNGMyYTFiOWUxMCIsIm5vbmNlIjoieVpnbzYyM3Bwc1NuR2tJVlRJY0UxVjJDbHhSdFFkTHE1U2piRDVOTGxIayIsIm1hYyI6IklzelpIZGw4d3Nkbjd6RjVYVW5qRWZYbEpJR1FFQ2wtT0JFV3FPODZ6OGcifX0=\"}",
+      "stream_welcome_plaintext": "{\"op\":\"stream_welcome\",\"data\":{\"session_id\":\"0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10\",\"nonce\":\"F6S5u8SdE8X2qB5DMT08EsMnnYHU7nQ2B6a3TXNxpfk\",\"mac\":\"UklzHn3LiQCS2Az87K-pSXvnVg18weriC0DPrlrFRo4\"}}",
+      "stream_welcome_envelope": "{\"v\":1,\"type\":\"call_audio\",\"id\":\"0192f5a2-8009-7b02-8c03-9d04ae05bf06\",\"ts\":1727152100009,\"payload\":\"eyJvcCI6InN0cmVhbV93ZWxjb21lIiwiZGF0YSI6eyJzZXNzaW9uX2lkIjoiMDE5MmY1YTItN2MxZS03YTU1LTlkMGItM2Y0YzJhMWI5ZTEwIiwibm9uY2UiOiJGNlM1dThTZEU4WDJxQjVETVQwOEVzTW5uWUhVN25RMkI2YTNUWE54cGZrIiwibWFjIjoiVWtsekhuM0xpUUNTMkF6ODdLLXBTWHZuVmcxOHdlcmlDMERQcmxyRlJvNCJ9fQ==\"}"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "stream_hello camera / mac sai",
+      "reason": "mac_mismatch",
+      "key": "50a08230cdbdd454108d68f3574ae50d6e729ce7ba7a30432b75acb29eb4f33e",
+      "message": "484c53545245414d317c0192f5a03c4d7e8f9a0b1c2d3e4f5a6b44b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63964",
+      "mac": "f763888988e3f5240f41ec9d5fded566aae1dab0a3ad239799c7dd57f75b6edb"
+    },
+    {
+      "name": "stream_hello camera / thông điệp bị sửa",
+      "reason": "message_tampered",
+      "key": "50a08230cdbdd454108d68f3574ae50d6e729ce7ba7a30432b75acb29eb4f33e",
+      "message": "484c53545245414d317c0192f5a03c4d7e8f9a0b1c2d3e4f5a6b44b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63965",
+      "mac": "7763888988e3f5240f41ec9d5fded566aae1dab0a3ad239799c7dd57f75b6edb"
+    },
+    {
+      "name": "stream_welcome camera / đảo thứ tự nonce",
+      "reason": "message_tampered",
+      "key": "50a08230cdbdd454108d68f3574ae50d6e729ce7ba7a30432b75acb29eb4f33e",
+      "message": "484c53545245414d317c77656c636f6d657c0192f5a03c4d7e8f9a0b1c2d3e4f5a6bb1cc1144dad2abaf6c3ee6cd3caa9bbb0c9485e8fb5245819764882498ed891244b14d47858143dffe79ea1cd9b6f1159c7ebb5452b2cbc22cb6ecfca0e63964",
+      "mac": "cd0ef7f84b5983abbc9179ea6c781d00bd1b1ef879eee17c40b42d08641ef9ac"
+    }
+  ]
+}

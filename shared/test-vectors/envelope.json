@@ -1,0 +1,133 @@
+{
+  "description": "Envelope JSON: payload = b64(nonce(24) ‖ ciphertext ‖ tag(16)) của XChaCha20-Poly1305, AAD = UTF-8 \"<v>|<type>|<id>|<ts>\". Tin bắt tay: payload = b64(JSON chưa mã hóa).",
+  "source": "docs/detailed-design/00-common-specs.md 0.5.1; plaintext mẫu từ 04-clipboard.md, 05-sms.md",
+  "vectors": [
+    {
+      "name": "clipboard push Mac→Android",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "clipboard",
+      "id": "0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10",
+      "ts": 1727150160460,
+      "aad": "1|clipboard|0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10|1727150160460",
+      "aad_hex": "317c636c6970626f6172647c30313932663365382d316232632d376433662d386130312d3561366237633864396531307c31373237313530313630343630",
+      "plaintext": "{\"op\":\"push\",\"data\":{\"clip_id\":\"0192f3e8-1b2c-7d3e-8f40-5a6b7c8d9e0f\",\"kind\":\"text\",\"mime\":\"text/plain\",\"text\":\"https://example.com/tai-lieu/bao-cao-quy-3\",\"sensitive\":false,\"origin_ts\":1727150160456,\"source\":\"mac\",\"origin_device_id\":\"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718\"}}",
+      "nonce": "59959a0f81f828356d498a4c1e93a19d578ac4582a39dfdb",
+      "ciphertext": "54c18932f89cafee92034bd0d61d4f4d02a33f840d13d06d2c431906aca87cb559fd68805051fc38ffddae071fcfa87f162bc93af014b41c37a0e99ae317f1d0f86e0576845a7d884c795d4aa26e50c78c37d8ec9ad89d8d95e6d70a1a040097a6659b1a36a31f6ab3b9d6fbbfb2fccca35ee4cb28ec9c5a1b6bd38276e7fbde7761a2787710b2705164169de00bac85d5a605cbb6ad149d80f1ea60ca9ebad43226d0b45c45157c3d7029241ed5f2ebb5ade7a4326c043e4c320322150d4fead96fa287966c0c6e9e27cc7d5c3f07881db796d6ea2f6cc32edbae26e38e2fa9b636a404d33528f8d2710b6bdffd2619ed6bd4cc880b7fcf63960c136a558a418d95d963637a6487deda1396d664d0af14b4",
+      "tag": "8842de03475431931d60c91fa788f32d",
+      "payload_b64": "WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1PTQKjP4QNE9BtLEMZBqyofLVZ/WiAUFH8OP/drgcfz6h/FivJOvAUtBw3oOma4xfx0PhuBXaEWn2ITHldSqJuUMeMN9jsmtidjZXm1woaBACXpmWbGjajH2qzudb7v7L8zKNe5Mso7JxaG2vTgnbn+953YaJ4dxCycFFkFp3gC6yF1aYFy7atFJ2A8epgyp661DIm0LRcRRV8PXApJB7V8uu1reekMmwEPkwyAyIVDU/q2W+ih5ZsDG6eJ8x9XD8HiB23ltbqL2zDLtuuJuOOL6m2NqQE0zUo+NJxC2vf/SYZ7WvUzIgLf89jlgwTalWKQY2V2WNjemSH3toTltZk0K8UtIhC3gNHVDGTHWDJH6eI8y0=",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ts\":1727150160460,\"payload\":\"WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1PTQKjP4QNE9BtLEMZBqyofLVZ/WiAUFH8OP/drgcfz6h/FivJOvAUtBw3oOma4xfx0PhuBXaEWn2ITHldSqJuUMeMN9jsmtidjZXm1woaBACXpmWbGjajH2qzudb7v7L8zKNe5Mso7JxaG2vTgnbn+953YaJ4dxCycFFkFp3gC6yF1aYFy7atFJ2A8epgyp661DIm0LRcRRV8PXApJB7V8uu1reekMmwEPkwyAyIVDU/q2W+ih5ZsDG6eJ8x9XD8HiB23ltbqL2zDLtuuJuOOL6m2NqQE0zUo+NJxC2vf/SYZ7WvUzIgLf89jlgwTalWKQY2V2WNjemSH3toTltZk0K8UtIhC3gNHVDGTHWDJH6eI8y0=\"}"
+    },
+    {
+      "name": "clipboard push Android→Mac (tiếng Việt)",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "clipboard",
+      "id": "0192f3e0-5a22-7c4d-8e5f-6a7b8c9d0e1f",
+      "ts": 1727150100130,
+      "aad": "1|clipboard|0192f3e0-5a22-7c4d-8e5f-6a7b8c9d0e1f|1727150100130",
+      "aad_hex": "317c636c6970626f6172647c30313932663365302d356132322d376334642d386535662d3661376238633964306531667c31373237313530313030313330",
+      "plaintext": "{\"op\":\"push\",\"data\":{\"clip_id\":\"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e\",\"kind\":\"text\",\"mime\":\"text/plain\",\"text\":\"Mã đơn hàng: HL-240917-0042\",\"sensitive\":false,\"origin_ts\":1727150100123,\"source\":\"auto\",\"origin_device_id\":\"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f\"}}",
+      "nonce": "094d6031b68d183a2ce38f492455559f04260be65cd45980",
+      "ciphertext": "6ea1218e0ff508dc483b42bbc655845c17572c0e5eb7ce3b2cd2bc4ab2e6ecd0baf437fcdf1c9184a832931b7b94f7d78ff67cb55b4c08f976dcf3383a7102dae586be3c954584de4585ac51d66ea2ebb6fed0ee60f4840d209a335115a9774b85765798a5d58ab6bd88ed540c9c53121cda3028cada6ccb0245bd2a18c3ed3d0c2a4ba772498f81e47c516d67a36bb02f3005368dcc497c0ea6352fa8a168c043609d5ca0f967da516d0445527fc60e12521b73797b28eb1e994025e14843c45026d0160b907819e079c7c225782c7a6b579465fd7db99a43db4594817d4d5315e1d943784ccc64519396e597395f70afb0ff0c7cbc82414d16bdf6b59830de6e0a7275c3ca307f",
+      "tag": "ac875aa8ab03861584e42a694cba03ca",
+      "payload_b64": "CU1gMbaNGDos449JJFVVnwQmC+Zc1FmAbqEhjg/1CNxIO0K7xlWEXBdXLA5et847LNK8SrLm7NC69Df83xyRhKgykxt7lPfXj/Z8tVtMCPl23PM4OnEC2uWGvjyVRYTeRYWsUdZuouu2/tDuYPSEDSCaM1EVqXdLhXZXmKXVira9iO1UDJxTEhzaMCjK2mzLAkW9KhjD7T0MKkunckmPgeR8UW1no2uwLzAFNo3MSXwOpjUvqKFowENgnVyg+WfaUW0ERVJ/xg4SUhtzeXso6x6ZQCXhSEPEUCbQFguQeBngecfCJXgsemtXlGX9fbmaQ9tFlIF9TVMV4dlDeEzMZFGTluWXOV9wr7D/DHy8gkFNFr32tZgw3m4KcnXDyjB/rIdaqKsDhhWE5CppTLoDyg==",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e0-5a22-7c4d-8e5f-6a7b8c9d0e1f\",\"ts\":1727150100130,\"payload\":\"CU1gMbaNGDos449JJFVVnwQmC+Zc1FmAbqEhjg/1CNxIO0K7xlWEXBdXLA5et847LNK8SrLm7NC69Df83xyRhKgykxt7lPfXj/Z8tVtMCPl23PM4OnEC2uWGvjyVRYTeRYWsUdZuouu2/tDuYPSEDSCaM1EVqXdLhXZXmKXVira9iO1UDJxTEhzaMCjK2mzLAkW9KhjD7T0MKkunckmPgeR8UW1no2uwLzAFNo3MSXwOpjUvqKFowENgnVyg+WfaUW0ERVJ/xg4SUhtzeXso6x6ZQCXhSEPEUCbQFguQeBngecfCJXgsemtXlGX9fbmaQ9tFlIF9TVMV4dlDeEzMZFGTluWXOV9wr7D/DHy8gkFNFr32tZgw3m4KcnXDyjB/rIdaqKsDhhWE5CppTLoDyg==\"}"
+    },
+    {
+      "name": "sms send Mac→Android",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "sms",
+      "id": "0192f3e2-4b5d-7e6f-8a70-9b0c1d2e3f40",
+      "ts": 1727150170000,
+      "aad": "1|sms|0192f3e2-4b5d-7e6f-8a70-9b0c1d2e3f40|1727150170000",
+      "aad_hex": "317c736d737c30313932663365322d346235642d376536662d386137302d3962306331643265336634307c31373237313530313730303030",
+      "plaintext": "{\"op\":\"send\",\"data\":{\"local_id\":\"0192f3e2-4b5c-7d6e-9f70-8a9b0c1d2e3f\",\"thread_id\":42,\"addresses\":[\"+84900000123\"],\"body\":\"Ok, 3h mình có mặt\",\"sub_id\":1}}",
+      "nonce": "f5693a8eb31903a262ce1f93427ea541278b62b4a024f0da",
+      "ciphertext": "3b7a1696627f9eb8e4e5bcab6a66aac0afaa147c62724a0b86d1ad1c7102d86eeeb93a760f4cb89a57a74a2d63ec686a1eee3bc82ccadc2fdd12ca5e1e5d74119e7c6968954a820c02bfaeaa54b50f4d4f031156de7131db5473cf37c2f6424d3fa63e76c9a1c0d3fb23d33e9ddfcadd0aae3f3c0daa6d78f828cda7c80a7c60cb46cea4246f18f2138e9b1d0f87aecd0ea023a7a3818659c4da246f0d961a",
+      "tag": "b7dbb7975ab55310551964e8b7000632",
+      "payload_b64": "9Wk6jrMZA6Jizh+TQn6lQSeLYrSgJPDaO3oWlmJ/nrjk5byramaqwK+qFHxickoLhtGtHHEC2G7uuTp2D0y4mlenSi1j7GhqHu47yCzK3C/dEspeHl10EZ58aWiVSoIMAr+uqlS1D01PAxFW3nEx21RzzzfC9kJNP6Y+dsmhwNP7I9M+nd/K3QquPzwNqm14+CjNp8gKfGDLRs6kJG8Y8hOOmx0Ph67NDqAjp6OBhlnE2iRvDZYat9u3l1q1UxBVGWTotwAGMg==",
+      "envelope": "{\"v\":1,\"type\":\"sms\",\"id\":\"0192f3e2-4b5d-7e6f-8a70-9b0c1d2e3f40\",\"ts\":1727150170000,\"payload\":\"9Wk6jrMZA6Jizh+TQn6lQSeLYrSgJPDaO3oWlmJ/nrjk5byramaqwK+qFHxickoLhtGtHHEC2G7uuTp2D0y4mlenSi1j7GhqHu47yCzK3C/dEspeHl10EZ58aWiVSoIMAr+uqlS1D01PAxFW3nEx21RzzzfC9kJNP6Y+dsmhwNP7I9M+nd/K3QquPzwNqm14+CjNp8gKfGDLRs6kJG8Y8hOOmx0Ph67NDqAjp6OBhlnE2iRvDZYat9u3l1q1UxBVGWTotwAGMg==\"}"
+    },
+    {
+      "name": "session hello (chưa mã hóa)",
+      "encrypted": false,
+      "direction": "c2s",
+      "key": null,
+      "key_source": null,
+      "v": 1,
+      "type": "session",
+      "id": "0192f400-11aa-7b2c-9d3e-4f5a6b7c8d9e",
+      "ts": 1727151000000,
+      "aad": null,
+      "aad_hex": null,
+      "plaintext": "{\"op\":\"hello\",\"data\":{\"protocol\":1,\"pair_id\":\"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\"device_id\":\"21fe31df-a154-8261-a26b-f854046fd227\",\"eph\":\"JyjwqwZwJ7TtITYKBuNmMC4EQ7YAWxmqrykcJd7khR0\",\"nonce\":\"LOxKHzPsZr18Psg7ySI5HJwemW28k3zRQ1bPhttQ224\",\"mac\":\"Zljzhe1skPtV_rppc65HO0L7BukfHCg_duWnkoN0mE0\"}}",
+      "nonce": null,
+      "ciphertext": null,
+      "tag": null,
+      "payload_b64": "eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJwcm90b2NvbCI6MSwicGFpcl9pZCI6IjNmMmIxYzRkLTVlNmYtNGE3Yi04YzlkLTBlMWYyYTNiNGM1ZCIsImRldmljZV9pZCI6IjIxZmUzMWRmLWExNTQtODI2MS1hMjZiLWY4NTQwNDZmZDIyNyIsImVwaCI6Ikp5andxd1p3SjdUdElUWUtCdU5tTUM0RVE3WUFXeG1xcnlrY0pkN2toUjAiLCJub25jZSI6IkxPeEtIelBzWnIxOFBzZzd5U0k1SEp3ZW1XMjhrM3pSUTFiUGh0dFEyMjQiLCJtYWMiOiJabGp6aGUxc2tQdFZfcnBwYzY1SE8wTDdCdWtmSENnX2R1V25rb04wbUUwIn19",
+      "envelope": "{\"v\":1,\"type\":\"session\",\"id\":\"0192f400-11aa-7b2c-9d3e-4f5a6b7c8d9e\",\"ts\":1727151000000,\"payload\":\"eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJwcm90b2NvbCI6MSwicGFpcl9pZCI6IjNmMmIxYzRkLTVlNmYtNGE3Yi04YzlkLTBlMWYyYTNiNGM1ZCIsImRldmljZV9pZCI6IjIxZmUzMWRmLWExNTQtODI2MS1hMjZiLWY4NTQwNDZmZDIyNyIsImVwaCI6Ikp5andxd1p3SjdUdElUWUtCdU5tTUM0RVE3WUFXeG1xcnlrY0pkN2toUjAiLCJub25jZSI6IkxPeEtIelBzWnIxOFBzZzd5U0k1SEp3ZW1XMjhrM3pSUTFiUGh0dFEyMjQiLCJtYWMiOiJabGp6aGUxc2tQdFZfcnBwYzY1SE8wTDdCdWtmSENnX2R1V25rb04wbUUwIn19\"}"
+    },
+    {
+      "name": "camera stream_hello (chưa mã hóa)",
+      "encrypted": false,
+      "direction": "c2s",
+      "key": null,
+      "key_source": null,
+      "v": 1,
+      "type": "camera",
+      "id": "0192f5a0-4a00-7b11-8c22-9d33ae44bf55",
+      "ts": 1727151100000,
+      "aad": null,
+      "aad_hex": null,
+      "plaintext": "{\"op\":\"stream_hello\",\"data\":{\"session_id\":\"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b\",\"nonce\":\"RLFNR4WBQ9_-eeoc2bbxFZx-u1RSssvCLLbs_KDmOWQ\",\"mac\":\"d2OIiYjj9SQPQeydX97VZqrh2rCjrSOXmcfdV_dbbts\"}}",
+      "nonce": null,
+      "ciphertext": null,
+      "tag": null,
+      "payload_b64": "eyJvcCI6InN0cmVhbV9oZWxsbyIsImRhdGEiOnsic2Vzc2lvbl9pZCI6IjAxOTJmNWEwLTNjNGQtN2U4Zi05YTBiLTFjMmQzZTRmNWE2YiIsIm5vbmNlIjoiUkxGTlI0V0JROV8tZWVvYzJiYnhGWngtdTFSU3NzdkNMTGJzX0tEbU9XUSIsIm1hYyI6ImQyT0lpWWpqOVNRUFFleWRYOTdWWnFyaDJyQ2pyU09YbWNmZFZfZGJidHMifX0=",
+      "envelope": "{\"v\":1,\"type\":\"camera\",\"id\":\"0192f5a0-4a00-7b11-8c22-9d33ae44bf55\",\"ts\":1727151100000,\"payload\":\"eyJvcCI6InN0cmVhbV9oZWxsbyIsImRhdGEiOnsic2Vzc2lvbl9pZCI6IjAxOTJmNWEwLTNjNGQtN2U4Zi05YTBiLTFjMmQzZTRmNWE2YiIsIm5vbmNlIjoiUkxGTlI0V0JROV8tZWVvYzJiYnhGWngtdTFSU3NzdkNMTGJzX0tEbU9XUSIsIm1hYyI6ImQyT0lpWWpqOVNRUFFleWRYOTdWWnFyaDJyQ2pyU09YbWNmZFZfZGJidHMifX0=\"}"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "name": "clipboard push Mac→Android / tag sai",
+      "reason": "tag_mismatch",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ts\":1727150160460,\"payload\":\"WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1PTQKjP4QNE9BtLEMZBqyofLVZ/WiAUFH8OP/drgcfz6h/FivJOvAUtBw3oOma4xfx0PhuBXaEWn2ITHldSqJuUMeMN9jsmtidjZXm1woaBACXpmWbGjajH2qzudb7v7L8zKNe5Mso7JxaG2vTgnbn+953YaJ4dxCycFFkFp3gC6yF1aYFy7atFJ2A8epgyp661DIm0LRcRRV8PXApJB7V8uu1reekMmwEPkwyAyIVDU/q2W+ih5ZsDG6eJ8x9XD8HiB23ltbqL2zDLtuuJuOOL6m2NqQE0zUo+NJxC2vf/SYZ7WvUzIgLf89jlgwTalWKQY2V2WNjemSH3toTltZk0K8UtIhC3gNHVDGTHWDJH6eI8yw=\"}"
+    },
+    {
+      "name": "clipboard push Mac→Android / ts bị sửa (AAD sai)",
+      "reason": "aad_mismatch",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ts\":1727150160461,\"payload\":\"WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1PTQKjP4QNE9BtLEMZBqyofLVZ/WiAUFH8OP/drgcfz6h/FivJOvAUtBw3oOma4xfx0PhuBXaEWn2ITHldSqJuUMeMN9jsmtidjZXm1woaBACXpmWbGjajH2qzudb7v7L8zKNe5Mso7JxaG2vTgnbn+953YaJ4dxCycFFkFp3gC6yF1aYFy7atFJ2A8epgyp661DIm0LRcRRV8PXApJB7V8uu1reekMmwEPkwyAyIVDU/q2W+ih5ZsDG6eJ8x9XD8HiB23ltbqL2zDLtuuJuOOL6m2NqQE0zUo+NJxC2vf/SYZ7WvUzIgLf89jlgwTalWKQY2V2WNjemSH3toTltZk0K8UtIhC3gNHVDGTHWDJH6eI8y0=\"}"
+    },
+    {
+      "name": "clipboard push Mac→Android / type bị sửa (AAD sai)",
+      "reason": "aad_mismatch",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"sms\",\"id\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ts\":1727150160460,\"payload\":\"WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1PTQKjP4QNE9BtLEMZBqyofLVZ/WiAUFH8OP/drgcfz6h/FivJOvAUtBw3oOma4xfx0PhuBXaEWn2ITHldSqJuUMeMN9jsmtidjZXm1woaBACXpmWbGjajH2qzudb7v7L8zKNe5Mso7JxaG2vTgnbn+953YaJ4dxCycFFkFp3gC6yF1aYFy7atFJ2A8epgyp661DIm0LRcRRV8PXApJB7V8uu1reekMmwEPkwyAyIVDU/q2W+ih5ZsDG6eJ8x9XD8HiB23ltbqL2zDLtuuJuOOL6m2NqQE0zUo+NJxC2vf/SYZ7WvUzIgLf89jlgwTalWKQY2V2WNjemSH3toTltZk0K8UtIhC3gNHVDGTHWDJH6eI8y0=\"}"
+    },
+    {
+      "name": "clipboard push Mac→Android / payload ngắn hơn 40 byte",
+      "reason": "payload_too_short",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e8-1b2c-7d3f-8a01-5a6b7c8d9e10\",\"ts\":1727150160460,\"payload\":\"WZWaD4H4KDVtSYpMHpOhnVeKxFgqOd/bVMGJMvicr+6SA0vQ1h1P\"}"
+    },
+    {
+      "name": "clipboard push Android→Mac (tiếng Việt) / tag sai",
+      "reason": "tag_mismatch",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"0192f3e0-5a22-7c4d-8e5f-6a7b8c9d0e1f\",\"ts\":1727150100130,\"payload\":\"CU1gMbaNGDos449JJFVVnwQmC+Zc1FmAbqEhjg/1CNxIO0K7xlWEXBdXLA5et847LNK8SrLm7NC69Df83xyRhKgykxt7lPfXj/Z8tVtMCPl23PM4OnEC2uWGvjyVRYTeRYWsUdZuouu2/tDuYPSEDSCaM1EVqXdLhXZXmKXVira9iO1UDJxTEhzaMCjK2mzLAkW9KhjD7T0MKkunckmPgeR8UW1no2uwLzAFNo3MSXwOpjUvqKFowENgnVyg+WfaUW0ERVJ/xg4SUhtzeXso6x6ZQCXhSEPEUCbQFguQeBngecfCJXgsemtXlGX9fbmaQ9tFlIF9TVMV4dlDeEzMZFGTluWXOV9wr7D/DHy8gkFNFr32tZgw3m4KcnXDyjB/rIdaqKsDhhWE5CppTLoDyw==\"}"
+    }
+  ]
+}

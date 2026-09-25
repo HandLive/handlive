@@ -1,0 +1,52 @@
+{
+  "description": "Rekey: secret_new = HKDF(X25519(eph mới) ‖ secret_old (64 byte), salt = SHA-256(nonce bên khởi tạo ‖ nonce bên nhận), info \"handlive/v1/rekey\", L 64). k_c2s = 32 byte đầu, k_s2c = 32 byte sau (theo vai C/S, không theo bên khởi tạo). secret_new thay secret cho lần rekey sau (epoch 2 nối từ epoch 1).",
+  "source": "docs/detailed-design/00-common-specs.md 0.6.3 bước 6; 03-connectivity.md CONN-02 API 3",
+  "vectors": [
+    {
+      "name": "rekey epoch 1 (client khởi tạo)",
+      "epoch": 1,
+      "initiator": "client",
+      "secret_old": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e172758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "initiator_eph_priv": "4ffaccd8ff8caba3002cd0bdbf37b9f9c2f2269b29b89a121050dfb7d0251733",
+      "initiator_eph_pub": "be02b8891ce61fbddd76f5cb6e9e163e34ed78fd6421d5bb55b1e7b2ae7cb333",
+      "initiator_nonce": "0776560036d10d42d3aa64475940e0cf756fda25a25c446f6c1d0bdf4b443bf9",
+      "responder_eph_priv": "ea271b3ec77bc3109366cb025367e468b5d22dea72b7b7e44c88e2d1dc229d06",
+      "responder_eph_pub": "8e3832f5f8eae4fa0fa69bcfea8ed80c47208995e0162ae821fb02d613f5087f",
+      "responder_nonce": "35aaa1fac2b4c0eb51713b4b6576fff8925ac76cc62f7613ed69184b598d8f61",
+      "eph_shared": "dd3ad181983347270b1480f6b52f3b6d4418411b822394246f162e9f862fd55e",
+      "ikm": "dd3ad181983347270b1480f6b52f3b6d4418411b822394246f162e9f862fd55ed1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e172758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "salt_input": "0776560036d10d42d3aa64475940e0cf756fda25a25c446f6c1d0bdf4b443bf935aaa1fac2b4c0eb51713b4b6576fff8925ac76cc62f7613ed69184b598d8f61",
+      "salt": "b07d9de32117281a75c87bd8685979c7dc0fd88a8e909e28592d4e89059ec5c1",
+      "info": "handlive/v1/rekey",
+      "length": 64,
+      "secret_new": "3ed1c3ce5730f7298f04b29f0ca96f8cea9598f3373d84369f50e722ae6abf443491c65041314bd66be89e52ef036917a09dde1400ed9c424bb39d085f9f9d3e",
+      "k_c2s": "3ed1c3ce5730f7298f04b29f0ca96f8cea9598f3373d84369f50e722ae6abf44",
+      "k_s2c": "3491c65041314bd66be89e52ef036917a09dde1400ed9c424bb39d085f9f9d3e",
+      "request_plaintext": "{\"op\":\"rekey\",\"data\":{\"epoch\":1,\"eph\":\"vgK4iRzmH73ddvXLbp4WPjTteP1kIdW7VbHnsq58szM\",\"nonce\":\"B3ZWADbRDULTqmRHWUDgz3Vv2iWiXERvbB0L30tEO_k\"}}",
+      "ack_data": "{\"epoch\":1,\"eph\":\"jjgy9fjq5PoPppvP6o7YDEcgiZXgFiroIfsC1hP1CH8\",\"nonce\":\"Naqh-sK0wOtRcTtLZXb_-JJax2zGL3YT7WkYS1mNj2E\"}"
+    },
+    {
+      "name": "rekey epoch 2 (server khởi tạo)",
+      "epoch": 2,
+      "initiator": "server",
+      "secret_old": "3ed1c3ce5730f7298f04b29f0ca96f8cea9598f3373d84369f50e722ae6abf443491c65041314bd66be89e52ef036917a09dde1400ed9c424bb39d085f9f9d3e",
+      "initiator_eph_priv": "e1db8a70619f8eba7dba5191bcb78fb41d52ecd0e6a039b74e0f862523cc6897",
+      "initiator_eph_pub": "04ded86335ccad68948447b010c516c0a16f8e5b11ec1910249eaf8b1a200f6a",
+      "initiator_nonce": "90c98aff124cf5767c30d9bb53624bc059c0a3132a431edd36a2b6c512846a0e",
+      "responder_eph_priv": "9f3e0d21b62c08908d577291dfc3c029cd5fcb9d4161d9a043fb6d579a3ec2bc",
+      "responder_eph_pub": "d009692c3e4d3c75c58ef21ab31071fff97980dc12bd49dc5ee2bc7b862a6d47",
+      "responder_nonce": "38327fc5b73c9adc3277086e433c619bb8da93d280390b0ba2faddee79dd3b92",
+      "eph_shared": "0ea10b682cf58b4491c727fe92c5066571bab3078c6b8cc99aad6804292d8f6c",
+      "ikm": "0ea10b682cf58b4491c727fe92c5066571bab3078c6b8cc99aad6804292d8f6c3ed1c3ce5730f7298f04b29f0ca96f8cea9598f3373d84369f50e722ae6abf443491c65041314bd66be89e52ef036917a09dde1400ed9c424bb39d085f9f9d3e",
+      "salt_input": "90c98aff124cf5767c30d9bb53624bc059c0a3132a431edd36a2b6c512846a0e38327fc5b73c9adc3277086e433c619bb8da93d280390b0ba2faddee79dd3b92",
+      "salt": "a14fc2a64158e2db67bb133185e187c4b8839201033dc4075a5586b3489b2734",
+      "info": "handlive/v1/rekey",
+      "length": 64,
+      "secret_new": "d592985252f213ac9afe0b5a75a3a700639e1e1390df03212429915515c6708ffbdf02a19b9915e1ea327991bbb9092283b92de7aaefd65d614695a360da2a17",
+      "k_c2s": "d592985252f213ac9afe0b5a75a3a700639e1e1390df03212429915515c6708f",
+      "k_s2c": "fbdf02a19b9915e1ea327991bbb9092283b92de7aaefd65d614695a360da2a17",
+      "request_plaintext": "{\"op\":\"rekey\",\"data\":{\"epoch\":2,\"eph\":\"BN7YYzXMrWiUhEewEMUWwKFvjlsR7BkQJJ6vixogD2o\",\"nonce\":\"kMmK_xJM9XZ8MNm7U2JLwFnAoxMqQx7dNqK2xRKEag4\"}}",
+      "ack_data": "{\"epoch\":2,\"eph\":\"0AlpLD5NPHXFjvIasxBx__l5gNwSvUncXuK8e4YqbUc\",\"nonce\":\"ODJ_xbc8mtwydwhuQzxhm7jak9KAOQsLovrd7nndO5I\"}"
+    }
+  ]
+}
