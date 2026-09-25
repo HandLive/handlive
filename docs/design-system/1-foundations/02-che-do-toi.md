@@ -1,114 +1,123 @@
-# Chế độ Tối và tương phản cao
+English | [Tiếng Việt](02-che-do-toi.vi.md)
 
-HandLive chạy đúng ở bốn giao diện và luôn theo cài đặt của hệ thống. Mục này quy định nền, màu và
-ảnh ở giao diện Tối, và cách kiểm cùng Tăng độ tương phản, Giảm độ trong suốt.
+# Dark Mode and increased contrast
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/dark-mode ·
+HandLive works correctly in four appearances and always follows the system setting. This section
+defines backgrounds, colors, and images in the Dark appearance, and how to test them together with
+Increase Contrast and Reduce Transparency.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/dark-mode ·
 https://developer.apple.com/design/human-interface-guidelines/accessibility
 
-## Bốn giao diện
+## Four appearances
 
-| Giao diện | Token | Bật khi | Apple | Android |
+| Appearance | Token | Active when | Apple | Android |
 |---|---|---|---|---|
-| Sáng | `light` | Mặc định | `colorScheme == .light` | `isSystemInDarkTheme()` = false |
-| Tối | `dark` | Chế độ Tối hoặc Tự động | `colorScheme == .dark` | `isSystemInDarkTheme()` = true |
-| Sáng · tương phản cao | `light-hc` | Tăng độ tương phản | `colorSchemeContrast == .increased` | `UiModeManager.getContrast()` ≥ 0.5 (Android 14+) |
-| Tối · tương phản cao | `dark-hc` | Tối và Tăng độ tương phản | như trên | như trên |
+| Light | `light` | Default | `colorScheme == .light` | `isSystemInDarkTheme()` = false |
+| Dark | `dark` | Dark Mode or Auto | `colorScheme == .dark` | `isSystemInDarkTheme()` = true |
+| Light · Increased Contrast | `light-hc` | Increase Contrast | `colorSchemeContrast == .increased` | `UiModeManager.getContrast()` ≥ 0.5 (Android 14+) |
+| Dark · Increased Contrast | `dark-hc` | Dark and Increase Contrast | same as above | same as above |
 
-- Không có công tắc giao diện riêng trong app, không có mục "Giao diện" trong Cài đặt của HandLive.
-  Theo HIG, công tắc riêng bắt người dùng chỉnh nhiều nơi và dễ tưởng app bị lỗi.
-- Chế độ Tự động đổi giao diện ngay khi app đang mở: không lưu màu đã quy đổi, luôn dùng màu động và
-  token của giao diện hiện tại.
-- AppKit đọc `NSApp.effectiveAppearance`; không đặt `NSApp.appearance`.
+- The app has no appearance switch of its own, and HandLive's Settings have no "Appearance" item. Per
+  the HIG, an app-specific switch makes people adjust settings in several places and can make them
+  think the app is broken.
+- Auto mode changes the appearance while the app is open: don't store resolved colors; always use
+  dynamic colors and the tokens of the current appearance.
+- AppKit reads `NSApp.effectiveAppearance`; don't set `NSApp.appearance`.
 
-## Nền base và elevated
+## Base and elevated backgrounds
 
-- iOS và iPadOS: nền Tối có hai bộ. Base tối hơn, lùi ra sau; elevated sáng hơn, nổi lên. Hệ thống
-  tự đổi sang elevated cho sheet, popover và cửa sổ khi đa nhiệm nếu view dùng bộ
-  `systemBackground`. HandLive không tự tô nền cho sheet.
-- Android và preview không có elevated tự động: sheet và hộp thoại ở giao diện Tối lấy
-  `secondary-system-background` làm nền nổi, phần tử bên trong dùng `tertiary-system-background`.
-- macOS: nền cửa sổ `window-background` là xám, không đen; danh sách và bảng dùng
-  `control-background`. Màu nhấn Graphite làm nền cửa sổ nhuốm màu hình nền.
-- Giao diện Tối phân lớp bằng màu nền, không bằng bóng: `shadow-card` là `none` ở Tối. Kính nổi vẫn
-  có `shadow-glass`.
+- iOS and iPadOS: Dark backgrounds come in two sets. Base is darker and recedes; elevated is lighter
+  and comes forward. The system switches to elevated for sheets, popovers, and windows in multitasking
+  when the view uses the `systemBackground` set. HandLive doesn't paint sheet backgrounds itself.
+- Android and previews have no automatic elevation: sheets and dialogs in the Dark appearance use
+  `secondary-system-background` as the raised background, and the elements inside them use
+  `tertiary-system-background`.
+- macOS: the `window-background` is gray, not black; lists and tables use `control-background`. The
+  Graphite accent color tints window backgrounds with the wallpaper.
+- The Dark appearance separates layers with background color, not shadows: `shadow-card` is `none` in
+  Dark. Floating glass still has `shadow-glass`.
 
-| Lớp | Token | Tối | Tối · tương phản cao |
+| Layer | Token | Dark | Dark · Increased Contrast |
 |---|---|---|---|
-| Nền màn hình | `system-background` | #000000 | #000000 |
-| Nhóm; nền nổi trên Android | `secondary-system-background` | #1c1c1e | #242426 |
-| Lồng trong nhóm | `tertiary-system-background` | #2c2c2e | #363638 |
-| Cửa sổ Mac | `window-background` | #282828 | #1c1c1c |
-| Danh sách, bảng Mac | `control-background` | #1e1e1e | #141414 |
+| Screen background | `system-background` | #000000 | #000000 |
+| Group; raised background on Android | `secondary-system-background` | #1c1c1e | #242426 |
+| Nested in a group | `tertiary-system-background` | #2c2c2e | #363638 |
+| Mac window | `window-background` | #282828 | #1c1c1c |
+| Mac lists, tables | `control-background` | #1e1e1e | #141414 |
 
-## Màu ở giao diện Tối
+## Colors in the Dark appearance
 
-Màu Tối không phải màu Sáng đảo ngược: nền dịu hơn, chữ và màu sáng hơn. Mỗi token tự định nghĩa có
-giá trị Tối riêng, ví dụ `accent` #197934 ở Sáng thành #3ddc6c ở Tối.
+Dark colors aren't Light colors inverted: backgrounds are softer, and text and colors are brighter.
+Every custom token has its own Dark value; for example, `accent` #197934 in Light becomes #3ddc6c in
+Dark.
 
-HIG: tương phản tối thiểu 4.5:1; màu tự định nghĩa nên nhắm 7:1, nhất là chữ nhỏ. Kết quả đo trên 7
-nền: `system-background`, `secondary-system-background`, `tertiary-system-background`,
-`system-grouped-background`, `secondary-system-grouped-background`, `window-background`,
-`control-background`.
+HIG: minimum contrast is 4.5:1; custom colors should aim for 7:1, especially for small text. Results
+measured on 7 backgrounds: `system-background`, `secondary-system-background`,
+`tertiary-system-background`, `system-grouped-background`, `secondary-system-grouped-background`,
+`window-background`, `control-background`.
 
-| Token | Tối | Tối · tương phản cao | Đạt 7:1 |
+| Token | Dark | Dark · Increased Contrast | Reaches 7:1 |
 |---|---|---|---|
-| `accent` | 7.7–11.7 | 7.5–13.0 | Có |
-| `text-green` | 7.6–11.4 | 7.7–13.3 | Có |
-| `text-orange` | 6.9–10.4 | 7.2–12.5 | Gần đạt (6.9 trên `tertiary-system-background`) |
-| `text-red` | 4.7–7.2 | 5.4–9.4 | Chỉ trên nền đen |
-| `brand-fire` | 5.0–7.5 | 5.2–9.1 | Không; chỉ cho chữ lớn |
+| `accent` | 7.7–11.7 | 7.5–13.0 | Yes |
+| `text-green` | 7.6–11.4 | 7.7–13.3 | Yes |
+| `text-orange` | 6.9–10.4 | 7.2–12.5 | Almost (6.9 on `tertiary-system-background`) |
+| `text-red` | 4.7–7.2 | 5.4–9.4 | Only on black |
+| `brand-fire` | 5.0–7.5 | 5.2–9.1 | No; large text only |
 
-- `text-red` đạt mức tối thiểu nhưng chưa đạt mức khuyến nghị: chỉ cho nhãn ngắn luôn kèm biểu tượng
-  ("Gửi lỗi"), không cho đoạn văn.
-- Chữ phụ trên Apple dùng `.secondary` của hệ thống; token `secondary-label` (5.3–6.4:1 ở Tối) chỉ
-  cho Android và preview.
+- `text-red` meets the minimum but not the recommended level: use it only for short labels that always
+  come with an icon ("Not sent"), not for paragraphs.
+- Secondary text on Apple platforms uses the system's `.secondary`; the `secondary-label` token
+  (5.3–6.4:1 in Dark) is only for Android and previews.
 
-## Ảnh, mã QR và video
+## Images, QR codes, and video
 
-- Mã QR luôn đen trên trắng (`qr-ink` trên `qr-paper`) ở cả 4 giao diện, có vùng trắng quanh mã.
-  Không đảo màu ở giao diện Tối: nhiều máy quét đọc kém mã đảo. Khung trắng chỉ rộng vừa mã
-  (`size-qr`) để bớt chói.
-- Khung camera (`CameraPreview`) và khung quét: nền `video-background` đen, chữ và biểu tượng
-  `on-video` trắng ở mọi giao diện.
-- Ảnh của người dùng (ảnh trên bảng nhớ tạm, ảnh đại diện) hiển thị nguyên bản. Minh họa của
-  HandLive có bản Sáng và bản Tối; theo HIG, làm dịu nền trắng trong minh họa để không chói.
-- SF Symbols tự đổi theo giao diện. Biểu tượng tự vẽ cần bản Sáng và bản Tối, thêm viền mảnh nếu
-  hình tối chìm vào nền tối.
-- Nền thương hiệu `brand-glow` đổi từ hồng đào (#fde9e2) sang nâu đỏ sẫm (#3b1a12), không dùng đen.
+- QR codes are always black on white (`qr-ink` on `qr-paper`) in all 4 appearances, with a white
+  quiet zone around the code. Don't invert them in the Dark appearance: many scanners read inverted
+  codes poorly. The white frame is only as wide as the code (`size-qr`) to reduce glare.
+- The camera frame (`CameraPreview`) and the scan frame: black `video-background`, white `on-video`
+  text and icons in every appearance.
+- The user's images (images on the clipboard, profile pictures) are shown as they are. HandLive's
+  illustrations have Light and Dark versions; per the HIG, soften white backgrounds in illustrations
+  so they don't glare.
+- SF Symbols adapt to the appearance on their own. Custom icons need Light and Dark versions, plus a
+  thin outline if a dark shape disappears into a dark background.
+- The `brand-glow` brand background changes from peach (#fde9e2) to a deep reddish brown (#3b1a12),
+  not to black.
 
-## Tăng độ tương phản và Giảm độ trong suốt
+## Increase Contrast and Reduce Transparency
 
-| Cài đặt | Hệ thống tự làm | HandLive làm thêm |
+| Setting | The system does | HandLive also does |
 |---|---|---|
-| Tăng độ tương phản | Màu hệ thống sang biến thể tương phản cao; viền control rõ hơn | Token lấy `light-hc`, `dark-hc`; `glass-stroke` và `separator` đậm hơn |
-| Giảm độ trong suốt | Kính và material thành nền gần đục | Vật liệu tự dựng đọc `accessibilityReduceTransparency` (SwiftUI) hoặc `NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency`, rồi dùng nền đục `secondary-system-background` hoặc `window-background` |
+| Increase Contrast | System colors switch to high-contrast variants; control borders become more visible | Tokens take `light-hc`, `dark-hc`; `glass-stroke` and `separator` get darker |
+| Reduce Transparency | Glass and materials become nearly opaque backgrounds | Custom materials read `accessibilityReduceTransparency` (SwiftUI) or `NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency`, then use the opaque `secondary-system-background` or `window-background` |
 
-`glass-fill` ở hai giao diện tương phản cao đã gần đục (92%), nên kính trên Android và preview trông
-giống khi bật Giảm độ trong suốt.
+`glass-fill` in the two Increased Contrast appearances is already nearly opaque (92%), so glass on
+Android and in previews looks the way it does with Reduce Transparency on.
 
-## Ma trận kiểm thử
+## Test matrix
 
-HIG yêu cầu kiểm giao diện Tối khi bật Tăng độ tương phản và Giảm độ trong suốt, riêng từng cái và
-cùng lúc. Mỗi màn chính (`Onboarding`, `PairingCard`, `MenuBarMenu`, `CallPanel`, Tin nhắn, Cài đặt)
-đi qua 4 giao diện × Giảm độ trong suốt tắt/bật = 8 tổ hợp.
+The HIG asks you to test the Dark appearance with Increase Contrast and Reduce Transparency turned on,
+each on its own and both together. Every main screen (`Onboarding`, `PairingCard`, `MenuBarMenu`,
+`CallPanel`, Messages, Settings) goes through 4 appearances × Reduce Transparency off/on = 8
+combinations.
 
-| Tổ hợp | Kiểm gì |
+| Combination | What to check |
 |---|---|
-| Sáng, Tối | Chữ phụ trên nền nhóm; kính trên hình nền sáng và tối; `text-red` ở Tối |
-| Hai giao diện tương phản cao | Viền kính, đường phân cách, chấm trạng thái vẫn tách khỏi nền |
-| Mỗi giao diện kèm Giảm độ trong suốt | Kính thành nền đục; chữ và nút vẫn đọc được |
-| Chế độ Tự động | Đổi giao diện khi app đang mở: không màu nào kẹt ở giao diện cũ |
-| Cửa sổ Mac không active | Mất vibrancy nhưng nội dung vẫn đọc được |
+| Light, Dark | Secondary text on group backgrounds; glass over light and dark wallpapers; `text-red` in Dark |
+| The two Increased Contrast appearances | Glass borders, separators, and status dots still stand out from the background |
+| Each appearance with Reduce Transparency | Glass becomes an opaque background; text and buttons stay readable |
+| Auto mode | The appearance changes while the app is open: no color stays stuck in the old appearance |
+| Inactive Mac window | Loses vibrancy, but the content stays readable |
 
-Công cụ: Environment Overrides trong Xcode (giao diện, tương phản, cỡ chữ) và Accessibility
-Inspector; trên Android đổi Giao diện tối và mức tương phản của hệ thống rồi chụp so sánh.
+Tools: Environment Overrides in Xcode (appearance, contrast, text size) and Accessibility Inspector;
+on Android, change the system's Dark theme and contrast level, then take screenshots to compare.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Dùng màu động và token của giao diện hiện tại | Thêm công tắc Sáng/Tối trong app |
-| Để hệ thống đổi nền base sang elevated | Tự tô đen cho sheet |
-| Giữ mã QR đen trên trắng | Đảo màu mã QR ở giao diện Tối |
-| Kiểm đủ 8 tổ hợp | Chỉ kiểm Sáng và Tối |
+| Use dynamic colors and the tokens of the current appearance | Add a Light/Dark switch in the app |
+| Let the system switch base backgrounds to elevated | Paint sheets black yourself |
+| Keep QR codes black on white | Invert QR codes in the Dark appearance |
+| Test all 8 combinations | Test only Light and Dark |

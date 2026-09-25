@@ -1,133 +1,137 @@
-# Bố cục
+English | [Tiếng Việt](04-bo-cuc.vi.md)
 
-Mục này quy định khoảng cách, lề, bố cục theo size class, góc bo, vùng chạm và quy tắc riêng của cửa
-sổ Mac. Trên Apple, lề và vùng an toàn lấy từ hệ thống; token là giá trị cho view tự dựng, preview
-và Android.
+# Layout
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/layout
+This section defines spacing, margins, layout by size class, corner radii, hit targets, and the rules
+specific to Mac windows. On Apple platforms, margins and safe areas come from the system; the tokens
+are values for custom views, previews, and Android.
 
-## Khoảng cách
+HIG source: https://developer.apple.com/design/human-interface-guidelines/layout
 
-Lưới 4 pt (dp trên Android).
+## Spacing
 
-| Token | Giá trị | Dùng cho |
+4 pt grid (dp on Android).
+
+| Token | Value | Used for |
 |---|---|---|
-| `space-4` | 4 | Khe giữa biểu tượng và chữ nhỏ |
-| `space-8` | 8 | Khe giữa các phần tử trong một dòng |
-| `space-12` | 12 | Đệm quanh control có viền (HIG: ~12 pt) |
-| `space-16` | 16 | Đệm trong thẻ, khe giữa các dòng nội dung |
-| `space-20` | 20 | Lề nội dung cửa sổ Mac, khe giữa các nhóm cài đặt |
-| `space-24` | 24 | Đệm quanh control không viền (HIG: ~24 pt), khe giữa hai nút tròn cuộc gọi |
-| `space-32` | 32 | Khe giữa các khối lớn trên màn chào |
-| `space-40` | 40 | Lề trên của tiêu đề màn chào |
-| `margin-compact` | 16 | Lề màn hình iPhone và điện thoại Android |
-| `margin-regular` | 20 | Lề màn hình iPad, cửa sổ rộng |
+| `space-4` | 4 | Gap between an icon and small text |
+| `space-8` | 8 | Gap between elements in a row |
+| `space-12` | 12 | Padding around bordered controls (HIG: ~12 pt) |
+| `space-16` | 16 | Padding inside cards, gap between content rows |
+| `space-20` | 20 | Content margins in Mac windows, gap between settings groups |
+| `space-24` | 24 | Padding around borderless controls (HIG: ~24 pt), gap between the two round call buttons |
+| `space-32` | 32 | Gap between large blocks on the welcome screen |
+| `space-40` | 40 | Top margin of the welcome screen title |
+| `margin-compact` | 16 | Screen margins on iPhone and Android phones |
+| `margin-regular` | 20 | Screen margins on iPad and in wide windows |
 
-## Lề hệ thống
+## System margins
 
-HIG bản 9/9/2026 không còn bảng lề. Trên Apple, lề đọc từ hệ thống, không cộng số cố định:
+The HIG as of September 9, 2026 no longer has a margins table. On Apple platforms, read margins from
+the system instead of adding fixed numbers:
 
-- UIKit: `layoutMargins`, `directionalLayoutMargins`, `readableContentGuide` (giới hạn bề rộng đoạn
-  văn trên iPad).
-- SwiftUI: `.padding()` mặc định, `.scenePadding()`; `List` và `Form` tự lề; `.safeAreaInset(edge:)`
-  cho thanh tự dựng.
-- macOS: `Form` với `.formStyle(.grouped)` tự lề; view tự dựng cách mép cửa sổ `space-20`.
-- Android: `margin-compact` khi bề rộng dưới 600 dp, `margin-regular` từ 600 dp, cộng thêm
+- UIKit: `layoutMargins`, `directionalLayoutMargins`, `readableContentGuide` (limits paragraph width
+  on iPad).
+- SwiftUI: the default `.padding()`, `.scenePadding()`; `List` and `Form` set their own margins;
+  `.safeAreaInset(edge:)` for custom bars.
+- macOS: `Form` with `.formStyle(.grouped)` sets its own margins; custom views sit `space-20` from the
+  window edge.
+- Android: `margin-compact` when the width is under 600 dp, `margin-regular` from 600 dp, plus
   `WindowInsets.safeDrawing`.
 
-## Size class
+## Size classes
 
-Bố cục theo size class, không theo loại thiết bị hay hướng xoay. Đổi size class chỉ đổi lượng nội
-dung hiển thị, không bớt chức năng. Không đặt bề rộng cố định.
+Lay out by size class, not by device type or orientation. A change of size class only changes how much
+content is shown, never which functions are available. Don't set fixed widths.
 
-| Nơi hiển thị | Chiều ngang | HandLive |
+| Where it's shown | Horizontal | HandLive |
 |---|---|---|
-| iPhone | Compact (máy lớn xoay ngang: Regular) | Thanh tab 4 tab; danh sách một cột; Tin nhắn đẩy sang màn hội thoại |
-| iPad toàn màn hình, cửa sổ rộng | Regular | Tin nhắn dùng `NavigationSplitView` (danh sách + hội thoại) |
-| iPad chia đôi, cửa sổ hẹp | Compact | Như iPhone |
-| iPhone Duo, màn ngoài | Compact | Như iPhone; hệ thống đưa thanh tab, toolbar ra cạnh dọc |
-| iPhone Duo, màn trong | Regular | Như iPad: Tin nhắn hai cột |
-| Android dưới 600 dp / từ 600 dp | `WindowSizeClass` Compact / Medium, Expanded | Như iPhone / như iPad |
+| iPhone | Compact (large phones in landscape: Regular) | Tab bar with 4 tabs; single-column lists; Messages pushes to the conversation screen |
+| iPad full screen, wide windows | Regular | Messages uses `NavigationSplitView` (list + conversation) |
+| iPad split screen, narrow windows | Compact | Like iPhone |
+| iPhone Duo, outer display | Compact | Like iPhone; the system moves the tab bar and toolbar to the vertical edge |
+| iPhone Duo, inner display | Regular | Like iPad: Messages in two columns |
+| Android under 600 dp / from 600 dp | `WindowSizeClass` Compact / Medium, Expanded | Like iPhone / like iPad |
 
-- iPhone Duo: component hệ thống tự tránh vùng camera và nếp gập (reserved regions); chỉ view tự
-  dựng mới cần `ReservedRegion` (iOS 27.1). Mỗi mục toolbar có cả chữ và symbol. Xem trước bằng
-  Device Hub trong Xcode.
-- Ở cỡ chữ trợ năng, bố cục ngang chuyển sang xếp dọc và giảm số cột.
+- iPhone Duo: system components avoid the camera area and the fold (reserved regions) on their own;
+  only custom views need `ReservedRegion` (iOS 27.1). Every toolbar item has both text and a symbol.
+  Preview with Device Hub in Xcode.
+- At accessibility text sizes, horizontal layouts switch to vertical stacks and use fewer columns.
 
-## Góc bo đồng tâm
+## Concentric corners
 
-Góc bên trong đồng tâm với góc bên ngoài: bán kính trong = bán kính ngoài − khoảng đệm. Ví dụ thẻ
-trong sheet: `radius-sheet` 26 − `space-12` = 14 = `radius-card`.
+Inner corners are concentric with outer corners: inner radius = outer radius − padding. For example,
+a card inside a sheet: `radius-sheet` 26 − `space-12` = 14 = `radius-card`.
 
-- macOS 26, iOS 26 trở lên: control, sheet, popover, cửa sổ lấy góc đồng tâm của hệ thống. View tự
-  dựng dùng `ConcentricRectangle`, `.containerShape(_:)`, `rect(corners:isUniform:)` (SwiftUI) hoặc
-  `cornerConfiguration` (UIKit), không đặt bán kính bằng số.
-- macOS 13–15, iOS 16–18 và Android dùng token:
+- macOS 26, iOS 26 and later: controls, sheets, popovers, and windows take the system's concentric
+  corners. Custom views use `ConcentricRectangle`, `.containerShape(_:)`, `rect(corners:isUniform:)`
+  (SwiftUI) or `cornerConfiguration` (UIKit), instead of numeric radii.
+- macOS 13–15, iOS 16–18, and Android use the tokens:
 
-| Token | Giá trị | Dùng cho |
+| Token | Value | Used for |
 |---|---|---|
-| `radius-control-mac` | 6 | Nút push, ô nhập trên macOS 13–15 |
-| `radius-row` | 10 | Nhóm danh sách inset (iOS 16–18), vùng chọn trong sidebar |
-| `radius-card` | 14 | Thẻ ở lớp nội dung, alert iOS 16–18 |
-| `radius-panel` | 18 | Menu, popover, thông báo, `CallPanel` |
-| `radius-sheet` | 26 | Sheet; nhóm danh sách và cửa sổ Mac từ bản 26 |
-| `radius-capsule` | 999 | Nút capsule, công tắc, huy hiệu, thanh tab nổi |
+| `radius-control-mac` | 6 | Push buttons and text fields on macOS 13–15 |
+| `radius-row` | 10 | Inset list groups (iOS 16–18), sidebar selection |
+| `radius-card` | 14 | Cards in the content layer, alerts on iOS 16–18 |
+| `radius-panel` | 18 | Menus, popovers, notifications, `CallPanel` |
+| `radius-sheet` | 26 | Sheets; list groups and Mac windows from version 26 |
+| `radius-capsule` | 999 | Capsule buttons, switches, badges, the floating tab bar |
 
-## Vùng chạm
+## Hit targets
 
-| Nền tảng | Mặc định | Tối thiểu | Token |
+| Platform | Default | Minimum | Token |
 |---|---|---|---|
 | iOS, iPadOS | 44×44 pt | 28×28 pt | `size-hit-ios`, `size-hit-ios-min` |
 | macOS | 28×28 pt | 20×20 pt | `size-hit-mac`, `size-hit-mac-min` |
 | Android | 48×48 dp | 48×48 dp | `size-hit-android` |
 
-- Biểu tượng nhỏ hơn vùng chạm thì nới vùng chạm, không phóng biểu tượng: SwiftUI
-  `.frame(minWidth:minHeight:)` với `.contentShape(Rectangle())`; Compose
+- When an icon is smaller than its hit target, enlarge the hit target, not the icon: SwiftUI
+  `.frame(minWidth:minHeight:)` with `.contentShape(Rectangle())`; Compose
   `Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)`.
-- Đệm quanh control, đo từ mép nhìn thấy: ~12 pt với control có viền (`space-12`), ~24 pt với
-  control không viền (`space-24`).
-- Nút tròn cuộc gọi `size-call-button` 48, cách nhau `space-24`.
+- Padding around controls, measured from the visible edge: ~12 pt for bordered controls
+  (`space-12`), ~24 pt for borderless controls (`space-24`).
+- Round call buttons are `size-call-button` 48, spaced `space-24` apart.
 
-## Cửa sổ macOS
+## macOS windows
 
-- Không đặt control hay thông tin quan trọng ở đáy cửa sổ: người dùng hay kéo cửa sổ lệch khỏi mép
-  dưới màn hình. Thanh dưới chỉ chứa thông tin phụ; nút soạn tin đặt trên toolbar, không ở đáy
-  sidebar.
-- Không tự vẽ khung cửa sổ, thanh tiêu đề hay nút điều khiển cửa sổ; không đặt nội dung dưới vùng
-  camera (notch).
-- Tiêu đề cửa sổ dưới 15 ký tự, không lấy tên app làm tiêu đề. Cửa sổ Settings đổi tiêu đề và kích
-  thước theo pane.
-- Thanh menu cao 24 pt (`size-menu-bar`). Biểu tượng HandLive có thể bị notch hoặc thanh menu chật
-  che mất, nên luôn có đường vào khác: mở lại app thì hiện cửa sổ chính.
-- Split view: đường chia mỏng 1 pt.
+- Don't put controls or important information at the bottom of a window: people often drag windows
+  partly off the bottom of the screen. A bottom bar holds only secondary information; the compose
+  button goes in the toolbar, not at the bottom of the sidebar.
+- Don't draw your own window frame, title bar, or window controls; don't put content under the camera
+  housing (notch).
+- Window titles are under 15 characters and never the app name. The Settings window changes its title
+  and size with each pane.
+- The menu bar is 24 pt tall (`size-menu-bar`). The HandLive icon can be hidden by the notch or a
+  crowded menu bar, so there's always another way in: reopening the app shows the main window.
+- Split views: a thin 1 pt divider.
 
-## Bề rộng HandLive dùng
+## Widths HandLive uses
 
-Không phải số của HIG; là giá trị HandLive chọn để các nền tảng và preview khớp nhau.
+These aren't HIG numbers; they're values HandLive chose so that the platforms and previews match.
 
-| Thành phần | Bề rộng | Ghi chú |
+| Component | Width | Notes |
 |---|---|---|
-| `MenuBarMenu` | Hệ thống tự tính (preview 280 pt) | Nhãn ngắn; tên thiết bị dài cắt ở giữa |
-| `CallPanel`, `Notification` | 340 pt | Cao theo nội dung; không đổi bề rộng khi đổi trạng thái cuộc gọi |
-| `Alert` trên macOS | Hệ thống tự tính (preview 260 pt) | — |
-| Popover | Vừa nội dung | Chỉ thông tin ngắn, không dùng để cảnh báo |
-| `PairingCard` | Mã QR `size-qr` 220 pt | Có vùng trắng quanh mã |
-| `MessageBubble` | Tối đa 76% khung hội thoại | — |
-| Ảnh đại diện | `size-avatar` 40 (Mac 32) | — |
+| `MenuBarMenu` | Computed by the system (preview 280 pt) | Short labels; long device names are truncated in the middle |
+| `CallPanel`, `Notification` | 340 pt | Height fits the content; the width doesn't change when the call state changes |
+| `Alert` on macOS | Computed by the system (preview 260 pt) | — |
+| Popover | Fits the content | Short information only, never for warnings |
+| `PairingCard` | QR code `size-qr` 220 pt | With a white quiet zone around the code |
+| `MessageBubble` | At most 76% of the conversation pane | — |
+| Avatar | `size-avatar` 40 (Mac 32) | — |
 
-## Vùng an toàn
+## Safe areas
 
-- iOS và iPadOS: nền kéo dài dưới thanh tab và toolbar kính; nội dung để đọc và chạm nằm trong safe
-  area. `ignoresSafeArea` chỉ dùng cho nền.
-- Android: edge-to-edge (`enableEdgeToEdge()`), đệm theo `WindowInsets.safeDrawing`; không đặt
-  control trong vùng cử chỉ quay lại ở hai mép (`WindowInsets.systemGestures`). Thanh trạng thái và
-  thanh điều hướng do Android quản lý.
+- iOS and iPadOS: backgrounds extend under the glass tab bar and toolbar; content people read and tap
+  stays inside the safe area. Use `ignoresSafeArea` only for backgrounds.
+- Android: edge-to-edge (`enableEdgeToEdge()`), padded with `WindowInsets.safeDrawing`; don't put
+  controls in the back-gesture zones along the two edges (`WindowInsets.systemGestures`). Android
+  manages the status bar and the navigation bar.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Đọc lề và safe area từ hệ thống | Cộng lề 16 pt cố định trên iOS |
-| Bố cục theo size class | Rẽ nhánh theo tên thiết bị |
-| Góc trong đồng tâm với góc ngoài | Cùng bán kính cho thẻ lồng trong sheet |
-| Nút quan trọng trong thân cửa sổ | Nút quan trọng ở đáy cửa sổ Mac |
+| Read margins and safe areas from the system | Add a fixed 16 pt margin on iOS |
+| Lay out by size class | Branch on device names |
+| Keep inner corners concentric with outer corners | Use the same radius for a card nested in a sheet |
+| Put important buttons in the window body | Put important buttons at the bottom of a Mac window |
