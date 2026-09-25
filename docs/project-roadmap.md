@@ -1,39 +1,41 @@
-# HandLive: Lộ trình
+English | [Tiếng Việt](project-roadmap.vi.md)
 
-> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`.
+# HandLive: Roadmap
 
-Xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng của phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau.
+> Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`.
 
-## Phase 1. Đồng bộ clipboard (MVP)
+Build **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase.
 
-Android chạy foreground service, máy chủ WebSocket bằng Ktor, tìm máy trong mạng qua mDNS (`NsdManager` trên Android, `NWBrowser` trên Apple), ghép cặp QR, mã hóa XChaCha20. macOS là ứng dụng trên thanh menu. Có văn bản và ảnh (chia mảnh), tự xóa sau 60 giây, hai máy thỏa thuận tính năng khi kết nối.
-**Đo:** văn bản dưới 50 ms trong mạng nội bộ, ảnh 5 MB dưới 2 giây, kết nối lại dưới 3 giây. **Công:** khoảng 3.5 person-month.
+## Phase 1. Clipboard sync (MVP)
 
-## Phase 2. Cầu nối SMS
+Android runs a foreground service and a Ktor WebSocket server, finds devices on the network over mDNS (`NsdManager` on Android, `NWBrowser` on Apple), pairs by QR code, encrypts with XChaCha20. macOS is a menu bar app. Text and images (in chunks), auto-clear after 60 seconds, the two devices negotiate features when they connect.
+**Measure:** text under 50 ms on the local network, a 5 MB image under 2 seconds, reconnect under 3 seconds. **Effort:** about 3.5 person-months.
 
-Android nhận và gửi SMS. macOS và iOS có màn hình hội thoại, đồng bộ 50 tin gần nhất mỗi liên hệ. Thêm **ứng dụng iOS** (clipboard và SMS), **cloud relay** viết bằng Rust cho máy ở ngoài mạng nội bộ, thông báo đẩy APNs và FCM.
-**Đo:** thông báo dưới 500 ms, xác nhận trả lời dưới 2 giây. **Công:** khoảng 4 person-month.
+## Phase 2. SMS bridge
 
-## Phase 3. Thông tin và điều khiển cuộc gọi
+Android receives and sends SMS. macOS and iOS get a conversation screen, syncing the latest 50 messages per contact. Adds the **iOS app** (clipboard and SMS), a **cloud relay** written in Rust for devices outside the local network, and APNs and FCM push notifications.
+**Measure:** notification under 500 ms, reply confirmation under 2 seconds. **Effort:** about 4 person-months.
 
-Android dùng API Telecom công khai: `TelephonyCallback`, `acceptRingingCall`, `endCall`. Không dùng `InCallService` (quyết định D9). macOS hiện bảng nổi `NSPanel` và thông báo liên lạc. Nghe hoặc từ chối đi qua Wi-Fi. Giữ máy, DTMF và tắt tiếng qua HFP để ở Phase 4. Có lịch sử cuộc gọi. iOS hiện thông tin cuộc gọi.
-**Đo:** thông báo cuộc gọi đến dưới 200 ms, nghe máy dưới 500 ms từ đầu đến cuối. **Công:** khoảng 3 person-month.
+## Phase 3. Call information and control
 
-## Phase 4. Âm thanh cuộc gọi
+Android uses the public Telecom APIs: `TelephonyCallback`, `acceptRingingCall`, `endCall`. No `InCallService` (decision D9). macOS shows a floating `NSPanel` and a communication notification. Answering or declining goes over Wi-Fi. Hold, DTMF and mute over HFP wait for Phase 4. Call history included. iOS shows call information.
+**Measure:** incoming-call notification under 200 ms, answer under 500 ms end to end. **Effort:** about 3 person-months.
 
-**Bắt đầu bằng một tuần thử HFP.** Bluetooth HFP (điện thoại là AG, Mac là HF), định tuyến SCO, khử tiếng vang bằng `AUVoiceProcessingIO`. Dự phòng Opus qua WebSocket, mã hóa hai lớp, bộ đệm jitter thích ứng, phát hiện khi tai nghe đang chiếm HFP. Đường HFP dựa vào mã hóa liên kết Bluetooth (D11). Có màn hình công bố trước khi bật (yêu cầu pháp lý).
-**Đo:** MOS từ 3.5 với Bluetooth, từ 3.0 với WebSocket. Echo return loss trên 40 dB. **Công:** khoảng 6 person-month.
+## Phase 4. Call audio
 
-## Phase 5. Camera và mic ảo
+**Starts with a one-week HFP spike.** Bluetooth HFP (the phone is the AG, the Mac is the HF), SCO routing, echo cancellation with `AUVoiceProcessingIO`. Opus-over-WebSocket fallback, two-layer encryption, adaptive jitter buffer, detection of a headset holding HFP. The HFP path relies on Bluetooth link encryption (D11). A disclosure screen before the feature is turned on (legal requirement).
+**Measure:** MOS of 3.5 or more over Bluetooth, 3.0 or more over WebSocket. Echo return loss above 40 dB. **Effort:** about 6 person-months.
 
-**Bắt đầu bằng một tuần thử CMIOExtension.** Android lấy hình bằng Camera2, nén bằng MediaCodec, gửi qua Wi-Fi, tự nhận cáp USB, hạ chất lượng khi máy nóng. macOS giải mã bằng VideoToolbox, đưa hình ra CMIOExtension, đưa tiếng ra AudioServerPlugin, cài bằng PKG.
-**Đo:** trễ dưới 120 ms qua Wi-Fi, dưới 70 ms qua USB. **Công:** khoảng 5.5 person-month.
+## Phase 5. Virtual camera and mic
 
-## Công tổng
+**Starts with a one-week CMIOExtension spike.** Android captures video with Camera2, encodes it with MediaCodec, sends it over Wi-Fi, detects a USB cable by itself, and lowers quality when the phone runs hot. macOS decodes with VideoToolbox, outputs video through CMIOExtension and audio through AudioServerPlugin, and installs via a PKG.
+**Measure:** latency under 120 ms over Wi-Fi, under 70 ms over USB. **Effort:** about 5.5 person-months.
 
-Khoảng 22 person-month. Hai người làm khoảng 11 tháng. Ba người làm khoảng 7.5 tháng. MVP (Phase 1) khoảng 2 tháng với hai người. Dùng được clipboard và SMS (Phase 1 cùng Phase 2) khoảng 4 tháng với hai người.
+## Total effort
 
-| Phase | Android | macOS | iOS | Server | Test | Tổng |
+About 22 person-months. Two people take about 11 months. Three people take about 7.5 months. The MVP (Phase 1) takes about 2 months with two people. Usable clipboard and SMS (Phase 1 plus Phase 2) takes about 4 months with two people.
+
+| Phase | Android | macOS | iOS | Server | Test | Total |
 |-------|:-------:|:-----:|:---:|:------:|:----:|:----:|
 | P1 | 1.5 | 1.5 | — | — | 0.5 | 3.5 |
 | P2 | 1 | 0.5 | 1 | 1 | 0.5 | 4 |
