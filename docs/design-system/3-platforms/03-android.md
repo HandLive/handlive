@@ -1,11 +1,13 @@
+English | [Tiếng Việt](03-android.vi.md)
+
 # Android
 
-App Android dựng lại ngôn ngữ của Apple bằng Jetpack Compose — như Apple làm Apple Music cho Android
-— với token, chữ Inter và biểu tượng Material Symbols Rounded. Phần do Android quản lý giữ kiểu
-Android. Khi quy ước Apple chạm vào thông báo, hộp thoại quyền, cử chỉ quay lại, thanh hệ thống,
-vùng chạm hay TalkBack, quy tắc Android thắng.
+The Android app rebuilds Apple's design language in Jetpack Compose — the way Apple built Apple Music
+for Android — with the tokens, Inter type, and Material Symbols Rounded icons. The parts Android
+manages keep the Android style. Where Apple conventions run into notifications, permission dialogs,
+the back gesture, the system bars, hit targets, or TalkBack, Android's rules win.
 
-Nguồn HIG (quy ước Apple được mang sang):
+HIG source (the Apple conventions carried over):
 https://developer.apple.com/design/human-interface-guidelines/tab-bars ·
 https://developer.apple.com/design/human-interface-guidelines/lists-and-tables ·
 https://developer.apple.com/design/human-interface-guidelines/toggles ·
@@ -14,104 +16,106 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 
 ## Theme
 
-- `HandLiveTheme` đọc token và cung cấp qua `CompositionLocal` (màu, chữ, khoảng cách, góc bo,
-  bóng). Component `HL*` chỉ đọc từ đây.
-- Không dùng Material dynamic color (Android 12+) và không lấy màu, chữ từ `MaterialTheme`: màu
-  trạng thái và AccentColor phải giống Mac, iPhone.
-- Trên Android, giá trị hex trong token là màu thật (Apple thì gọi API hệ thống).
-- Giao diện Tối theo hệ thống (`isSystemInDarkTheme()`), không có công tắc trong app. Tương phản cao
-  khi `UiModeManager.getContrast()` ≥ 0.5 (Android 14+) thì dùng bộ `-hc`.
+- `HandLiveTheme` reads the tokens and provides them through `CompositionLocal` (colors, type,
+  spacing, corner radii, shadows). `HL*` components read only from there.
+- Don't use Material dynamic color (Android 12+), and don't take colors or type from `MaterialTheme`:
+  status colors and the AccentColor must match the Mac and iPhone.
+- On Android, the hex values in the tokens are the actual colors (on Apple platforms, the system APIs
+  are called instead).
+- The Dark appearance follows the system (`isSystemInDarkTheme()`), with no switch in the app.
+  Increased contrast: when `UiModeManager.getContrast()` ≥ 0.5 (Android 14+), use the `-hc` set.
 
-## Chữ và biểu tượng
+## Type and icons
 
-- Inter đóng gói trong app (`res/font`, giấy phép OFL), cùng thang cỡ iOS tính bằng sp
-  (`android-*`): Body 17 sp, nhỏ nhất 11 sp, tracking theo token. Be Vietnam Pro cho
-  `brand-large-title`, `brand-title`, `wordmark`; Roboto Mono cho `code-pin`; `timer` bật
+- Inter bundled with the app (`res/font`, OFL license), with the same size scale as iOS, in sp
+  (`android-*`): Body 17 sp, smallest 11 sp, tracking per the tokens. Be Vietnam Pro for
+  `brand-large-title`, `brand-title`, `wordmark`; Roboto Mono for `code-pin`; `timer` turns on
   `fontFeatureSettings = "tnum"`.
-- Phóng chữ tới 200% (Android 14 phóng phi tuyến): không khóa cỡ, không cố định chiều cao dòng chữ.
-  Chữ đậm của hệ thống: `Configuration.fontWeightAdjustment` (Android 12+).
-- Material Symbols Rounded (Apache 2.0), weight 400, bản rỗng; tab đang chọn dùng bản đặc (`FILL`
-  1). Tên đối chiếu với SF Symbol theo bảng ở mục Biểu tượng, ví dụ `chevron.forward` ↔
+- Text scales up to 200% (Android 14 scales nonlinearly): don't lock sizes, don't fix the height of
+  text lines. The system's bold text: `Configuration.fontWeightAdjustment` (Android 12+).
+- Material Symbols Rounded (Apache 2.0), weight 400, outlined; the selected tab uses the filled version
+  (`FILL` 1). Names map to SF Symbols according to the table in Icons, for example `chevron.forward` ↔
   `chevron_right`, `checkmark.circle.fill` ↔ `check_circle`.
 
-## Thành phần dựng theo kiểu Apple
+## Components built in the Apple style
 
-| Thành phần | Compose | Quy cách |
+| Component | Compose | Specification |
 |---|---|---|
-| Danh sách nhóm | `HLGroupedList` (`LazyColumn`) | Nền `system-grouped-background`, nhóm `secondary-system-grouped-background` bo `radius-sheet`, dòng ≥ 56 dp, header sentence case, chú thích dưới nhóm |
-| Công tắc | `HLSwitch` 51×31 dp | Bật `system-green`, tắt `system-fill`, núm trắng; cả dòng là vùng chạm (`Role.Switch`) |
-| Segmented | `HLSegmented` | Rãnh `tertiary-system-fill`, đoạn chọn `tertiary-system-background`, nhóm cao 48 dp |
-| Nút | `HLButton` capsule | Nút chính `accent-fill` + `on-accent`, cao 50 dp; nhấn thì tối đi 8%, không gợn sóng |
-| Sheet | Sheet có grabber | Góc `radius-sheet`, hai mức cao (vừa, lớn), vuốt xuống để đóng |
-| Alert, action sheet | `HLAlert`, `HLActionSheet` | Như Apple: "Hủy" bên trái hoặc dưới cùng; không dùng `AlertDialog` của Material |
-| Thanh tab | Kính nổi ở đáy | Capsule `radius-capsule`, `glass-fill` + làm mờ `RenderEffect` (API 31+), viền `glass-stroke`, bóng `shadow-glass`; API 29–30 nền đục, tương phản cao gần đục |
-| Tiêu đề lớn | Large title co lại khi cuộn | `android-large-title` 34 sp; cuộn thì thu thành tiêu đề giữa `android-headline` ở thanh trên |
-| Phản hồi | HUD `Feedback` | Kính ở đỉnh màn ~1,5 giây kèm rung |
+| Grouped list | `HLGroupedList` (`LazyColumn`) | `system-grouped-background` background, `secondary-system-grouped-background` groups with `radius-sheet` corners, rows ≥ 56 dp, sentence-case headers, captions under groups |
+| Switch | `HLSwitch` 51×31 dp | On `system-green`, off `system-fill`, white thumb; the whole row is the hit target (`Role.Switch`) |
+| Segmented control | `HLSegmented` | Track `tertiary-system-fill`, selected segment `tertiary-system-background`, the group is 48 dp tall |
+| Button | `HLButton` capsule | Primary button `accent-fill` + `on-accent`, 50 dp tall; darkens by 8% when pressed, no ripple |
+| Sheet | Sheet with a grabber | `radius-sheet` corners, two heights (medium, large), swipe down to close |
+| Alert, action sheet | `HLAlert`, `HLActionSheet` | As on Apple platforms: "Cancel" on the left or at the bottom; don't use Material's `AlertDialog` |
+| Tab bar | Floating glass at the bottom | Capsule `radius-capsule`, `glass-fill` + `RenderEffect` blur (API 31+), `glass-stroke` border, `shadow-glass` shadow; API 29–30 an opaque background, nearly opaque in increased contrast |
+| Large title | A large title that shrinks on scroll | `android-large-title` 34 sp; on scroll it collapses into a centered `android-headline` title in the top bar |
+| Feedback | `Feedback` HUD | Glass at the top of the screen for ~1.5 seconds with a haptic |
 
-## Điều hướng
+## Navigation
 
-- Thanh tab hai mục: "Thiết bị" (Mac, iPhone, iPad đã ghép — `DeviceRow`, PAIR-02) và "Cài đặt"
-  (SET-02). Không có tab Bảng nhớ tạm: gửi thủ công bằng ô Cài đặt nhanh, nút trên thông báo hoặc
-  bảng chia sẻ.
-- Màn con: chevron `chevron_left` ở góc trên trái kèm tên màn trước, như iOS. Nút và cử chỉ quay lại
-  của hệ thống luôn dùng được; predictive back (Android 14+) bằng `PredictiveBackHandler`, khai
-  `android:enableOnBackInvokedCallback="true"`.
-- Không đặt control trong vùng cử chỉ quay lại ở hai mép (`WindowInsets.systemGestures`).
+- A tab bar with two items: "Devices" (the paired Mac, iPhone, and iPad — `DeviceRow`, PAIR-02) and
+  "Settings" (SET-02). No Clipboard tab: manual sending goes through the Quick Settings tile, the
+  notification button, or the share sheet.
+- Subscreens: a `chevron_left` chevron at the top left with the previous screen's name, as on iOS. The
+  system back button and gesture always work; predictive back (Android 14+) with
+  `PredictiveBackHandler`, declaring `android:enableOnBackInvokedCallback="true"`.
+- Don't put controls in the back-gesture zones along the two edges (`WindowInsets.systemGestures`).
 
-## Giữ nguyên kiểu Android
+## Keeping the Android style
 
-| Phần | Cách làm |
+| Part | Approach |
 |---|---|
-| Thông báo | `NotificationCompat` với kênh `hl_service`, `camera_request`, `camera_live`, `camera_alert` (mục Thông báo) |
-| Hộp thoại quyền runtime | Của hệ thống, không vẽ lại; `PermissionPrimer` đứng trước (mục Xin quyền) |
-| Ô Cài đặt nhanh | `TileService`, nhãn "Gửi bảng nhớ tạm", dòng phụ "Tới MacBook của Lan", "Tới 2 thiết bị" hoặc "Chưa kết nối"; API 34+ gọi `startActivityAndCollapse(PendingIntent)` |
-| Bảng chia sẻ | Đích "Gửi tới thiết bị (HandLive)", chỉ nhận `text/plain` |
-| Toast | Kết quả gửi khi app không hiện ("Đã gửi tới MacBook của Lan"); toast "HandLive đã dán từ bộ nhớ đệm" (Android 12+) do hệ thống hiện, không tắt được |
-| Hỗ trợ tiếp cận | Trang Cài đặt › Hỗ trợ tiếp cận của hệ thống; HandLive chỉ dẫn tới sau `ConsentSheet` |
-| Thanh trạng thái, thanh điều hướng | Edge-to-edge: `enableEdgeToEdge()`, đệm theo `WindowInsets.safeDrawing` |
-| Splash | `SplashScreen` của hệ thống (Android 12+) trên `system-background`, không thêm chữ |
-| Chỉ báo camera, micro đang dùng | Của hệ thống |
+| Notifications | `NotificationCompat` with the channels `hl_service`, `camera_request`, `camera_live`, `camera_alert` (Notifications section) |
+| Runtime permission dialog | The system's own, not redrawn; `PermissionPrimer` comes before it (Requesting permission section) |
+| Quick Settings tile | `TileService`, label "Send Clipboard", subtitle "To Lan's MacBook", "To 2 devices", or "Not connected"; on API 34+ call `startActivityAndCollapse(PendingIntent)` |
+| Share sheet | The target "Send to Device (HandLive)", accepting only `text/plain` |
+| Toast | Send results while the app isn't visible ("Sent to Lan's MacBook"); the toast "HandLive pasted from your clipboard" (Android 12+) is shown by the system and can't be turned off |
+| Accessibility | The system's Settings › Accessibility page; HandLive only links there after `ConsentSheet` |
+| Status bar, navigation bar | Edge-to-edge: `enableEdgeToEdge()`, padded with `WindowInsets.safeDrawing` |
+| Splash | The system `SplashScreen` (Android 12+) on `system-background`, with no added text |
+| Camera and microphone in-use indicators | The system's own |
 
-## Trợ năng và cảm giác
+## Accessibility and feel
 
-- Vùng chạm ≥ 48 dp (`size-hit-android`) thay cho 44 pt của iOS; khoảng cách giữa hai vùng chạm ≥ 8
-  dp.
-- TalkBack: mỗi control tự dựng có nhãn, `role` và `stateDescription` ("Bật", "Tắt"); gộp dòng bằng
-  `semantics(mergeDescendants = true)`; trạng thái kết nối là live region; tiêu đề màn đánh dấu
-  `heading()`.
-- Tắt hiệu ứng: `ValueAnimator.areAnimatorsEnabled()` là `false` thì bỏ chuyển động, chỉ đổi trạng
-  thái (token `duration-*`).
-- Rung qua `View.performHapticFeedback`: `CONFIRM`, `REJECT` (API 30+); `TOGGLE_ON`, `TOGGLE_OFF`
-  (API 34+); API 29 dùng `CONTEXT_CLICK`. Tôn trọng cài đặt rung của hệ thống.
+- Hit targets ≥ 48 dp (`size-hit-android`) instead of iOS's 44 pt; the space between two hit targets
+  ≥ 8 dp.
+- TalkBack: every custom control has a label, a `role`, and a `stateDescription` ("On", "Off"); merge
+  rows with `semantics(mergeDescendants = true)`; the connection status is a live region; screen
+  titles are marked with `heading()`.
+- Animations off: when `ValueAnimator.areAnimatorsEnabled()` is `false`, drop the motion and only
+  change the state (the `duration-*` tokens).
+- Haptics through `View.performHapticFeedback`: `CONFIRM`, `REJECT` (API 30+); `TOGGLE_ON`,
+  `TOGGLE_OFF` (API 34+); API 29 uses `CONTEXT_CLICK`. Respect the system vibration settings.
 
-## Giấy phép
+## Licenses
 
-- Không dùng SF Pro, SF Mono, SF Symbols hay UI Kit của Apple trong app Android, kể cả để dựng
-  mock-up Android; không dùng biểu tượng hay hình phần cứng của Apple.
-- Inter, Be Vietnam Pro (OFL), Roboto Mono, Material Symbols Rounded (Apache 2.0) đóng gói trong
-  app; ghi trong màn giấy phép mã nguồn mở.
+- Don't use Apple's SF Pro, SF Mono, SF Symbols, or UI Kits in the Android app, not even to build
+  Android mock-ups; don't use Apple icons or images of Apple hardware.
+- Inter, Be Vietnam Pro (OFL), Roboto Mono, and Material Symbols Rounded (Apache 2.0) are bundled with
+  the app and listed on the open source licenses screen.
 
-## Phiên bản (minSdk 29, targetSdk 35)
+## Versions (minSdk 29, targetSdk 35)
 
-| Từ | Ảnh hưởng tới giao diện |
+| Since | Effect on the interface |
 |---|---|
-| API 29 (Android 10) | Không đọc bảng nhớ tạm khi chạy nền; kính là nền đục; không có đường âm thanh Opus/WS |
-| API 30 (11) | Rung `CONFIRM`, `REJECT`; Opus/WS qua Shizuku có thể dùng trên một số máy |
-| API 31 (12) | Làm mờ `RenderEffect`; quyền `BLUETOOTH_CONNECT`; splash của hệ thống; toast khi đọc bảng nhớ tạm; chặn mở activity gián tiếp từ thông báo |
-| API 33 (13) | Quyền `POST_NOTIFICATIONS`; chế độ cài đặt bị hạn chế với bản cài ngoài Google Play; overlay xem trước khi ghi bảng nhớ tạm |
-| API 34 (14) | Predictive back; phóng chữ phi tuyến tới 200%; `getContrast()`; rung `TOGGLE_ON`; người dùng vuốt bỏ được thông báo dịch vụ |
-| API 35 (15) | Edge-to-edge bắt buộc với targetSdk 35 |
+| API 29 (Android 10) | No reading the clipboard in the background; glass is an opaque background; no Opus/WS audio path |
+| API 30 (11) | `CONFIRM`, `REJECT` haptics; Opus/WS through Shizuku may work on some devices |
+| API 31 (12) | `RenderEffect` blur; the `BLUETOOTH_CONNECT` permission; the system splash screen; a toast when the clipboard is read; opening activities indirectly from notifications is blocked |
+| API 33 (13) | The `POST_NOTIFICATIONS` permission; restricted settings for installs from outside Google Play; a preview overlay when the clipboard is written |
+| API 34 (14) | Predictive back; nonlinear text scaling up to 200%; `getContrast()`; the `TOGGLE_ON` haptic; users can swipe away the service notification |
+| API 35 (15) | Edge-to-edge is required with targetSdk 35 |
 
-## Điểm lệch
+## Deviations
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CLIP-01 trường 4–5 "Gửi bảng nhớ tạm".
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục".
-- Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
+- Synced with the detailed design (September 25, 2026): CLIP-01 fields 4–5 "Send Clipboard".
+- Synced with the detailed design (September 25, 2026): SET-01 field 6 uses "Continue".
+- The Vietnamese detailed design writes "Huỷ"; the Vietnamese version of this page uses the Apple style
+  "Hủy".
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Dựng control theo quy cách Apple bằng token | Dùng Material 3 hay dynamic color cho giao diện của HandLive |
-| Để thông báo, hộp thoại quyền, cử chỉ quay lại là của Android | Vẽ lại thông báo hay hộp thoại quyền theo kiểu iOS |
-| Giữ vùng chạm 48 dp dù hình vẽ nhỏ hơn | Thu vùng chạm về 44 dp cho giống iPhone |
+| Build controls to Apple's specifications with the tokens | Use Material 3 or dynamic color for HandLive's interface |
+| Leave notifications, permission dialogs, and the back gesture to Android | Redraw notifications or permission dialogs in the iOS style |
+| Keep 48 dp hit targets even when the graphic is smaller | Shrink hit targets to 44 dp to look like the iPhone |

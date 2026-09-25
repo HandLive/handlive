@@ -1,145 +1,151 @@
+English | [Tiếng Việt](01-macos.vi.md)
+
 # macOS
 
-HandLive trên Mac là app thanh menu, mở cửa sổ khi cần. Mục này quy định cấu trúc app, cách chuyển
-giữa chế độ chỉ-thanh-menu và chế độ có Dock, thanh menu của app, phím tắt, Liquid Glass và API theo
-phiên bản (macOS 13 trở lên).
+On the Mac, HandLive is a menu bar app that opens windows when needed. This section defines the app's
+structure, how it switches between menu-bar-only mode and Dock mode, the app's menu bar, keyboard
+shortcuts, Liquid Glass, and APIs by version (macOS 13 and later).
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/designing-for-macos ·
+HIG source: https://developer.apple.com/design/human-interface-guidelines/designing-for-macos ·
 https://developer.apple.com/design/human-interface-guidelines/the-menu-bar ·
 https://developer.apple.com/design/human-interface-guidelines/windows ·
 https://developer.apple.com/design/human-interface-guidelines/panels
 
-## Cấu trúc
+## Structure
 
-| Bề mặt | Loại | API | Nội dung |
+| Surface | Type | API | Content |
 |---|---|---|---|
-| Biểu tượng thanh menu | Menu bar extra | `MenuBarExtra` + `.menuBarExtraStyle(.menu)` | `MenuBarMenu`: trạng thái, lệnh nhanh, Cài đặt, Thoát |
-| Tin nhắn | Cửa sổ chính | `Window` + `NavigationSplitView` | Thanh bên: ô tìm kiếm, mục "Cuộc gọi" (nhật ký CALL-04), danh sách `ThreadRow`; cột phải: `MessageBubble` và ô soạn |
-| Xem trước camera | Cửa sổ phụ | `Window` | `CameraPreview` |
-| Cài đặt | Cửa sổ phụ | `Settings` | Sáu pane (mục Cài đặt) |
-| Chào mừng | Cửa sổ phụ, cố định cỡ | `Window` | `Onboarding` |
-| Ghép nối, công bố, hướng dẫn gỡ lỗi USB | Sheet | `sheet(isPresented:onDismiss:content:)` | `PairingCard`, `ConsentSheet`, wizard CAM-04 |
-| Cuộc gọi | Panel (ngoại lệ) | `NSPanel` `.nonactivatingPanel`, `level = .floating`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `hidesOnDeactivate = false` | `CallPanel` |
+| Menu bar icon | Menu bar extra | `MenuBarExtra` + `.menuBarExtraStyle(.menu)` | `MenuBarMenu`: status, quick commands, Settings, Quit |
+| Messages | Main window | `Window` + `NavigationSplitView` | Sidebar: search field, a "Calls" item (the CALL-04 log), the `ThreadRow` list; right column: `MessageBubble` and the compose field |
+| Camera Preview | Secondary window | `Window` | `CameraPreview` |
+| Settings | Secondary window | `Settings` | Six panes (Settings section) |
+| Welcome | Secondary window, fixed size | `Window` | `Onboarding` |
+| Pairing, disclosure, USB debugging guide | Sheet | `sheet(isPresented:onDismiss:content:)` | `PairingCard`, `ConsentSheet`, the CAM-04 wizard |
+| Calls | Panel (an exception) | `NSPanel` `.nonactivatingPanel`, `level = .floating`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `hidesOnDeactivate = false` | `CallPanel` |
 
-Nút "Tin nhắn mới" nằm trên toolbar cửa sổ Tin nhắn, không ở đáy thanh bên. Không đặt thông tin hay
-nút quan trọng ở đáy cửa sổ.
+The "New Message" button sits in the toolbar of the Messages window, not at the bottom of the sidebar.
+Don't put important information or buttons at the bottom of a window.
 
-## Chế độ kích hoạt
+## Activation modes
 
-| Khi | Chế độ | Người dùng thấy |
+| When | Mode | What the user sees |
 |---|---|---|
-| Chỉ có biểu tượng thanh menu (khởi động, `LSUIElement = YES`) | `.accessory` | Không Dock, không thanh menu của app |
-| Mở cửa sổ Tin nhắn hoặc Xem trước camera | `.regular` | Biểu tượng Dock, thanh menu HandLive, Dock menu |
-| Người dùng tắt "Hiện HandLive trên thanh menu" | `.regular`, giữ luôn | Dock là lối vào chính |
-| Đóng hết hai cửa sổ trên và biểu tượng thanh menu đang hiện | Về `.accessory` | — |
+| Only the menu bar icon (at launch, `LSUIElement = YES`) | `.accessory` | No Dock icon, no app menu bar |
+| The Messages or Camera Preview window is open | `.regular` | Dock icon, the HandLive menu bar, a Dock menu |
+| The user turns off "Show HandLive in Menu Bar" | `.regular`, permanently | The Dock is the main way in |
+| Both windows above are closed and the menu bar icon is showing | Back to `.accessory` | — |
 
-- Chuyển bằng `NSApp.setActivationPolicy(_:)` rồi kích hoạt app để cửa sổ ra trước.
-- Cửa sổ Cài đặt và Chào mừng không đổi chế độ. Ở `.accessory` không có thanh menu, nên hai cửa sổ
-  này tự nhận ⌘W và Esc (kiểm trên máy thật).
-- Mở lại HandLive từ Finder, Launchpad hay Spotlight khi app đang chạy
-  (`applicationShouldHandleReopen(_:hasVisibleWindows:)`): mở cửa sổ Tin nhắn, chưa ghép nối thì mở
-  cửa sổ Chào mừng.
-- Biểu tượng hiện theo cài đặt "Hiện HandLive trên thanh menu" (`isInserted`, mặc định bật). Hệ
-  thống có thể giấu bớt biểu tượng khi thanh menu chật, nên mọi lệnh của `MenuBarMenu` cũng có ở nơi
-  khác.
+- Switch with `NSApp.setActivationPolicy(_:)`, then activate the app so the window comes to the front.
+- The Settings and Welcome windows don't change the mode. In `.accessory` there's no menu bar, so these
+  two windows handle ⌘W and Esc themselves (check on a real Mac).
+- Reopening HandLive from Finder, Launchpad, or Spotlight while it's running
+  (`applicationShouldHandleReopen(_:hasVisibleWindows:)`): open the Messages window, or the Welcome
+  window if the phone isn't paired yet.
+- The icon follows the "Show HandLive in Menu Bar" setting (`isInserted`, on by default). The system
+  may hide some icons when the menu bar is crowded, so every `MenuBarMenu` command is also available
+  somewhere else.
 
-## Thanh menu của app (chế độ `.regular`)
+## The app's menu bar (`.regular` mode)
 
-| Menu | Mục của HandLive (ngoài mục chuẩn do hệ thống tạo và dịch) |
+| Menu | HandLive's items (besides the standard items the system creates and localizes) |
 |---|---|
-| HandLive | "Cài đặt…" ⌘, · "Ghép điện thoại…" · "Thoát HandLive" ⌘Q |
-| Tệp | "Tin nhắn mới" ⌘N · "Đóng" ⌘W |
-| Sửa | Mục chuẩn (Hoàn tác, Cắt, Sao chép, Dán…) · "Gửi bảng nhớ tạm sang điện thoại" · Tìm ⌘F (đưa con trỏ vào ô tìm kiếm đầu thanh bên) |
-| Xem | Hiện hoặc ẩn thanh bên (nhãn theo trạng thái) · Vào toàn màn hình |
-| Cửa sổ | Thu nhỏ ⌘M · Thu phóng · "Tin nhắn" · "Xem trước camera" · Đưa tất cả ra trước |
-| Trợ giúp | "Trợ giúp HandLive" |
+| HandLive | "Settings…" ⌘, · "Pair Phone…" · "Quit HandLive" ⌘Q |
+| File | "New Message" ⌘N · "Close" ⌘W |
+| Edit | Standard items (Undo, Cut, Copy, Paste…) · "Send Clipboard to Phone" · Find ⌘F (puts the cursor in the search field at the top of the sidebar) |
+| View | Show or hide the sidebar (the label follows the state) · Enter Full Screen |
+| Window | Minimize ⌘M · Zoom · "Messages" · "Camera Preview" · Bring All to Front |
+| Help | "HandLive Help" |
 
-Mục chưa dùng được thì mờ, không ẩn; mọi nút toolbar đều có lệnh ở đây.
+Items that can't be used yet are dimmed, not hidden; every toolbar button has a command here.
 
-Dock menu (`applicationDockMenu(_:)`): "Tin nhắn mới", "Gửi bảng nhớ tạm sang điện thoại", "Xem
-trước camera", cùng danh sách cửa sổ của hệ thống.
+Dock menu (`applicationDockMenu(_:)`): "New Message", "Send Clipboard to Phone", "Camera Preview",
+along with the system's list of windows.
 
-## Phím tắt
+## Keyboard shortcuts
 
-| Phím | Tác dụng |
+| Keys | Action |
 |---|---|
-| ⌘, | Mở Cài đặt |
-| ⌘N | Tin nhắn mới |
-| ⌘W | Đóng cửa sổ; Xem trước camera đóng mà không dừng camera khi app họp đang dùng |
-| ⌘Q | Thoát HandLive |
-| ⌘F | Tìm hội thoại |
-| Return · ⇧Return | Gửi tin · xuống dòng trong ô soạn |
-| Return · Esc · ⌘⌫ | Trả lời · Bỏ qua (đóng panel, tắt chuông trên Mac, không từ chối) · Từ chối — trong `CallPanel` |
-| 0–9, *, # | Bấm số khi bàn phím của `CallPanel` đang mở (CALL-03 trường 7) |
+| ⌘, | Open Settings |
+| ⌘N | New message |
+| ⌘W | Close the window; Camera Preview closes without stopping the camera while a meeting app is using it |
+| ⌘Q | Quit HandLive |
+| ⌘F | Search conversations |
+| Return · ⇧Return | Send the message · new line in the compose field |
+| Return · Esc · ⌘⌫ | Answer · Ignore (closes the panel and silences the ringing on the Mac, without declining) · Decline — in `CallPanel` |
+| 0–9, *, # | Dial digits while the `CallPanel` keypad is open (CALL-03 field 7) |
 
-`CallPanel` không tự lấy focus của app người dùng đang gõ; phím của panel chỉ có tác dụng sau khi
-người dùng bấm vào panel.
+`CallPanel` doesn't take focus away from the app the user is typing in; the panel's keys only work
+after the user clicks the panel.
 
-## Liquid Glass và bản cũ
+## Liquid Glass and older versions
 
-- Build bằng SDK 27: menu, toolbar, thanh bên, sheet tự thành kính trên macOS 26+; không dùng
-  `UIDesignRequiresCompatibility` để né.
-- Chỉ tự áp kính cho `CallPanel` (`NSGlassEffectView`) và HUD `Feedback`. Control tự dựng dùng
-  `ConcentricRectangle` (26+).
-- macOS 13–15: `NSVisualEffectView` `.popover` cho `CallPanel`, `.hudWindow` cho HUD; góc bo theo
-  token `radius-control-mac`, `radius-panel` (mục Vật liệu).
+- Built with SDK 27: menus, toolbars, sidebars, and sheets turn into glass on macOS 26+ on their own;
+  don't use `UIDesignRequiresCompatibility` to avoid it.
+- Apply glass yourself only to `CallPanel` (`NSGlassEffectView`) and the `Feedback` HUD. Custom
+  controls use `ConcentricRectangle` (26+).
+- macOS 13–15: `NSVisualEffectView` `.popover` for `CallPanel`, `.hudWindow` for the HUD; corners use
+  the `radius-control-mac` and `radius-panel` tokens (Materials section).
 
-## Control
+## Controls
 
-- Mỗi cửa sổ hoặc sheet một nút nổi bật ở cạnh phải hàng nút (`.borderedProminent`, 26+
-  `.glassProminent`) với `.keyboardShortcut(.defaultAction)`; nút khác là push button thường; "Hủy"
-  bên trái với `.cancelAction`.
-- Nút mở cửa sổ, sheet hoặc alert có "…": "Ghép điện thoại…", "Chi tiết…", "Hủy ghép nối…", "Từ chối
-  kèm tin nhắn…".
-- Switch và checkbox chỉ trong thân cửa sổ, không trên toolbar; trong menu dùng dấu kiểm.
-- Nút chỉ có biểu tượng có tooltip `help(_:)`, bắt đầu bằng động từ, 60–75 ký tự trở xuống.
-- AccentColor là `accent`; người dùng chọn màu nhấn khác Multicolor thì control theo màu đó. Màu
-  mang nghĩa (`call-accept-fill`, `call-decline-fill`, trạng thái) không đổi theo màu nhấn.
+- Each window or sheet has one prominent button at the right end of the button row
+  (`.borderedProminent`, 26+ `.glassProminent`) with `.keyboardShortcut(.defaultAction)`; other
+  buttons are regular push buttons; "Cancel" on the left with `.cancelAction`.
+- Buttons that open a window, a sheet, or an alert have "…": "Pair Phone…", "Details…", "Unpair…",
+  "Decline with Message…".
+- Switches and checkboxes go only in the window body, not in the toolbar; menus use checkmarks.
+- Icon-only buttons have a `help(_:)` tooltip that starts with a verb and is 60–75 characters or
+  shorter.
+- The AccentColor is `accent`; when the user chooses an accent color other than Multicolor, controls
+  follow it. Colors with a meaning (`call-accept-fill`, `call-decline-fill`, status) don't change with
+  the accent color.
 
-## Thông báo, Tập trung, đăng nhập, khôi phục
+## Notifications, Focus, login, restoration
 
-- Mac không nhận push: thông báo cục bộ `UNUserNotificationCenter`; tin nhắn, cuộc gọi là thông báo
-  liên lạc (`INSendMessageIntent`, `INStartCallIntent`), cần capability Communication Notifications
-  và `NSUserActivityTypes` (mục Thông báo).
-- Tập trung: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, khóa
-  `NSFocusStatusUsageDescription`). Tập trung đang bật thì không panel, không chuông; cuộc gọi vẫn
-  có trong `MenuBarMenu`. Chưa đọc được trạng thái Tập trung thì vẫn hiện panel nhưng không đổ
-  chuông.
-- Không hiện hai lớp cho một cuộc gọi: khi `CallPanel` đang hiện, thông báo cuộc gọi gửi ở mức
-  passive (vào Trung tâm thông báo, không banner, không âm); khi không hiện panel (Tập trung), thông
-  báo ở mức time-sensitive để hệ thống quyết định theo người gọi và cài đặt Tập trung. Trả lời từ
-  thông báo thì mở `CallPanel` ở trạng thái đang gọi.
-- Mở khi đăng nhập: `SMAppService.mainApp.register()` / `unregister()`, trạng thái luôn đọc từ
-  `status`; `.requiresApproval` thì nút mở `SMAppService.openSystemSettingsLoginItems()`.
-- Mac không có launch screen. Mở lại thì khôi phục khung cửa sổ, hội thoại đang chọn, vị trí cuộn;
-  Cài đặt mở lại pane cuối.
+- The Mac doesn't receive push: local notifications through `UNUserNotificationCenter`; messages and
+  calls are communication notifications (`INSendMessageIntent`, `INStartCallIntent`), which need the
+  Communication Notifications capability and `NSUserActivityTypes` (Notifications section).
+- Focus: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, key
+  `NSFocusStatusUsageDescription`). When a Focus is on: no panel, no ringing; the call is still in
+  `MenuBarMenu`. If the Focus status can't be read, the panel still appears but doesn't ring.
+- Never show two layers for one call: while `CallPanel` is showing, the call notification is sent at
+  the passive level (into Notification Center, no banner, no sound); when the panel isn't shown
+  (Focus), the notification is time-sensitive so the system decides based on the caller and the Focus
+  settings. Answering from the notification opens `CallPanel` in the in-call state.
+- Open at login: `SMAppService.mainApp.register()` / `unregister()`, always reading the state from
+  `status`; with `.requiresApproval`, a button opens `SMAppService.openSystemSettingsLoginItems()`.
+- The Mac has no launch screen. On reopening, restore the window frame, the selected conversation, and
+  the scroll position; Settings reopens the last pane.
 
-## API theo phiên bản
+## APIs by version
 
-| API | Từ | Trên macOS 13 |
+| API | Since | On macOS 13 |
 |---|---|---|
-| `MenuBarExtra(_:systemImage:isInserted:content:)`, `Window`, `NavigationSplitView`, `Form` `.grouped`, `SMAppService` | 13 | Dùng được |
+| `MenuBarExtra(_:systemImage:isInserted:content:)`, `Window`, `NavigationSplitView`, `Form` `.grouped`, `SMAppService` | 13 | Available |
 | `MenuBarExtra(_:image:isInserted:content:)` | 14 | `if #available` |
-| `SettingsLink`, `OpenSettingsAction` | 14 | Cần đường mở Cài đặt riêng, chưa có API chính thức |
-| `.contentTransition(.symbolEffect(.replace))`, TipKit, `ContentUnavailableView` | 14 | Đổi biểu tượng không hiệu ứng; tự dựng trạng thái trống |
-| Quyền mạng cục bộ | 15 | Không hỏi |
-| `NSPasteboard.accessBehavior` | 15.4 | Không có quyền dán |
-| `glassEffect(_:in:)`, `.glassProminent`, `NSGlassEffectView`, `ConcentricRectangle` | 26 | Vật liệu chuẩn |
+| `SettingsLink`, `OpenSettingsAction` | 14 | Needs its own way to open Settings; there's no official API yet |
+| `.contentTransition(.symbolEffect(.replace))`, TipKit, `ContentUnavailableView` | 14 | The icon changes without an effect; custom empty states |
+| Local network permission | 15 | Not asked |
+| `NSPasteboard.accessBehavior` | 15.4 | No paste permission |
+| `glassEffect(_:in:)`, `.glassProminent`, `NSGlassEffectView`, `ConcentricRectangle` | 26 | Standard materials |
 
-## Điểm lệch
+## Deviations
 
-- Lệch có chủ đích: `CallPanel` nổi trên mọi Space và không ẩn khi app không active (quyết định 10).
-- Giữ menu Tệp như app Tin nhắn của Apple ("Tin nhắn mới", "Đóng") dù HandLive không xử lý tệp, để
-  ⌘N và ⌘W nằm đúng chỗ người dùng tìm.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 (bước 6, Yêu cầu đặc biệt) mô tả đổi
-  activation policy `.accessory` ↔ `.regular`; SET-02 trường 31 `mac.menu_bar_extra`.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-04 trường 1 đặt nhật ký ở thanh bên cửa sổ Tin
-  nhắn; CAM-03 dùng menu con Camera trong `MenuBarMenu` và cửa sổ Xem trước camera.
-- Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
+- Intentional deviation: `CallPanel` floats on every Space and doesn't hide when the app isn't active
+  (decision 10).
+- Keep a File menu, as in Apple's Messages app ("New Message", "Close"), even though HandLive doesn't
+  handle files, so that ⌘N and ⌘W are where people look for them.
+- Synced with the detailed design (September 25, 2026): SET-03 (step 6, Special requirements) describes
+  switching the activation policy `.accessory` ↔ `.regular`; SET-02 field 31 `mac.menu_bar_extra`.
+- Synced with the detailed design (September 25, 2026): CALL-04 field 1 puts the call log in the
+  sidebar of the Messages window; CAM-03 uses the Camera submenu in `MenuBarMenu` and the Camera
+  Preview window.
+- The Vietnamese detailed design writes "Huỷ"; the Vietnamese version of this page uses the Apple style
+  "Hủy".
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Đưa mọi lệnh vào thanh menu của app và Dock menu | Dựa vào việc biểu tượng thanh menu luôn hiện |
-| Dùng cửa sổ, sheet, control của hệ thống | Tự vẽ khung cửa sổ, nút đóng hay thu nhỏ |
+| Put every command in the app's menu bar and the Dock menu | Rely on the menu bar icon always being visible |
+| Use the system's windows, sheets, and controls | Draw your own window frame or close and minimize buttons |
