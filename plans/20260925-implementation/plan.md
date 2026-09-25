@@ -6,7 +6,7 @@
 
 | # | Quyết định | Lý do |
 |---|-----------|-------|
-| I1 | **Monorepo** một kho: `android/`, `apple/` (macOS + iOS + Swift packages dùng chung), `relay/`, `shared/` (test vector, schema, design tokens), `tools/` | Ba nền tảng phải khớp một wire protocol; test vector và schema chỉ có một bản |
+| I1 | **Năm kho trong một workspace** (từ 25/09/2026, quyết định của chủ dự án để đưa từng phần vào một group; trước đó là monorepo): hub `handlive` (tài liệu, kế hoạch, `tools/docs/`) và bốn kho `handlive-android`, `handlive-apple` (macOS + iOS + Swift packages dùng chung), `handlive-relay`, `handlive-shared` (test vector, schema, design tokens, `tools/vectors`, `tools/schemas`) clone vào `android/`, `apple/`, `relay/`, `shared/` bên trong thư mục hub — `tools/workspace.sh`; báo cáo `reports/repo-split.md` | Mỗi phần đẩy lên group riêng biệt; ba nền tảng vẫn khớp một wire protocol vì test vector và schema chỉ có một bản trong `shared/`, build và test đọc qua `../shared` |
 | I2 | **Phase 0** dựng khung, thư viện giao thức và mã hóa, test vector liên nền tảng trước mọi tính năng | Mọi phase sau dùng lại; sai lệch mã hóa giữa Tink và CryptoKit phải lộ ngay từ đầu |
 | I3 | Thứ tự phase 1 → 5 như roadmap; mỗi phase một nhánh `feat/phase-0N-<slug>`, gộp vào `main` khi đạt tiêu chí đo | Mỗi phase là sản phẩm dùng được |
 | I4 | Phase 4 và 5 mở đầu bằng **spike một tuần** có cổng go/no-go (D1, D6) trước khi viết tính năng | Rủi ro R1, R6 |
@@ -28,11 +28,11 @@
 
 ## 3. Cách giao việc cho agent
 
-Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = nền tảng: A Android, M macOS, I iOS, R relay, S shared, T test), đầu vào (mục tài liệu phải đọc), đầu ra (đường dẫn được tạo/sửa), tiêu chí chấp nhận, kiểm thử. Prompt giao việc gồm đúng các mục theo `~/.claude/rules/orchestration-protocol.md`: task, files to read, files it may modify, acceptance criteria, constraints, work context path (`/Users/hxd/HandLive`), reports path (`plans/20260925-implementation/reports/`).
+Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = nền tảng: A Android, M macOS, I iOS, R relay, S shared, T test), đầu vào (mục tài liệu phải đọc), đầu ra (đường dẫn được tạo/sửa), tiêu chí chấp nhận, kiểm thử. Prompt giao việc gồm đúng các mục theo `~/.claude/rules/orchestration-protocol.md`: task, files to read, files it may modify, acceptance criteria, constraints, work context path (`/Users/hxd/HandLive` — gốc workspace, chứa cả năm kho; agent làm việc trong kho của phần mình), reports path (`plans/20260925-implementation/reports/`).
 
 **Thứ tự đọc bắt buộc trước khi viết mã:** `CLAUDE.md` → `docs/detailed-design/README.md` (danh mục, quy ước §3, quyết định C1–C19) → `docs/detailed-design/00-common-specs.md` → file phase → các chức năng lá được nêu → `docs/code-standards.md`. Việc có giao diện đọc thêm `docs/design-system/README.md`, mục nền tảng tương ứng trong `docs/design-system/3-platforms/` và README của thành phần liên quan.
 
-**Ranh giới sửa file:** agent Android chỉ sửa `android/` và `shared/`; agent Apple chỉ `apple/` và `shared/`; agent relay chỉ `relay/` và `shared/`. Sửa `shared/` (test vector, schema) phải nêu trong báo cáo để agent nền tảng khác chạy lại. Sửa `docs/detailed-design/` chỉ khi phát hiện lệch, kèm chạy validator.
+**Ranh giới sửa file:** mỗi phần là một kho git riêng. Agent Android chỉ sửa `android/` (handlive-android) và `shared/` (handlive-shared, commit riêng); agent Apple chỉ `apple/` và `shared/`; agent relay chỉ `relay/` và `shared/`. Sửa `shared/` (test vector, schema, token) phải nêu trong báo cáo để agent nền tảng khác chạy lại (CI nền tảng không tự chạy khi shared đổi). Sửa `docs/detailed-design/` (kho hub) chỉ khi phát hiện lệch, kèm chạy validator.
 
 **Định nghĩa "xong" chung cho mọi thẻ việc:**
 1. Mã dựng và test xanh trên toolchain của nền tảng (lệnh ghi trong file phase); không giấu lỗi lint, type, build.
@@ -41,7 +41,7 @@ Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = 
 4. Không có secret, khóa, chứng chỉ, dotenv trong commit.
 5. `docs/codebase-summary.md` cập nhật khi cấu trúc mã thay đổi.
 6. Báo cáo trong `reports/<phase>-<mã việc>.md`, kết thúc bằng khối `Status:` / `Summary:` / `Concerns/Blockers:`.
-7. **Commit nhỏ, commit sớm:** ít nhất một commit cho mỗi thẻ việc, và tách commit theo từng bước hợp lý bên trong (khung → module → test → tài liệu). Không gom cả phase vào một commit; không trộn hai nền tảng hoặc trộn `shared/` với mã nền tảng trong một commit. Commit trước khi viết báo cáo và ghi danh sách hash vào báo cáo.
+7. **Commit nhỏ, commit sớm:** ít nhất một commit cho mỗi thẻ việc, và tách commit theo từng bước hợp lý bên trong (khung → module → test → tài liệu). Không gom cả phase vào một commit; một commit không bao giờ trải hai kho (commit `shared/` trước, rồi kho nền tảng). Commit trước khi viết báo cáo và ghi danh sách hash kèm tên kho vào báo cáo.
 
 ## 4. Cổng và rủi ro
 

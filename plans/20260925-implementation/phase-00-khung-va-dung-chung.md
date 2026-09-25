@@ -10,7 +10,7 @@
 
 ## Yêu cầu
 
-- Bố cục kho (I1) — tạo đủ, dựng xanh dù rỗng:
+- Bố cục kho (I1; từ 25/09/2026 mỗi phần là kho riêng trong cùng thư mục workspace — xem `plan.md` I1 và `reports/repo-split.md`; `tools/vectors`, `tools/schemas` nay ở `shared/tools/`, workflow CI nằm trong từng kho) — tạo đủ, dựng xanh dù rỗng:
 
 ```
 android/                      Gradle Kotlin DSL, AGP mới nhất ổn định, Kotlin 2.x, minSdk 29, targetSdk 35
