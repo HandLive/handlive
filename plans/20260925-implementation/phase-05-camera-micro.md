@@ -1,55 +1,61 @@
-# Phase 5 — Điện thoại làm webcam và micro cho Mac
+English | [Tiếng Việt](phase-05-camera-micro.vi.md)
 
-**Mục tiêu:** ứng dụng họp trên Mac chọn "HandLive Camera" và "HandLive Microphone"; hình và tiếng
-từ điện thoại qua Wi-Fi, tự tăng tốc qua USB khi cắm cáp; chất lượng thích ứng theo mạng, nhiệt,
-pin.
+# Phase 5 — The phone as a webcam and microphone for the Mac
 
-## Cổng G5 — spike D6 (tuần đầu)
+**Goal:** meeting apps on the Mac pick "HandLive Camera" and "HandLive Microphone"; picture and sound
+come from the phone over Wi-Fi, speeding up automatically over USB when a cable is plugged in; quality
+adapts to the network, temperature and battery.
 
-- CMIOExtension: extension ký Developer ID kích hoạt từ app trong `/Applications`, xuất khung 720p30
-  từ sink stream, Zoom/Meet/FaceTime nhận được; kiểm cập nhật extension cần khởi động lại (C11).
-- AudioServerPlugin loopback theo mô hình BlackHole (C8): thiết bị ẩn + "HandLive Microphone", cài
-  bằng PKG nhúng + `postinstall` `killall coreaudiod` (C9); ứng dụng họp nghe được PCM app phát.
-- Kết quả trong `reports/phase-05-spike-d6.md`; không đạt → dừng Phase 5.
+## Gate G5 — spike D6 (first week)
 
-## Ngữ cảnh
+- CMIOExtension: a Developer ID–signed extension activated from the app in `/Applications`,
+  delivering 720p30 frames from the sink stream that Zoom/Meet/FaceTime receive; check whether
+  updating the extension requires a restart (C11).
+- AudioServerPlugin loopback on the BlackHole model (C8): a hidden device + "HandLive Microphone",
+  installed with an embedded PKG + `postinstall` `killall coreaudiod` (C9); meeting apps hear the PCM
+  the app plays.
+- Results in `reports/phase-05-spike-d6.md`; not met → stop Phase 5.
 
-- Chức năng lá: `08-camera-mic.md` CAM-01…05 (kể cả "Quy tắc hình ảnh": `rotation_deg`, center-crop,
-  chọn kích thước mã hóa); common specs 0.5 khung HL, kênh `/v1/stream/camera`, MAC `HLSTREAM1`.
-- Nghiên cứu: `plans/20260924-virtual-camera-mic-research/plan.md`,
-  `plans/20260924-ipc-research/plan.md`; kiến trúc §10.
-- Design system: `CameraPreview`, `MenuBarMenu` (menu con Camera), `Notification` (kênh
+## Context
+
+- Leaf functions: `08-camera-mic.md` CAM-01…05 (including the "Image rules": `rotation_deg`,
+  center-crop, choosing the encode size); common specs 0.5 HL frame, the `/v1/stream/camera` channel,
+  the `HLSTREAM1` MAC.
+- Research: `plans/20260924-virtual-camera-mic-research/plan.md`,
+  `plans/20260924-ipc-research/plan.md`; architecture §10.
+- Design system: `CameraPreview`, `MenuBarMenu` (Camera submenu), `Notification` (channels
   `camera_request`, `camera_live`, `camera_alert`).
-- Quyết định: D6, D7/C9, D8, C8, C11.
+- Decisions: D6, D7/C9, D8, C8, C11.
 
-## Yêu cầu và tiêu chí đo
+## Requirements and measurable criteria
 
-- Trễ kính-tới-kính 720p30 < 120 ms Wi-Fi, < 70 ms USB; khung đầu là IDR kèm SPS/PPS; chu kỳ IDR 1–2
-  s khi đổi kênh.
-- Điện thoại hiện chỉ báo quyền riêng tư và thông báo thường trực có "Dừng"; yêu cầu bật tự hủy sau
-  60 s.
-- Mac: nút "Dừng" không phải phá hủy; không có lật gương.
+- Glass-to-glass latency at 720p30 < 120 ms over Wi-Fi, < 70 ms over USB; the first frame is an IDR
+  with SPS/PPS; IDR interval 1–2 s when switching channels.
+- The phone shows the privacy indicator and an ongoing notification with "Stop"; a start request
+  cancels itself after 60 s.
+- Mac: the "Stop" button is not destructive; no mirroring.
 
-## Thẻ việc
+## Task cards
 
-| Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
-|----|------|--------|--------------------|
-| M5.1 [macOS] | CAM-01: kích hoạt CMIOExtension (`OSSystemExtensionRequest`), cài PKG micro ảo, hướng dẫn cho phép trong Cài đặt hệ thống, gỡ; extension target `HandLiveCameraExtension`, driver `HandLiveMic` | `apple/macOS/…Extension`, `apple/macOS/HandLiveMic`, `docs/deployment-guide.md` | Cài, gỡ, cập nhật (kể cả cần khởi động lại) đúng E của CAM-01 |
-| M5.2 [macOS] | CAM-02: nhu cầu từ consumer (`app.handlive.camera.demand`, `DeviceIsRunningSomewhere`), `camera/start` với `hlaf`, kênh stream, `VTDecompressionSession` → `VTPixelTransferSession` → sink stream; Opus decode → AUHAL `app.handlive.mic.feed`; khung chờ "Đang chờ điện thoại…" | app, packages | Trễ đạt mục tiêu qua Wi-Fi; mất khung → `camera/keyframe` |
-| M5.3 [macOS] | Cửa sổ `CameraPreview`, menu con Camera trong `MenuBarMenu`, CAM-03 điều khiển (`camera/config`), CAM-04 USB: phát hiện IOKit, adb nhúng `forward`, wizard bật gỡ lỗi USB (D8), chuyển kênh có IDR | app | Chuyển Wi-Fi ↔ USB không đứt hình quá 1 khung IDR |
-| A5.1 [android] | CAM-02: FGS type `camera | microphone` (thông báo `camera_request` "Bật"/"Từ chối" là ngoại lệ Android 14+), Camera2 + `MediaCodec` H.264 (bậc 1080p/720p/480p), `AudioRecord` 48 kHz + Opus 32 kbps, khung HL, xoay theo `rotation_deg` và center-crop | `android/feature/camera` | Khung đầu IDR; FGS khởi động từ thông báo trên Android 14+ |
-| A5.2 [android] | CAM-03 áp cấu hình (đổi camera, chất lượng, micro, tạm dừng hình), CAM-05 thích ứng: giảm bitrate 75 %, hạ bậc, hạ fps, nhiệt (`PowerManager.thermalStatus`), pin < 20 %; `camera/state` với `reason` | `android/feature/camera` | Kịch bản mạng nghẽn hạ và nâng đúng thứ tự; quá nóng → dừng với thông báo `camera_alert` |
-| A5.3 [android] | CAM-04 phía Android: chấp nhận kết nối `127.0.0.1` là kênh `usb`, đóng kết nối Wi-Fi mã 4409, `camera/state reason = transport` | `android/core/transport` | Chuyển kênh < 1 s |
-| T5.1 [test] | Đo trễ kính-tới-kính (đồng hồ mili giây quay trước camera), fps, bitrate; ma trận Zoom, Meet, FaceTime, Teams; máy nóng 15 phút | `tools/bench/`, `reports/` | Đạt mục tiêu; không rơi khung liên tục quá 2 s |
+| Code | Task | Outputs | Acceptance criteria |
+|------|------|---------|---------------------|
+| M5.1 [macOS] | CAM-01: activate the CMIOExtension (`OSSystemExtensionRequest`), install the virtual-microphone PKG, guidance for allowing them in System Settings, uninstall; extension target `HandLiveCameraExtension`, driver `HandLiveMic` | `apple/macOS/…Extension`, `apple/macOS/HandLiveMic`, `docs/deployment-guide.md` | Install, uninstall and update (including when a restart is needed) follow the Es of CAM-01 |
+| M5.2 [macOS] | CAM-02: demand from consumers (`app.handlive.camera.demand`, `DeviceIsRunningSomewhere`), `camera/start` with `hlaf`, the stream channel, `VTDecompressionSession` → `VTPixelTransferSession` → sink stream; Opus decode → AUHAL `app.handlive.mic.feed`; a "Waiting for the phone…" placeholder frame | app, packages | Latency meets the target over Wi-Fi; lost frames → `camera/keyframe` |
+| M5.3 [macOS] | The `CameraPreview` window, the Camera submenu in `MenuBarMenu`, CAM-03 controls (`camera/config`), CAM-04 USB: IOKit detection, embedded adb `forward`, a wizard for turning on USB debugging (D8), channel switch with an IDR | app | Switching Wi-Fi ↔ USB never breaks the picture for longer than 1 IDR frame |
+| A5.1 [android] | CAM-02: FGS type `camera | microphone` (the `camera_request` notification with "Turn On"/"Decline" is the Android 14+ exemption), Camera2 + `MediaCodec` H.264 (1080p/720p/480p tiers), `AudioRecord` 48 kHz + Opus 32 kbps, HL frames, rotation by `rotation_deg` and center-crop | `android/feature/camera` | The first frame is an IDR; the FGS starts from the notification on Android 14+ |
+| A5.2 [android] | CAM-03 applies the configuration (switch camera, quality, microphone, pause video), CAM-05 adaptation: cut the bitrate to 75 %, lower the tier, lower the fps, temperature (`PowerManager.thermalStatus`), battery < 20 %; `camera/state` with `reason` | `android/feature/camera` | A congested-network scenario steps down and back up in the right order; overheating → stop with a `camera_alert` notification |
+| A5.3 [android] | CAM-04 on the Android side: accept connections from `127.0.0.1` as the `usb` channel, close the Wi-Fi connection with code 4409, `camera/state reason = transport` | `android/core/transport` | Channel switch < 1 s |
+| T5.1 [test] | Measure glass-to-glass latency (a millisecond clock filmed by the camera), fps, bitrate; a matrix of Zoom, Meet, FaceTime, Teams; 15 minutes with a hot phone | `tools/bench/`, `reports/` | Targets met; no continuous frame drop longer than 2 s |
 
-## Kiểm thử
+## Testing
 
-- Đơn vị: chọn kích thước mã hóa theo `hlaf` và bậc, máy trạng thái CAM-05, phân tích Annex-B.
-- Tay: cập nhật extension từ bản cũ, gỡ sạch, cài lại; máy chưa vào `/Applications` (E1 của CAM-01).
+- Unit: choosing the encode size from `hlaf` and the tier, the CAM-05 state machine, Annex-B parsing.
+- Manual: update the extension from an old version, clean uninstall, reinstall; the app not yet in
+  `/Applications` (E1 of CAM-01).
 
-## Rủi ro và quay lui
+## Risks and rollback
 
-- Extension cần khởi động lại sau cập nhật (C11) → thông báo rõ, không chặn phần còn lại.
-- `killall coreaudiod` làm ứng dụng họp mất âm thanh vài giây → cài khi không có cuộc họp, cảnh báo
-  trước.
-- USB: adb không hoạt động trên vài OEM → luôn còn Wi-Fi.
+- The extension needs a restart after an update (C11) → say so clearly; do not block the rest.
+- `killall coreaudiod` cuts the audio of meeting apps for a few seconds → install when no meeting is
+  running, with a warning first.
+- USB: adb does not work on some OEMs → Wi-Fi is always there.
