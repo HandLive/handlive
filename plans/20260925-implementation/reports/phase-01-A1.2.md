@@ -77,3 +77,34 @@ Status: DONE_WITH_CONCERNS
 Summary: PAIR-01 (QR and PIN on the LAN), PAIR-02 data and PAIR-03 flow A are implemented and tested against an independent client written from the spec, with Argon2id and the pairing derivations checked against RFC and independent values; CameraX + ZXing scanning without ML Kit.
 Concerns/Blockers: no shared pairing vector yet (interop with the Mac unproven until M1.3); the label spacing reading must match Apple.
 ```
+
+## Follow-up 2 (QR window released after a dropped connection)
+
+Found by the Apple agent: `PairingWindow.release()` ran only for PIN windows, so a Mac whose connection dropped mid-exchange left a QR window claimed; its reconnects got `PAIRING_CLOSED` (it retries every second) until the window expired, although the coordinator had already gone back to `Waiting`.
+
+- `PairingExchange` now remembers whether its own connection took the window's claim, and gives it back after `DISCONNECTED` (QR and PIN) or `PIN_INVALID` — the two failures after which the coordinator keeps the window open. A reconnecting Mac therefore finishes pairing within the same 120 s window.
+- Only the connection holding the claim can release it: before, any failed exchange on a PIN window released the claim, even one refused with `PAIRING_CLOSED` because another connection held the window (API 2 rule 4 broken for a third client). Other failures (`AUTH_FAILED`, …) keep the claim until the coordinator closes the window, so no second try on the same secret.
+- E2 is unchanged: an expired window is closed by the coordinator (and refused by `isOpen`), and a replaced window is no longer the coordinator's current one.
+
+| Hash | Subject |
+|------|---------|
+| f08c8d4 | fix(android): give a pairing window back when its client drops mid-exchange |
+| d5f02f5 | test(android): finish QR pairing on a new connection after a drop within the window |
+
+```text
+$ ./gradlew check → BUILD SUCCESSFUL; CI ci-android run 36187082112 green on d5f02f5
+feature:pairing tests=43, failures=0 — new (the 1st, 3rd and 4th failed before the fix; the E2 and the refusal
+  tests guard behaviour that must not change):
+  PairingCoordinatorTest.aMacThatDropsMidExchangeFinishesPairingOnANewConnectionWithinTheWindow
+    (hello, offer, drop → Waiting; second connection → pair/done checked by the client, Paired, one pair stored)
+  PairingCoordinatorTest.aReconnectAfterTheWindowExpiredIsStillPairingClosed (E2)
+  PairingExchangeTest.aQrClientThatDropsMidExchangeGivesTheWindowBack
+  PairingExchangeTest.aConnectionThatNeverClaimedTheWindowLeavesTheClaimAlone
+  PairingExchangeTest.aRefusedExchangeKeepsTheQrWindowClaimedUntilTheCoordinatorClosesIt
+```
+
+```text
+Status: DONE_WITH_CONCERNS
+Summary: A QR or PIN window is given back after its client drops mid-exchange, only by the connection that held it, so a reconnecting Mac finishes pairing within the same 120 s; E2 unchanged; tests and CI green.
+Concerns/Blockers: interop with the real Mac (M1.3) still to be checked on devices.
+```
