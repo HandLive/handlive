@@ -6,6 +6,8 @@
 #                                                  ví dụ git@github.com:handlive hoặc https://github.com/handlive
 #   tools/workspace.sh status                       nhánh và git status của cả năm kho
 #   tools/workspace.sh run <lệnh git…>              chạy một lệnh git trong cả năm kho, ví dụ: run fetch --all
+#   tools/workspace.sh remotes <group-url>         đặt origin cho cả năm kho: <group-url>/handlive[-phần].git
+#   tools/workspace.sh push                         đẩy main của bốn kho thành phần; hub đẩy main và nhánh hiện tại
 set -euo pipefail
 
 HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,5 +34,25 @@ case "${1:-}" in
       dir="$(repo_dir "$repo")"; [ -d "$dir/.git" ] || continue
       echo "== $repo"; git -C "$dir" "$@"
     done ;;
-  *) sed -n '2,8p' "$0"; exit 2 ;;
+  remotes)
+    GROUP="${2:?thiếu <group-url>, ví dụ git@github.com:HandLive}"
+    for repo in hub "${PARTS[@]}"; do
+      dir="$(repo_dir "$repo")"; [ -d "$dir/.git" ] || continue
+      name=handlive; [ "$repo" != hub ] && name="handlive-$repo"
+      url="${GROUP%/}/$name.git"
+      if git -C "$dir" remote get-url origin >/dev/null 2>&1; then git -C "$dir" remote set-url origin "$url"; else git -C "$dir" remote add origin "$url"; fi
+      echo "$repo → $url"
+    done ;;
+  push)
+    for repo in hub "${PARTS[@]}"; do
+      dir="$(repo_dir "$repo")"; [ -d "$dir/.git" ] || continue
+      echo "== $repo"
+      if [ "$repo" = hub ]; then
+        cur="$(git -C "$dir" rev-parse --abbrev-ref HEAD)"; branches=main; [ "$cur" != main ] && branches="main $cur"
+        git -C "$dir" push -u origin $branches
+      else
+        git -C "$dir" push -u origin main
+      fi
+    done ;;
+  *) sed -n '2,10p' "$0"; exit 2 ;;
 esac
