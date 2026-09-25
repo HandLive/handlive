@@ -17,6 +17,7 @@ xcuserdata/
 DerivedData/
 .build/
 *.xcodeproj/project.xcworkspace/xcuserdata/
+apple/*.xcodeproj
 
 # Rust
 relay/target/

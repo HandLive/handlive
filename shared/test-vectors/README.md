@@ -68,6 +68,12 @@ Như envelope mã hóa nhưng plaintext nhị phân: `plaintext_hex` = `hdr_len`
 ### `hl-frame.json`
 `channel`, `direction`, `key`, `seq`, `ts` (uint32), `header` (11 byte = `484c01` ‖ seq BE ‖ ts BE = AAD), `plaintext`, `nonce`, `ciphertext`, `tag`, `encrypted_part` = nonce ‖ ciphertext ‖ tag, `frame` = header ‖ encrypted_part. Kênh camera thêm `track`, `flags`, `pts_us` (int64 BE), `data` (plaintext = track ‖ flags ‖ pts_us ‖ data). Một vector dùng `seq` = `ts` = 2³²−1 để kiểm biên. `invalid_vectors`: `{key, frame}` — `seq` bị sửa (AAD sai), tag sai.
 
+### `envelope-roundtrip.json` (liên nền tảng, Android ghi)
+Envelope do Android (`android/core/crypto`, Tink XChaCha20-Poly1305) mã hóa bằng khóa cố định của `envelope.json` (`k_c2s`/`k_s2c` cặp 1), `id` UUIDv7 và nonce ngẫu nhiên mới. **Cùng trường với vector `encrypted = true` của `envelope.json`** (`name`, `encrypted`, `direction`, `key`, `key_source`, `v`, `type`, `id`, `ts`, `aad`, `aad_hex`, `plaintext`, `nonce`, `ciphertext`, `tag`, `payload_b64`, `envelope`). Không sinh bằng `tools/vectors/`: chỉ ghi lại khi chạy `cd android && HL_WRITE_ROUNDTRIP=1 ./gradlew :core:crypto:test`; test thường chỉ đọc và giải mã lại. Phía Apple (M0.1) giải mã từng `envelope` bằng `key` và so với `plaintext`. Ngược lại, test Android giải mã `envelope-roundtrip-apple.json` nếu file đó có.
+
+### `envelope-roundtrip-apple.json` (liên nền tảng, Apple ghi)
+Envelope do Apple (`apple/Packages/HLCrypto`: HChaCha20 tự cài + CryptoKit `ChaChaPoly`) mã hóa bằng khóa cố định của `envelope.json` (`k_c2s`/`k_s2c` cặp 1), `id` UUIDv7 và nonce ngẫu nhiên mới; plaintext lấy nguyên byte từ các vector `encrypted = true` của `envelope.json`. Cùng trường và thứ tự trường như `envelope-roundtrip.json`. Không sinh bằng `tools/vectors/`: chỉ ghi lại khi chạy `cd apple/Packages/HLCrypto && HL_WRITE_ROUNDTRIP=1 swift test` (thêm `HL_SWIFT_TESTING_PACKAGE=1` nếu máy chỉ có Command Line Tools); test thường chỉ đọc và giải mã lại. Android (A0.1) và relay giải mã từng `envelope` bằng `key` và so với `plaintext`.
+
 ## Dùng trong CI
 
 Mỗi nền tảng đọc thẳng các file này trong test đơn vị: tính lại mọi trường của `vectors`, và kiểm mọi `invalid_vectors` bị từ chối. Trên Apple, `xchacha20-poly1305.json` phải qua bằng HChaCha20 tự cài + `ChaChaPoly`.

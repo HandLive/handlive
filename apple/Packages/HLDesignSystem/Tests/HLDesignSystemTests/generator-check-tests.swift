@@ -13,7 +13,7 @@ struct GeneratorCheckTests {
         process.standardError = output
         try process.run()
         process.waitUntilExit()
-        let log = String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        let log = String(bytes: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         #expect(process.terminationStatus == 0, "\(log)")
     }
 }

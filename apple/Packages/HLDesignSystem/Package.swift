@@ -25,7 +25,8 @@ let package = Package(
         .target(
             name: "HLDesignSystem",
             exclude: hasXcode ? [] : [colorCatalog],
-            resources: (hasXcode ? [.process(colorCatalog)] : []) + [.copy("Resources/Fonts")], // font + OFL.txt đi cùng nhau (điều kiện của OFL)
+            // Font và OFL.txt đi cùng nhau (điều kiện của OFL).
+            resources: (hasXcode ? [.process(colorCatalog)] : []) + [.copy("Resources/Fonts")],
             swiftSettings: hasXcode ? [] : [.define("HL_COMMAND_LINE_TOOLS_ONLY")]
         ),
         .testTarget(

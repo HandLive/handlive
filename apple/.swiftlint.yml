@@ -1,0 +1,38 @@
+# SwiftLint cho apple/ — chạy từ thư mục apple/: `swiftlint lint --strict`.
+included:
+  - macOS
+  - Packages
+excluded:
+  - Packages/*/.build
+  - Packages/*/Sources/*/Generated
+  - "*.xcodeproj"
+# Dấu phẩy cuối trong literal: để tùy từng package (Swift 6.1+ cho phép rộng rãi).
+disabled_rules:
+  - trailing_comma
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - sorted_first_last
+  - toggle_bool
+line_length:
+  warning: 130
+  error: 160
+  ignores_comments: true
+file_length:
+  warning: 250
+  error: 400
+type_body_length:
+  warning: 250
+  error: 400
+function_body_length:
+  warning: 60
+  error: 100
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - re
+    - ok
+    - ts
+    - v

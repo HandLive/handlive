@@ -1,0 +1,63 @@
+{
+  "description": "Envelope do Apple (HLCrypto: HChaCha20 + CryptoKit ChaChaPoly) mã hóa bằng khóa cố định của envelope.json, nonce và id mới; Android/relay phải giải mã được. Cùng định dạng envelope.json.",
+  "source": "apple/Packages/HLCrypto/Tests/HLCryptoTests/envelope-roundtrip-tests.swift (HL_WRITE_ROUNDTRIP=1)",
+  "vectors": [
+    {
+      "name": "Apple: clipboard push Mac→Android",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "clipboard",
+      "id": "01a0d641-34c5-73b3-b743-1e94965dd523",
+      "ts": 1790300992709,
+      "aad": "1|clipboard|01a0d641-34c5-73b3-b743-1e94965dd523|1790300992709",
+      "aad_hex": "317c636c6970626f6172647c30316130643634312d333463352d373362332d623734332d3165393439363564643532337c31373930333030393932373039",
+      "plaintext": "{\"op\":\"push\",\"data\":{\"clip_id\":\"0192f3e8-1b2c-7d3e-8f40-5a6b7c8d9e0f\",\"kind\":\"text\",\"mime\":\"text/plain\",\"text\":\"https://example.com/tai-lieu/bao-cao-quy-3\",\"sensitive\":false,\"origin_ts\":1727150160456,\"source\":\"mac\",\"origin_device_id\":\"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718\"}}",
+      "nonce": "306652e0ffcb18664477a61ef17be256685ca9092546ca1a",
+      "ciphertext": "ae70a31eec8eff38111012982f51d39657f587011118e215d9b69764e5805cebd53f5ac287d75ad6914ba22a2350af3873836653f9568e5e6df40c11e2a38ac5184f0776aeeac552cfe0fc5601ca5fbc0bbf144d4a0dba9847fe94bdde4df94416b4b3109e254ee0a106d4d4b534a505dd5a8750dfed3d65831aefc1a1c03062b4a2b31f8845207bc6032674ea8e9d99673743222502142d1521e877b528752717c4534bf049acc9deed1daf4b555bcead3d2cae8cf7f1a286fdfb315d17fff01e4e261436f6433306604fadfef2e5d127ac09b90652da1d28bad22f22429b71143395270a539e392e1e6c3dc1edbeb74771449789cb9e456188d652b846734fa43bdcfeb69edfda2a1d39359c23041b7931",
+      "tag": "097c9a07f8926e1a1911285d7e716634",
+      "payload_b64": "MGZS4P/LGGZEd6Ye8XviVmhcqQklRsoarnCjHuyO/zgREBKYL1HTllf1hwERGOIV2baXZOWAXOvVP1rCh9da1pFLoiojUK84c4NmU/lWjl5t9AwR4qOKxRhPB3au6sVSz+D8VgHKX7wLvxRNSg26mEf+lL3eTflEFrSzEJ4lTuChBtTUtTSlBd1ah1Df7T1lgxrvwaHAMGK0orMfiEUge8YDJnTqjp2ZZzdDIiUCFC0VIeh3tSh1JxfEU0vwSazJ3u0dr0tVW86tPSyujPfxoob9+zFdF//wHk4mFDb2QzMGYE+t/vLl0SesCbkGUtodKLrSLyJCm3EUM5UnClOeOS4ebD3B7b63R3FEl4nLnkVhiNZSuEZzT6Q73P62nt/aKh05NZwjBBt5MQl8mgf4km4aGREoXX5xZjQ=",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"01a0d641-34c5-73b3-b743-1e94965dd523\",\"ts\":1790300992709,\"payload\":\"MGZS4P/LGGZEd6Ye8XviVmhcqQklRsoarnCjHuyO/zgREBKYL1HTllf1hwERGOIV2baXZOWAXOvVP1rCh9da1pFLoiojUK84c4NmU/lWjl5t9AwR4qOKxRhPB3au6sVSz+D8VgHKX7wLvxRNSg26mEf+lL3eTflEFrSzEJ4lTuChBtTUtTSlBd1ah1Df7T1lgxrvwaHAMGK0orMfiEUge8YDJnTqjp2ZZzdDIiUCFC0VIeh3tSh1JxfEU0vwSazJ3u0dr0tVW86tPSyujPfxoob9+zFdF//wHk4mFDb2QzMGYE+t/vLl0SesCbkGUtodKLrSLyJCm3EUM5UnClOeOS4ebD3B7b63R3FEl4nLnkVhiNZSuEZzT6Q73P62nt/aKh05NZwjBBt5MQl8mgf4km4aGREoXX5xZjQ=\"}"
+    },
+    {
+      "name": "Apple: clipboard push Android→Mac (tiếng Việt)",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "clipboard",
+      "id": "01a0d641-34c7-721a-9ca5-56255fc32eba",
+      "ts": 1790300992711,
+      "aad": "1|clipboard|01a0d641-34c7-721a-9ca5-56255fc32eba|1790300992711",
+      "aad_hex": "317c636c6970626f6172647c30316130643634312d333463372d373231612d396361352d3536323535666333326562617c31373930333030393932373131",
+      "plaintext": "{\"op\":\"push\",\"data\":{\"clip_id\":\"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e\",\"kind\":\"text\",\"mime\":\"text/plain\",\"text\":\"Mã đơn hàng: HL-240917-0042\",\"sensitive\":false,\"origin_ts\":1727150100123,\"source\":\"auto\",\"origin_device_id\":\"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f\"}}",
+      "nonce": "c38b737ca9a500b3239c922f25e3b3452b2a2eea4476bb43",
+      "ciphertext": "75055d112a89b1758b99743c567fafbbe63679bb5e1cbd858933205494f153931ba3c7706def99cd456e7c9bc3201bcb87aecb15fb4596e059637e75eb85a32b13fc7f633760987bc71491b884439862b49a59512c405780a94a26ab7d57008b46bc62e568dd37951310a9800dec33258daffc670d83fd38d6fdf5f7f174e66067b460e79b459d6f735e514a69ca750c7b4441ed61cd76c31e8d6ff0297ee1bfb853c88b2d8b86f52af548f5e89f4920bffcccb9d21a40f0215239dd2e1500dd33d11e15ece9d911f792d3d3e8b3d57b69774d4629aef84703fe7367eeded9581c13b121d91999271bcf8544a8b192d69fd8fce431fc308907865f97bc3f836bb03a7e3934574155",
+      "tag": "721b8986c2212b77f100f965fb8ae7a5",
+      "payload_b64": "w4tzfKmlALMjnJIvJeOzRSsqLupEdrtDdQVdESqJsXWLmXQ8Vn+vu+Y2ebteHL2FiTMgVJTxU5Mbo8dwbe+ZzUVufJvDIBvLh67LFftFluBZY35164WjKxP8f2M3YJh7xxSRuIRDmGK0mllRLEBXgKlKJqt9VwCLRrxi5WjdN5UTEKmADewzJY2v/GcNg/041v319/F05mBntGDnm0Wdb3NeUUppynUMe0RB7WHNdsMejW/wKX7hv7hTyIsti4b1KvVI9eifSSC//My50hpA8CFSOd0uFQDdM9EeFezp2RH3ktPT6LPVe2l3TUYprvhHA/5zZ+7e2VgcE7Eh2RmZJxvPhUSosZLWn9j85DH8MIkHhl+XvD+Da7A6fjk0V0FVchuJhsIhK3fxAPll+4rnpQ==",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"01a0d641-34c7-721a-9ca5-56255fc32eba\",\"ts\":1790300992711,\"payload\":\"w4tzfKmlALMjnJIvJeOzRSsqLupEdrtDdQVdESqJsXWLmXQ8Vn+vu+Y2ebteHL2FiTMgVJTxU5Mbo8dwbe+ZzUVufJvDIBvLh67LFftFluBZY35164WjKxP8f2M3YJh7xxSRuIRDmGK0mllRLEBXgKlKJqt9VwCLRrxi5WjdN5UTEKmADewzJY2v/GcNg/041v319/F05mBntGDnm0Wdb3NeUUppynUMe0RB7WHNdsMejW/wKX7hv7hTyIsti4b1KvVI9eifSSC//My50hpA8CFSOd0uFQDdM9EeFezp2RH3ktPT6LPVe2l3TUYprvhHA/5zZ+7e2VgcE7Eh2RmZJxvPhUSosZLWn9j85DH8MIkHhl+XvD+Da7A6fjk0V0FVchuJhsIhK3fxAPll+4rnpQ==\"}"
+    },
+    {
+      "name": "Apple: sms send Mac→Android",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "sms",
+      "id": "01a0d641-34c8-7cc6-a59f-7f0b97bfe359",
+      "ts": 1790300992712,
+      "aad": "1|sms|01a0d641-34c8-7cc6-a59f-7f0b97bfe359|1790300992712",
+      "aad_hex": "317c736d737c30316130643634312d333463382d376363362d613539662d3766306239376266653335397c31373930333030393932373132",
+      "plaintext": "{\"op\":\"send\",\"data\":{\"local_id\":\"0192f3e2-4b5c-7d6e-9f70-8a9b0c1d2e3f\",\"thread_id\":42,\"addresses\":[\"+84900000123\"],\"body\":\"Ok, 3h mình có mặt\",\"sub_id\":1}}",
+      "nonce": "c79fb512e70a378f80e223704a96e5f4d0fe625ef1deae31",
+      "ciphertext": "afd1f3699ace10932b8184b2d5b897f6a1c6c88a6acdac3c2ceba539e098b04f0f7dc3818a40f1b40c49463a2f5948563c23e580581e1794dcbc08f2136b33fccef1c16837dadd638ac0d0be65193b042713b09c7e89453caf002a03e1100e73aae097b295a333e8492dde3a129a7e1064534411a6a4f7a0541db2672cc2044fe627af959fcc931f32573aca83525e02dcbdd31ba7e077868fd6d480c5b636",
+      "tag": "dc46ff6ff19b8b0fe83a39ccbc7d8498",
+      "payload_b64": "x5+1EucKN4+A4iNwSpbl9ND+Yl7x3q4xr9HzaZrOEJMrgYSy1biX9qHGyIpqzaw8LOulOeCYsE8PfcOBikDxtAxJRjovWUhWPCPlgFgeF5TcvAjyE2sz/M7xwWg32t1jisDQvmUZOwQnE7CcfolFPK8AKgPhEA5zquCXspWjM+hJLd46Epp+EGRTRBGmpPegVB2yZyzCBE/mJ6+Vn8yTHzJXOsqDUl4C3L3TG6fgd4aP1tSAxbY23Eb/b/Gbiw/oOjnMvH2EmA==",
+      "envelope": "{\"v\":1,\"type\":\"sms\",\"id\":\"01a0d641-34c8-7cc6-a59f-7f0b97bfe359\",\"ts\":1790300992712,\"payload\":\"x5+1EucKN4+A4iNwSpbl9ND+Yl7x3q4xr9HzaZrOEJMrgYSy1biX9qHGyIpqzaw8LOulOeCYsE8PfcOBikDxtAxJRjovWUhWPCPlgFgeF5TcvAjyE2sz/M7xwWg32t1jisDQvmUZOwQnE7CcfolFPK8AKgPhEA5zquCXspWjM+hJLd46Epp+EGRTRBGmpPegVB2yZyzCBE/mJ6+Vn8yTHzJXOsqDUl4C3L3TG6fgd4aP1tSAxbY23Eb/b/Gbiw/oOjnMvH2EmA==\"}"
+    }
+  ]
+}

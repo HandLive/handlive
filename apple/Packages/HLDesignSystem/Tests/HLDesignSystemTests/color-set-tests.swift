@@ -61,7 +61,7 @@ struct ColorSetTests {
     @Test("Mỗi màu trong tokens.json có Color Set đủ 4 giao diện, đúng giá trị")
     func everyTokenHasFourAppearances() throws {
         let tokens = try TokenColors()
-        #expect(tokens.names.count > 0)
+        #expect(!tokens.names.isEmpty)
         for name in tokens.names {
             let set = try colorSet(named: name)
             #expect(set.count == 4, "\(name): \(set.keys.sorted())")
