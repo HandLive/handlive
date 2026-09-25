@@ -12,5 +12,5 @@ Summary: một hai câu
 Concerns/Blockers: nếu có
 ```
 
-Hash trong các báo cáo `phase-00-*` là của kho hub trước khi tách kho (25/09/2026, xem
-`repo-split.md`); lịch sử tương ứng nằm trong `main` của từng kho thành phần.
+Hash trong các báo cáo `phase-00-*` là của kho hub trước khi tách kho và trước khi viết lại lịch sử
+(25/09/2026, xem `repo-split.md`); tra theo tiêu đề commit trong `main` của từng kho.
