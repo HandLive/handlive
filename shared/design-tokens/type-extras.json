@@ -1,0 +1,152 @@
+{
+  "note": "Trường phụ của kiểu chữ trong tokens.json, tách riêng để giữ định dạng artifact Design System: relativeTo = Font.TextStyle để phóng theo Dynamic Type (iOS/Android; macOS không có Dynamic Type), emphasisWeight = cột Nhấn mạnh của HIG (400 regular, 500 medium, 600 semibold, 700 bold, 800 heavy), fontFeatures = tính năng OpenType (tnum: chữ số đều bề rộng). Bộ sinh mã đọc cả hai file.",
+  "styles": {
+    "ios-large-title": {
+      "relativeTo": "largeTitle",
+      "emphasisWeight": 700
+    },
+    "android-large-title": {
+      "relativeTo": "largeTitle",
+      "emphasisWeight": 700
+    },
+    "ios-title-1": {
+      "relativeTo": "title",
+      "emphasisWeight": 700
+    },
+    "android-title-1": {
+      "relativeTo": "title",
+      "emphasisWeight": 700
+    },
+    "ios-title-2": {
+      "relativeTo": "title2",
+      "emphasisWeight": 700
+    },
+    "android-title-2": {
+      "relativeTo": "title2",
+      "emphasisWeight": 700
+    },
+    "ios-title-3": {
+      "relativeTo": "title3",
+      "emphasisWeight": 600
+    },
+    "android-title-3": {
+      "relativeTo": "title3",
+      "emphasisWeight": 600
+    },
+    "ios-headline": {
+      "relativeTo": "headline",
+      "emphasisWeight": 600
+    },
+    "android-headline": {
+      "relativeTo": "headline",
+      "emphasisWeight": 600
+    },
+    "ios-body": {
+      "relativeTo": "body",
+      "emphasisWeight": 600
+    },
+    "android-body": {
+      "relativeTo": "body",
+      "emphasisWeight": 600
+    },
+    "ios-callout": {
+      "relativeTo": "callout",
+      "emphasisWeight": 600
+    },
+    "android-callout": {
+      "relativeTo": "callout",
+      "emphasisWeight": 600
+    },
+    "ios-subheadline": {
+      "relativeTo": "subheadline",
+      "emphasisWeight": 600
+    },
+    "android-subheadline": {
+      "relativeTo": "subheadline",
+      "emphasisWeight": 600
+    },
+    "ios-footnote": {
+      "relativeTo": "footnote",
+      "emphasisWeight": 600
+    },
+    "android-footnote": {
+      "relativeTo": "footnote",
+      "emphasisWeight": 600
+    },
+    "ios-caption-1": {
+      "relativeTo": "caption",
+      "emphasisWeight": 600
+    },
+    "android-caption-1": {
+      "relativeTo": "caption",
+      "emphasisWeight": 600
+    },
+    "ios-caption-2": {
+      "relativeTo": "caption2",
+      "emphasisWeight": 600
+    },
+    "android-caption-2": {
+      "relativeTo": "caption2",
+      "emphasisWeight": 600
+    },
+    "mac-large-title": {
+      "emphasisWeight": 700
+    },
+    "mac-title-1": {
+      "emphasisWeight": 700
+    },
+    "mac-title-2": {
+      "emphasisWeight": 700
+    },
+    "mac-title-3": {
+      "emphasisWeight": 600
+    },
+    "mac-headline": {
+      "emphasisWeight": 800
+    },
+    "mac-body": {
+      "emphasisWeight": 600
+    },
+    "mac-callout": {
+      "emphasisWeight": 600
+    },
+    "mac-subheadline": {
+      "emphasisWeight": 600
+    },
+    "mac-footnote": {
+      "emphasisWeight": 600
+    },
+    "mac-caption-1": {
+      "emphasisWeight": 500
+    },
+    "mac-caption-2": {
+      "emphasisWeight": 600
+    },
+    "brand-large-title": {
+      "relativeTo": "largeTitle",
+      "emphasisWeight": 800
+    },
+    "brand-title": {
+      "relativeTo": "title2",
+      "emphasisWeight": 700
+    },
+    "wordmark": {
+      "relativeTo": "title3",
+      "emphasisWeight": 800
+    },
+    "code-pin": {
+      "relativeTo": "title",
+      "emphasisWeight": 700,
+      "fontFeatures": [
+        "tnum"
+      ]
+    },
+    "timer": {
+      "relativeTo": "body",
+      "emphasisWeight": 600,
+      "fontFeatures": [
+        "tnum"
+      ]
+    }
+  }
+}
