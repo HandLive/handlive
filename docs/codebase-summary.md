@@ -4,46 +4,53 @@ English | [Tiếng Việt](codebase-summary.vi.md)
 
 > **Update this file whenever the code structure changes significantly.**
 
-## Current status (2026-09-25)
+## Current status (2026-09-26)
 
-**Phase 0 is done** — repository scaffolding, protocol, encryption, tokens, CI; no user-facing features
-yet. About 111 Kotlin files, 66 Swift files, 28 Rust files. Since 2026-09-25 the source code is split into
-**five git repositories in one workspace** (decision I1 in `plans/20260925-implementation/plan.md`,
-report `reports/repo-split.md`): this hub repository keeps only the docs, plans and documentation tools;
-the four component repositories are cloned inside the hub directory (the hub git-ignores them).
+**Phase 1 (clipboard MVP) code is complete** on the branch `feat/phase-01-clipboard` of handlive-android,
+handlive-apple, handlive-shared and handlive-relay, with CI green in each; it waits for gate G1 (latency and UI
+checks on real Pixel/Samsung phones and Macs) before it merges into `main`. The UI is multilingual — English by
+default, Vietnamese second — with every string in the shared catalog (C20). About 297 Kotlin files, 188 Swift
+files (plus generated ones), 29 Rust files and 36 Python tool files. Since 2026-09-25 the source code is split
+into **five git repositories in one workspace** (decision I1 in `plans/20260925-implementation/plan.md`, report
+`reports/repo-split.md`): this hub repository keeps only the docs, plans and documentation tools; the four
+component repositories are cloned inside the hub directory (the hub git-ignores them).
 
 ```
 HandLive/                          # hub repository "handlive"
-├── CLAUDE.md, README.md
-├── docs/                          # detailed-design/ (contracts), design-system/, PDR, architecture, code standards…
-├── plans/20260925-implementation/ # Implementation plan, phase-00…05, reports/
-├── tools/docs/                    # validate_design_docs.py, apple_diacritics.py, build_design_html.py
-├── tools/workspace.sh             # clone <group-url> | status | run <git…> for all five repositories
-├── .github/workflows/ci-docs.yml  # doc templates + schemas checked against the examples
+├── CLAUDE.md, README.md (+ README.vi.md)
+├── docs/                          # every page as X.md (English) + X.vi.md (Vietnamese): detailed-design/, design-system/, privacy, PDR…
+├── plans/20260925-implementation/ # Implementation plan, phase-00…05 (both languages), reports/ (English)
+├── tools/docs/                    # validate_design_docs.py, check_bilingual_docs.py, apple_diacritics.py, build_design_html.py
+├── tools/workspace.sh             # clone | status | run | remotes | push | hooks for every repository
+├── .github/workflows/ci-docs.yml  # doc templates, bilingual pairs, schemas checked against the examples
 │
-├── android/   ← repository "handlive-android": Gradle KTS, AGP 9.4, Kotlin 2.4, compileSdk 36 / targetSdk 35 / minSdk 29
-│   ├── app/                       # Compose, package app.handlive.android (placeholder screen)
-│   ├── buildSrc/                  # HandLiveTheme generator from ../shared/design-tokens/tokens.json
-│   ├── core/
-│   │   ├── protocol/              # Envelope, Payload, Ack, ErrorCode (0.8.1), HlFrame, clipboard chunk, UUIDv7, b64/b64u
-│   │   ├── crypto/                # Tink XChaCha20-Poly1305, X25519, Ed25519, HKDF (JCA), device_id, PRK, session/rekey/stream key schedule, hl_master key store
-│   │   ├── transport/             # Ktor/Netty WSS (TLS 1.3, self-signed P-256 certificate), S-side handshake, capability, rekey, session replacement 4409
-│   │   └── design/                # HandLiveTheme (4 appearances, Inter/Be Vietnam Pro/Roboto Mono), HLButton, HLSwitch, HLGroupedList, HLStatusIndicator
+├── android/   ← "handlive-android": Gradle KTS, AGP 9.4, Kotlin 2.4, compileSdk 37 / targetSdk 35 / minSdk 29
+│   ├── app/                       # Compose screens: setup (SET-01), devices, pairing, settings (SET-02), consent, HUD
+│   ├── buildSrc/                  # generators: HandLiveTheme from tokens.json, strings.xml (en, vi) from the string catalog
+│   ├── core/protocol, core/crypto, core/transport, core/design   # as in Phase 0, plus close codes 4410/4411/4429 and limits
+│   ├── core/data/                 # Room database (paired_device, 0.9.1)
+│   ├── core/strings/              # generated resources of shared/strings/ui-strings.json, per-app language
+│   ├── feature/connection/        # HandLiveService (FGS), mDNS with hourly hints, sessions, capability, HLBENCH/1 logs
+│   ├── feature/pairing/           # QR (CameraX + ZXing) and PIN pairing, devices, Security Code, unpairing
+│   ├── feature/clipboard/         # Accessibility and manual sending, receive, image chunks, safe auto-clear (C17)
 │   └── .github/workflows/ci-android.yml
-├── apple/     ← repository "handlive-apple": XcodeGen project.yml (+ HandLive.xcworkspace), .swiftlint.yml
-│   ├── Packages/HLProtocol        # Codable protocol models, HLFrame, ErrorCode
-│   ├── Packages/HLCrypto          # hand-written HChaCha20 + ChaChaPoly = XChaCha20-Poly1305, Curve25519, HKDF, key schedule, Keychain
-│   ├── Packages/HLTransport       # client-side handshake (logic), 0.11 state machine
-│   ├── Packages/HLDesignSystem    # Color Sets for 4 appearances + Swift code generated from tokens.json, Be Vietnam Pro font, 3 SwiftUI components
-│   ├── macOS/HandLive/            # placeholder menu bar app (Phase 1)
+├── apple/     ← "handlive-apple": XcodeGen project.yml (+ HandLive.xcworkspace), .swiftlint.yml
+│   ├── Packages/HLProtocol, HLCrypto   # protocol models; XChaCha20-Poly1305, pairing and session keys, Keychain
+│   ├── Packages/HLTransport       # Network.framework WSS with pinning, NWBrowser discovery, handshake, 0.11 state machine
+│   ├── Packages/HLAppCore         # settings, local identity, sealed pair store, clipboard engine
+│   ├── Packages/HLLocalization    # Localizable/InfoPlist String Catalogs and L10n accessors generated from the catalog
+│   ├── Packages/HLDesignSystem    # Color Sets and fonts from tokens.json, SwiftUI components
+│   ├── Packages/HLMacUI           # menu bar menu, welcome window, pairing sheet, Settings panes, pasteboard
+│   ├── macOS/HandLive/            # menu bar app entry point, generated assets and purpose strings
 │   └── .github/workflows/ci-apple.yml
-├── relay/     ← repository "handlive-relay": Cargo workspace crates/relay-server (actix-web 4, sqlx, redis), migrations/ (0.9.4), dev docker-compose
+├── relay/     ← "handlive-relay": crates/relay-server (actix-web 4, sqlx, redis), migrations/ (0.9.4), dev docker-compose
 │   └── .github/workflows/ci-relay.yml
-└── shared/    ← repository "handlive-shared"
-    ├── test-vectors/              # 14 vector files + envelope-roundtrip{,-apple}.json (cross-platform)
-    ├── schemas/                   # JSON Schema 2020-12: envelope, payload, ack, error, session-*, capability-*
+└── shared/    ← "handlive-shared"
+    ├── test-vectors/              # crypto, envelope, session, relay-auth, ed25519, pair-handshake, discovery-hint, round trips
+    ├── schemas/                   # JSON Schema 2020-12: envelope, payload, ack, error, session-*, capability-*, close codes
+    ├── strings/                   # ui-strings.json (every UI string, en + vi) and its schema
     ├── design-tokens/             # tokens.json (byte-identical to the hub's docs/design-system/tokens.json), type-extras.json
-    ├── tools/vectors/, tools/schemas/   # generate_vectors.py (--check), verify_vectors.py, check_schemas.py; venv tools/.venv (gitignored)
+    ├── tools/vectors, schemas, strings, bench   # generators and checkers; HLBENCH/1 latency scripts; venv tools/.venv
     └── .github/workflows/ci-shared.yml
 ```
 
@@ -61,12 +68,12 @@ repositories need the secret `HANDLIVE_REPOS_TOKEN` — `docs/deployment-guide.m
 
 | Part | Command |
 |------|---------|
-| Android | `cd android && ./gradlew check` (JVM tests, Android Lint, ktlint, detekt); needs `JAVA_HOME` JDK 21, `ANDROID_HOME` with `platforms;android-36` |
-| Apple (machine with Command Line Tools only) | `cd apple/Packages/<Pkg> && HL_SWIFT_TESTING_PACKAGE=1 swift test`; `cd apple && xcodegen generate`; `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict` |
+| Android | `cd android && ./gradlew check` (JVM tests, Android Lint, ktlint, detekt); needs `JAVA_HOME` JDK 21 and `ANDROID_HOME` with `platforms;android-37` |
+| Apple (machine with Command Line Tools only) | `cd apple/Packages/<Pkg> && HL_SWIFT_TESTING_PACKAGE=1 swift test` (SwiftUI packages add `SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk`); `cd apple && xcodegen generate`; `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict` |
 | Apple (with Xcode, CI) | `xcodebuild test -scheme <Pkg> -destination 'platform=macOS'` in the package directory (do not set `HL_SWIFT_TESTING_PACKAGE`) |
 | Relay | `cd relay && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test`; integration: `docker compose up -d --wait`, load `.env.example`, `cargo test -- --ignored` |
-| Shared contracts | `cd shared && tools/.venv/bin/python tools/vectors/verify_vectors.py`, `… tools/vectors/generate_vectors.py --check`, `… tools/schemas/check_schemas.py` |
-| Docs (hub) | `python3 tools/docs/validate_design_docs.py` — must print `problems=0` |
+| Shared contracts | `cd shared && tools/.venv/bin/python tools/vectors/verify_vectors.py`, `… tools/vectors/generate_vectors.py --check`, `… tools/schemas/check_schemas.py`, `… tools/strings/check_strings.py [--docs]` |
+| Docs (hub) | `python3 tools/docs/validate_design_docs.py` and `python3 tools/docs/check_bilingual_docs.py` — both must print `problems=0` |
 | All five repositories | `tools/workspace.sh status`; `tools/workspace.sh run fetch --all` |
 
 Cross-platform roundtrip: with `HL_WRITE_ROUNDTRIP=1`, the Android/Apple crypto tests rewrite
@@ -78,16 +85,17 @@ tests decrypt the other side's file.
 | Repository (directory) | Platform | Role |
 |------------------------|----------|------|
 | `handlive` (hub, this directory) | Markdown, Python | `docs/`, `plans/`, `tools/docs/`, `tools/workspace.sh`; contracts for every other repository |
-| `handlive-android` (`android/`) | Kotlin, Gradle KTS | Hub: `app/`, `core/{protocol,crypto,transport,design}`, `feature/{pairing,clipboard,sms,call,callaudio,camera}` (added phase by phase) |
-| `handlive-apple` (`apple/`) | Swift 6 | Shared `Packages/{HLProtocol,HLCrypto,HLTransport,HLDesignSystem,HLCallAudio}`; `macOS/HandLive` (menu bar, camera extension, microphone driver); `iOS/HandLive` + `iOS/NotificationService` |
+| `handlive-android` (`android/`) | Kotlin, Gradle KTS | Hub: `app/`, `core/{protocol,crypto,transport,design,data,strings}`, `feature/{connection,pairing,clipboard}`; `feature/{sms,call,callaudio,camera}` arrive phase by phase |
+| `handlive-apple` (`apple/`) | Swift 6 | Shared `Packages/{HLProtocol,HLCrypto,HLTransport,HLAppCore,HLLocalization,HLDesignSystem,HLMacUI}`; `macOS/HandLive` (menu bar; camera extension and microphone driver in Phase 5); `iOS/HandLive` + `iOS/NotificationService` in Phase 2 |
 | `handlive-relay` (`relay/`) | Rust | Cargo workspace: `crates/relay-server`, `crates/relay-push`, `migrations/` |
-| `handlive-shared` (`shared/`) | JSON, Python | `test-vectors/`, `schemas/`, `design-tokens/`, `tools/vectors/`, `tools/schemas/` — source: `docs/detailed-design/00-common-specs.md` and the design system; `tools/bench/` (latency measurement, Phase 1) |
+| `handlive-shared` (`shared/`) | JSON, Python | `test-vectors/`, `schemas/`, `strings/`, `design-tokens/`, `tools/{vectors,schemas,strings,bench}` — source: `docs/detailed-design/00-common-specs.md` and the design system |
 
 Each component repository has its own `CLAUDE.md` that spells out the workspace layout and that
 repository's commands. Module details and task cards: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md`.
 
 ## Where to start implementing
 
-Phase 0 is done (reports: `plans/20260925-implementation/reports/phase-00-*.md`, review
-`phase-00-review.md`) → gate G0 (still waiting for CI to run for real on the GitHub group) → Phase 1
-(clipboard MVP). See `plans/20260925-implementation/plan.md` and `docs/project-roadmap.md`.
+Phase 0 and the Phase 1 code are done (reports: `plans/20260925-implementation/reports/phase-00-*.md`,
+`phase-01-*.md`) → gate G1: run the device matrix of `shared/tools/bench/README.md` on real phones and Macs,
+then merge `feat/phase-01-clipboard` into `main` in each repository → Phase 2 (SMS, iOS app, relay, push). See
+`plans/20260925-implementation/plan.md` and `docs/project-roadmap.md`.

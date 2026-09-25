@@ -4,46 +4,53 @@
 
 > **Cập nhật file này mỗi khi cấu trúc code thay đổi đáng kể.**
 
-## Trạng thái hiện tại (25/09/2026)
+## Trạng thái hiện tại (2026-09-26)
 
-**Phase 0 xong** — khung kho, giao thức, mã hóa, token, CI; chưa có tính năng người dùng. Khoảng 111
-file Kotlin, 66 file Swift, 28 file Rust. Từ 25/09/2026 mã nguồn tách thành
-**năm kho git trong một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`,
-báo cáo `reports/repo-split.md`): kho hub này chỉ giữ tài liệu, kế hoạch và công cụ tài liệu; bốn
-kho thành phần clone vào bên trong thư mục hub (hub git-ignore chúng).
+**Mã Phase 1 (bảng nhớ tạm MVP) đã xong** trên nhánh `feat/phase-01-clipboard` của handlive-android,
+handlive-apple, handlive-shared và handlive-relay, CI xanh ở từng kho; chờ cổng G1 (đo trễ và kiểm giao diện
+trên điện thoại Pixel/Samsung và Mac thật) rồi mới gộp vào `main`. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
+tiếng Việt thứ hai — mọi chuỗi nằm trong catalog dùng chung (C20). Khoảng 297 file Kotlin, 188 file Swift (chưa
+tính file sinh), 29 file Rust và 36 file công cụ Python. Từ 25/09/2026 mã nguồn tách thành **năm kho git trong
+một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`, báo cáo `reports/repo-split.md`):
+kho hub này chỉ giữ tài liệu, kế hoạch và công cụ tài liệu; bốn kho thành phần clone vào bên trong thư mục hub
+(hub git-ignore chúng).
 
 ```
 HandLive/                          # kho hub "handlive"
-├── CLAUDE.md, README.md
-├── docs/                          # detailed-design/ (hợp đồng), design-system/, PDR, kiến trúc, chuẩn mã…
-├── plans/20260925-implementation/ # Kế hoạch triển khai, phase-00…05, reports/
-├── tools/docs/                    # validate_design_docs.py, apple_diacritics.py, build_design_html.py
-├── tools/workspace.sh             # clone <group-url> | status | run <git…> cho cả năm kho
-├── .github/workflows/ci-docs.yml  # khuôn tài liệu + schema đối chiếu ví dụ
+├── CLAUDE.md, README.md (+ README.vi.md)
+├── docs/                          # mọi trang có X.md (tiếng Anh) + X.vi.md (tiếng Việt): detailed-design/, design-system/, privacy, PDR…
+├── plans/20260925-implementation/ # Kế hoạch triển khai, phase-00…05 (hai ngôn ngữ), reports/ (tiếng Anh)
+├── tools/docs/                    # validate_design_docs.py, check_bilingual_docs.py, apple_diacritics.py, build_design_html.py
+├── tools/workspace.sh             # clone | status | run | remotes | push | hooks cho mọi kho
+├── .github/workflows/ci-docs.yml  # khuôn tài liệu, cặp song ngữ, schema đối chiếu ví dụ
 │
-├── android/   ← kho "handlive-android": Gradle KTS, AGP 9.4, Kotlin 2.4, compileSdk 36 / targetSdk 35 / minSdk 29
-│   ├── app/                       # Compose, gói app.handlive.android (màn giữ chỗ)
-│   ├── buildSrc/                  # Generator HandLiveTheme từ ../shared/design-tokens/tokens.json
-│   ├── core/
-│   │   ├── protocol/              # Envelope, Payload, Ack, ErrorCode (0.8.1), HlFrame, chunk bảng nhớ tạm, UUIDv7, b64/b64u
-│   │   ├── crypto/                # Tink XChaCha20-Poly1305, X25519, Ed25519, HKDF (JCA), device_id, PRK, lịch khóa phiên/rekey/stream, kho khóa hl_master
-│   │   ├── transport/             # Ktor/Netty WSS (TLS 1.3, chứng chỉ P-256 tự ký), bắt tay phía S, capability, rekey, thay phiên 4409
-│   │   └── design/                # HandLiveTheme (4 giao diện, Inter/Be Vietnam Pro/Roboto Mono), HLButton, HLSwitch, HLGroupedList, HLStatusIndicator
+├── android/   ← "handlive-android": Gradle KTS, AGP 9.4, Kotlin 2.4, compileSdk 37 / targetSdk 35 / minSdk 29
+│   ├── app/                       # màn Compose: thiết lập (SET-01), thiết bị, ghép nối, cài đặt (SET-02), công bố, HUD
+│   ├── buildSrc/                  # bộ sinh: HandLiveTheme từ tokens.json, strings.xml (en, vi) từ catalog chuỗi
+│   ├── core/protocol, core/crypto, core/transport, core/design   # như Phase 0, thêm mã đóng 4410/4411/4429 và giới hạn
+│   ├── core/data/                 # cơ sở dữ liệu Room (paired_device, 0.9.1)
+│   ├── core/strings/              # tài nguyên sinh từ shared/strings/ui-strings.json, ngôn ngữ theo ứng dụng
+│   ├── feature/connection/        # HandLiveService (FGS), mDNS với hint theo giờ, phiên, capability, log HLBENCH/1
+│   ├── feature/pairing/           # ghép nối QR (CameraX + ZXing) và PIN, thiết bị, Mã an toàn, hủy ghép nối
+│   ├── feature/clipboard/         # gửi qua Hỗ trợ tiếp cận và thủ công, nhận, ảnh theo chunk, tự xóa an toàn (C17)
 │   └── .github/workflows/ci-android.yml
-├── apple/     ← kho "handlive-apple": XcodeGen project.yml (+ HandLive.xcworkspace), .swiftlint.yml
-│   ├── Packages/HLProtocol        # Model giao thức Codable, HLFrame, ErrorCode
-│   ├── Packages/HLCrypto          # HChaCha20 tự cài + ChaChaPoly = XChaCha20-Poly1305, Curve25519, HKDF, lịch khóa, Keychain
-│   ├── Packages/HLTransport       # Bắt tay phía client (logic), máy trạng thái 0.11
-│   ├── Packages/HLDesignSystem    # Color Sets 4 giao diện + mã Swift sinh từ tokens.json, font Be Vietnam Pro, 3 thành phần SwiftUI
-│   ├── macOS/HandLive/            # App menu bar giữ chỗ (Phase 1)
+├── apple/     ← "handlive-apple": XcodeGen project.yml (+ HandLive.xcworkspace), .swiftlint.yml
+│   ├── Packages/HLProtocol, HLCrypto   # model giao thức; XChaCha20-Poly1305, khóa ghép nối và phiên, Keychain
+│   ├── Packages/HLTransport       # WSS Network.framework có ghim, tìm bằng NWBrowser, bắt tay, máy trạng thái 0.11
+│   ├── Packages/HLAppCore         # cài đặt, định danh cục bộ, kho cặp niêm phong, bộ máy bảng nhớ tạm
+│   ├── Packages/HLLocalization    # String Catalog Localizable/InfoPlist và accessor L10n sinh từ catalog
+│   ├── Packages/HLDesignSystem    # Color Set và font từ tokens.json, thành phần SwiftUI
+│   ├── Packages/HLMacUI           # menu thanh menu, cửa sổ chào, sheet ghép nối, pane Cài đặt, bảng dán
+│   ├── macOS/HandLive/            # điểm vào app thanh menu, asset và purpose string sinh ra
 │   └── .github/workflows/ci-apple.yml
-├── relay/     ← kho "handlive-relay": Cargo workspace crates/relay-server (actix-web 4, sqlx, redis), migrations/ (0.9.4), docker-compose dev
+├── relay/     ← "handlive-relay": crates/relay-server (actix-web 4, sqlx, redis), migrations/ (0.9.4), docker-compose dev
 │   └── .github/workflows/ci-relay.yml
-└── shared/    ← kho "handlive-shared"
-    ├── test-vectors/              # 14 file vector + envelope-roundtrip{,-apple}.json (liên nền tảng)
-    ├── schemas/                   # JSON Schema 2020-12: envelope, payload, ack, error, session-*, capability-*
+└── shared/    ← "handlive-shared"
+    ├── test-vectors/              # mã hóa, envelope, phiên, relay-auth, ed25519, pair-handshake, discovery-hint, roundtrip
+    ├── schemas/                   # JSON Schema 2020-12: envelope, payload, ack, error, session-*, capability-*, mã đóng
+    ├── strings/                   # ui-strings.json (mọi chuỗi giao diện, en + vi) và schema của nó
     ├── design-tokens/             # tokens.json (giống byte với docs/design-system/tokens.json của hub), type-extras.json
-    ├── tools/vectors/, tools/schemas/   # generate_vectors.py (--check), verify_vectors.py, check_schemas.py; venv tools/.venv (gitignore)
+    ├── tools/vectors, schemas, strings, bench   # bộ sinh và bộ kiểm; script đo trễ HLBENCH/1; venv tools/.venv
     └── .github/workflows/ci-shared.yml
 ```
 
@@ -61,12 +68,12 @@ secret `HANDLIVE_REPOS_TOKEN` — `docs/deployment-guide.md`).
 
 | Phần | Lệnh |
 |------|------|
-| Android | `cd android && ./gradlew check` (test JVM, Android Lint, ktlint, detekt); cần `JAVA_HOME` JDK 21, `ANDROID_HOME` có `platforms;android-36` |
-| Apple (máy chỉ có Command Line Tools) | `cd apple/Packages/<Pkg> && HL_SWIFT_TESTING_PACKAGE=1 swift test`; `cd apple && xcodegen generate`; `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict` |
+| Android | `cd android && ./gradlew check` (test JVM, Android Lint, ktlint, detekt); cần `JAVA_HOME` JDK 21, `ANDROID_HOME` có `platforms;android-37` |
+| Apple (máy chỉ có Command Line Tools) | `cd apple/Packages/<Pkg> && HL_SWIFT_TESTING_PACKAGE=1 swift test` (package SwiftUI thêm `SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk`); `cd apple && xcodegen generate`; `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict` |
 | Apple (có Xcode, CI) | `xcodebuild test -scheme <Pkg> -destination 'platform=macOS'` trong thư mục package (không đặt `HL_SWIFT_TESTING_PACKAGE`) |
 | Relay | `cd relay && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test`; tích hợp: `docker compose up -d --wait`, nạp `.env.example`, `cargo test -- --ignored` |
-| Hợp đồng dùng chung | `cd shared && tools/.venv/bin/python tools/vectors/verify_vectors.py`, `… tools/vectors/generate_vectors.py --check`, `… tools/schemas/check_schemas.py` |
-| Tài liệu (hub) | `python3 tools/docs/validate_design_docs.py` — phải in `problems=0` |
+| Hợp đồng dùng chung | `cd shared && tools/.venv/bin/python tools/vectors/verify_vectors.py`, `… tools/vectors/generate_vectors.py --check`, `… tools/schemas/check_schemas.py`, `… tools/strings/check_strings.py [--docs]` |
+| Tài liệu (hub) | `python3 tools/docs/validate_design_docs.py` và `python3 tools/docs/check_bilingual_docs.py` — cả hai phải in `problems=0` |
 | Cả năm kho | `tools/workspace.sh status`; `tools/workspace.sh run fetch --all` |
 
 Roundtrip liên nền tảng: `HL_WRITE_ROUNDTRIP=1` khi chạy test crypto Android/Apple ghi lại
@@ -78,16 +85,17 @@ của mỗi bên giải mã file của bên kia.
 | Kho (thư mục) | Nền tảng | Vai trò |
 |---------------|----------|---------|
 | `handlive` (hub, thư mục này) | Markdown, Python | `docs/`, `plans/`, `tools/docs/`, `tools/workspace.sh`; hợp đồng cho mọi kho khác |
-| `handlive-android` (`android/`) | Kotlin, Gradle KTS | Hub: `app/`, `core/{protocol,crypto,transport,design}`, `feature/{pairing,clipboard,sms,call,callaudio,camera}` (tạo dần theo phase) |
-| `handlive-apple` (`apple/`) | Swift 6 | `Packages/{HLProtocol,HLCrypto,HLTransport,HLDesignSystem,HLCallAudio}` dùng chung; `macOS/HandLive` (menu bar, extension camera, driver micro); `iOS/HandLive` + `iOS/NotificationService` |
+| `handlive-android` (`android/`) | Kotlin, Gradle KTS | Hub: `app/`, `core/{protocol,crypto,transport,design,data,strings}`, `feature/{connection,pairing,clipboard}`; `feature/{sms,call,callaudio,camera}` thêm dần theo phase |
+| `handlive-apple` (`apple/`) | Swift 6 | `Packages/{HLProtocol,HLCrypto,HLTransport,HLAppCore,HLLocalization,HLDesignSystem,HLMacUI}` dùng chung; `macOS/HandLive` (thanh menu; extension camera và driver micro ở Phase 5); `iOS/HandLive` + `iOS/NotificationService` ở Phase 2 |
 | `handlive-relay` (`relay/`) | Rust | Cargo workspace: `crates/relay-server`, `crates/relay-push`, `migrations/` |
-| `handlive-shared` (`shared/`) | JSON, Python | `test-vectors/`, `schemas/`, `design-tokens/`, `tools/vectors/`, `tools/schemas/` — nguồn: `docs/detailed-design/00-common-specs.md` và design system; `tools/bench/` (đo trễ, Phase 1) |
+| `handlive-shared` (`shared/`) | JSON, Python | `test-vectors/`, `schemas/`, `strings/`, `design-tokens/`, `tools/{vectors,schemas,strings,bench}` — nguồn: `docs/detailed-design/00-common-specs.md` và design system |
 
 Mỗi kho thành phần có `CLAUDE.md` riêng nói rõ bố cục workspace và lệnh của kho đó. Chi tiết module
 và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md`.
 
 ## Điểm bắt đầu implement
 
-Phase 0 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`, rà soát
-`phase-00-review.md`) → cổng G0 (còn chờ CI chạy thật trên group GitHub) → Phase 1 (bảng nhớ tạm
-MVP). Xem `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.
+Phase 0 và mã Phase 1 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`,
+`phase-01-*.md`) → cổng G1: chạy ma trận thiết bị của `shared/tools/bench/README.md` trên điện thoại và Mac
+thật, rồi gộp `feat/phase-01-clipboard` vào `main` ở từng kho → Phase 2 (SMS, app iOS, relay, push). Xem
+`plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.
