@@ -22,17 +22,17 @@ phát hiện mã Swift sinh sẵn lệch với 4 token thêm sáng nay → sinh 
 
 Lịch sử: tách bằng `git subtree split` nên mỗi kho con giữ các commit Phase 0 chạm tới phần mình
 (hash mới). Lịch sử của `tools/vectors`, `tools/schemas` trước khi chuyển chỉ còn trong kho hub.
-Hash trong `phase-00-*.md` là của kho hub trước khi tách.
+Hash trong `phase-00-*.md` là của kho hub trước khi tách. Lịch sử cả năm kho được viết lại ngày 25/09/2026 (danh tính tác giả `Hồ Xuân Dũng <me@hxd.vn>`, bỏ trailer đồng tác giả) — bảng dưới ghi hash sau khi viết lại.
 
 ## Commit
 
 | Kho | Nhánh | Commit |
 |-----|-------|--------|
-| handlive (hub) | `feat/phase-00-khung` | af74c25 refactor(shared): move vector and schema tools next to the data they check · fea9a84 fix(apple): look for the Python venv under shared/tools · e07d2a4 refactor: extract android, apple, relay and shared into their own repositories · be50817 ci: keep only the documentation workflow in the hub · ddedecb feat(tools): add workspace script · 9359fd1 docs: describe the five-repository workspace and its CI layout · d3b0574 docs(plans): record the repository split in decision I1 and the report rules |
-| handlive-android | `main` (4 commit Phase 0 + 3) | 7d26473 build(android): ignore Gradle output and local config · c2d2709 ci: check out handlive-shared beside the repo · 82566ef docs: add README and CLAUDE.md |
-| handlive-apple | `main` (5 + 4) | d9a0481 build(apple): ignore generated project, build output and signing files · b221792 ci: check out the hub and handlive-shared around the repo · d985e07 docs: describe the standalone repo · 881aa26 feat(apple): regenerate design tokens for the switch-thumb, on-icon-fill and row-icon tokens |
-| handlive-relay | `main` (1 + 3) | b3be32b build(relay): ignore target and dotenv files · 8e95465 ci: check out handlive-shared beside the repo · c98ddb9 docs: describe the standalone repo |
-| handlive-shared | `main` (8 + 3) | 94baf5b build(shared): ignore the tools venv and Python caches · 8a5b716 ci: check out the hub docs beside the repo · da81918 docs: add README and CLAUDE.md |
+| handlive (hub) | `feat/phase-00-khung` | 5f03540 refactor(shared): move vector and schema tools next to the data they check · 91dd0a1 fix(apple): look for the Python venv under shared/tools · ecd5b32 refactor: extract android, apple, relay and shared into their own repositories · b318923 ci: keep only the documentation workflow in the hub · 7999b79 feat(tools): add workspace script · 4452139 docs: describe the five-repository workspace and its CI layout · 3616199 docs(plans): record the repository split in decision I1 and the report rules |
+| handlive-android | `main` (4 commit Phase 0 + 3) | f613216 build(android): ignore Gradle output and local config · 03000cb ci: check out handlive-shared beside the repo · 4e1014e docs: add README and CLAUDE.md |
+| handlive-apple | `main` (5 + 4) | 31217a6 build(apple): ignore generated project, build output and signing files · 7d11838 ci: check out the hub and handlive-shared around the repo · 08331f3 docs: describe the standalone repo · bcc7291 feat(apple): regenerate design tokens for the switch-thumb, on-icon-fill and row-icon tokens |
+| handlive-relay | `main` (1 + 3) | 01b08b5 build(relay): ignore target and dotenv files · 6060675 ci: check out handlive-shared beside the repo · 9ba4873 docs: describe the standalone repo |
+| handlive-shared | `main` (8 + 3) | d4d34e2 build(shared): ignore the tools venv and Python caches · e987fdc ci: check out the hub docs beside the repo · eb67776 docs: add README and CLAUDE.md |
 
 ## Kiểm chứng sau khi tách
 
