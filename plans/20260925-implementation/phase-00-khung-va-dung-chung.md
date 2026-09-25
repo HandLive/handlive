@@ -48,7 +48,7 @@ tools/docs/                   đã có; tools/bench/ (Phase 1)
 | M0.1 [apple] | XcodeGen `project.yml`, workspace, ba package `HLProtocol`, `HLCrypto`, `HLTransport`; SwiftLint; test qua S0.1, S0.2 | `apple/` | `xcodebuild test -scheme HLCrypto` xanh trên macOS; HChaCha20 khớp vector |
 | M0.2 [apple] | `HLDesignSystem`: script sinh Asset Catalog Color Sets (Any, Dark, High Contrast) và `Font` từ `tokens.json`; text style theo `03-kieu-chu.md`; thành phần cơ bản (`HLButtonStyle`, `StatusIndicator`, `GroupedList`) | `apple/Packages/HLDesignSystem` | Xem trước SwiftUI ở 4 giao diện; AccentColor = `accent` |
 | R0.1 [relay] | Cargo workspace, `relay-server` khởi động với PostgreSQL + Redis (docker-compose cho dev), migration lược đồ 0.9.4, xác thực `device_id` tự chứng thực (C4), JWT HS256 (0.6.4) | `relay/` | `cargo test` xanh; `docker compose up` chạy được; không đọc payload |
-| T0.1 [test] | CI: Android (`./gradlew test lint`), Apple (`xcodebuild test` trên runner macOS), relay (`cargo test`, `cargo clippy`); cache | `.github/workflows/*.yml` | Ba workflow xanh trên nhánh `feat/phase-00-khung` |
+| T0.1 [test] | CI: Android (`./gradlew check` = test, lint, ktlint, detekt), Apple (`xcodebuild test` từng package trên runner macOS, `swiftlint`, build app), relay (`cargo test`, `cargo clippy`, test tích hợp Postgres + Redis), shared (vector, schema, validator tài liệu); cache | `.github/workflows/*.yml` | Bốn workflow xanh trên nhánh `feat/phase-00-khung` |
 
 ## Kiểm thử
 

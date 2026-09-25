@@ -23,6 +23,7 @@ targets:
   HandLive:
     type: application
     platform: macOS
+    scheme: {}
     sources:
       - path: macOS/HandLive
     settings:
