@@ -1,17 +1,25 @@
 # Phase 1 — Bảng nhớ tạm Android ↔ Mac trong LAN (MVP)
 
-**Mục tiêu:** ghép nối bằng QR, tự tìm nhau trong Wi-Fi, gửi văn bản và ảnh của bảng nhớ tạm hai chiều với mã hóa đầu-cuối, tự xóa sau 60 giây. Sản phẩm dùng được cho một điện thoại và một Mac.
+**Mục tiêu:** ghép nối bằng QR, tự tìm nhau trong Wi-Fi, gửi văn bản và ảnh của bảng nhớ tạm hai
+chiều với mã hóa đầu-cuối, tự xóa sau 60 giây. Sản phẩm dùng được cho một điện thoại và một Mac.
 
 ## Ngữ cảnh
 
-- Chức năng lá: `01-setup-settings.md` SET-01, SET-02 (trường 1–6, 21–23, 31), SET-03 (Mac); `02-pairing.md` PAIR-01 (QR và PIN trong LAN), PAIR-02, PAIR-03 (luồng A); `03-connectivity.md` CONN-01, CONN-02; `04-clipboard.md` CLIP-01, CLIP-02, CLIP-03, CLIP-05 và quy tắc chung QC1–QC9.
-- Design system: `docs/design-system/3-platforms/03-android.md`, `01-macos.md`; `2-patterns/01-thiet-lap-ban-dau.md`, `02-xin-quyen.md`, `04-cai-dat.md`, `05-phan-hoi-va-tai.md`; thành phần `Onboarding`, `PermissionPrimer`, `ConsentSheet`, `PairingCard`, `DeviceRow`, `GroupedList`, `Toggle`, `MenuBarMenu`, `StatusIndicator`, `Feedback`, `Alert`.
+- Chức năng lá: `01-setup-settings.md` SET-01, SET-02 (trường 1–6, 21–23, 31), SET-03 (Mac);
+  `02-pairing.md` PAIR-01 (QR và PIN trong LAN), PAIR-02, PAIR-03 (luồng A); `03-connectivity.md`
+  CONN-01, CONN-02; `04-clipboard.md` CLIP-01, CLIP-02, CLIP-03, CLIP-05 và quy tắc chung QC1–QC9.
+- Design system: `docs/design-system/3-platforms/03-android.md`, `01-macos.md`;
+  `2-patterns/01-thiet-lap-ban-dau.md`, `02-xin-quyen.md`, `04-cai-dat.md`, `05-phan-hoi-va-tai.md`;
+  thành phần `Onboarding`, `PermissionPrimer`, `ConsentSheet`, `PairingCard`, `DeviceRow`,
+  `GroupedList`, `Toggle`, `MenuBarMenu`, `StatusIndicator`, `Feedback`, `Alert`.
 - Quyết định: D4/D12 (Accessibility), C6 (hint mDNS), C10 (quyền dán Mac), C15, C16, C17.
 
 ## Yêu cầu và tiêu chí đo
 
-- Văn bản < 50 ms từ lúc sao chép tới lúc dán được ở máy kia (LAN); ảnh 5 MB < 2 s; kết nối lại < 3 s sau khi Wi-Fi đổi.
-- Không đọc bảng nhớ tạm khi chưa có đồng ý (CLIP-01 trường 2, 3); nội dung nhạy cảm bị chặn (QC3); vòng lặp và xung đột theo QC4, QC8.
+- Văn bản < 50 ms từ lúc sao chép tới lúc dán được ở máy kia (LAN); ảnh 5 MB < 2 s; kết nối lại < 3
+  s sau khi Wi-Fi đổi.
+- Không đọc bảng nhớ tạm khi chưa có đồng ý (CLIP-01 trường 2, 3); nội dung nhạy cảm bị chặn (QC3);
+  vòng lặp và xung đột theo QC4, QC8.
 - Android 12+ hiện toast hệ thống khi đọc — chấp nhận, đã công bố.
 
 ## Thẻ việc
@@ -34,11 +42,14 @@
 ## Kiểm thử
 
 - Đơn vị: chunking 64 KiB, SHA-256, chống trùng `clip_id` 256 mục/10 phút, Luhn, so `origin_ts`.
-- Tích hợp: Android emulator (API 34) + app Mac trên cùng máy qua loopback không đủ (mDNS) → dùng máy thật; JVM test giả lập client Mac bằng Ktor client cho phần giao thức.
+- Tích hợp: Android emulator (API 34) + app Mac trên cùng máy qua loopback không đủ (mDNS) → dùng
+  máy thật; JVM test giả lập client Mac bằng Ktor client cho phần giao thức.
 - Chấp nhận cuối phase: cổng G1 trong `plan.md`.
 
 ## Rủi ro và quay lui
 
-- OEM chặn dịch vụ Hỗ trợ tiếp cận hoặc `ClipboardReadActivity` không lấy được focus → đường thủ công luôn có; ghi máy lỗi vào `docs/deployment-guide.md`.
+- OEM chặn dịch vụ Hỗ trợ tiếp cận hoặc `ClipboardReadActivity` không lấy được focus → đường thủ
+  công luôn có; ghi máy lỗi vào `docs/deployment-guide.md`.
 - macOS 15.4+ `accessBehavior` `.ask` → mục menu "Gửi bảng nhớ tạm sang điện thoại" vẫn gửi được.
-- Google Play từ chối Accessibility (C15 đã chấp nhận rủi ro) → phân phối APK trực tiếp cho bản có Accessibility.
+- Google Play từ chối Accessibility (C15 đã chấp nhận rủi ro) → phân phối APK trực tiếp cho bản có
+  Accessibility.

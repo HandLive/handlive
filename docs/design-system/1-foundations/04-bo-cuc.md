@@ -1,6 +1,8 @@
 # Bố cục
 
-Mục này quy định khoảng cách, lề, bố cục theo size class, góc bo, vùng chạm và quy tắc riêng của cửa sổ Mac. Trên Apple, lề và vùng an toàn lấy từ hệ thống; token là giá trị cho view tự dựng, preview và Android.
+Mục này quy định khoảng cách, lề, bố cục theo size class, góc bo, vùng chạm và quy tắc riêng của cửa
+sổ Mac. Trên Apple, lề và vùng an toàn lấy từ hệ thống; token là giá trị cho view tự dựng, preview
+và Android.
 
 Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/layout
 
@@ -25,14 +27,18 @@ Lưới 4 pt (dp trên Android).
 
 HIG bản 9/9/2026 không còn bảng lề. Trên Apple, lề đọc từ hệ thống, không cộng số cố định:
 
-- UIKit: `layoutMargins`, `directionalLayoutMargins`, `readableContentGuide` (giới hạn bề rộng đoạn văn trên iPad).
-- SwiftUI: `.padding()` mặc định, `.scenePadding()`; `List` và `Form` tự lề; `.safeAreaInset(edge:)` cho thanh tự dựng.
+- UIKit: `layoutMargins`, `directionalLayoutMargins`, `readableContentGuide` (giới hạn bề rộng đoạn
+  văn trên iPad).
+- SwiftUI: `.padding()` mặc định, `.scenePadding()`; `List` và `Form` tự lề; `.safeAreaInset(edge:)`
+  cho thanh tự dựng.
 - macOS: `Form` với `.formStyle(.grouped)` tự lề; view tự dựng cách mép cửa sổ `space-20`.
-- Android: `margin-compact` khi bề rộng dưới 600 dp, `margin-regular` từ 600 dp, cộng thêm `WindowInsets.safeDrawing`.
+- Android: `margin-compact` khi bề rộng dưới 600 dp, `margin-regular` từ 600 dp, cộng thêm
+  `WindowInsets.safeDrawing`.
 
 ## Size class
 
-Bố cục theo size class, không theo loại thiết bị hay hướng xoay. Đổi size class chỉ đổi lượng nội dung hiển thị, không bớt chức năng. Không đặt bề rộng cố định.
+Bố cục theo size class, không theo loại thiết bị hay hướng xoay. Đổi size class chỉ đổi lượng nội
+dung hiển thị, không bớt chức năng. Không đặt bề rộng cố định.
 
 | Nơi hiển thị | Chiều ngang | HandLive |
 |---|---|---|
@@ -43,14 +49,19 @@ Bố cục theo size class, không theo loại thiết bị hay hướng xoay. �
 | iPhone Duo, màn trong | Regular | Như iPad: Tin nhắn hai cột |
 | Android dưới 600 dp / từ 600 dp | `WindowSizeClass` Compact / Medium, Expanded | Như iPhone / như iPad |
 
-- iPhone Duo: component hệ thống tự tránh vùng camera và nếp gập (reserved regions); chỉ view tự dựng mới cần `ReservedRegion` (iOS 27.1). Mỗi mục toolbar có cả chữ và symbol. Xem trước bằng Device Hub trong Xcode.
+- iPhone Duo: component hệ thống tự tránh vùng camera và nếp gập (reserved regions); chỉ view tự
+  dựng mới cần `ReservedRegion` (iOS 27.1). Mỗi mục toolbar có cả chữ và symbol. Xem trước bằng
+  Device Hub trong Xcode.
 - Ở cỡ chữ trợ năng, bố cục ngang chuyển sang xếp dọc và giảm số cột.
 
 ## Góc bo đồng tâm
 
-Góc bên trong đồng tâm với góc bên ngoài: bán kính trong = bán kính ngoài − khoảng đệm. Ví dụ thẻ trong sheet: `radius-sheet` 26 − `space-12` = 14 = `radius-card`.
+Góc bên trong đồng tâm với góc bên ngoài: bán kính trong = bán kính ngoài − khoảng đệm. Ví dụ thẻ
+trong sheet: `radius-sheet` 26 − `space-12` = 14 = `radius-card`.
 
-- macOS 26, iOS 26 trở lên: control, sheet, popover, cửa sổ lấy góc đồng tâm của hệ thống. View tự dựng dùng `ConcentricRectangle`, `.containerShape(_:)`, `rect(corners:isUniform:)` (SwiftUI) hoặc `cornerConfiguration` (UIKit), không đặt bán kính bằng số.
+- macOS 26, iOS 26 trở lên: control, sheet, popover, cửa sổ lấy góc đồng tâm của hệ thống. View tự
+  dựng dùng `ConcentricRectangle`, `.containerShape(_:)`, `rect(corners:isUniform:)` (SwiftUI) hoặc
+  `cornerConfiguration` (UIKit), không đặt bán kính bằng số.
 - macOS 13–15, iOS 16–18 và Android dùng token:
 
 | Token | Giá trị | Dùng cho |
@@ -70,16 +81,24 @@ Góc bên trong đồng tâm với góc bên ngoài: bán kính trong = bán kí
 | macOS | 28×28 pt | 20×20 pt | `size-hit-mac`, `size-hit-mac-min` |
 | Android | 48×48 dp | 48×48 dp | `size-hit-android` |
 
-- Biểu tượng nhỏ hơn vùng chạm thì nới vùng chạm, không phóng biểu tượng: SwiftUI `.frame(minWidth:minHeight:)` với `.contentShape(Rectangle())`; Compose `Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)`.
-- Đệm quanh control, đo từ mép nhìn thấy: ~12 pt với control có viền (`space-12`), ~24 pt với control không viền (`space-24`).
+- Biểu tượng nhỏ hơn vùng chạm thì nới vùng chạm, không phóng biểu tượng: SwiftUI
+  `.frame(minWidth:minHeight:)` với `.contentShape(Rectangle())`; Compose
+  `Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)`.
+- Đệm quanh control, đo từ mép nhìn thấy: ~12 pt với control có viền (`space-12`), ~24 pt với
+  control không viền (`space-24`).
 - Nút tròn cuộc gọi `size-call-button` 48, cách nhau `space-24`.
 
 ## Cửa sổ macOS
 
-- Không đặt control hay thông tin quan trọng ở đáy cửa sổ: người dùng hay kéo cửa sổ lệch khỏi mép dưới màn hình. Thanh dưới chỉ chứa thông tin phụ; nút soạn tin đặt trên toolbar, không ở đáy sidebar.
-- Không tự vẽ khung cửa sổ, thanh tiêu đề hay nút điều khiển cửa sổ; không đặt nội dung dưới vùng camera (notch).
-- Tiêu đề cửa sổ dưới 15 ký tự, không lấy tên app làm tiêu đề. Cửa sổ Settings đổi tiêu đề và kích thước theo pane.
-- Thanh menu cao 24 pt (`size-menu-bar`). Biểu tượng HandLive có thể bị notch hoặc thanh menu chật che mất, nên luôn có đường vào khác: mở lại app thì hiện cửa sổ chính.
+- Không đặt control hay thông tin quan trọng ở đáy cửa sổ: người dùng hay kéo cửa sổ lệch khỏi mép
+  dưới màn hình. Thanh dưới chỉ chứa thông tin phụ; nút soạn tin đặt trên toolbar, không ở đáy
+  sidebar.
+- Không tự vẽ khung cửa sổ, thanh tiêu đề hay nút điều khiển cửa sổ; không đặt nội dung dưới vùng
+  camera (notch).
+- Tiêu đề cửa sổ dưới 15 ký tự, không lấy tên app làm tiêu đề. Cửa sổ Settings đổi tiêu đề và kích
+  thước theo pane.
+- Thanh menu cao 24 pt (`size-menu-bar`). Biểu tượng HandLive có thể bị notch hoặc thanh menu chật
+  che mất, nên luôn có đường vào khác: mở lại app thì hiện cửa sổ chính.
 - Split view: đường chia mỏng 1 pt.
 
 ## Bề rộng HandLive dùng
@@ -98,8 +117,11 @@ Không phải số của HIG; là giá trị HandLive chọn để các nền t�
 
 ## Vùng an toàn
 
-- iOS và iPadOS: nền kéo dài dưới thanh tab và toolbar kính; nội dung để đọc và chạm nằm trong safe area. `ignoresSafeArea` chỉ dùng cho nền.
-- Android: edge-to-edge (`enableEdgeToEdge()`), đệm theo `WindowInsets.safeDrawing`; không đặt control trong vùng cử chỉ quay lại ở hai mép (`WindowInsets.systemGestures`). Thanh trạng thái và thanh điều hướng do Android quản lý.
+- iOS và iPadOS: nền kéo dài dưới thanh tab và toolbar kính; nội dung để đọc và chạm nằm trong safe
+  area. `ignoresSafeArea` chỉ dùng cho nền.
+- Android: edge-to-edge (`enableEdgeToEdge()`), đệm theo `WindowInsets.safeDrawing`; không đặt
+  control trong vùng cử chỉ quay lại ở hai mép (`WindowInsets.systemGestures`). Thanh trạng thái và
+  thanh điều hướng do Android quản lý.
 
 ## Nên và không nên
 

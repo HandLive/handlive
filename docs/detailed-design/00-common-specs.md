@@ -1,8 +1,12 @@
 # 0. Đặc tả dùng chung
 
-> Phần này **không phải nhóm chức năng**. Mọi chức năng lá tham chiếu tới đây cho thành phần, định danh, kiểu dữ liệu, khung tin, bảo mật, mã lỗi, mô hình dữ liệu và hằng số. Chức năng lá không định nghĩa lại các mục này; nếu cần loại tin, mã lỗi hay cột dữ liệu mới thì bổ sung vào đây trước.
+> Phần này **không phải nhóm chức năng**. Mọi chức năng lá tham chiếu tới đây cho thành phần, định
+> danh, kiểu dữ liệu, khung tin, bảo mật, mã lỗi, mô hình dữ liệu và hằng số. Chức năng lá không
+> định nghĩa lại các mục này; nếu cần loại tin, mã lỗi hay cột dữ liệu mới thì bổ sung vào đây
+> trước.
 >
-> Wire format bám đúng quy ước ổn định trong `docs/code-standards.md`: envelope JSON `{v, type, id, ts, payload}` và khung audio nhị phân `[0x48 0x4C][ver][seq][ts][encrypted]`.
+> Wire format bám đúng quy ước ổn định trong `docs/code-standards.md`: envelope JSON
+> `{v, type, id, ts, payload}` và khung audio nhị phân `[0x48 0x4C][ver][seq][ts][encrypted]`.
 
 ## 0.1 Thành phần hệ thống
 
@@ -30,7 +34,8 @@ Cột "Thành phần" trong bảng bước của mọi chức năng dùng các m
 | OS | Dịch vụ hệ điều hành (Telecom, SmsManager, ClipboardManager, CoreAudio, CoreMediaIO…) | — | — |
 | PUSH | FCM (Android), APNs (iOS) | — | Đánh thức, đẩy thông báo |
 
-Trong kết nối thiết bị–thiết bị: **máy chủ (S)** luôn là Android (A-SVC); **máy khách (C)** là Mac hoặc iPhone/iPad.
+Trong kết nối thiết bị–thiết bị: **máy chủ (S)** luôn là Android (A-SVC); **máy khách (C)** là Mac
+hoặc iPhone/iPad.
 
 ## 0.2 Định danh
 
@@ -60,17 +65,17 @@ Trong kết nối thiết bị–thiết bị: **máy chủ (S)** luôn là Andr
 | Kiểu | Mô tả | Ví dụ |
 |------|-------|-------|
 | `string` | Chuỗi UTF-8 | `"Xin chào"` |
-| `string(n)` | Tối đa n ký tự (code point) | |
-| `int32`, `int64` | Số nguyên có dấu | |
-| `bool` | | `true` |
-| `enum{a\|b}` | Một trong các giá trị liệt kê | `enum{front\|back}` |
+| `string(n)` | Tối đa n ký tự (code point) |  |
+| `int32`, `int64` | Số nguyên có dấu |  |
+| `bool` |  | `true` |
+| `enum{a\ | b}` | Một trong các giá trị liệt kê | `enum{front\ | back}` |
 | `uuid` | 36 ký tự thường, có gạch | `0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10` |
 | `timestamp` | int64 mili-giây Unix epoch UTC | `1727150000123` |
-| `b64` | Base64 chuẩn (RFC 4648 §4, có padding) | |
-| `b64u` | Base64url không padding (RFC 4648 §5) | |
+| `b64` | Base64 chuẩn (RFC 4648 §4, có padding) |  |
+| `b64u` | Base64url không padding (RFC 4648 §5) |  |
 | `e164` | Số điện thoại chuẩn E.164; nếu không chuẩn hóa được thì giữ chuỗi gốc | `+84900000123` |
-| `bytes` | Chuỗi byte thô (chỉ trong khung nhị phân) | |
-| `object`, `array<T>` | JSON | |
+| `bytes` | Chuỗi byte thô (chỉ trong khung nhị phân) |  |
+| `object`, `array<T>` | JSON |  |
 
 Quy ước cột **Input/Output** ở mục 3 của mỗi chức năng lá:
 
@@ -86,9 +91,12 @@ Trường nội bộ giữa các thành phần (không hiển thị) chỉ mô t
 
 ### 0.4.1 LAN: mDNS + WSS
 
-- A-SVC lắng nghe TCP **47800** trên mọi interface; nếu cổng bận thử lần lượt 47801–47809 và quảng bá cổng thực qua bản ghi SRV.
-- **TLS 1.3** bắt buộc. Chứng chỉ tự ký ECDSA P-256, sinh lúc cài, hạn 20 năm. Client **ghim** SHA-256 của chứng chỉ (DER) nhận được lúc ghép nối; không kiểm hostname.
-- **mDNS**: kiểu dịch vụ `_handlive._tcp.local.`; tên instance ngẫu nhiên `HL-<6 hex>`, đổi mỗi lần dịch vụ khởi động (không lộ tên máy). Bản ghi TXT:
+- A-SVC lắng nghe TCP **47800** trên mọi interface; nếu cổng bận thử lần lượt 47801–47809 và quảng
+  bá cổng thực qua bản ghi SRV.
+- **TLS 1.3** bắt buộc. Chứng chỉ tự ký ECDSA P-256, sinh lúc cài, hạn 20 năm. Client **ghim**
+  SHA-256 của chứng chỉ (DER) nhận được lúc ghép nối; không kiểm hostname.
+- **mDNS**: kiểu dịch vụ `_handlive._tcp.local.`; tên instance ngẫu nhiên `HL-<6 hex>`, đổi mỗi lần
+  dịch vụ khởi động (không lộ tên máy). Bản ghi TXT:
 
 | Khóa | Giá trị | Khi nào có |
 |------|---------|-----------|
@@ -97,7 +105,8 @@ Trường nội bộ giữa các thành phần (không hiển thị) chỉ mô t
 | `pr` | 8 ký tự hex đầu của SHA-256(`pk` trong QR) | Chỉ trong 120 giây của chế độ ghép nối QR |
 | `pm` | `1` | Chỉ trong 120 giây của chế độ ghép nối PIN |
 
-Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đồng hồ quanh mốc giờ). Hint đổi mỗi giờ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
+Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đồng hồ quanh mốc giờ). Hint đổi mỗi giờ
+nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
 
 - **Endpoint WSS** trên A-SVC:
 
@@ -108,30 +117,43 @@ Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đ
 | `/v1/stream/call-audio` | Âm thanh cuộc gọi Opus/WS — đường dự phòng (AUDIO-04) | Khóa dẫn xuất từ phiên ctl | P4 |
 | `/v1/stream/camera` | Luồng camera/micro (kênh riêng) | Khóa dẫn xuất từ phiên ctl | P5 |
 
-- Mỗi cặp chỉ có **một** kết nối `/v1/ctl` tại một thời điểm. Kết nối mới xác thực thành công thay thế kết nối cũ (đóng mã 4409).
+- Mỗi cặp chỉ có **một** kết nối `/v1/ctl` tại một thời điểm. Kết nối mới xác thực thành công thay
+  thế kết nối cũ (đóng mã 4409).
 
 ### 0.4.2 USB (P5, tùy chọn)
 
-- M-APP nói chuyện trực tiếp với adb server qua giao thức host trên `127.0.0.1:5037` (`host:version`, `host:devices-l`, `host:track-devices`, `forward`, `killforward`), không gọi lệnh `adb` khi server đã chạy — client adb khác phiên bản sẽ tắt server của Android Studio hoặc scrcpy. Chỉ khi chưa có server mới chạy `adb start-server` bằng bản đi kèm ứng dụng (build từ mã nguồn AOSP, Apache-2.0). Chi tiết: CAM-04.
-- Yêu cầu chuyển tiếp tương đương `adb -s <serial> forward tcp:0 tcp:<cổng A-SVC>` trả về cổng cục bộ; kết nối `wss://127.0.0.1:<cổng cục bộ>/v1/...` với **cùng chứng chỉ ghim**.
+- M-APP nói chuyện trực tiếp với adb server qua giao thức host trên `127.0.0.1:5037`
+  (`host:version`, `host:devices-l`, `host:track-devices`, `forward`, `killforward`), không gọi lệnh
+  `adb` khi server đã chạy — client adb khác phiên bản sẽ tắt server của Android Studio hoặc scrcpy.
+  Chỉ khi chưa có server mới chạy `adb start-server` bằng bản đi kèm ứng dụng (build từ mã nguồn
+  AOSP, Apache-2.0). Chi tiết: CAM-04.
+- Yêu cầu chuyển tiếp tương đương `adb -s <serial> forward tcp:0 tcp:<cổng A-SVC>` trả về cổng cục
+  bộ; kết nối `wss://127.0.0.1:<cổng cục bộ>/v1/...` với **cùng chứng chỉ ghim**.
 - Dùng cho `/v1/stream/camera`; `/v1/ctl` chỉ đi qua USB khi LAN không kết nối được.
 
 ### 0.4.3 Relay (P2)
 
-- REST: `https://{RELAY_HOST}/v1/...`, JSON UTF-8. Lỗi: HTTP status + `{"error":{"code":"<MÃ>","message":"<mô tả>"}}`.
+- REST: `https://{RELAY_HOST}/v1/...`, JSON UTF-8. Lỗi: HTTP status +
+  `{"error":{"code":"<MÃ>","message":"<mô tả>"}}`.
 - WSS: `wss://{RELAY_HOST}/v1/relay`, header `Authorization: Bearer <jwt>`.
-- TLS 1.3 với chứng chỉ Let's Encrypt. Client ghim SPKI của ISRG Root X1 và ISRG Root X2, cộng một khóa dự phòng do dự án giữ.
+- TLS 1.3 với chứng chỉ Let's Encrypt. Client ghim SPKI của ISRG Root X1 và ISRG Root X2, cộng một
+  khóa dự phòng do dự án giữ.
 - `{RELAY_HOST}` cấu hình lúc build. Ví dụ trong tài liệu dùng `relay.example.com`.
 - Relay không có khóa E2E: chỉ thấy lớp bọc định tuyến, `type` của envelope và kích thước.
 - Lớp bọc định tuyến (relay ↔ thiết bị):
-  - WS text frame: `{"to":"<device_id>","env":{<envelope>}}` (thiết bị → relay); relay chuyển thành `{"from":"<device_id>","env":{<envelope>}}`.
-  - WS binary frame: `[0x48 0x52]` ("HR") ‖ `ver`(1) ‖ `op`(1, `0x01` = chuyển tiếp) ‖ `device_id` đích/nguồn (16 byte) ‖ khung nhị phân HL nguyên vẹn.
+  - WS text frame: `{"to":"<device_id>","env":{<envelope>}}` (thiết bị → relay); relay chuyển thành
+    `{"from":"<device_id>","env":{<envelope>}}`.
+  - WS binary frame: `[0x48 0x52]` ("HR") ‖ `ver` (1) ‖ `op` (1, `0x01` = chuyển tiếp) ‖ `device_id`
+    đích/nguồn (16 byte) ‖ khung nhị phân HL nguyên vẹn.
   - Tin điều khiển của relay: WS text frame `{"op":"<tên>", ...}` (0.7.3).
 
 ### 0.4.4 Push (P2)
 
-- **Android (FCM):** data message ưu tiên cao, TTL 60 s, **không chứa nội dung**: `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
-- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. Tổng payload ≤ 4 KB.
+- **Android (FCM):** data message ưu tiên cao, TTL 60 s, **không chứa nội dung**:
+  `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
+- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc
+  định chung chung; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội
+  dung. Tổng payload ≤ 4 KB.
 - Mac không đăng ký push; khi thức dậy, M-APP kết nối lại và đồng bộ theo con trỏ.
 
 ## 0.5 Khung tin
@@ -148,11 +170,16 @@ Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đ
 | `type` | enum | Có | Nhóm tin (0.7.1) |
 | `id` | uuid | Có | UUIDv7 duy nhất |
 | `ts` | timestamp | Có | Thời điểm tạo ở bên gửi |
-| `payload` | b64 | Có | `nonce(24) ‖ ciphertext ‖ tag(16)` của XChaCha20-Poly1305. AAD = UTF-8 của `"<v>|<type>|<id>|<ts>"` ở dạng chuẩn tắc: `v` và `ts` là số thập phân không số 0 đầu, `id` 36 ký tự chữ thường; bên nhận dựng lại AAD từ giá trị đã parse (khớp `shared/test-vectors/`) |
+| `payload` | b64 | Có | `nonce(24) ‖ ciphertext ‖ tag(16)` của XChaCha20-Poly1305. AAD = UTF-8 của `"<v> | <type> | <id> | <ts>"` ở dạng chuẩn tắc: `v` và `ts` là số thập phân không số 0 đầu, `id` 36 ký tự chữ thường; bên nhận dựng lại AAD từ giá trị đã parse (khớp `shared/test-vectors/`) |
 
 Hai ngoại lệ:
-- Tin bắt tay (`pair` op `hello`/`offer`/`confirm`/`done`/`error`; `session` op `hello`/`welcome`/`error`; `camera` và `call_audio` op `stream_hello`/`stream_welcome`) có `payload` = b64 của JSON **chưa mã hóa** (khóa chưa tồn tại); toàn vẹn được bảo vệ bằng trường `mac` bên trong.
-- `clipboard` op `chunk` có plaintext **nhị phân** để tránh base64 hai lần: `hdr_len` (uint16 BE) ‖ JSON `{"op":"chunk","data":{"transfer_id":"<uuid>","index":<int32>}}` ‖ bytes của khối (≤ `CHUNK_SIZE`).
+- Tin bắt tay (`pair` op `hello` /`offer`/`confirm`/`done`/`error`; `session` op `hello`
+  /`welcome`/`error`; `camera` và `call_audio` op `stream_hello` /`stream_welcome`) có `payload` =
+  b64 của JSON **chưa mã hóa** (khóa chưa tồn tại); toàn vẹn được bảo vệ bằng trường `mac` bên
+  trong.
+- `clipboard` op `chunk` có plaintext **nhị phân** để tránh base64 hai lần: `hdr_len` (uint16 BE) ‖
+  JSON `{"op":"chunk","data":{"transfer_id":"<uuid>","index":<int32>}}` ‖ bytes của khối (≤
+  `CHUNK_SIZE`).
 
 **Plaintext của payload:**
 
@@ -174,12 +201,20 @@ Hai ngoại lệ:
 
 Quy tắc chung:
 
-1. Thao tác đánh dấu "có ack" ở 0.7.1 phải được trả `ack` trong **10 s** (`REQUEST_TIMEOUT`); quá hạn bên gọi coi là lỗi `TIMEOUT`.
-2. Bên nhận lưu `id` đã xử lý trong 5 phút gần nhất (LRU 1 000 mục); gặp `id` trùng thì gửi lại `ack` cũ, không xử lý lại.
-3. `type` hoặc `op` không biết: nếu là yêu cầu → `ack` lỗi `UNSUPPORTED_TYPE`; nếu là sự kiện → bỏ qua.
+1. Thao tác đánh dấu "có ack" ở 0.7.1 phải được trả `ack` trong **10 s** (`REQUEST_TIMEOUT`); quá
+   hạn bên gọi coi là lỗi `TIMEOUT`.
+2. Bên nhận lưu `id` đã xử lý trong 5 phút gần nhất (LRU 1 000 mục); gặp `id` trùng thì gửi lại
+   `ack` cũ, không xử lý lại.
+3. `type` hoặc `op` không biết: nếu là yêu cầu → `ack` lỗi `UNSUPPORTED_TYPE`; nếu là sự kiện → bỏ
+   qua.
 4. Envelope ≤ 256 KiB. Dữ liệu lớn hơn đi theo chunk (`clipboard` op `chunk`).
-5. Không ghi log `payload` hay nội dung đã giải mã ở bất kỳ thành phần nào; log chỉ gồm `type`, `op`, kích thước, mã lỗi.
-6. **Tương thích tiến** trong cùng major `protocol`: bên nhận bỏ qua trường lạ ở mọi cấp; giá trị enum lạ không làm hỏng tin — mã lỗi lạ xử lý như `INTERNAL` (giữ `message`, ghi log mã lạ), phần tử lạ trong danh sách (vd. `codecs`, `cameras`) bị bỏ qua, trường enum đơn lạ coi là "không biết" (tính năng phụ thuộc coi như không hỗ trợ). Bên gửi chỉ phát giá trị có trong tài liệu này; `shared/schemas/` kiểm phía gửi (chặt), không phải phía nhận.
+5. Không ghi log `payload` hay nội dung đã giải mã ở bất kỳ thành phần nào; log chỉ gồm `type`,
+   `op`, kích thước, mã lỗi.
+6. **Tương thích tiến** trong cùng major `protocol`: bên nhận bỏ qua trường lạ ở mọi cấp; giá trị
+   enum lạ không làm hỏng tin — mã lỗi lạ xử lý như `INTERNAL` (giữ `message`, ghi log mã lạ), phần
+   tử lạ trong danh sách (vd. `codecs`, `cameras`) bị bỏ qua, trường enum đơn lạ coi là "không biết"
+   (tính năng phụ thuộc coi như không hỗ trợ). Bên gửi chỉ phát giá trị có trong tài liệu này;
+   `shared/schemas/` kiểm phía gửi (chặt), không phải phía nhận.
 
 ### 0.5.2 Khung nhị phân HL (WS binary frame, chỉ trên kênh `/v1/stream/*`)
 
@@ -195,7 +230,8 @@ Theo đúng định dạng audio đã chốt:
 
 Plaintext theo kênh:
 - `/v1/stream/call-audio`: một gói Opus.
-- `/v1/stream/camera`: `track`(1: `0x01` video H.264, `0x02` audio Opus) ‖ `flags`(1: bit0 keyframe, bit1 codec config SPS/PPS, bit2 discontinuity) ‖ `pts_us`(int64 BE) ‖ dữ liệu.
+- `/v1/stream/camera`: `track` (1: `0x01` video H.264, `0x02` audio Opus) ‖ `flags` (1: bit0
+  keyframe, bit1 codec config SPS/PPS, bit2 discontinuity) ‖ `pts_us` (int64 BE) ‖ dữ liệu.
 
 Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống phát lại).
 
@@ -213,47 +249,93 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 | `K_push` | HKDF(`PRK`, info = `"handlive/v1/push"`) | Tính khi cần | Theo cặp |
 | `k_c2s`, `k_s2c` | 32 byte | Bộ nhớ | Theo kết nối; rekey sau 24 h hoặc 10 000 envelope mỗi chiều |
 
-- Keychain: `kSecClassGenericPassword`, service `app.handlive.keys`, `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (theo `docs/code-standards.md`). macOS dùng data-protection keychain (`kSecUseDataProtectionKeychain = true`) để thuộc tính này có hiệu lực như iOS; app phải ký với entitlement `keychain-access-groups` (`docs/deployment-guide.md`); tiến trình test không ký dùng kho khóa trong bộ nhớ. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem CONN-04).
+- Keychain: `kSecClassGenericPassword`, service `app.handlive.keys`,
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (theo `docs/code-standards.md`). macOS dùng
+  data-protection keychain (`kSecUseDataProtectionKeychain = true`) để thuộc tính này có hiệu lực
+  như iOS; app phải ký với entitlement `keychain-access-groups` (`docs/deployment-guide.md`); tiến
+  trình test không ký dùng kho khóa trong bộ nhớ. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động
+  lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình
+  khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem
+  CONN-04).
 - Thư viện:
   - Android: Tink 1.14+ (`Ed25519Sign/Verify`, `X25519`, `Hkdf`, `subtle.XChaCha20Poly1305`).
-  - Apple: CryptoKit (`Curve25519`, `HKDF`, `HMAC`, `SHA256`, `ChaChaPoly`). CryptoKit không có XChaCha20, nên XChaCha20-Poly1305 = HChaCha20 (tự cài theo draft-irtf-cfrg-xchacha-03 §2.2, kiểm bằng test vector §2.2.1) + `ChaChaPoly` với nonce 12 byte = `0x00000000` ‖ 8 byte cuối của nonce 24 byte.
+  - Apple: CryptoKit (`Curve25519`, `HKDF`, `HMAC`, `SHA256`, `ChaChaPoly`). CryptoKit không có
+    XChaCha20, nên XChaCha20-Poly1305 = HChaCha20 (tự cài theo draft-irtf-cfrg-xchacha-03 §2.2, kiểm
+    bằng test vector §2.2.1) + `ChaChaPoly` với nonce 12 byte = `0x00000000` ‖ 8 byte cuối của nonce
+    24 byte.
   - Relay: `ed25519-dalek`, `jsonwebtoken`, `ring`.
-- Bộ test vector liên nền tảng (Kotlin ↔ Swift ↔ Rust) cho: `device_id`, `PRK`, bắt tay phiên, mã hóa envelope, khung HL. Chạy trong CI của cả ba phía.
+- Bộ test vector liên nền tảng (Kotlin ↔ Swift ↔ Rust) cho: `device_id`, `PRK`, bắt tay phiên, mã
+  hóa envelope, khung HL. Chạy trong CI của cả ba phía.
 
 ### 0.6.2 Ghép nối
 
-- `PRK` = HKDF-SHA256(ikm = X25519(`ik_dh` mình, `ik_dh` đối phương) ‖ `pairing_secret`, salt = SHA-256(`device_id` nhỏ hơn ‖ `device_id` lớn hơn, dạng 16 byte), info = `"handlive/v1/pair"`, L = 32).
-- Với PIN (dự phòng): thay `pairing_secret` bằng `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖ `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32).
-- Bản chứng thực ghép nối (`attestation`): `"HLPAIR1"` ‖ `pair_id`(16) ‖ `device_id` Android(16) ‖ `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at`(int64 BE). Cả hai bên ký Ed25519; relay kiểm hai chữ ký trước khi cho phép định tuyến.
+- `PRK` = HKDF-SHA256(ikm = X25519(`ik_dh` mình, `ik_dh` đối phương) ‖ `pairing_secret`, salt =
+  SHA-256(`device_id` nhỏ hơn ‖ `device_id` lớn hơn, dạng 16 byte), info = `"handlive/v1/pair"`, L =
+  32).
+- Với PIN (dự phòng): thay `pairing_secret` bằng `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖
+  `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32).
+- Bản chứng thực ghép nối (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
+  `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
+  BE). Cả hai bên ký Ed25519; relay kiểm hai chữ ký trước khi cho phép định tuyến.
 - Luồng chi tiết: PAIR-01.
 
 ### 0.6.3 Bắt tay phiên trên `/v1/ctl`
 
 C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1).
 
-1. C → S, `type` = `session`, op `hello`, data `{protocol, pair_id, device_id, eph, nonce, mac}` (`protocol` = 1; khác major → đóng 4426, xem CONN-01; `protocol` không nằm trong `T1`):
+1. C → S, `type` = `session`, op `hello`, data `{protocol, pair_id, device_id, eph, nonce, mac}`
+   (`protocol` = 1; khác major → đóng 4426, xem CONN-01; `protocol` không nằm trong `T1`):
    - `eph` = b64u khóa công khai X25519 tạm; `nonce` = b64u 32 byte ngẫu nhiên.
-   - `K_auth` = HKDF(`PRK`, info = `"handlive/v1/session-auth"`); `T1` = `"HL1|hello|"` ‖ `pair_id` ‖ `device_id`C ‖ `eph`C ‖ `nonce`C; `mac` = b64u HMAC-SHA256(`K_auth`, `T1`).
-2. S kiểm: cặp tồn tại, chưa thu hồi, `device_id` đúng đối phương, `mac` đúng (so sánh hằng thời gian). Sai → op `error` rồi đóng 4401 hoặc 4403.
-   S → C, op `welcome`, data `{device_id, eph, nonce, mac}` với `T2` = `"HL1|welcome|"` ‖ `T1` ‖ `device_id`S ‖ `eph`S ‖ `nonce`S; `mac` = HMAC(`K_auth`, `T2`).
-3. C kiểm `mac`. Hai bên tính `secret` = HKDF-SHA256(ikm = X25519(eph) ‖ `PRK`, salt = SHA-256(`T2`), info = `"handlive/v1/session"`, L = 64); `k_c2s` = 32 byte đầu, `k_s2c` = 32 byte sau.
-4. Mọi envelope sau đó mã hóa bằng khóa theo chiều gửi. Envelope đầu tiên mỗi chiều là `capability` op `hello`.
+   - `K_auth` = HKDF(`PRK`, info = `"handlive/v1/session-auth"`); `T1` = `"HL1|hello|"` ‖ `pair_id`
+     ‖ `device_id` C ‖ `eph` C ‖ `nonce` C; `mac` = b64u HMAC-SHA256(`K_auth`, `T1`).
+2. S kiểm: cặp tồn tại, chưa thu hồi, `device_id` đúng đối phương, `mac` đúng (so sánh hằng thời
+   gian). Sai → op `error` rồi đóng 4401 hoặc 4403.
+   S → C, op `welcome`, data `{device_id, eph, nonce, mac}` với `T2` = `"HL1|welcome|"` ‖ `T1` ‖
+   `device_id` S ‖ `eph` S ‖ `nonce` S; `mac` = HMAC(`K_auth`, `T2`).
+3. C kiểm `mac`. Hai bên tính `secret` = HKDF-SHA256(ikm = X25519(eph) ‖ `PRK`, salt =
+   SHA-256(`T2`), info = `"handlive/v1/session"`, L = 64); `k_c2s` = 32 byte đầu, `k_s2c` = 32 byte
+   sau.
+4. Mọi envelope sau đó mã hóa bằng khóa theo chiều gửi. Envelope đầu tiên mỗi chiều là `capability`
+   op `hello`.
 5. Bắt tay quá 5 s (`HANDSHAKE_TIMEOUT`) → đóng 4408.
-6. **Rekey**: sau 24 h hoặc 10 000 envelope một chiều, bên phát hiện trước gửi `session` op `rekey` `{epoch, eph, nonce}` (`epoch` = thế hệ khóa hiện tại + 1; có ack chứa `{epoch, eph, nonce}` của bên kia, xem CONN-02); khóa mới = HKDF(ikm = X25519(eph mới) ‖ `secret` cũ, salt = SHA-256(hai nonce), info = `"handlive/v1/rekey"`, L = 64). Bên nhận `ack` chuyển khóa ngay; bên gửi `ack` chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
-7. **Khóa kênh stream** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info = `"handlive/v1/stream/" ‖ <kênh> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth`(32) ‖ `k_c2s`(32) ‖ `k_s2c`(32). Tin đầu tiên trên kênh stream là envelope `camera`/`call_audio` op `stream_hello` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖ `session_id` ‖ `nonce_c`); S trả `stream_welcome` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — gắn cả hai nonce nên không phát lại được. Sai `mac` → đóng 4401.
+6. **Rekey**: sau 24 h hoặc 10 000 envelope một chiều, bên phát hiện trước gửi `session` op `rekey`
+   `{epoch, eph, nonce}` (`epoch` = thế hệ khóa hiện tại + 1; có ack chứa `{epoch, eph, nonce}` của
+   bên kia, xem CONN-02); khóa mới = HKDF(ikm = X25519(eph mới) ‖ `secret` cũ, salt = SHA-256(hai
+   nonce), info = `"handlive/v1/rekey"`, L = 64). Bên nhận `ack` chuyển khóa ngay; bên gửi `ack`
+   chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
+7. **Khóa kênh stream** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info =
+   `"handlive/v1/stream/" ‖ <kênh> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth` (32) ‖ `k_c2s` (32) ‖
+   `k_s2c` (32). Tin đầu tiên trên kênh stream là envelope `camera` /`call_audio` op `stream_hello`
+   `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖ `session_id` ‖
+   `nonce_c`); S trả `stream_welcome` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`,
+   `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — gắn cả hai nonce nên không phát
+   lại được. Sai `mac` → đóng 4401.
 8. **Mã hóa byte (chuẩn tắc, khớp `shared/test-vectors/`)**:
-   - `T1`, `T2`, chuỗi MAC `HLSTREAM1` ghép **byte thô** như `T_offer` (PAIR-01): nhãn ASCII ‖ uuid 16 byte ‖ `eph` 32 byte ‖ `nonce` 32 byte (giá trị đã giải b64u). `T1` = 106 byte, `T2` = 198 byte. `protocol` không vào `T1`; phiên bản được xác thực lại trong `capability` op `hello` (đã mã hóa).
+   - `T1`, `T2`, chuỗi MAC `HLSTREAM1` ghép **byte thô** như `T_offer` (PAIR-01): nhãn ASCII ‖ uuid
+     16 byte ‖ `eph` 32 byte ‖ `nonce` 32 byte (giá trị đã giải b64u). `T1` = 106 byte, `T2` = 198
+     byte. `protocol` không vào `T1`; phiên bản được xác thực lại trong `capability` op `hello` (đã
+     mã hóa).
    - HKDF không ghi salt thì salt rỗng; không ghi L thì L = 32 (vd. `K_auth`).
    - Salt của `PRK`: hai `device_id` so theo 16 byte, thứ tự byte không dấu.
-   - `info` của `K_stream`: UTF-8 `"handlive/v1/stream/<kênh>/<session_id 36 ký tự chữ thường>"`, `<kênh>` ∈ {`camera`, `call-audio`}. `K_stream` luôn dẫn từ `secret` của bắt tay đầu (epoch 0) trong suốt kết nối, kể cả sau rekey.
-   - Rekey: shared = X25519(eph bên khởi tạo, eph bên nhận); salt = SHA-256(`nonce` bên khởi tạo ‖ `nonce` bên nhận); 64 byte kết quả chia `k_c2s` ‖ `k_s2c` theo vai C/S (không theo bên khởi tạo) và thay `secret` cho lần rekey sau; `epoch` không vào KDF.
+   - `info` của `K_stream`: UTF-8 `"handlive/v1/stream/<kênh>/<session_id 36 ký tự chữ thường>"`,
+     `<kênh>` ∈ {`camera`, `call-audio` }. `K_stream` luôn dẫn từ `secret` của bắt tay đầu (epoch 0)
+     trong suốt kết nối, kể cả sau rekey.
+   - Rekey: shared = X25519(eph bên khởi tạo, eph bên nhận); salt = SHA-256(`nonce` bên khởi tạo ‖
+     `nonce` bên nhận); 64 byte kết quả chia `k_c2s` ‖ `k_s2c` theo vai C/S (không theo bên khởi
+     tạo) và thay `secret` cho lần rekey sau; `epoch` không vào KDF.
 
 ### 0.6.4 Xác thực thiết bị với relay
 
 1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s).
-2. `POST /v1/auth/token` `{device_id, challenge, sig}` với `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖ challenge (32 byte thô đã giải b64u) ‖ `device_id` 16 byte) → `{access_token, expires_in}`. Token JWT HS256, `sub` = `device_id`, hạn 15 phút.
-3. Gọi REST và mở WSS với `Authorization: Bearer <token>`. Nhận 401 `TOKEN_EXPIRED` → lặp lại bước 1–2 rồi thử lại một lần.
-4. Mọi endpoint dùng JWT kiểm `sub` còn trong `devices`: không còn → 404 `DEVICE_NOT_FOUND` (thiết bị đã tự xóa khỏi relay, SET-02), dù JWT còn hạn. Dòng có `revoked_at` (vận hành khóa thiết bị lạm dụng; ứng dụng không bao giờ đặt) → 410 `DEVICE_REVOKED` ở đăng ký, challenge, token và mọi endpoint. Thiếu hoặc sai header `Authorization` → 401 `SIGNATURE_INVALID`.
+2. `POST /v1/auth/token` `{device_id, challenge, sig}` với `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖
+   challenge (32 byte thô đã giải b64u) ‖ `device_id` 16 byte) → `{access_token, expires_in}`. Token
+   JWT HS256, `sub` = `device_id`, hạn 15 phút.
+3. Gọi REST và mở WSS với `Authorization: Bearer <token>`. Nhận 401 `TOKEN_EXPIRED` → lặp lại bước
+   1–2 rồi thử lại một lần.
+4. Mọi endpoint dùng JWT kiểm `sub` còn trong `devices`: không còn → 404 `DEVICE_NOT_FOUND` (thiết
+   bị đã tự xóa khỏi relay, SET-02), dù JWT còn hạn. Dòng có `revoked_at` (vận hành khóa thiết bị
+   lạm dụng; ứng dụng không bao giờ đặt) → 410 `DEVICE_REVOKED` ở đăng ký, challenge, token và mọi
+   endpoint. Thiếu hoặc sai header `Authorization` → 401 `SIGNATURE_INVALID`.
 
 ### 0.6.5 Nguyên tắc bảo mật chung
 
@@ -266,7 +348,8 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 
 ### 0.7.1 Envelope thiết bị ↔ thiết bị
 
-`type` giữ đúng tập đã chốt (`clipboard | sms | call_event | call_audio | pair | ack | ping | capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
+`type` giữ đúng tập đã chốt (`clipboard | sms | call_event | call_audio | pair | ack | ping |
+capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
 
 | type | op | Chiều | Ack | Kênh | Chức năng |
 |------|----|-------|-----|------|-----------|
@@ -314,7 +397,11 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 
 ### 0.7.2 `capability` op `hello` và `update`
 
-Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng **hiệu lực** = bật ở cả hai phía **và** đủ quyền hệ điều hành. `capability/update` luôn mang **ảnh chụp đầy đủ** cùng cấu trúc `capability/hello`; bên nhận thay toàn bộ bản đã lưu, không gộp từng phần. Tính năng mà nền tảng không có (ví dụ `camera` trên iOS) vắng mặt trong `features` và được coi là tắt. Ví dụ trong các nhóm chức năng có thể chỉ trích phần liên quan.
+Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng **hiệu lực** = bật ở cả hai phía
+**và** đủ quyền hệ điều hành. `capability/update` luôn mang **ảnh chụp đầy đủ** cùng cấu trúc
+`capability/hello`; bên nhận thay toàn bộ bản đã lưu, không gộp từng phần. Tính năng mà nền tảng
+không có (ví dụ `camera` trên iOS) vắng mặt trong `features` và được coi là tắt. Ví dụ trong các
+nhóm chức năng có thể chỉ trích phần liên quan.
 
 ```json
 {
@@ -343,11 +430,11 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 |--------|------|-------|
 | `protocol` | int32 | Phiên bản giao thức; khác major → đóng 4426 |
 | `app_version`, `os_version`, `model` | string | Hiển thị ở PAIR-02 |
-| `platform` | enum{android\|macos\|ios\|ipados} | |
+| `platform` | enum{android\ | macos\ | ios\ | ipados} |  |
 | `features.<tên>.enabled` | bool | Theo khóa cài đặt `feature.<tên>` (0.9.5) |
 | `features.clipboard.auto_send` | bool | Android: Accessibility đang bật; client: luôn `true` |
 | `features.sms.sims` | array | Chỉ Android; SIM đang hoạt động (cần `READ_PHONE_STATE`, thiếu → rỗng) |
-| `features.sms.default_sub_id` | int32 \| null | Chỉ Android; SIM gửi SMS mặc định, null khi máy đặt "luôn hỏi" |
+| `features.sms.default_sub_id` | int32 \ | null | Chỉ Android; SIM gửi SMS mặc định, null khi máy đặt "luôn hỏi" |
 | `features.sms.notify` | bool | Chỉ iOS/iPadOS; bằng `sms.notify` — Android chỉ push SMS mới khi `true` |
 | `features.call.can_answer`, `can_end` | bool | Android: có quyền `ANSWER_PHONE_CALLS` |
 | `features.call.caller_id` | bool | Android: có `READ_CALL_LOG` (số gọi đến) |
@@ -476,7 +563,9 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 
 ## 0.9 Mô hình dữ liệu
 
-> **Về "query lấy từ mã":** tại ngày 2026-09-24 repo chưa có mã nguồn nên không trích được query từ mã. Mọi query trong tài liệu là **thiết kế**, gắn nhãn `[Thiết kế]`, dựa trên lược đồ dưới đây. Khi có mã, thay bằng query thực và bỏ nhãn.
+> **Về "query lấy từ mã":** tại ngày 2026-09-24 repo chưa có mã nguồn nên không trích được query từ
+> mã. Mọi query trong tài liệu là **thiết kế**, gắn nhãn `[Thiết kế]`, dựa trên lược đồ dưới đây.
+> Khi có mã, thay bằng query thực và bỏ nhãn.
 
 ### 0.9.1 Android — Room `handlive.db`
 
@@ -532,7 +621,8 @@ CREATE TABLE push_outbox (
 | `CallLog.Calls.CONTENT_URI` | `READ_CALL_LOG` | CALL-04 |
 | `ContactsContract.PhoneLookup.CONTENT_FILTER_URI` | `READ_CONTACTS` | SMS, CALL (tên hiển thị) |
 
-HandLive không phải ứng dụng SMS mặc định nên **không ghi** được vào provider SMS (hệ thống tự ghi tin đã gửi qua `SmsManager` vào hộp Sent).
+HandLive không phải ứng dụng SMS mặc định nên **không ghi** được vào provider SMS (hệ thống tự ghi
+tin đã gửi qua `SmsManager` vào hộp Sent).
 
 ### 0.9.3 Mac/iOS — SQLite `handlive.sqlite` (GRDB + SQLCipher)
 
@@ -637,7 +727,8 @@ CREATE TABLE consent_record (
 );
 ```
 
-iOS dùng cùng lược đồ, trừ `consent_record`. File nằm trong App Group container để I-APP và I-NSE dùng chung vị trí (I-NSE hiện không ghi DB).
+iOS dùng cùng lược đồ, trừ `consent_record`. File nằm trong App Group container để I-APP và I-NSE
+dùng chung vị trí (I-NSE hiện không ghi DB).
 
 ### 0.9.4 Relay — PostgreSQL 16 và Redis 7
 
@@ -691,7 +782,7 @@ Khóa Redis `[Thiết kế]`:
 | `presence:<device_id>` | string (instance id) | 60 s, gia hạn 20 s/lần | Thiết bị đang nối tới instance nào |
 | `dev:<device_id>` | pub/sub channel | — | Instance đang giữ kết nối subscribe; instance khác publish khung cần chuyển |
 | `rv:<rv_id>` | set (device_id) | 180 s | Điểm hẹn ghép nối |
-| `revoked_notice:<device_id>` | set (`<pair_id>\|<by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
+| `revoked_notice:<device_id>` | set (`<pair_id>\ | <by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
 | `rl:<device_id>:<nhóm>:<phút>` | counter | 120 s | Rate limit |
 | `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2) |
 
@@ -706,7 +797,8 @@ DELETE FROM devices WHERE last_seen_at < now() - INTERVAL '180 days';
 
 ### 0.9.5 Khóa cài đặt
 
-Android lưu bằng DataStore; Mac/iOS lưu bằng `UserDefaults` (suite của App Group với iOS). Chức năng SET-02 quản lý các khóa này.
+Android lưu bằng DataStore; Mac/iOS lưu bằng `UserDefaults` (suite của App Group với iOS). Chức năng
+SET-02 quản lý các khóa này.
 
 | Khóa | Kiểu | Mặc định | Nền tảng | Mô tả |
 |------|------|----------|----------|-------|
@@ -731,8 +823,8 @@ Android lưu bằng DataStore; Mac/iOS lưu bằng `UserDefaults` (suite của A
 | `call.notify` | bool | `true` | Mac, iOS | Thông báo cuộc gọi |
 | `call.ringtone` | bool | `true` | Mac | Phát chuông khi có cuộc gọi đến (tôn trọng chế độ Tập trung) |
 | `call.quick_replies` | array<string> | 2 mẫu mặc định | Mac | Tin trả lời nhanh khi từ chối, tối đa 6 mẫu × 160 ký tự |
-| `cam.default_camera` | enum{front\|back} | `front` | Mac | Camera mặc định |
-| `cam.default_quality` | enum{auto\|480p\|720p\|1080p} | `auto` | Mac | Chất lượng mặc định |
+| `cam.default_camera` | enum{front\ | back} | `front` | Mac | Camera mặc định |
+| `cam.default_quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | `auto` | Mac | Chất lượng mặc định |
 | `cam.usb_boost` | bool | `true` | Mac | Tự chuyển USB khi cắm cáp |
 | `cam.usb_wizard_dismissed` | bool | `false` | Mac | Người dùng chọn "Không hỏi lại" ở wizard bật gỡ lỗi USB (CAM-04) |
 | `mac.menu_bar_extra` | bool | `true` | Mac | Hiện biểu tượng HandLive trên thanh menu; tắt → app giữ biểu tượng Dock và thanh menu của app làm lối vào (SET-03 bước 6) |
@@ -741,21 +833,21 @@ Android lưu bằng DataStore; Mac/iOS lưu bằng `UserDefaults` (suite của A
 
 | Hằng | Giá trị | Ghi chú |
 |------|---------|---------|
-| `CTL_PORT` | 47800 (dự phòng 47801–47809) | |
+| `CTL_PORT` | 47800 (dự phòng 47801–47809) |  |
 | `PAIRING_WINDOW` | 120 s | Hạn QR/PIN và cửa sổ `/v1/pair` |
-| `PIN_MAX_ATTEMPTS` | 3 | |
-| `HANDSHAKE_TIMEOUT` | 5 s | |
+| `PIN_MAX_ATTEMPTS` | 3 |  |
+| `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `REQUEST_TIMEOUT` | 10 s | Chờ `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: ping WS; relay: thêm `ping` E2E mỗi 30 s |
 | `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi thành công; thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
-| `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều | |
-| `DEDUP_WINDOW` | 5 phút / 1 000 id | |
-| `CLIP_MAX_TEXT` | 1 MiB (UTF-8) | |
-| `CLIP_MAX_IMAGE` | 10 MiB | |
+| `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
+| `DEDUP_WINDOW` | 5 phút / 1 000 id |  |
+| `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
+| `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Trước mã hóa |
-| `CLIP_POLL_MAC` | 500 ms | |
-| `CLIP_CONFLICT_WINDOW` | 500 ms | |
+| `CLIP_POLL_MAC` | 500 ms |  |
+| `CLIP_CONFLICT_WINDOW` | 500 ms |  |
 | `CLIP_INLINE_MAX` | 180 KiB | Văn bản lớn hơn đi theo chunk (giữ envelope < 256 KiB sau base64) |
 | `CLIP_LOOP_WINDOW` | 5 s | Bỏ qua thay đổi cục bộ trùng hash clip vừa nhận |
 | `CLIP_DETECT_DEBOUNCE` | 300 ms | Gom tín hiệu sao chép từ Accessibility |
@@ -764,24 +856,24 @@ Android lưu bằng DataStore; Mac/iOS lưu bằng `UserDefaults` (suite của A
 | `CALL_HFP_CMD_TIMEOUT` | 2 s | Chờ phản hồi lệnh HFP |
 | `CLIP_STALE_AFTER` | 120 s | Clip cũ hơn không gửi khi kết nối lại |
 | `SMS_SYNC_THREADS` | 200 hội thoại gần nhất | Lần đồng bộ đầu |
-| `SMS_SYNC_PER_THREAD` | 50 tin | |
-| `SMS_PAGE_MAX` | 500 tin / `ack` | |
-| `SMS_HISTORY_PAGE` | 50 tin | |
+| `SMS_SYNC_PER_THREAD` | 50 tin |  |
+| `SMS_PAGE_MAX` | 500 tin / `ack` |  |
+| `SMS_HISTORY_PAGE` | 50 tin |  |
 | `SMS_OUTBOX_RETRY` | 3 lần: 5 s, 15 s, 45 s | Gửi lại `sms/send` khi chưa có `ack` |
 | `SMS_OUTBOX_EXPIRY` | 24 h | Tin chờ quá hạn → `failed` |
 | `SMS_PAGE_MAX_BYTES` | 180 KiB plaintext / `ack` | Cùng với `SMS_PAGE_MAX` giữ envelope < 256 KiB |
-| `SMS_BODY_MAX` | 1 600 ký tự | |
+| `SMS_BODY_MAX` | 1 600 ký tự |  |
 | `SMS_SEND_MATCH_WINDOW` | 60 s | Ghép tin đã gửi trong provider với `local_id` |
 | `SMS_QUICK_REPLY_TIMEOUT` | 20 s | Trả lời nhanh từ thông báo iOS |
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Gom các lần `onChange` của provider SMS |
-| `CALLLOG_SYNC_WINDOW` | 90 ngày, tối đa 500 mục | |
-| `JWT_TTL` / `CHALLENGE_TTL` | 15 phút / 60 s | |
+| `CALLLOG_SYNC_WINDOW` | 90 ngày, tối đa 500 mục |  |
+| `JWT_TTL` / `CHALLENGE_TTL` | 15 phút / 60 s |  |
 | `RELAY_IDLE_DISCONNECT` | 5 phút | Android tự ngắt relay khi rảnh |
-| `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp | |
-| `CAM_DEFAULT` | 1280×720, 30 fps, 2,5 Mbps | |
-| `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) | |
-| `CAM_STATS_INTERVAL` | 1 s | |
-| `USB_DETECT_DEBOUNCE` | 1 s | |
+| `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp |  |
+| `CAM_DEFAULT` | 1280×720, 30 fps, 2,5 Mbps |  |
+| `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
+| `CAM_STATS_INTERVAL` | 1 s |  |
+| `USB_DETECT_DEBOUNCE` | 1 s |  |
 | `USB_SWITCH_GAP` | < 500 ms | Mục tiêu gián đoạn khi chuyển USB ↔ Wi-Fi |
 | `CAM_STOP_GRACE` | 5 s | Chờ sau khi hết consumer rồi mới dừng |
 | `CAM_CONFIRM_TIMEOUT` | 60 s | Hạn người dùng chạm "Bật" trên điện thoại |
@@ -822,4 +914,7 @@ stateDiagram-v2
   Connected --> Idle: hủy ghép nối
 ```
 
-Trạng thái hiển thị cho người dùng (PAIR-02): `Idle`/`Backoff` → "Mất kết nối"; `Discovering`/`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến"; `Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại".
+Trạng thái hiển thị cho người dùng (PAIR-02): `Idle` /`Backoff` → "Mất kết nối"; `Discovering`
+/`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến";
+`Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh
+camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại".

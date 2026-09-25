@@ -4,7 +4,11 @@
 
 ## Trạng thái hiện tại (25/09/2026)
 
-**Phase 0 xong** — khung kho, giao thức, mã hóa, token, CI; chưa có tính năng người dùng. Khoảng 111 file Kotlin, 66 file Swift, 28 file Rust. Từ 25/09/2026 mã nguồn tách thành **năm kho git trong một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`, báo cáo `reports/repo-split.md`): kho hub này chỉ giữ tài liệu, kế hoạch và công cụ tài liệu; bốn kho thành phần clone vào bên trong thư mục hub (hub git-ignore chúng).
+**Phase 0 xong** — khung kho, giao thức, mã hóa, token, CI; chưa có tính năng người dùng. Khoảng 111
+file Kotlin, 66 file Swift, 28 file Rust. Từ 25/09/2026 mã nguồn tách thành
+**năm kho git trong một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`,
+báo cáo `reports/repo-split.md`): kho hub này chỉ giữ tài liệu, kế hoạch và công cụ tài liệu; bốn
+kho thành phần clone vào bên trong thư mục hub (hub git-ignore chúng).
 
 ```
 HandLive/                          # kho hub "handlive"
@@ -41,7 +45,13 @@ HandLive/                          # kho hub "handlive"
     └── .github/workflows/ci-shared.yml
 ```
 
-Đường dẫn giữa các kho là tương đối và **bắt buộc**: Gradle và test Android đọc `../shared` (system property `hl.shared.dir`); test Apple đọc `../shared` và `../docs/design-system/1-foundations/03-kieu-chu.md`; test relay đọc `../shared/test-vectors`; `shared/tools/schemas/check_schemas.py` đọc `../docs/detailed-design` (ghi đè bằng `HANDLIVE_DOCS_DIR`). CI của từng kho dựng lại đúng bố cục này bằng `actions/checkout` (hub ở gốc workspace khi cần tài liệu, phần vào `<phần>/`, `handlive-shared` vào `shared/`; kho private cần secret `HANDLIVE_REPOS_TOKEN` — `docs/deployment-guide.md`).
+Đường dẫn giữa các kho là tương đối và **bắt buộc**: Gradle và test Android đọc `../shared` (system
+property `hl.shared.dir`); test Apple đọc `../shared` và
+`../docs/design-system/1-foundations/03-kieu-chu.md`; test relay đọc `../shared/test-vectors`;
+`shared/tools/schemas/check_schemas.py` đọc `../docs/detailed-design` (ghi đè bằng
+`HANDLIVE_DOCS_DIR`). CI của từng kho dựng lại đúng bố cục này bằng `actions/checkout` (hub ở gốc
+workspace khi cần tài liệu, phần vào `<phần>/`, `handlive-shared` vào `shared/`; kho private cần
+secret `HANDLIVE_REPOS_TOKEN` — `docs/deployment-guide.md`).
 
 ## Lệnh kiểm thử
 
@@ -55,7 +65,9 @@ HandLive/                          # kho hub "handlive"
 | Tài liệu (hub) | `python3 tools/docs/validate_design_docs.py` — phải in `problems=0` |
 | Cả năm kho | `tools/workspace.sh status`; `tools/workspace.sh run fetch --all` |
 
-Roundtrip liên nền tảng: `HL_WRITE_ROUNDTRIP=1` khi chạy test crypto Android/Apple ghi lại `envelope-roundtrip.json` / `envelope-roundtrip-apple.json` trong `shared/test-vectors`; test thường của mỗi bên giải mã file của bên kia.
+Roundtrip liên nền tảng: `HL_WRITE_ROUNDTRIP=1` khi chạy test crypto Android/Apple ghi lại
+`envelope-roundtrip.json` / `envelope-roundtrip-apple.json` trong `shared/test-vectors`; test thường
+của mỗi bên giải mã file của bên kia.
 
 ## Cấu trúc code (năm kho — quyết định I1 trong kế hoạch triển khai)
 
@@ -67,8 +79,11 @@ Roundtrip liên nền tảng: `HL_WRITE_ROUNDTRIP=1` khi chạy test crypto Andr
 | `handlive-relay` (`relay/`) | Rust | Cargo workspace: `crates/relay-server`, `crates/relay-push`, `migrations/` |
 | `handlive-shared` (`shared/`) | JSON, Python | `test-vectors/`, `schemas/`, `design-tokens/`, `tools/vectors/`, `tools/schemas/` — nguồn: `docs/detailed-design/00-common-specs.md` và design system; `tools/bench/` (đo trễ, Phase 1) |
 
-Mỗi kho thành phần có `CLAUDE.md` riêng nói rõ bố cục workspace và lệnh của kho đó. Chi tiết module và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md`.
+Mỗi kho thành phần có `CLAUDE.md` riêng nói rõ bố cục workspace và lệnh của kho đó. Chi tiết module
+và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md`.
 
 ## Điểm bắt đầu implement
 
-Phase 0 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`, rà soát `phase-00-review.md`) → cổng G0 (còn chờ CI chạy thật trên group GitHub) → Phase 1 (bảng nhớ tạm MVP). Xem `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.
+Phase 0 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`, rà soát
+`phase-00-review.md`) → cổng G0 (còn chờ CI chạy thật trên group GitHub) → Phase 1 (bảng nhớ tạm
+MVP). Xem `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.

@@ -1,17 +1,30 @@
 # Thiết lập ban đầu
 
-Mục này quy định lần mở đầu tiên trên từng nền tảng: chào ngắn, xin đúng quyền cần để app chạy, ghép nối bằng mã QR rồi vào app. Quyền của từng tính năng để tới lúc dùng tính năng đó.
+Mục này quy định lần mở đầu tiên trên từng nền tảng: chào ngắn, xin đúng quyền cần để app chạy, ghép
+nối bằng mã QR rồi vào app. Quyền của từng tính năng để tới lúc dùng tính năng đó.
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/onboarding · https://developer.apple.com/design/human-interface-guidelines/launching · https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission
+Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/onboarding ·
+https://developer.apple.com/design/human-interface-guidelines/launching ·
+https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission
 
 ## Nguyên tắc
 
-- Ngắn và dạy bằng việc thật: bước ghép nối chính là phần hướng dẫn. Mac và iPhone tối đa 6 màn (SET-03), Android tối đa 5 màn trước ghép nối (SET-01); xong trong 60 s.
-- Chỉ nói về HandLive, không dạy cách dùng máy. Mẹo theo ngữ cảnh (TipKit, iOS 17 và macOS 14 trở lên) thay cho chuỗi màn hướng dẫn.
-- Xin ở đây chỉ quyền cần để chạy: thông báo, mạng cục bộ (Mac, iPhone); thông báo, chạy nền (Android). Bluetooth và micro của Mac xin khi bật "Nghe gọi trên Mac"; quyền camera và Camera Extension khi bật "Dùng điện thoại làm webcam"; quyền SMS, cuộc gọi của Android ở thẻ tính năng sau lần ghép đầu. Chi tiết ở mục Xin quyền.
-- Màn giải thích quyền không có "Bỏ qua"; người dùng từ chối trong hộp thoại của hệ thống. "Bỏ qua" chỉ có ở bước không mở hộp thoại hệ thống, ví dụ hướng dẫn tự khởi chạy theo hãng.
-- Đóng giữa chừng vẫn vào được app: trạng thái trống mời "Ghép điện thoại…" (Android: "Thêm thiết bị"). Bước đã đạt thì tự bỏ qua; lần mở sau chạy tiếp từ bước còn thiếu.
-- Launch screen không mang thương hiệu. iOS: nền `system-background` trơn, không chữ, không logo. macOS không có launch screen. Android 12+: giữ splash của hệ thống (biểu tượng app trên `system-background`), không thêm chữ. Thương hiệu (`wordmark`, `brand-large-title`, nền `brand-glow`) chỉ ở màn Chào mừng, ghép nối và Đã ghép nối.
+- Ngắn và dạy bằng việc thật: bước ghép nối chính là phần hướng dẫn. Mac và iPhone tối đa 6 màn
+  (SET-03), Android tối đa 5 màn trước ghép nối (SET-01); xong trong 60 s.
+- Chỉ nói về HandLive, không dạy cách dùng máy. Mẹo theo ngữ cảnh (TipKit, iOS 17 và macOS 14 trở
+  lên) thay cho chuỗi màn hướng dẫn.
+- Xin ở đây chỉ quyền cần để chạy: thông báo, mạng cục bộ (Mac, iPhone); thông báo, chạy nền
+  (Android). Bluetooth và micro của Mac xin khi bật "Nghe gọi trên Mac"; quyền camera và Camera
+  Extension khi bật "Dùng điện thoại làm webcam"; quyền SMS, cuộc gọi của Android ở thẻ tính năng
+  sau lần ghép đầu. Chi tiết ở mục Xin quyền.
+- Màn giải thích quyền không có "Bỏ qua"; người dùng từ chối trong hộp thoại của hệ thống. "Bỏ qua"
+  chỉ có ở bước không mở hộp thoại hệ thống, ví dụ hướng dẫn tự khởi chạy theo hãng.
+- Đóng giữa chừng vẫn vào được app: trạng thái trống mời "Ghép điện thoại…" (Android: "Thêm thiết
+  bị"). Bước đã đạt thì tự bỏ qua; lần mở sau chạy tiếp từ bước còn thiếu.
+- Launch screen không mang thương hiệu. iOS: nền `system-background` trơn, không chữ, không logo.
+  macOS không có launch screen. Android 12+: giữ splash của hệ thống (biểu tượng app trên
+  `system-background`), không thêm chữ. Thương hiệu (`wordmark`, `brand-large-title`, nền
+  `brand-glow`) chỉ ở màn Chào mừng, ghép nối và Đã ghép nối.
 
 ## Các bước
 
@@ -66,16 +79,26 @@ Bỏ chọn "Hiện HandLive trên thanh menu" thì app chuyển ngay sang có b
 ## Ghép nối (PAIR-01)
 
 - Mac và iPhone/iPad hiện QR, Android quét. Mã tự làm mới sau 120 s.
-- PIN 6 số là đường dự phòng, chỉ dùng được khi cùng mạng Wi-Fi; hiện bằng `code-pin`, nhóm ba số "482 915"; sai quá 3 lần thì sinh mã mới.
-- Lỗi hiện ngay trong sheet, không bằng alert: "Ghép nối không an toàn, thử lại" (E4). Hết hạn thì mã mới tự thay, không báo lỗi.
-- Ghép xong: sheet tự đóng, hai máy cùng hiện "Đã ghép nối với <tên>". Đây là khoảnh khắc Niềm vui: minh họa trên `brand-glow`, rung `success` trên iPhone; bật Giảm chuyển động thì bỏ chuyển động, giữ nội dung. Trong thiết lập ban đầu, màn Đã ghép nối thay cho HUD `Feedback`; ghép lại từ Cài đặt thì chỉ có HUD.
+- PIN 6 số là đường dự phòng, chỉ dùng được khi cùng mạng Wi-Fi; hiện bằng `code-pin`, nhóm ba số
+  "482 915"; sai quá 3 lần thì sinh mã mới.
+- Lỗi hiện ngay trong sheet, không bằng alert: "Ghép nối không an toàn, thử lại" (E4). Hết hạn thì
+  mã mới tự thay, không báo lỗi.
+- Ghép xong: sheet tự đóng, hai máy cùng hiện "Đã ghép nối với <tên>". Đây là khoảnh khắc Niềm vui:
+  minh họa trên `brand-glow`, rung `success` trên iPhone; bật Giảm chuyển động thì bỏ chuyển động,
+  giữ nội dung. Trong thiết lập ban đầu, màn Đã ghép nối thay cho HUD `Feedback`; ghép lại từ Cài
+  đặt thì chỉ có HUD.
 
 ## Điểm lệch
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định 11).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 đặt hai hộp chọn "Mở HandLive khi đăng nhập" (trường 3) và "Hiện HandLive trên thanh menu" (trường 16) trên màn chào; màn Thanh menu trong bảng bước ở trên là cách trình bày tương đương — khi dựng giao diện theo SET-03.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 11 bỏ câu về quyền dán và nói rõ gửi bằng nút Dán (CLIP-04); giới hạn vẫn hiện ở bước 11 của SET-03.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục"; PAIR-01 trường 5 dùng "Ghép nối" / "Hủy".
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định
+  11).
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 đặt hai hộp chọn "Mở HandLive khi đăng nhập"
+  (trường 3) và "Hiện HandLive trên thanh menu" (trường 16) trên màn chào; màn Thanh menu trong bảng
+  bước ở trên là cách trình bày tương đương — khi dựng giao diện theo SET-03.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 11 bỏ câu về quyền dán và nói rõ gửi
+  bằng nút Dán (CLIP-04); giới hạn vẫn hiện ở bước 11 của SET-03.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục"; PAIR-01 trường 5
+  dùng "Ghép nối" / "Hủy".
 - Tài liệu chi tiết viết "huỷ, xoá, tuỳ"; mục này viết kiểu Apple "hủy, xóa, tùy".
 
 ## Nên và không nên

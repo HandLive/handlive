@@ -1,6 +1,8 @@
 # PasteCard
 
-Tab Bảng nhớ tạm trên iPhone và iPad (CLIP-04): gửi nội dung vừa sao chép sang điện thoại, và xem, sao chép lại nội dung vừa nhận. iOS không cho app đọc bảng nhớ tạm khi chạy nền, nên người dùng gửi bằng một lần chạm vào nút **Dán** của hệ thống.
+Tab Bảng nhớ tạm trên iPhone và iPad (CLIP-04): gửi nội dung vừa sao chép sang điện thoại, và xem,
+sao chép lại nội dung vừa nhận. iOS không cho app đọc bảng nhớ tạm khi chạy nền, nên người dùng gửi
+bằng một lần chạm vào nút **Dán** của hệ thống.
 
 ## Cấu tạo
 
@@ -12,11 +14,14 @@ Tab Bảng nhớ tạm trên iPhone và iPad (CLIP-04): gửi nội dung vừa s
 | Nội dung nhạy cảm | Không hiện nội dung, chỉ "Nội dung nhạy cảm đã được ẩn" |
 | Trống | "Chưa nhận gì" và câu hướng dẫn sao chép trên điện thoại |
 
-Thanh tab (iOS 26 trở lên là kính nổi): "Bảng nhớ tạm", "Tin nhắn" (huy hiệu số chưa đọc, màu `badge`), "Cuộc gọi", "Cài đặt"; biểu tượng bản đặc, tab đang chọn màu `accent`.
+Thanh tab (iOS 26 trở lên là kính nổi): "Bảng nhớ tạm", "Tin nhắn" (huy hiệu số chưa đọc, màu
+`badge`), "Cuộc gọi", "Cài đặt"; biểu tượng bản đặc, tab đang chọn màu `accent`.
 
 ## Android
 
-Android là máy trung tâm nên không có tab này: gửi thủ công bằng ô Cài đặt nhanh "Gửi bảng nhớ tạm", nút trong thông báo thường trực, hoặc bảng chia sẻ — đều là giao diện của Android. Tự gửi khi sao chép bật trong Cài đặt (cần Hỗ trợ tiếp cận, xem `ConsentSheet`).
+Android là máy trung tâm nên không có tab này: gửi thủ công bằng ô Cài đặt nhanh "Gửi bảng nhớ tạm",
+nút trong thông báo thường trực, hoặc bảng chia sẻ — đều là giao diện của Android. Tự gửi khi sao
+chép bật trong Cài đặt (cần Hỗ trợ tiếp cận, xem `ConsentSheet`).
 
 ## Nên và không nên
 

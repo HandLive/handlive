@@ -4,7 +4,10 @@
 
 ## 1. Vấn đề
 
-Người dùng Android không có trải nghiệm liền mạch giữa điện thoại và máy tính như Apple Continuity hay Microsoft Phone Link (Android↔Windows). HandLive lấp khoảng trống này cho **Android ↔ macOS/iOS**, tập trung vào ba luồng bị thiếu nhất: audio cuộc gọi, camera/mic, và đồng bộ dữ liệu thời gian thực — tất cả với E2E encryption.
+Người dùng Android không có trải nghiệm liền mạch giữa điện thoại và máy tính như Apple Continuity
+hay Microsoft Phone Link (Android↔Windows). HandLive lấp khoảng trống này cho
+**Android ↔ macOS/iOS**, tập trung vào ba luồng bị thiếu nhất: audio cuộc gọi, camera/mic, và đồng
+bộ dữ liệu thời gian thực — tất cả với E2E encryption.
 
 ## 2. Mục tiêu
 
@@ -16,13 +19,16 @@ Người dùng Android không có trải nghiệm liền mạch giữa điện t
 
 ## 3. Phi mục tiêu (Non-goals)
 
-- Call audio relay trên iOS (Apple không có public HFP HF API) — iOS chỉ clipboard + SMS + call metadata.
+- Call audio relay trên iOS (Apple không có public HFP HF API) — iOS chỉ clipboard + SMS + call
+  metadata.
 - Ghi âm cuộc gọi — chỉ relay realtime, không lưu.
 - Stream media/nhạc chất lượng cao qua HFP (kênh này mono 8/16kHz).
 
 ## 4. Người dùng mục tiêu
 
-Mass-market (không phải chỉ dev). Hệ quả thiết kế then chốt: **zero-config, hoàn toàn không dây** là mặc định. Mọi thứ đòi hỏi setup ADB/USB/Shizuku chỉ là tùy chọn "boost" cho power user, không bao giờ bắt buộc để dùng tính năng cốt lõi.
+Mass-market (không phải chỉ dev). Hệ quả thiết kế then chốt: **zero-config, hoàn toàn không dây** là
+mặc định. Mọi thứ đòi hỏi setup ADB/USB/Shizuku chỉ là tùy chọn "boost" cho power user, không bao
+giờ bắt buộc để dùng tính năng cốt lõi.
 
 ## 5. Ràng buộc & nền tảng
 
@@ -40,12 +46,15 @@ Xem đầy đủ mục 12 (D1–D8) trong `plans/20260924-definitive-architectur
 - **D1:** Call audio dùng dual-path — spike HFP 1 tuần; fail → Opus/WS permanent.
 - **D2:** Disclosure-first cho call relay (two-party consent), không block ship chờ legal.
 - **D3:** `BluetoothHeadsetClient` @SystemApi + Shizuku ngay; monitor CompanionDeviceManager.
-- **D4:** Clipboard background dùng Accessibility Service (Plan B: gửi thủ công — nút trên thông báo, ô Cài đặt nhanh, Chia sẻ; C15).
+- **D4:** Clipboard background dùng Accessibility Service (Plan B: gửi thủ công — nút trên thông
+  báo, ô Cài đặt nhanh, Chia sẻ; C15).
 - **D5:** Cloud relay self-host 1 VPS; migrate managed khi >500 concurrent users.
 - **D6:** CMIOExtension spike tuần 1 Phase 5.
 - **D7:** AudioServerPlugin phân phối qua PKG notarized + Homebrew cask.
 - **D8:** USB boost qua ADB + wizard; UVC native để dành v2.
-- **D9–D12 (bổ sung 2026-09-24, plan §13):** điều khiển cuộc gọi bằng API công khai, giữ máy/DTMF qua HFP (không `InCallService`); giữ Opus/WS + Shizuku với giới hạn khả thi được ghi rõ; âm thanh HFP dựa vào mã hóa Bluetooth; giữ Accessibility mặc định cho clipboard, dự phòng gửi thủ công.
+- **D9–D12 (bổ sung 2026-09-24, plan §13):** điều khiển cuộc gọi bằng API công khai, giữ máy/DTMF
+  qua HFP (không `InCallService`); giữ Opus/WS + Shizuku với giới hạn khả thi được ghi rõ; âm thanh
+  HFP dựa vào mã hóa Bluetooth; giữ Accessibility mặc định cho clipboard, dự phòng gửi thủ công.
 
 ## 7. Chỉ số thành công (đo được)
 

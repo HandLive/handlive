@@ -1,24 +1,36 @@
 # Viết nội dung
 
-Câu chữ của HandLive ngắn, rõ và bình tĩnh như một công cụ của hệ thống. Mục này quy định giọng văn, cách viết hoa và bỏ dấu, cách viết từng thành phần, thuật ngữ, định dạng số và ngày, và những chỗ cần đồng bộ với tài liệu thiết kế chi tiết.
+Câu chữ của HandLive ngắn, rõ và bình tĩnh như một công cụ của hệ thống. Mục này quy định giọng văn,
+cách viết hoa và bỏ dấu, cách viết từng thành phần, thuật ngữ, định dạng số và ngày, và những chỗ
+cần đồng bộ với tài liệu thiết kế chi tiết.
 
 Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/writing
 
 ## Giọng văn
 
-- Rõ ràng, bình tĩnh, đáng tin. Nói việc đang xảy ra và việc cần làm; điều quan trọng nhất đặt trước.
-- Giọng đổi theo ngữ cảnh: lỗi và quyền riêng tư thì trung tính, cụ thể; ghép nối xong thì ấm và ngắn ("Đã ghép nối với Pixel 8 của Lan"); cuộc gọi thì tối giản.
-- Không "chúng tôi", không dấu chấm than, không emoji, không "Rất tiếc" hay "Úi". Không tiếng lóng, thành ngữ.
-- Tránh đại từ và sở hữu thừa ("Thiết bị" thay "Thiết bị của bạn"); chỉ xưng "bạn" khi thiếu chủ ngữ gây hiểu lầm.
+- Rõ ràng, bình tĩnh, đáng tin. Nói việc đang xảy ra và việc cần làm; điều quan trọng nhất đặt
+  trước.
+- Giọng đổi theo ngữ cảnh: lỗi và quyền riêng tư thì trung tính, cụ thể; ghép nối xong thì ấm và
+  ngắn ("Đã ghép nối với Pixel 8 của Lan"); cuộc gọi thì tối giản.
+- Không "chúng tôi", không dấu chấm than, không emoji, không "Rất tiếc" hay "Úi". Không tiếng lóng,
+  thành ngữ.
+- Tránh đại từ và sở hữu thừa ("Thiết bị" thay "Thiết bị của bạn"); chỉ xưng "bạn" khi thiếu chủ ngữ
+  gây hiểu lầm.
 - "Chạm" cho màn hình cảm ứng (iPhone, iPad, Android), "bấm" cho chuột và bàn phím (Mac).
 
 ## Viết hoa và dấu
 
-- Sentence case cho mọi thành phần: nút, mục menu, tiêu đề cửa sổ, tab, alert, thông báo. Chỉ viết hoa chữ đầu và tên riêng: "Hủy ghép nối", "Gửi bảng nhớ tạm sang điện thoại".
-- Lệch có chủ đích: HIG dùng title-style cho nút, menu, tab theo tiếng Anh; tiếng Việt không có lối viết hoa từng từ nên HandLive dùng sentence case.
-- Tên riêng giữ nguyên: HandLive, Mac, iPhone, iPad, Android, Wi-Fi, Bluetooth, USB, SIM. Tên cài đặt hệ thống viết đúng bản tiếng Việt của hệ thống: "Cài đặt hệ thống", "Quyền riêng tư & Bảo mật", "Tập trung", "Trung tâm thông báo"; Apple gọi Accessibility là "Trợ năng", Android gọi là "Hỗ trợ tiếp cận".
+- Sentence case cho mọi thành phần: nút, mục menu, tiêu đề cửa sổ, tab, alert, thông báo. Chỉ viết
+  hoa chữ đầu và tên riêng: "Hủy ghép nối", "Gửi bảng nhớ tạm sang điện thoại".
+- Lệch có chủ đích: HIG dùng title-style cho nút, menu, tab theo tiếng Anh; tiếng Việt không có lối
+  viết hoa từng từ nên HandLive dùng sentence case.
+- Tên riêng giữ nguyên: HandLive, Mac, iPhone, iPad, Android, Wi-Fi, Bluetooth, USB, SIM. Tên cài
+  đặt hệ thống viết đúng bản tiếng Việt của hệ thống: "Cài đặt hệ thống", "Quyền riêng tư & Bảo
+  mật", "Tập trung", "Trung tâm thông báo"; Apple gọi Accessibility là "Trợ năng", Android gọi là
+  "Hỗ trợ tiếp cận".
 - Không viết HOA TOÀN BỘ.
-- Bỏ dấu kiểu Apple, dấu nằm trên nguyên âm chính của vần oa, oe, uy: hóa, xóa, hủy, tùy, thủy, khỏe, lũy, khóa, hòa, họa, thỏa. Không viết hoá, xoá, huỷ, tuỳ.
+- Bỏ dấu kiểu Apple, dấu nằm trên nguyên âm chính của vần oa, oe, uy: hóa, xóa, hủy, tùy, thủy,
+  khỏe, lũy, khóa, hòa, họa, thỏa. Không viết hoá, xoá, huỷ, tuỳ.
 
 ## Từng thành phần
 
@@ -69,7 +81,8 @@ Dùng formatter của hệ thống với locale tiếng Việt, không tự ghé
 
 ## Lỗi
 
-Mẫu: chuyện gì xảy ra, rồi cách xử lý. Đặt ngay cạnh chỗ lỗi; không đổ lỗi cho người dùng; không mã lỗi, không tiêu đề chung chung "Lỗi".
+Mẫu: chuyện gì xảy ra, rồi cách xử lý. Đặt ngay cạnh chỗ lỗi; không đổ lỗi cho người dùng; không mã
+lỗi, không tiêu đề chung chung "Lỗi".
 
 | Viết | Tránh |
 |---|---|
@@ -79,18 +92,23 @@ Mẫu: chuyện gì xảy ra, rồi cách xử lý. Đặt ngay cạnh chỗ l�
 
 ## Trạng thái trống
 
-Luôn có bước tiếp theo: tiêu đề `brand-title`, một câu, một nút; không đặt thông tin quan trọng ở đây. Ví dụ: "Chưa có điện thoại" · "Ghép điện thoại Android để nhận bảng nhớ tạm, tin nhắn và cuộc gọi." · nút "Thêm điện thoại…".
+Luôn có bước tiếp theo: tiêu đề `brand-title`, một câu, một nút; không đặt thông tin quan trọng ở
+đây. Ví dụ: "Chưa có điện thoại" · "Ghép điện thoại Android để nhận bảng nhớ tạm, tin nhắn và cuộc
+gọi." · nút "Thêm điện thoại…".
 
 ## Dấu "…"
 
 - Dùng ký tự "…" (một ký tự), không gõ ba dấu chấm.
-- Cho lệnh cần thêm bước nhập hoặc chọn ("Cài đặt…", "Từ chối kèm tin nhắn…") và nút Mac mở cửa sổ hay sheet khác ("Thêm điện thoại…").
+- Cho lệnh cần thêm bước nhập hoặc chọn ("Cài đặt…", "Từ chối kèm tin nhắn…") và nút Mac mở cửa sổ
+  hay sheet khác ("Thêm điện thoại…").
 - Cho trạng thái đang diễn ra: "Đang kết nối…", "Đang gửi…".
 - Không dùng cho lệnh chạy ngay ("Gửi", "Trả lời").
 
 ## Đã đồng bộ với tài liệu chi tiết
 
-Đã áp dụng toàn bộ vào `docs/detailed-design/` ngày 25/09/2026 (README §3.5, C19). Tên mục hệ thống ("Quyền riêng tư & Bảo mật") lấy theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối chiếu trên máy thật.
+Đã áp dụng toàn bộ vào `docs/detailed-design/` ngày 25/09/2026 (README §3.5, C19). Tên mục hệ thống
+("Quyền riêng tư & Bảo mật") lấy theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối
+chiếu trên máy thật.
 
 | Tài liệu chi tiết | Design system | Nơi |
 |---|---|---|

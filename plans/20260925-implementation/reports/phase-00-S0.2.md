@@ -4,24 +4,45 @@ Ngày: 2026-09-25 · Nhánh: `feat/phase-00-khung` · Chưa commit.
 
 ## Việc đã làm
 
-- Viết 12 JSON Schema draft 2020-12 trong `shared/schemas/`, `$id` ổn định `https://handlive.app/schemas/v1/<file>`, `$ref` tương đối giữa các file, kiểu chung trong `common.schema.json#/$defs` (`uuid`, `uuid-v4|v7|v8`, `int32`, `int64`, `timestamp`, `b64`, `b64u`, `b64u-32`).
-- Tách một file mỗi op theo tên gợi ý (không gộp): mỗi op là một hợp đồng riêng mà A0.1/M0.1 kiểm độc lập; phần dùng chung đặt ở `$defs` (`capability-hello#/$defs/capability-data`, `ack#/$defs/success|failure`, `session-rekey#/$defs/ack`).
-- Thêm `session-bye.schema.json` dù thẻ việc không liệt kê: `bye` là op `session` trong 0.7.1, phiên Phase 0 (A0.2) cần đóng êm; đặc tả ở PAIR-03 API 2. Không thêm op/mã lỗi nào ngoài spec.
-- Ràng buộc chặt: `v` const 1; `type` enum đúng 10 giá trị 0.7.1; `id`/`re` UUIDv7 chữ thường 36 ký tự (kiểm cả nibble version và variant); `device_id` UUIDv8, `pair_id` UUIDv4 (0.2); `ts` int64 ≥ 0; `payload` Base64 chuẩn có padding; `eph`/`nonce`/`mac` b64u đúng 32 byte; `additionalProperties: false` ở mọi đối tượng spec liệt kê đủ trường (kể cả từng tính năng trong `features`, `opus_fallback`, phần tử `sims`).
-- `ack` dùng `if ok=true then success else failure` (thay vì `oneOf`) để thông báo lỗi chỉ đúng chỗ sai.
-- Script `tools/schemas/check_schemas.py` (+ `doc_examples.py` trích/thay placeholder/phân loại, `sample_messages.py` mẫu dương và âm):
-  1. metaschema, `$id` khớp tên file, mọi `$ref` phân giải được; enum mã lỗi và enum `type` so thẳng với bảng 0.8.1 và 0.7.1 trong tài liệu (phát hiện trôi);
-  2. mọi khối ```json của `00-common-specs.md` phải phân loại được và qua; mở rộng thêm mọi envelope, ack và op session/capability (theo tiêu đề `WS session/<op>`, `WS capability/<op>`) trong 01–08; envelope `session` có payload giải b64 ra JSON thì kiểm cả plaintext bắt tay;
+- Viết 12 JSON Schema draft 2020-12 trong `shared/schemas/`, `$id` ổn định
+  `https://handlive.app/schemas/v1/<file>`, `$ref` tương đối giữa các file, kiểu chung trong
+  `common.schema.json#/$defs` (`uuid`, `uuid-v4|v7|v8`, `int32`, `int64`, `timestamp`, `b64`,
+  `b64u`, `b64u-32`).
+- Tách một file mỗi op theo tên gợi ý (không gộp): mỗi op là một hợp đồng riêng mà A0.1/M0.1 kiểm
+  độc lập; phần dùng chung đặt ở `$defs` (`capability-hello#/$defs/capability-data`,
+  `ack#/$defs/success|failure`, `session-rekey#/$defs/ack`).
+- Thêm `session-bye.schema.json` dù thẻ việc không liệt kê: `bye` là op `session` trong 0.7.1, phiên
+  Phase 0 (A0.2) cần đóng êm; đặc tả ở PAIR-03 API 2. Không thêm op/mã lỗi nào ngoài spec.
+- Ràng buộc chặt: `v` const 1; `type` enum đúng 10 giá trị 0.7.1; `id` /`re` UUIDv7 chữ thường 36 ký
+  tự (kiểm cả nibble version và variant); `device_id` UUIDv8, `pair_id` UUIDv4 (0.2); `ts` int64 ≥
+  0; `payload` Base64 chuẩn có padding; `eph` /`nonce`/`mac` b64u đúng 32 byte;
+  `additionalProperties: false` ở mọi đối tượng spec liệt kê đủ trường (kể cả từng tính năng trong
+  `features`, `opus_fallback`, phần tử `sims`).
+- `ack` dùng `if ok=true then success else failure` (thay vì `oneOf`) để thông báo lỗi chỉ đúng chỗ
+  sai.
+- Script `tools/schemas/check_schemas.py` (+ `doc_examples.py` trích/thay placeholder/phân loại,
+  `sample_messages.py` mẫu dương và âm):
+  1. metaschema, `$id` khớp tên file, mọi `$ref` phân giải được; enum mã lỗi và enum `type` so thẳng
+     với bảng 0.8.1 và 0.7.1 trong tài liệu (phát hiện trôi);
+  2. mọi khối `` `json của ` 00-common-specs.md` phải phân loại được và qua; mở rộng thêm mọi
+     envelope, ack và op session/capability (theo tiêu đề `WS session/<op>`, `WS capability/<op>`)
+     trong 01–08; envelope `session` có payload giải b64 ra JSON thì kiểm cả plaintext bắt tay;
   3. 13 mẫu dương tự viết, 36 mẫu âm (mỗi mẫu hỏng đúng một chỗ).
-- Placeholder (`"<b64>"`, `"<id của yêu cầu>"`, `"…"`, `"..."`, `"0192f4a0-…"`) thay theo tên khóa chứa nó, quy tắc ghi trong `tools/schemas/README.md`, mỗi lần thay in ra; khóa không có quy tắc → lỗi.
+- Placeholder (`"<b64>"`, `"<id của yêu cầu>"`, `"…"`, `"..."`, `"0192f4a0-…"`) thay theo tên khóa
+  chứa nó, quy tắc ghi trong `tools/schemas/README.md`, mỗi lần thay in ra; khóa không có quy tắc →
+  lỗi.
 
 ## File tạo
 
-- `shared/schemas/common.schema.json`, `envelope.schema.json`, `payload.schema.json`, `ack.schema.json`, `error.schema.json`
-- `shared/schemas/session-hello.schema.json`, `session-welcome.schema.json`, `session-error.schema.json`, `session-rekey.schema.json`, `session-bye.schema.json`
+- `shared/schemas/common.schema.json`, `envelope.schema.json`, `payload.schema.json`,
+  `ack.schema.json`, `error.schema.json`
+- `shared/schemas/session-hello.schema.json`, `session-welcome.schema.json`,
+  `session-error.schema.json`, `session-rekey.schema.json`, `session-bye.schema.json`
 - `shared/schemas/capability-hello.schema.json`, `capability-update.schema.json`
 - `shared/schemas/README.md`
-- `tools/schemas/check_schemas.py`, `tools/schemas/doc_examples.py`, `tools/schemas/sample_messages.py`, `tools/schemas/requirements.txt` (`jsonschema==4.26.0`, `referencing==0.37.0` — đã có sẵn trong venv), `tools/schemas/README.md`
+- `tools/schemas/check_schemas.py`, `tools/schemas/doc_examples.py`,
+  `tools/schemas/sample_messages.py`, `tools/schemas/requirements.txt` (`jsonschema==4.26.0`,
+  `referencing==0.37.0` — đã có sẵn trong venv), `tools/schemas/README.md`
 
 ## Test
 
@@ -124,7 +145,8 @@ $ tools/.venv/bin/python tools/schemas/check_schemas.py; echo EXIT=$?
 EXIT=0
 ```
 
-Mọi ví dụ của `00-common-specs.md` (5 đối tượng trong 4 khối ```json) qua schema. 83 đối tượng ngoài phạm vi (op clipboard/sms/call…, REST, push, relay control) chỉ được đếm.
+Mọi ví dụ của `00-common-specs.md` (5 đối tượng trong 4 khối `` `json) qua schema. 83 đối tượng
+ngoài phạm vi (op clipboard/sms/call…, REST, push, relay control) chỉ được đếm.
 
 ## Điểm lệch với tài liệu
 
@@ -141,15 +163,21 @@ Không sửa `docs/`. Đề xuất sửa cho chủ dự án:
 | 7 | 07:150, 08:252 | Ví dụ `capability/update` chỉ trích một tính năng, trái "luôn mang ảnh chụp đầy đủ" — đã ghi rõ "trích" | Schema không ép đủ tính năng (tính năng vắng = tắt), nên vẫn qua | Không cần sửa; ghi nhận |
 
 Quyết định cần biết khi dùng schema:
-- `session/error.min_protocol`: CONN-01 API 6 ghi "chỉ với `UNSUPPORTED_VERSION`" → schema **cấm** ở mã khác, **không bắt buộc** khi `UNSUPPORTED_VERSION`.
-- Trong `capability`, mỗi tính năng chỉ bắt buộc `enabled`; trường "Chỉ Android/Mac/iOS" để tùy chọn, không ép theo `platform` (KISS).
-- `error.code` chỉ gồm mã ứng dụng 0.8.1; mã relay HTTP (0.8.2) không thuộc ack nên không có schema ở thẻ này.
-- Regex dùng cú pháp chung ECMA/Python (`^…$`); với Python `re`, `$` chấp nhận một `\n` cuối chuỗi — validator Kotlin/Swift nên dùng khớp toàn chuỗi.
+- `session/error.min_protocol`: CONN-01 API 6 ghi "chỉ với `UNSUPPORTED_VERSION` " → schema **cấm**
+  ở mã khác, **không bắt buộc** khi `UNSUPPORTED_VERSION`.
+- Trong `capability`, mỗi tính năng chỉ bắt buộc `enabled`; trường "Chỉ Android/Mac/iOS" để tùy
+  chọn, không ép theo `platform` (KISS).
+- `error.code` chỉ gồm mã ứng dụng 0.8.1; mã relay HTTP (0.8.2) không thuộc ack nên không có schema
+  ở thẻ này.
+- Regex dùng cú pháp chung ECMA/Python (`^…$`); với Python `re`, `$` chấp nhận một `\n` cuối chuỗi —
+  validator Kotlin/Swift nên dùng khớp toàn chuỗi.
 
 ## Câu hỏi mở
 
-- `min_protocol` có nên bắt buộc khi `code = UNSUPPORTED_VERSION` (client cần để hiển thị "cập nhật lên…")?
-- Chủ dự án duyệt đề xuất 1–6 để sửa `docs/detailed-design/`; khi sửa 3 và 4, xóa hai mục tương ứng trong `KNOWN_SPEC_ISSUES` (`tools/schemas/doc_examples.py`) — script sẽ báo nếu quên.
+- `min_protocol` có nên bắt buộc khi `code = UNSUPPORTED_VERSION` (client cần để hiển thị "cập nhật
+  lên…")?
+- Chủ dự án duyệt đề xuất 1–6 để sửa `docs/detailed-design/`; khi sửa 3 và 4, xóa hai mục tương ứng
+  trong `KNOWN_SPEC_ISSUES` (`tools/schemas/doc_examples.py`) — script sẽ báo nếu quên.
 
 ```text
 Status: DONE_WITH_CONCERNS

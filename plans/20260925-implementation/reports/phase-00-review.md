@@ -1,6 +1,10 @@
 # Rà soát Phase 0 — quyết định cho các điểm lệch agent nêu
 
-Ngày 25/09/2026. Nguồn: chín báo cáo `phase-00-*.md`, kiểm chứng độc lập (`verify_vectors.py` 360 phép kiểm, `check_schemas.py`, `swift test` HLCrypto 19 test). Nhiều điểm đã được điều phối viên chốt ngay trong Phase 0 (byte hóa `T1`/`T2`/`HLSTREAM1`, HKDF mặc định, rekey, `K_stream` epoch 0, `protocol` xác thực lại trong `capability/hello`, HS256, sửa hai ví dụ AUDIO-04, `scheme` cho target). Bảng dưới là phần còn lại, đã áp dụng vào tài liệu cùng ngày.
+Ngày 25/09/2026. Nguồn: chín báo cáo `phase-00-*.md`, kiểm chứng độc lập (`verify_vectors.py` 360
+phép kiểm, `check_schemas.py`, `swift test` HLCrypto 19 test). Nhiều điểm đã được điều phối viên
+chốt ngay trong Phase 0 (byte hóa `T1` /`T2`/`HLSTREAM1`, HKDF mặc định, rekey, `K_stream` epoch 0,
+`protocol` xác thực lại trong `capability/hello`, HS256, sửa hai ví dụ AUDIO-04, `scheme` cho
+target). Bảng dưới là phần còn lại, đã áp dụng vào tài liệu cùng ngày.
 
 | # | Điểm (báo cáo) | Quyết định | Áp dụng ở |
 |---|----------------|------------|-----------|
@@ -36,4 +40,5 @@ Ngày 25/09/2026. Nguồn: chín báo cáo `phase-00-*.md`, kiểm chứng độ
 | 30 | CI chưa chạy thật (T0.1) | Cần remote GitHub và branch protection — việc của chủ dự án; cổng G0 đánh dấu khi bốn workflow xanh | deployment-guide |
 | 31 | Câu chữ phase-00 (A0.2-7, T0.1-1) | `./gradlew check`; PKCS#12 | phase-00 |
 
-Không còn câu hỏi mở từ Phase 0. Việc cần chủ dự án tự làm: tạo remote GitHub, đẩy nhánh, bật branch protection; cài `platforms;android-37`; máy có Xcode để chạy `xcodebuild test`.
+Không còn câu hỏi mở từ Phase 0. Việc cần chủ dự án tự làm: tạo remote GitHub, đẩy nhánh, bật branch
+protection; cài `platforms;android-37`; máy có Xcode để chạy `xcodebuild test`.

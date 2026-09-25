@@ -1,21 +1,38 @@
 # Android
 
-App Android dựng lại ngôn ngữ của Apple bằng Jetpack Compose — như Apple làm Apple Music cho Android — với token, chữ Inter và biểu tượng Material Symbols Rounded. Phần do Android quản lý giữ kiểu Android. Khi quy ước Apple chạm vào thông báo, hộp thoại quyền, cử chỉ quay lại, thanh hệ thống, vùng chạm hay TalkBack, quy tắc Android thắng.
+App Android dựng lại ngôn ngữ của Apple bằng Jetpack Compose — như Apple làm Apple Music cho Android
+— với token, chữ Inter và biểu tượng Material Symbols Rounded. Phần do Android quản lý giữ kiểu
+Android. Khi quy ước Apple chạm vào thông báo, hộp thoại quyền, cử chỉ quay lại, thanh hệ thống,
+vùng chạm hay TalkBack, quy tắc Android thắng.
 
-Nguồn HIG (quy ước Apple được mang sang): https://developer.apple.com/design/human-interface-guidelines/tab-bars · https://developer.apple.com/design/human-interface-guidelines/lists-and-tables · https://developer.apple.com/design/human-interface-guidelines/toggles · https://developer.apple.com/design/human-interface-guidelines/sheets · https://developer.apple.com/design/human-interface-guidelines/alerts
+Nguồn HIG (quy ước Apple được mang sang):
+https://developer.apple.com/design/human-interface-guidelines/tab-bars ·
+https://developer.apple.com/design/human-interface-guidelines/lists-and-tables ·
+https://developer.apple.com/design/human-interface-guidelines/toggles ·
+https://developer.apple.com/design/human-interface-guidelines/sheets ·
+https://developer.apple.com/design/human-interface-guidelines/alerts
 
 ## Theme
 
-- `HandLiveTheme` đọc token và cung cấp qua `CompositionLocal` (màu, chữ, khoảng cách, góc bo, bóng). Component `HL*` chỉ đọc từ đây.
-- Không dùng Material dynamic color (Android 12+) và không lấy màu, chữ từ `MaterialTheme`: màu trạng thái và AccentColor phải giống Mac, iPhone.
+- `HandLiveTheme` đọc token và cung cấp qua `CompositionLocal` (màu, chữ, khoảng cách, góc bo,
+  bóng). Component `HL*` chỉ đọc từ đây.
+- Không dùng Material dynamic color (Android 12+) và không lấy màu, chữ từ `MaterialTheme`: màu
+  trạng thái và AccentColor phải giống Mac, iPhone.
 - Trên Android, giá trị hex trong token là màu thật (Apple thì gọi API hệ thống).
-- Giao diện Tối theo hệ thống (`isSystemInDarkTheme()`), không có công tắc trong app. Tương phản cao khi `UiModeManager.getContrast()` ≥ 0.5 (Android 14+) thì dùng bộ `-hc`.
+- Giao diện Tối theo hệ thống (`isSystemInDarkTheme()`), không có công tắc trong app. Tương phản cao
+  khi `UiModeManager.getContrast()` ≥ 0.5 (Android 14+) thì dùng bộ `-hc`.
 
 ## Chữ và biểu tượng
 
-- Inter đóng gói trong app (`res/font`, giấy phép OFL), cùng thang cỡ iOS tính bằng sp (`android-*`): Body 17 sp, nhỏ nhất 11 sp, tracking theo token. Be Vietnam Pro cho `brand-large-title`, `brand-title`, `wordmark`; Roboto Mono cho `code-pin`; `timer` bật `fontFeatureSettings = "tnum"`.
-- Phóng chữ tới 200% (Android 14 phóng phi tuyến): không khóa cỡ, không cố định chiều cao dòng chữ. Chữ đậm của hệ thống: `Configuration.fontWeightAdjustment` (Android 12+).
-- Material Symbols Rounded (Apache 2.0), weight 400, bản rỗng; tab đang chọn dùng bản đặc (`FILL` 1). Tên đối chiếu với SF Symbol theo bảng ở mục Biểu tượng, ví dụ `chevron.forward` ↔ `chevron_right`, `checkmark.circle.fill` ↔ `check_circle`.
+- Inter đóng gói trong app (`res/font`, giấy phép OFL), cùng thang cỡ iOS tính bằng sp
+  (`android-*`): Body 17 sp, nhỏ nhất 11 sp, tracking theo token. Be Vietnam Pro cho
+  `brand-large-title`, `brand-title`, `wordmark`; Roboto Mono cho `code-pin`; `timer` bật
+  `fontFeatureSettings = "tnum"`.
+- Phóng chữ tới 200% (Android 14 phóng phi tuyến): không khóa cỡ, không cố định chiều cao dòng chữ.
+  Chữ đậm của hệ thống: `Configuration.fontWeightAdjustment` (Android 12+).
+- Material Symbols Rounded (Apache 2.0), weight 400, bản rỗng; tab đang chọn dùng bản đặc (`FILL`
+  1). Tên đối chiếu với SF Symbol theo bảng ở mục Biểu tượng, ví dụ `chevron.forward` ↔
+  `chevron_right`, `checkmark.circle.fill` ↔ `check_circle`.
 
 ## Thành phần dựng theo kiểu Apple
 
@@ -33,8 +50,12 @@ Nguồn HIG (quy ước Apple được mang sang): https://developer.apple.com/d
 
 ## Điều hướng
 
-- Thanh tab hai mục: "Thiết bị" (Mac, iPhone, iPad đã ghép — `DeviceRow`, PAIR-02) và "Cài đặt" (SET-02). Không có tab Bảng nhớ tạm: gửi thủ công bằng ô Cài đặt nhanh, nút trên thông báo hoặc bảng chia sẻ.
-- Màn con: chevron `chevron_left` ở góc trên trái kèm tên màn trước, như iOS. Nút và cử chỉ quay lại của hệ thống luôn dùng được; predictive back (Android 14+) bằng `PredictiveBackHandler`, khai `android:enableOnBackInvokedCallback="true"`.
+- Thanh tab hai mục: "Thiết bị" (Mac, iPhone, iPad đã ghép — `DeviceRow`, PAIR-02) và "Cài đặt"
+  (SET-02). Không có tab Bảng nhớ tạm: gửi thủ công bằng ô Cài đặt nhanh, nút trên thông báo hoặc
+  bảng chia sẻ.
+- Màn con: chevron `chevron_left` ở góc trên trái kèm tên màn trước, như iOS. Nút và cử chỉ quay lại
+  của hệ thống luôn dùng được; predictive back (Android 14+) bằng `PredictiveBackHandler`, khai
+  `android:enableOnBackInvokedCallback="true"`.
 - Không đặt control trong vùng cử chỉ quay lại ở hai mép (`WindowInsets.systemGestures`).
 
 ## Giữ nguyên kiểu Android
@@ -53,15 +74,22 @@ Nguồn HIG (quy ước Apple được mang sang): https://developer.apple.com/d
 
 ## Trợ năng và cảm giác
 
-- Vùng chạm ≥ 48 dp (`size-hit-android`) thay cho 44 pt của iOS; khoảng cách giữa hai vùng chạm ≥ 8 dp.
-- TalkBack: mỗi control tự dựng có nhãn, `role` và `stateDescription` ("Bật", "Tắt"); gộp dòng bằng `semantics(mergeDescendants = true)`; trạng thái kết nối là live region; tiêu đề màn đánh dấu `heading()`.
-- Tắt hiệu ứng: `ValueAnimator.areAnimatorsEnabled()` là `false` thì bỏ chuyển động, chỉ đổi trạng thái (token `duration-*`).
-- Rung qua `View.performHapticFeedback`: `CONFIRM`, `REJECT` (API 30+); `TOGGLE_ON`, `TOGGLE_OFF` (API 34+); API 29 dùng `CONTEXT_CLICK`. Tôn trọng cài đặt rung của hệ thống.
+- Vùng chạm ≥ 48 dp (`size-hit-android`) thay cho 44 pt của iOS; khoảng cách giữa hai vùng chạm ≥ 8
+  dp.
+- TalkBack: mỗi control tự dựng có nhãn, `role` và `stateDescription` ("Bật", "Tắt"); gộp dòng bằng
+  `semantics(mergeDescendants = true)`; trạng thái kết nối là live region; tiêu đề màn đánh dấu
+  `heading()`.
+- Tắt hiệu ứng: `ValueAnimator.areAnimatorsEnabled()` là `false` thì bỏ chuyển động, chỉ đổi trạng
+  thái (token `duration-*`).
+- Rung qua `View.performHapticFeedback`: `CONFIRM`, `REJECT` (API 30+); `TOGGLE_ON`, `TOGGLE_OFF`
+  (API 34+); API 29 dùng `CONTEXT_CLICK`. Tôn trọng cài đặt rung của hệ thống.
 
 ## Giấy phép
 
-- Không dùng SF Pro, SF Mono, SF Symbols hay UI Kit của Apple trong app Android, kể cả để dựng mock-up Android; không dùng biểu tượng hay hình phần cứng của Apple.
-- Inter, Be Vietnam Pro (OFL), Roboto Mono, Material Symbols Rounded (Apache 2.0) đóng gói trong app; ghi trong màn giấy phép mã nguồn mở.
+- Không dùng SF Pro, SF Mono, SF Symbols hay UI Kit của Apple trong app Android, kể cả để dựng
+  mock-up Android; không dùng biểu tượng hay hình phần cứng của Apple.
+- Inter, Be Vietnam Pro (OFL), Roboto Mono, Material Symbols Rounded (Apache 2.0) đóng gói trong
+  app; ghi trong màn giấy phép mã nguồn mở.
 
 ## Phiên bản (minSdk 29, targetSdk 35)
 

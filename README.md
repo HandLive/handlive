@@ -1,14 +1,18 @@
 # HandLive
 
-> Biến điện thoại Android thành hub relay **clipboard, SMS, cuộc gọi (kèm audio) và camera/mic** sang macOS (đầy đủ) và iOS/iPadOS (clipboard + SMS + call metadata).
+> Biến điện thoại Android thành hub relay **clipboard, SMS, cuộc gọi (kèm audio) và camera/mic**
+> sang macOS (đầy đủ) và iOS/iPadOS (clipboard + SMS + call metadata).
 >
 > **Phương châm thiết kế:** *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 
-**Trạng thái:** Phase 0 xong (khung, giao thức, mã hóa, token, CI) — chưa có tính năng người dùng. Mã nguồn nằm ở bốn kho riêng clone vào trong thư mục này (xem Cấu trúc).
+**Trạng thái:** Phase 0 xong (khung, giao thức, mã hóa, token, CI) — chưa có tính năng người dùng.
+Mã nguồn nằm ở bốn kho riêng clone vào trong thư mục này (xem Cấu trúc).
 
 ## HandLive giải quyết gì
 
-Tương tự Microsoft Phone Link / Apple Continuity nhưng **xuyên hệ sinh thái**: người dùng Android nghe/gọi, nhắn tin, đồng bộ clipboard, và dùng camera/mic của điện thoại ngay trên máy Mac — với mã hóa đầu-cuối (E2E) không thể tắt.
+Tương tự Microsoft Phone Link / Apple Continuity nhưng **xuyên hệ sinh thái**: người dùng Android
+nghe/gọi, nhắn tin, đồng bộ clipboard, và dùng camera/mic của điện thoại ngay trên máy Mac — với mã
+hóa đầu-cuối (E2E) không thể tắt.
 
 | Tính năng | macOS | iOS/iPadOS |
 |-----------|:-----:|:----------:|
@@ -20,18 +24,27 @@ Tương tự Microsoft Phone Link / Apple Continuity nhưng **xuyên hệ sinh t
 
 ## Kiến trúc tóm tắt
 
-- **WebSocket** (Ktor server trên Android, discovery qua mDNS) là kênh chính cho *mọi dữ liệu*: clipboard, SMS, call metadata, notifications.
-- **Bluetooth HFP SCO** chỉ dùng cho **audio cuộc gọi** (Android 10+ chặn capture call audio qua API công khai; HFP là con đường duy nhất đã được chứng minh). Fallback: **Opus-over-WebSocket** (~100–150ms) khi HFP không khả dụng — cần Shizuku, giới hạn theo phiên bản Android và theo máy (plan §13 D10).
-- **E2E encryption** bắt buộc toàn hệ thống: XChaCha20-Poly1305 payload, X25519 + HKDF key exchange, ghép cặp qua **QR code**. Âm thanh qua Opus/WS mã hóa hai lớp; âm thanh HFP dựa vào mã hóa Bluetooth (plan §13 D11).
-- **Cloud relay** (Rust/Actix-web) là zero-knowledge, chỉ relay blob đã mã hóa khi thiết bị ngoài LAN.
+- **WebSocket** (Ktor server trên Android, discovery qua mDNS) là kênh chính cho *mọi dữ liệu*:
+  clipboard, SMS, call metadata, notifications.
+- **Bluetooth HFP SCO** chỉ dùng cho **audio cuộc gọi** (Android 10+ chặn capture call audio qua API
+  công khai; HFP là con đường duy nhất đã được chứng minh). Fallback: **Opus-over-WebSocket**
+  (~100–150ms) khi HFP không khả dụng — cần Shizuku, giới hạn theo phiên bản Android và theo máy
+  (plan §13 D10).
+- **E2E encryption** bắt buộc toàn hệ thống: XChaCha20-Poly1305 payload, X25519 + HKDF key exchange,
+  ghép cặp qua **QR code**. Âm thanh qua Opus/WS mã hóa hai lớp; âm thanh HFP dựa vào mã hóa
+  Bluetooth (plan §13 D11).
+- **Cloud relay** (Rust/Actix-web) là zero-knowledge, chỉ relay blob đã mã hóa khi thiết bị ngoài
+  LAN.
 
-Chi tiết đầy đủ: [`docs/system-architecture.md`](docs/system-architecture.md) và [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
+Chi tiết đầy đủ: [`docs/system-architecture.md`](docs/system-architecture.md) và
+[`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
 
 ## Lộ trình (xây theo thứ tự)
 
 1. **Clipboard sync** (MVP) — Android ↔ macOS qua WebSocket LAN
 2. **SMS bridge** — + app iOS + cloud relay + push
-3. **Call metadata + control** — API Telecom công khai (không `InCallService`, D9) + floating call panel
+3. **Call metadata + control** — API Telecom công khai (không `InCallService`, D9) + floating call
+   panel
 4. **Call audio relay** — HFP/SCO + Opus fallback + echo cancellation
 5. **Camera/mic virtual devices** — CMIOExtension + AudioServerPlugin
 
@@ -39,7 +52,9 @@ Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.md).
 
 ## Cấu trúc: năm kho, một workspace
 
-Kho này (`handlive`) là **hub**: chỉ giữ tài liệu, kế hoạch và công cụ tài liệu. Mã nguồn nằm ở bốn kho riêng, clone vào bên trong thư mục hub (hub git-ignore chúng) — bố cục bắt buộc vì build và test đọc `../shared`, test Apple đọc `../docs`:
+Kho này (`handlive`) là **hub**: chỉ giữ tài liệu, kế hoạch và công cụ tài liệu. Mã nguồn nằm ở bốn
+kho riêng, clone vào bên trong thư mục hub (hub git-ignore chúng) — bố cục bắt buộc vì build và test
+đọc `../shared`, test Apple đọc `../docs`:
 
 ```
 HandLive/                # kho hub "handlive"

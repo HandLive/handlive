@@ -1,12 +1,14 @@
 # Design system HandLive theo Apple HIG
 
-**Trạng thái:** Hoàn tất (artifact phiên bản 6; bản sao trong `docs/design-system/`; tài liệu chi tiết đã đồng bộ 25/09/2026) · **Ngày:** 24/09/2026 · **Kết quả:** artifact Design System https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (thay bản Material 3 + HIG trước đó)
+**Trạng thái:** Hoàn tất (artifact phiên bản 6; bản sao trong `docs/design-system/`; tài liệu chi
+tiết đã đồng bộ 25/09/2026) · **Ngày:** 24/09/2026 · **Kết quả:** artifact Design System
+https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (thay bản Material 3 + HIG trước đó)
 
 ## Quyết định của chủ dự án
 
 | # | Quyết định | Hệ quả |
 |---|-----------|--------|
-| DS1 | Theo chuẩn Apple (https://developer.apple.com/design/) cho **mọi nền tảng**, kể cả Android | Android dùng ngôn ngữ thiết kế Apple như Apple Music/Apple TV cho Android; phần do Android quản lý (thông báo, hộp thoại quyền, ô Cài đặt nhanh, cử chỉ quay lại) giữ nguyên của hệ thống. SF Pro và SF Symbols chỉ được dùng trên nền tảng Apple → Android dùng font và bộ biểu tượng thay thế |
+| DS1 | Theo chuẩn Apple (https://developer.apple.com/design/) cho **mọi nền tảng**, kể cả Android | Android dùng ngôn ngữ thiết kế Apple như Apple Music/Apple TV cho Android; phần do Android quản lý (thông báo, hộp thoại quyền, ô Cài đặt nhanh, cử chỉ quay lại) giữ nguyên của hệ thống.<br>SF Pro và SF Symbols chỉ được dùng trên nền tảng Apple → Android dùng font và bộ biểu tượng thay thế |
 | DS2 | Thêm iOS/iPadOS | Bao phủ CLIP-04, SMS, thông báo cuộc gọi, ghép nối bằng QR trên iPhone/iPad |
 | DS3 | Màu thương hiệu hợp mệnh **Sơn Đầu Hỏa** | Màu bản mệnh (đỏ, cam, hồng, tím) và màu tương sinh (xanh lá — Mộc sinh Hỏa); không dùng đen, xanh dương, xanh nước biển (Thủy khắc Hỏa) cho thương hiệu |
 
@@ -31,5 +33,7 @@
 
 ## Rủi ro
 
-- Liquid Glass chỉ có từ macOS 26/iOS 26; app hỗ trợ macOS 13+, iOS 16+ → thành phần tuỳ biến cần phương án vật liệu cũ.
-- Giao diện kiểu Apple trên Android lệch quy ước Material; cần giữ nguyên các phần hệ thống và vùng chạm 48dp.
+- Liquid Glass chỉ có từ macOS 26/iOS 26; app hỗ trợ macOS 13+, iOS 16+ → thành phần tuỳ biến cần
+  phương án vật liệu cũ.
+- Giao diện kiểu Apple trên Android lệch quy ước Material; cần giữ nguyên các phần hệ thống và vùng
+  chạm 48dp.

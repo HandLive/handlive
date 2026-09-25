@@ -1,6 +1,8 @@
 # PairingCard
 
-Ghép nối hai máy bằng mã QR (PAIR-01): **Mac và iPhone/iPad hiện mã, Android quét.** Khi không quét được thì dùng mã PIN 6 số (chỉ trong cùng mạng Wi-Fi). Là một khoảnh khắc thương hiệu: nền `brand-glow` ở lớp nội dung.
+Ghép nối hai máy bằng mã QR (PAIR-01): **Mac và iPhone/iPad hiện mã, Android quét.** Khi không quét
+được thì dùng mã PIN 6 số (chỉ trong cùng mạng Wi-Fi). Là một khoảnh khắc thương hiệu: nền
+`brand-glow` ở lớp nội dung.
 
 ## Phía hiện mã (Mac, iPhone, iPad)
 
@@ -17,7 +19,9 @@ Ghép xong: sheet tự đóng, `Feedback` "Đã ghép nối với Pixel 8 của 
 
 ## Phía quét (Android)
 
-Màn camera toàn màn hình: khung ngắm bốn góc màu `on-video`, lớp tối ngoài khung, câu "Hướng camera vào mã QR trên Mac hoặc iPhone", nút kính tròn đóng (`xmark` ↔ `close`) ở góc trên trái, nút kính "Nhập mã PIN" ở dưới. Quét được: rung `CONFIRM`, hiện tên máy và **Mã an toàn** để đối chiếu.
+Màn camera toàn màn hình: khung ngắm bốn góc màu `on-video`, lớp tối ngoài khung, câu "Hướng camera
+vào mã QR trên Mac hoặc iPhone", nút kính tròn đóng (`xmark` ↔ `close`) ở góc trên trái, nút kính
+"Nhập mã PIN" ở dưới. Quét được: rung `CONFIRM`, hiện tên máy và **Mã an toàn** để đối chiếu.
 
 ## Nên và không nên
 

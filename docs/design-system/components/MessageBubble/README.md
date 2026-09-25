@@ -1,6 +1,8 @@
 # MessageBubble
 
-Bong bóng một tin SMS trong hội thoại và ô soạn tin ở cuối (SMS-03, SMS-04). Theo quy ước Tin nhắn của Apple: tin SMS mình gửi màu xanh lá — ở HandLive là `bubble-outgoing` (đậm hơn xanh SMS của Apple để chữ trắng đạt 4.5:1), tin đến màu `bubble-incoming`.
+Bong bóng một tin SMS trong hội thoại và ô soạn tin ở cuối (SMS-03, SMS-04). Theo quy ước Tin nhắn
+của Apple: tin SMS mình gửi màu xanh lá — ở HandLive là `bubble-outgoing` (đậm hơn xanh SMS của
+Apple để chữ trắng đạt 4.5:1), tin đến màu `bubble-incoming`.
 
 ## Bong bóng
 
@@ -22,11 +24,17 @@ Trạng thái tin gửi chỉ đi tiến, mỗi trạng thái có biểu tượn
 | `delivered` | "Đã nhận" | `checkmark.circle` ↔ `done_all` |
 | `failed` | "Gửi lỗi · <lý do>" + nút "Thử lại"; biểu tượng `exclamationmark.circle.fill` đỏ cạnh bong bóng | ↔ `error` |
 
-Lý do theo mã lỗi: `SMS_NO_SERVICE` "Không có sóng" · `SMS_RADIO_OFF` "Điện thoại đang ở chế độ máy bay" · `SMS_LIMIT_EXCEEDED` "Đã gửi quá nhiều tin, thử lại sau" · `SMS_INVALID_ADDRESS` "Số nhận không hợp lệ" · `SMS_SIM_UNAVAILABLE` "SIM này không hoạt động, hãy chọn SIM khác" · `NOT_CONNECTED` "Không kết nối được điện thoại trong 24 giờ" · khác "Không gửi được".
+Lý do theo mã lỗi: `SMS_NO_SERVICE` "Không có sóng" · `SMS_RADIO_OFF` "Điện thoại đang ở chế độ máy
+bay" · `SMS_LIMIT_EXCEEDED` "Đã gửi quá nhiều tin, thử lại sau" · `SMS_INVALID_ADDRESS` "Số nhận
+không hợp lệ" · `SMS_SIM_UNAVAILABLE` "SIM này không hoạt động, hãy chọn SIM khác" · `NOT_CONNECTED`
+"Không kết nối được điện thoại trong 24 giờ" · khác "Không gửi được".
 
 ## Ô soạn tin
 
-Ô nhập capsule "Tin nhắn SMS" trên nền kính, nút gửi tròn `accent-fill` (`arrow.up`). Máy hai SIM: chip "SIM 1" mở menu chọn SIM. Tin dài hơn một phần: hiện "2 tin SMS" (mỗi phần tính cước). Tối đa 1 600 ký tự. Mac: Return gửi, ⇧Return xuống dòng. Hội thoại nhiều người nhận: không có ô soạn, thay bằng dòng "Trả lời hội thoại nhóm trên điện thoại". Điện thoại không cho gửi SMS: ẩn ô soạn.
+Ô nhập capsule "Tin nhắn SMS" trên nền kính, nút gửi tròn `accent-fill` (`arrow.up`). Máy hai SIM:
+chip "SIM 1" mở menu chọn SIM. Tin dài hơn một phần: hiện "2 tin SMS" (mỗi phần tính cước). Tối đa 1
+600 ký tự. Mac: Return gửi, ⇧Return xuống dòng. Hội thoại nhiều người nhận: không có ô soạn, thay
+bằng dòng "Trả lời hội thoại nhóm trên điện thoại". Điện thoại không cho gửi SMS: ẩn ô soạn.
 
 ## Nên và không nên
 

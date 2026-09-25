@@ -1,15 +1,22 @@
 # Màu sắc
 
-HandLive dùng màu ngữ nghĩa của hệ thống cho chữ, nền và đường phân cách; màu hệ thống cho trạng thái; xanh lá làm màu nhấn cho thao tác; màu thương hiệu chỉ ở lớp nội dung. Mục này nói token nào ứng với API nào và màu nào dùng ở đâu.
+HandLive dùng màu ngữ nghĩa của hệ thống cho chữ, nền và đường phân cách; màu hệ thống cho trạng
+thái; xanh lá làm màu nhấn cho thao tác; màu thương hiệu chỉ ở lớp nội dung. Mục này nói token nào
+ứng với API nào và màu nào dùng ở đâu.
 
 Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 
 ## Nguyên tắc
 
-- Mỗi màu một nghĩa. Xanh lá `accent` là thao tác; xanh lá `status-connected` là trạng thái và luôn đi kèm chữ.
-- Không hard-code màu hệ thống trên Apple. Luôn gọi API (`Color(.label)`, `NSColor.windowBackgroundColor`…): Apple đã đổi giá trị màu hệ thống ngày 9/6/2025 và có thể đổi tiếp. Hex trong token chỉ là tham chiếu cho Android và preview.
-- Màu tự định nghĩa có đủ 4 biến thể `light`, `dark`, `light-hc`, `dark-hc`. Trên Apple khai báo bằng Color Set trong asset catalog, bật biến thể High Contrast.
-- Không đổi nghĩa màu ngữ nghĩa: không lấy `separator` làm màu chữ, không lấy `secondary-label` làm nền.
+- Mỗi màu một nghĩa. Xanh lá `accent` là thao tác; xanh lá `status-connected` là trạng thái và luôn
+  đi kèm chữ.
+- Không hard-code màu hệ thống trên Apple. Luôn gọi API (`Color(.label)`,
+  `NSColor.windowBackgroundColor` …): Apple đã đổi giá trị màu hệ thống ngày 9/6/2025 và có thể đổi
+  tiếp. Hex trong token chỉ là tham chiếu cho Android và preview.
+- Màu tự định nghĩa có đủ 4 biến thể `light`, `dark`, `light-hc`, `dark-hc`. Trên Apple khai báo
+  bằng Color Set trong asset catalog, bật biến thể High Contrast.
+- Không đổi nghĩa màu ngữ nghĩa: không lấy `separator` làm màu chữ, không lấy `secondary-label` làm
+  nền.
 
 ## Màu ngữ nghĩa và API
 
@@ -41,8 +48,11 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 | `system-brown` | `.brown` | Avatar chữ cái, dùng ít (Thổ) |
 | `system-gray` … `system-gray-6` | `.gray` · `systemGray` … `systemGray6` | Ngoại tuyến, viền, nền nhóm |
 
-- AppKit chỉ có `systemGray`; Gray 2–6 là của iOS. Trên Mac dùng màu ngữ nghĩa (`separatorColor`, `controlBackgroundColor`) ở chỗ iOS dùng Gray 2–6.
-- Không dùng (Thủy khắc Hỏa): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` — không cho thương hiệu, mảng màu lớn, trạng thái hay avatar. Phần hệ thống vẽ theo lựa chọn của người dùng (màu nhấn, vùng chọn chữ) để nguyên.
+- AppKit chỉ có `systemGray`; Gray 2–6 là của iOS. Trên Mac dùng màu ngữ nghĩa (`separatorColor`,
+  `controlBackgroundColor`) ở chỗ iOS dùng Gray 2–6.
+- Không dùng (Thủy khắc Hỏa): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo`
+  — không cho thương hiệu, mảng màu lớn, trạng thái hay avatar. Phần hệ thống vẽ theo lựa chọn của
+  người dùng (màu nhấn, vùng chọn chữ) để nguyên.
 
 ## Màu nhấn
 
@@ -53,11 +63,20 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 | `on-accent` | Chữ và biểu tượng trên `accent-fill` |
 | `accent-tint` | Nền nhạt vùng chọn. Không đặt chữ `accent` dưới 13 pt lên nền này |
 
-- Apple: Color Set `AccentColor` lấy giá trị `accent-fill` (4 biến thể; target app đặt `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`); control hệ thống tự lấy; control tự dựng dùng `Color.accentColor` hoặc `NSColor.controlAccentColor` cho nền và `accent` cho chữ, liên kết, biểu tượng.
+- Apple: Color Set `AccentColor` lấy giá trị `accent-fill` (4 biến thể; target app đặt
+  `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`); control hệ thống tự lấy; control
+  tự dựng dùng `Color.accentColor` hoặc `NSColor.controlAccentColor` cho nền và `accent` cho chữ,
+  liên kết, biểu tượng.
 - Tiết chế: mỗi màn một nút tô màu, tối đa hai. Phân biệt mức ưu tiên bằng kiểu nút, không bằng cỡ.
-- macOS: màu nhấn của app chỉ hiện khi người dùng để Màu nhấn là Nhiều màu (Cài đặt hệ thống › Giao diện). Người dùng chọn màu khác thì control theo màu đó; HandLive không ép xanh lá. Màu mang nghĩa cố định (trạng thái, nút cuộc gọi) không đổi theo. Chọn Graphite thì nền cửa sổ nhuốm màu hình nền; control tự dựng ở trạng thái trung tính nên hơi trong suốt.
-- Liquid Glass: chỉ tô nền của một hành động chính trên lớp kính (`.buttonStyle(.glassProminent)`, `Glass.tint(_:)`); không tô chữ hay biểu tượng trên kính; không tô nhiều control cùng lúc. Chấm trạng thái trên kính được phép.
-- Lệch có chủ đích: liên kết dùng `accent` thay màu `link` xanh dương của hệ thống (Thủy khắc Hỏa); liên kết luôn nằm trong ngữ cảnh rõ ràng, không chỉ dựa vào màu.
+- macOS: màu nhấn của app chỉ hiện khi người dùng để Màu nhấn là Nhiều màu (Cài đặt hệ thống › Giao
+  diện). Người dùng chọn màu khác thì control theo màu đó; HandLive không ép xanh lá. Màu mang nghĩa
+  cố định (trạng thái, nút cuộc gọi) không đổi theo. Chọn Graphite thì nền cửa sổ nhuốm màu hình
+  nền; control tự dựng ở trạng thái trung tính nên hơi trong suốt.
+- Liquid Glass: chỉ tô nền của một hành động chính trên lớp kính (`.buttonStyle(.glassProminent)`,
+  `Glass.tint(_:)`); không tô chữ hay biểu tượng trên kính; không tô nhiều control cùng lúc. Chấm
+  trạng thái trên kính được phép.
+- Lệch có chủ đích: liên kết dùng `accent` thay màu `link` xanh dương của hệ thống (Thủy khắc Hỏa);
+  liên kết luôn nằm trong ngữ cảnh rõ ràng, không chỉ dựa vào màu.
 
 ## Trạng thái
 
@@ -68,9 +87,13 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 | Ngoại tuyến | `status-offline` (systemGray) | `secondary-label` | "Ngoại tuyến" |
 | Lỗi | `status-error` (systemRed) | `text-red` | "Cần ghép nối lại" |
 
-- systemGreen và systemOrange ở giao diện Sáng chỉ đạt 1.9–2.3:1 trên nền trắng hoặc xám: chỉ dùng cho chấm và biểu tượng. Chữ màu cỡ nhỏ dùng `text-red`, `text-orange`, `text-green` (≥ 4.5:1 trên mọi nền, cả 4 giao diện).
-- Chữ trạng thái mặc định vẫn là `label` hoặc `secondary-label`; chỉ tô màu khi màu thêm nghĩa, ví dụ lý do tính năng chưa dùng được viết bằng `text-orange`.
-- `destructive-text` (= `text-red`) cho nút phá hủy dạng chữ. `badge` (= `system-red`) cho huy hiệu số: dùng API badge của hệ thống, không tự vẽ.
+- systemGreen và systemOrange ở giao diện Sáng chỉ đạt 1.9–2.3:1 trên nền trắng hoặc xám: chỉ dùng
+  cho chấm và biểu tượng. Chữ màu cỡ nhỏ dùng `text-red`, `text-orange`, `text-green` (≥ 4.5:1 trên
+  mọi nền, cả 4 giao diện).
+- Chữ trạng thái mặc định vẫn là `label` hoặc `secondary-label`; chỉ tô màu khi màu thêm nghĩa, ví
+  dụ lý do tính năng chưa dùng được viết bằng `text-orange`.
+- `destructive-text` (= `text-red`) cho nút phá hủy dạng chữ. `badge` (= `system-red`) cho huy hiệu
+  số: dùng API badge của hệ thống, không tự vẽ.
 
 ## Nút cuộc gọi
 
@@ -80,23 +103,33 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 | `call-decline-fill` | Từ chối, Kết thúc, nút phá hủy dạng đặc | Chữ trắng ≥ 4.5:1 |
 | `on-call-fill` | Biểu tượng và chữ trên hai nền trên | Trắng |
 
-Luôn kèm biểu tượng khác hình (`phone.fill`, `phone.down.fill`), vị trí cố định (Từ chối bên trái, Trả lời bên phải) và nhãn chữ dưới nút.
+Luôn kèm biểu tượng khác hình (`phone.fill`, `phone.down.fill`), vị trí cố định (Từ chối bên trái,
+Trả lời bên phải) và nhãn chữ dưới nút.
 
 ## Đỏ, xanh lá và mù màu
 
-- Người mù màu khó phân biệt đỏ với xanh lá. Mọi cặp đỏ–xanh lá của HandLive phải khác nhau ở cả ba lớp: biểu tượng, vị trí, chữ.
-- Khi bật Phân biệt không dùng màu (Differentiate Without Color), chấm trạng thái đổi thành biểu tượng có hình: `checkmark.circle.fill` (đã kết nối), `ellipsis.circle.fill` (đang kết nối), `exclamationmark.triangle.fill` (lỗi), `record.circle` (đang phát camera). Android không có cài đặt này nên luôn hiện chữ trạng thái.
+- Người mù màu khó phân biệt đỏ với xanh lá. Mọi cặp đỏ–xanh lá của HandLive phải khác nhau ở cả ba
+  lớp: biểu tượng, vị trí, chữ.
+- Khi bật Phân biệt không dùng màu (Differentiate Without Color), chấm trạng thái đổi thành biểu
+  tượng có hình: `checkmark.circle.fill` (đã kết nối), `ellipsis.circle.fill` (đang kết nối),
+  `exclamationmark.triangle.fill` (lỗi), `record.circle` (đang phát camera). Android không có cài
+  đặt này nên luôn hiện chữ trạng thái.
 
 ## Tương phản cao
 
-Màu hệ thống tự đổi sang biến thể tương phản cao; màu tự định nghĩa lấy `light-hc`, `dark-hc`. Cách đọc cài đặt và kiểm thử: xem mục Chế độ Tối và tương phản cao.
+Màu hệ thống tự đổi sang biến thể tương phản cao; màu tự định nghĩa lấy `light-hc`, `dark-hc`. Cách
+đọc cài đặt và kiểm thử: xem mục Chế độ Tối và tương phản cao.
 
 ## Android dùng token
 
-- Token là nguồn màu duy nhất: sinh bốn bảng màu Compose (`light`, `dark`, `light-hc`, `dark-hc`), chọn theo `isSystemInDarkTheme()` và `UiModeManager.getContrast()` (Android 14+, ≥ 0.5 thì dùng bộ `-hc`).
+- Token là nguồn màu duy nhất: sinh bốn bảng màu Compose (`light`, `dark`, `light-hc`, `dark-hc`),
+  chọn theo `isSystemInDarkTheme()` và `UiModeManager.getContrast()` (Android 14+, ≥ 0.5 thì dùng bộ
+  `-hc`).
 - Không dùng màu động (Material You) hay bảng màu Material.
-- Màu có alpha (`separator`, `system-fill`, `glass-fill`…) vẽ đè lên nền của đúng lớp, không quy đổi thành màu đặc.
-- `secondary-label` bản token đậm hơn giá trị gốc của Apple (75% thay 60% ở Sáng) để đạt 4.5:1; trên Apple vẫn dùng `.secondary` của hệ thống.
+- Màu có alpha (`separator`, `system-fill`, `glass-fill` …) vẽ đè lên nền của đúng lớp, không quy
+  đổi thành màu đặc.
+- `secondary-label` bản token đậm hơn giá trị gốc của Apple (75% thay 60% ở Sáng) để đạt 4.5:1; trên
+  Apple vẫn dùng `.secondary` của hệ thống.
 
 ## Nên và không nên
 

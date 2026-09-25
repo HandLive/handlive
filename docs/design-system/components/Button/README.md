@@ -1,6 +1,7 @@
 # Button
 
-Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ, biểu tượng hoặc cả hai) và vai trò (role) — cho Mac, iPhone/iPad và Android.
+Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ, biểu tượng hoặc cả hai) và vai trò
+(role) — cho Mac, iPhone/iPad và Android.
 
 ## Kiểu và vai trò
 
@@ -12,9 +13,11 @@ Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ
 | Chữ (plain) | Liên kết, lệnh phụ trong câu | `.borderless` / `.plain` | `style = Plain` | `accent` |
 | Phá hủy (destructive) | Hủy ghép nối, xóa lịch sử | `role: .destructive` | `style = Destructive` | `destructive-text` trên nền kính (`glass-fill`, `glass-stroke`); nền đỏ đặc `call-decline-fill` chỉ cho nút tròn Từ chối, Kết thúc trong `CallPanel` |
 
-- Vai trò: bình thường, chính (phản hồi Return), hủy (phản hồi Esc), phá hủy. **Không** gán vai trò chính cho nút phá hủy.
+- Vai trò: bình thường, chính (phản hồi Return), hủy (phản hồi Esc), phá hủy. **Không** gán vai trò
+  chính cho nút phá hủy.
 - Phân biệt mức ưu tiên bằng kiểu, không bằng cỡ. Mỗi màn một nút nổi bật.
-- Nhãn bắt đầu bằng động từ, sentence case: "Ghép nối", "Gửi bảng nhớ tạm", "Hủy ghép nối". Nút mở cửa sổ hay bước khác kết thúc bằng "…": "Cài đặt…", "Từ chối kèm tin nhắn…".
+- Nhãn bắt đầu bằng động từ, sentence case: "Ghép nối", "Gửi bảng nhớ tạm", "Hủy ghép nối". Nút mở
+  cửa sổ hay bước khác kết thúc bằng "…": "Cài đặt…", "Từ chối kèm tin nhắn…".
 - Nút chỉ có biểu tượng phải có nhãn trợ năng và (trên Mac) tooltip bắt đầu bằng động từ.
 
 ## Cỡ
@@ -27,7 +30,9 @@ Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ
 
 ## Trạng thái
 
-Nhấn: tối đi 8%, không gợn sóng (ripple) trên Android. Vô hiệu: độ mờ 40% và luôn có dòng lý do gần đó. Đang xử lý: đổi nhãn sang tiến trình ("Đang ghép nối…") kèm `ProgressView` nhỏ, không đổi cỡ nút.
+Nhấn: tối đi 8%, không gợn sóng (ripple) trên Android. Vô hiệu: độ mờ 40% và luôn có dòng lý do gần
+đó. Đang xử lý: đổi nhãn sang tiến trình ("Đang ghép nối…") kèm `ProgressView` nhỏ, không đổi cỡ
+nút.
 
 ## Nên và không nên
 

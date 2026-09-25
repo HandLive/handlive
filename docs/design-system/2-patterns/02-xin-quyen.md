@@ -1,14 +1,21 @@
 # Xin quyền
 
-Mục này quy định mỗi quyền được xin lúc nào, với câu giải thích nào, và giao diện khi bị từ chối. Mỗi quyền gắn với một tính năng; thiếu quyền của tính năng này không làm hỏng tính năng khác.
+Mục này quy định mỗi quyền được xin lúc nào, với câu giải thích nào, và giao diện khi bị từ chối.
+Mỗi quyền gắn với một tính năng; thiếu quyền của tính năng này không làm hỏng tính năng khác.
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission · https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-screens-windows-or-views
+Nguồn HIG:
+https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission ·
+https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-screens-windows-or-views
 
 ## Quy tắc
 
-- Xin khi người dùng sắp dùng tính năng; thiết lập ban đầu chỉ xin quyền cần để app chạy; mỗi lần một tính năng.
-- `PermissionPrimer` hiện ngay trước hộp thoại hệ thống khi hộp thoại chưa đủ ngữ cảnh: tiêu đề, một–hai câu nói lợi ích và dữ liệu đi đâu, đúng một nút "Tiếp tục" mở hộp thoại. Không "Bỏ qua", không "Hủy", không nút đóng, không nhãn giống "Cho phép".
-- Android luôn có primer: hộp thoại runtime không cho app thêm chữ, primer là lời giải thích duy nhất.
+- Xin khi người dùng sắp dùng tính năng; thiết lập ban đầu chỉ xin quyền cần để app chạy; mỗi lần
+  một tính năng.
+- `PermissionPrimer` hiện ngay trước hộp thoại hệ thống khi hộp thoại chưa đủ ngữ cảnh: tiêu đề,
+  một–hai câu nói lợi ích và dữ liệu đi đâu, đúng một nút "Tiếp tục" mở hộp thoại. Không "Bỏ qua",
+  không "Hủy", không nút đóng, không nhãn giống "Cho phép".
+- Android luôn có primer: hộp thoại runtime không cho app thêm chữ, primer là lời giải thích duy
+  nhất.
 - Purpose string trên Apple: một câu chủ động, cụ thể, có dấu chấm, bắt đầu bằng "HandLive".
 - Không hỏi lại tự động sau khi bị từ chối; không thưởng, không dọa để đổi lấy quyền.
 
@@ -32,20 +39,34 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/priva
 
 iPhone và iPad không xin quyền camera (chỉ hiện QR) và không xin quyền dán (`PasteButton`).
 
-Không phải hộp thoại quyền, chỉ hướng dẫn kèm nút mở đúng trang: Camera Extension (CAM-01 trường 5), driver micro ảo (CAM-01 trường 8), Dán từ ứng dụng khác trên macOS 15.4+ (C10), mục đăng nhập cần duyệt (`SMAppService.openSystemSettingsLoginItems()`), quyền Shizuku (AUDIO-01 bước 10).
+Không phải hộp thoại quyền, chỉ hướng dẫn kèm nút mở đúng trang: Camera Extension (CAM-01 trường 5),
+driver micro ảo (CAM-01 trường 8), Dán từ ứng dụng khác trên macOS 15.4+ (C10), mục đăng nhập cần
+duyệt (`SMAppService.openSystemSettingsLoginItems()`), quyền Shizuku (AUDIO-01 bước 10).
 
 ## Khi bị từ chối
 
-- Tính năng vẫn bật nhưng chưa dùng được. Dòng của nó trong Cài đặt có lý do màu `text-orange` và một nút: Mac "Mở Cài đặt hệ thống", iOS và Android "Mở cài đặt".
-- Đích mở: Mac `x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth` và các trang tương ứng; iOS `UIApplication.openSettingsURLString`, `openNotificationSettingsURLString`; Android `ACTION_APPLICATION_DETAILS_SETTINGS`, `ACTION_APP_NOTIFICATION_SETTINGS`, `ACTION_ACCESSIBILITY_SETTINGS`.
-- Android không báo từ chối vĩnh viễn: suy từ `perm.requested` và `shouldShowRequestPermissionRationale` (Android 11+ tự chặn sau hai lần). Khi đó không gọi hộp thoại nữa mà hiện "Mở cài đặt".
-- Mac và iPhone thấy quyền còn thiếu trên điện thoại (`permissions_missing`) ở trang Thiết bị, ví dụ "Thiếu quyền SMS trên điện thoại"; điện thoại đăng thông báo gợi ý tối đa một lần mỗi tính năng mỗi 24 h (SET-01 trường 17).
+- Tính năng vẫn bật nhưng chưa dùng được. Dòng của nó trong Cài đặt có lý do màu `text-orange` và
+  một nút: Mac "Mở Cài đặt hệ thống", iOS và Android "Mở cài đặt".
+- Đích mở: Mac `x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth` và các
+  trang tương ứng; iOS `UIApplication.openSettingsURLString`, `openNotificationSettingsURLString`;
+  Android `ACTION_APPLICATION_DETAILS_SETTINGS`, `ACTION_APP_NOTIFICATION_SETTINGS`,
+  `ACTION_ACCESSIBILITY_SETTINGS`.
+- Android không báo từ chối vĩnh viễn: suy từ `perm.requested` và
+  `shouldShowRequestPermissionRationale` (Android 11+ tự chặn sau hai lần). Khi đó không gọi hộp
+  thoại nữa mà hiện "Mở cài đặt".
+- Mac và iPhone thấy quyền còn thiếu trên điện thoại (`permissions_missing`) ở trang Thiết bị, ví dụ
+  "Thiếu quyền SMS trên điện thoại"; điện thoại đăng thông báo gợi ý tối đa một lần mỗi tính năng
+  mỗi 24 h (SET-01 trường 17).
 
 ## Riêng Android
 
-- Hộp thoại runtime là giao diện hệ thống: không vẽ lại, không che. Hệ thống gộp theo nhóm: SMS, Danh bạ, Điện thoại, Nhật ký cuộc gọi, Camera, Micro, Thiết bị ở gần.
-- Hỗ trợ tiếp cận đi qua `ConsentSheet` toàn màn; chỉ sau "Đồng ý" mới mở Cài đặt › Hỗ trợ tiếp cận. Công bố nói trước về toast của hệ thống "HandLive đã dán từ bộ nhớ đệm" (Android 12+).
-- Bản cài ngoài Google Play trên Android 13+: trước khi mở Hỗ trợ tiếp cận, hướng dẫn "Chế độ cài đặt bị hạn chế": Cài đặt › Ứng dụng › HandLive › ⋮ › "Cho phép chế độ cài đặt bị hạn chế" (SET-01 API 6).
+- Hộp thoại runtime là giao diện hệ thống: không vẽ lại, không che. Hệ thống gộp theo nhóm: SMS,
+  Danh bạ, Điện thoại, Nhật ký cuộc gọi, Camera, Micro, Thiết bị ở gần.
+- Hỗ trợ tiếp cận đi qua `ConsentSheet` toàn màn; chỉ sau "Đồng ý" mới mở Cài đặt › Hỗ trợ tiếp cận.
+  Công bố nói trước về toast của hệ thống "HandLive đã dán từ bộ nhớ đệm" (Android 12+).
+- Bản cài ngoài Google Play trên Android 13+: trước khi mở Hỗ trợ tiếp cận, hướng dẫn "Chế độ cài
+  đặt bị hạn chế": Cài đặt › Ứng dụng › HandLive › ⋮ › "Cho phép chế độ cài đặt bị hạn chế" (SET-01
+  API 6).
 
 ## Hai lựa chọn: chỉ ở ConsentSheet
 
@@ -58,11 +79,19 @@ Không chọn sẵn. Đổi nội dung công bố thì tăng phiên bản văn b
 
 ## Điểm lệch
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định 11).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): AUDIO-01 xin quyền micro cùng lúc với Bluetooth (API 3), `NSMicrophoneUsageDescription` khai ở SET-03; AUDIO-02 E7 và AUDIO-04 điều kiện 6 nói rõ khi bị từ chối thì chỉ nghe.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 5 và SET-03 khai `NSFocusStatusUsageDescription`. Còn cần đồng bộ: các câu ghi "Đề xuất" cho Android đưa vào SET-01 API 2.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 bước 7 chỉ nói cuộc gọi đến dùng mức nhạy cảm thời gian "để đến kịp lúc"; Mac tôn trọng Tập trung (quyết định 10).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): tài liệu chi tiết viết "Quyền riêng tư & Bảo mật" theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối chiếu tên mục hệ thống trên máy thật. Dấu kiểu Apple đã áp cho tài liệu chi tiết.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định
+  11).
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): AUDIO-01 xin quyền micro cùng lúc với Bluetooth
+  (API 3), `NSMicrophoneUsageDescription` khai ở SET-03; AUDIO-02 E7 và AUDIO-04 điều kiện 6 nói rõ
+  khi bị từ chối thì chỉ nghe.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 5 và SET-03 khai
+  `NSFocusStatusUsageDescription`. Còn cần đồng bộ: các câu ghi "Đề xuất" cho Android đưa vào SET-01
+  API 2.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 bước 7 chỉ nói cuộc gọi đến dùng mức nhạy
+  cảm thời gian "để đến kịp lúc"; Mac tôn trọng Tập trung (quyết định 10).
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): tài liệu chi tiết viết "Quyền riêng tư & Bảo mật"
+  theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối chiếu tên mục hệ thống trên máy
+  thật. Dấu kiểu Apple đã áp cho tài liệu chi tiết.
 
 ## Nên và không nên
 

@@ -15,25 +15,39 @@ Bốn workflow trong `.github/workflows/`. Chung cho cả bốn:
 | File | Runner | Job / bước |
 |------|--------|------------|
 | `ci-android.yml` | `ubuntu-latest` | `actions/setup-java@v5` (temurin 21); `android-actions/setup-android@v3` (`platform-tools platforms;android-36`, chấp nhận license để AGP tự tải build-tools); `gradle/actions/setup-gradle@v5` (cache `~/.gradle`, kiểm checksum wrapper; chỉ ghi cache trên `main`/`feat/*`); `cd android && ./gradlew check --stacktrace` (test + Android Lint + ktlint + detekt); khi lỗi thì upload `android/**/build/reports/` và `build/test-results/` (giữ 7 ngày) |
-| `ci-apple.yml` | `macos-15` + `maxim-lobanov/setup-xcode@v1` (`latest-stable`) | In phiên bản Xcode/Swift; `actions/cache@v4` cho DerivedData (khóa = hash `apple/Packages/*/Package.swift` + `apple/project.yml`); `xcodebuild test -scheme <Pkg> -destination 'platform=macOS'` chạy trong từng thư mục `apple/Packages/{HLProtocol,HLCrypto,HLTransport,HLDesignSystem}`; `brew install xcodegen swiftlint`; `swiftlint lint --strict` (trong `apple/`); `xcodegen generate` + `xcodebuild -list`; `xcodebuild build -project apple/HandLive.xcodeproj -scheme HandLive -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO`. Không đặt `HL_SWIFT_TESTING_PACKAGE` |
-| `ci-relay.yml` | `ubuntu-latest` | Job `lint-test`: `dtolnay/rust-toolchain@stable` (clippy, rustfmt), `Swatinem/rust-cache@v2` (`workspaces: relay`), `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`. Job `integration`: service `postgres:16-alpine` + `redis:7-alpine` có healthcheck, cổng host 55432/56379 như `docker-compose.yml`, env giống `.env.example` (`RELAY_JWT_SECRET` là chuỗi giả ghi rõ "ci-only-placeholder-not-a-secret"), `cargo test -- --ignored` |
+| `ci-apple.yml` | `macos-15` + `maxim-lobanov/setup-xcode@v1` (`latest-stable`) | In phiên bản Xcode/Swift; `actions/cache@v4` cho DerivedData (khóa = hash `apple/Packages/*/Package.swift` + `apple/project.yml`); `xcodebuild test -scheme <Pkg> -destination 'platform=macOS'` chạy trong từng thư mục `apple/Packages/{HLProtocol,HLCrypto,HLTransport,HLDesignSystem}`; `brew install xcodegen swiftlint`; `swiftlint lint --strict` (trong `apple/`); `xcodegen generate` + `xcodebuild -list`; `xcodebuild build -project apple/HandLive.xcodeproj -scheme HandLive -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO`.<br>Không đặt `HL_SWIFT_TESTING_PACKAGE` |
+| `ci-relay.yml` | `ubuntu-latest` | Job `lint-test`: `dtolnay/rust-toolchain@stable` (clippy, rustfmt), `Swatinem/rust-cache@v2` (`workspaces: relay`), `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`.<br>Job `integration`: service `postgres:16-alpine` + `redis:7-alpine` có healthcheck, cổng host 55432/56379 như `docker-compose.yml`, env giống `.env.example` (`RELAY_JWT_SECRET` là chuỗi giả ghi rõ "ci-only-placeholder-not-a-secret"), `cargo test -- --ignored` |
 | `ci-shared.yml` | `ubuntu-latest` | `actions/setup-python@v6` (3.14, cache pip theo 2 file requirements); cài `tools/vectors/requirements.txt` + `tools/schemas/requirements.txt` (đã ghim phiên bản); `verify_vectors.py`, `generate_vectors.py --check`, `check_schemas.py`, `validate_design_docs.py` |
 
 ### Quyết định
 
-1. **Tách `ci-shared.yml`, không gộp vào `ci-relay`.** Bốn script này kiểm `shared/` và `docs/detailed-design/`, không liên quan relay. Nếu đặt trong `ci-relay`, sửa tài liệu (`docs/detailed-design/**`) hay `tools/**` sẽ không kích hoạt được, vì bộ lọc đường dẫn của relay không phủ các thư mục đó. Mở rộng bộ lọc thì mỗi lần sửa tài liệu lại chạy luôn cargo. Tách riêng thì workflow nhẹ (Python, khoảng 1 phút) và có bộ lọc riêng: `shared/**`, `tools/**`, `docs/detailed-design/**` (`check_schemas.py` đọc ví dụ trong `docs/detailed-design/`).
+1. **Tách `ci-shared.yml`, không gộp vào `ci-relay`.** Bốn script này kiểm `shared/` và
+   `docs/detailed-design/`, không liên quan relay. Nếu đặt trong `ci-relay`, sửa tài liệu
+   (`docs/detailed-design/**`) hay `tools/**` sẽ không kích hoạt được, vì bộ lọc đường dẫn của relay
+   không phủ các thư mục đó. Mở rộng bộ lọc thì mỗi lần sửa tài liệu lại chạy luôn cargo. Tách riêng
+   thì workflow nhẹ (Python, khoảng 1 phút) và có bộ lọc riêng: `shared/**`, `tools/**`,
+   `docs/detailed-design/**` (`check_schemas.py` đọc ví dụ trong `docs/detailed-design/`).
 2. **Test Apple: `xcodebuild test` chạy trong thư mục package, không dùng `swift test` hay `-workspace`.**
-   - Chọn `xcodebuild` vì thẻ việc ghi `xcodebuild test`. Nó cũng chắc chắn biên dịch asset catalog của HLDesignSystem (actool) và các khối `#Preview`: đây chính là phần M0.2 chưa kiểm được tại máy.
-   - Chạy trong thư mục package vì không phụ thuộc vào `.xcodeproj` sinh ra. Package chỉ có một product trùng tên nên xcodebuild tự sinh scheme `<Pkg>` kèm test target.
-   - Bốn package chạy nối tiếp trong một job (vòng lặp có `::group::`), mỗi package có `-derivedDataPath` riêng nằm dưới thư mục được cache.
-3. **Có workflow Android mà `shared/**` không kích hoạt?** Không có. Test của cả ba nền tảng đều đọc `shared/test-vectors` hoặc `shared/schemas`, và relay đọc `device-id.json`. Vì vậy `shared/**` kích hoạt cả bốn workflow.
-4. **Android dùng `./gradlew check`** chứ không `test lint` như dòng T0.1 trong phase-00. Theo báo cáo A0.1, `check` = test + lint + ktlintCheck + detekt, bao trọn `test lint`.
+   - Chọn `xcodebuild` vì thẻ việc ghi `xcodebuild test`. Nó cũng chắc chắn biên dịch asset catalog
+     của HLDesignSystem (actool) và các khối `#Preview`: đây chính là phần M0.2 chưa kiểm được tại
+     máy.
+   - Chạy trong thư mục package vì không phụ thuộc vào `.xcodeproj` sinh ra. Package chỉ có một
+     product trùng tên nên xcodebuild tự sinh scheme `<Pkg>` kèm test target.
+   - Bốn package chạy nối tiếp trong một job (vòng lặp có `::group::`), mỗi package có
+     `-derivedDataPath` riêng nằm dưới thư mục được cache.
+3. **Có workflow Android mà `shared/**
+   ` không kích hoạt?** Không có. Test của cả ba nền tảng đều đọc ` shared/test-vectors` hoặc
+   `shared/schemas`, và relay đọc `device-id.json`. Vì vậy `shared/**` kích hoạt cả bốn workflow.
+4. **Android dùng `./gradlew check`** chứ không `test lint` như dòng T0.1 trong phase-00. Theo báo
+   cáo A0.1, `check` = test + lint + ktlintCheck + detekt, bao trọn `test lint`.
 
 ## Đường dẫn tạo/sửa
 
-- Tạo: `.github/workflows/ci-android.yml`, `.github/workflows/ci-apple.yml`, `.github/workflows/ci-relay.yml`, `.github/workflows/ci-shared.yml`
+- Tạo: `.github/workflows/ci-android.yml`, `.github/workflows/ci-apple.yml`,
+  `.github/workflows/ci-relay.yml`, `.github/workflows/ci-shared.yml`
 - Tạo: báo cáo này. Không sửa file nào khác.
-- Phụ: `xcodegen generate` sinh lại `apple/HandLive.xcodeproj`. Thư mục này nằm trong `.gitignore`, không ảnh hưởng gì.
+- Phụ: `xcodegen generate` sinh lại `apple/HandLive.xcodeproj`. Thư mục này nằm trong `.gitignore`,
+  không ảnh hưởng gì.
 
 ## Lệnh test và kết quả (đầu ra thật)
 
@@ -109,7 +123,8 @@ $ python tools/docs/validate_design_docs.py
 files=8 leaves=33 problems=0                                  (exit=0)
 ```
 
-Dòng "THỪA" chỉ là thông tin: hai file roundtrip do Android và Apple ghi, script không sinh. Lệnh vẫn exit 0.
+Dòng "THỪA" chỉ là thông tin: hai file roundtrip do Android và Apple ghi, script không sinh. Lệnh
+vẫn exit 0.
 
 Apple (chỉ phần chạy được với Command Line Tools):
 
@@ -127,16 +142,27 @@ Ba lỗi `swiftlint --strict` ghi trong báo cáo M0.1 đã hết.
 
 Kho không có remote nên chưa run workflow nào thật. Chưa kiểm được:
 
-1. **Android**: `./gradlew check` trên runner. Theo yêu cầu, không chạy Gradle tại máy; điều phối viên tự chạy. Cũng chưa kiểm việc `setup-android` cài `platforms;android-36` và AGP 9.4.1 tự tải build-tools trên `ubuntu-latest`.
+1. **Android**: `./gradlew check` trên runner. Theo yêu cầu, không chạy Gradle tại máy; điều phối
+   viên tự chạy. Cũng chưa kiểm việc `setup-android` cài `platforms;android-36` và AGP 9.4.1 tự tải
+   build-tools trên `ubuntu-latest`.
 2. **Apple**: toàn bộ `xcodebuild`, vì máy không có Xcode:
-   - `xcodebuild test` cho 4 package, gồm asset catalog, `#Preview` và Testing đi kèm Xcode khi không có `HL_SWIFT_TESTING_PACKAGE`.
+   - `xcodebuild test` cho 4 package, gồm asset catalog, `#Preview` và Testing đi kèm Xcode khi
+     không có `HL_SWIFT_TESTING_PACKAGE`.
    - Build app `HandLive`.
    - Phiên bản Xcode mà `latest-stable` chọn trên `macos-15`.
-   - **Rủi ro cụ thể:** `project.yml` không khai báo `schemes:`, và `xcodegen generate` không sinh file `.xcscheme` nào (đã kiểm: `find apple/HandLive.xcodeproj -name '*.xcscheme'` trả rỗng). Bước build dựa vào việc xcodebuild tự tạo scheme `HandLive` từ target, nên đã thêm `xcodebuild -list` để thấy scheme trong log. Nếu CI báo không có scheme `HandLive`, cần thêm `scheme: {}` cho target `HandLive` trong `apple/project.yml` (thẻ này không được sửa file đó).
-   - `swiftlint` trên runner chạy với toolchain Xcode thay vì CLT. Luật giống nhau, nhưng phiên bản brew có thể khác 0.65.1.
-3. **Relay**: service container của GitHub (cổng 55432/56379, healthcheck) và cache `Swatinem/rust-cache`. Lệnh cargo đã xanh tại máy.
-4. **Cache**: hiệu quả của cache (hit/miss) và việc `setup-gradle` chỉ ghi cache trên `main`/`feat/*`.
-5. **Tiêu chí G0 "Ba workflow xanh trên nhánh `feat/phase-00-khung`"**: chỉ đánh dấu được khi có remote và đẩy nhánh lên.
+   - **Rủi ro cụ thể:** `project.yml` không khai báo `schemes:`, và `xcodegen generate` không sinh
+     file `.xcscheme` nào (đã kiểm: `find apple/HandLive.xcodeproj -name '*.xcscheme'` trả rỗng).
+     Bước build dựa vào việc xcodebuild tự tạo scheme `HandLive` từ target, nên đã thêm
+     `xcodebuild -list` để thấy scheme trong log. Nếu CI báo không có scheme `HandLive`, cần thêm
+     `scheme: {}` cho target `HandLive` trong `apple/project.yml` (thẻ này không được sửa file đó).
+   - `swiftlint` trên runner chạy với toolchain Xcode thay vì CLT. Luật giống nhau, nhưng phiên bản
+     brew có thể khác 0.65.1.
+3. **Relay**: service container của GitHub (cổng 55432/56379, healthcheck) và cache
+   `Swatinem/rust-cache`. Lệnh cargo đã xanh tại máy.
+4. **Cache**: hiệu quả của cache (hit/miss) và việc `setup-gradle` chỉ ghi cache trên `main`
+   /`feat/*`.
+5. **Tiêu chí G0 "Ba workflow xanh trên nhánh `feat/phase-00-khung`"**: chỉ đánh dấu được khi có
+   remote và đẩy nhánh lên.
 
 ## Điểm lệch với tài liệu và cách xử lý
 
@@ -147,7 +173,9 @@ Kho không có remote nên chưa run workflow nào thật. Chưa kiểm được
 | 3 | `apple/README.md` gợi ý `xcodebuild test -workspace apple/HandLive.xcworkspace -scheme HLCrypto` | CI chạy `xcodebuild test -scheme <Pkg>` trong thư mục package (không cần `xcodegen` trước khi test) | Có thể thêm lệnh này vào README |
 | 4 | `docs/deployment-guide.md` chưa có phần CI | Không sửa (ngoài phạm vi được phép) | Thêm mục ngắn liệt kê 4 workflow khi cập nhật tài liệu |
 
-Gợi ý (chưa làm, vì không có trong thẻ): nhánh iOS của các package (`#if os(iOS)`) chưa được biên dịch ở đâu. Sau này có thể thêm bước `xcodebuild build -scheme <Pkg> -destination 'generic/platform=iOS'` vào `ci-apple.yml`.
+Gợi ý (chưa làm, vì không có trong thẻ): nhánh iOS của các package (`#if os(iOS)`) chưa được biên
+dịch ở đâu. Sau này có thể thêm bước
+`xcodebuild build -scheme <Pkg> -destination 'generic/platform=iOS'` vào `ci-apple.yml`.
 
 ## Câu hỏi còn mở
 

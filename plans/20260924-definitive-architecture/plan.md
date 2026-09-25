@@ -4,14 +4,20 @@
 > **Tagline:** "WebSocket cho dữ liệu, Bluetooth cho giọng nói"  
 > **Ngày:** 2026-09-24  
 > **Trạng thái:** Quyết định cuối cùng  
-> **Cơ sở:** Tổng hợp từ 3 đề xuất (A: Bluetooth-Native, B: Network-First, C: Plugin-Hybrid) qua 3 vòng phản biện (Technical Feasibility, Security & Privacy, UX & Reliability)
-> **Cập nhật 2026-09-24:** §13 (D9–D12) thay một số điểm ở §3.1, §6.1, §7, §10.3 sau kiểm chứng nền tảng — đọc §13 trước khi triển khai. Thiết kế chi tiết: `docs/detailed-design/`.
+> **Cơ sở:** Tổng hợp từ 3 đề xuất (A: Bluetooth-Native, B: Network-First, C: Plugin-Hybrid) qua 3
+> vòng phản biện (Technical Feasibility, Security & Privacy, UX & Reliability)
+> **Cập nhật 2026-09-24:** §13 (D9–D12) thay một số điểm ở §3.1, §6.1, §7, §10.3 sau kiểm chứng nền
+> tảng — đọc §13 trước khi triển khai. Thiết kế chi tiết: `docs/detailed-design/`.
 
 ---
 
 ## 1. Triết lý thiết kế
 
-WebSocket làm kênh truyền chính cho mọi dữ liệu (clipboard, SMS, call metadata, notifications). Bluetooth HFP chỉ dùng cho một việc duy nhất: relay audio cuộc gọi sang macOS — vì đây là cách duy nhất đã chứng minh hiệu quả trên Android 10+. Khi HFP không khả dụng (user đang dùng AirPods, ngoài BT range), fallback sang Opus codec qua WebSocket với latency chấp nhận được (~100-150ms). Mỗi feature hoạt động độc lập — clipboard hỏng không kéo theo SMS chết.
+WebSocket làm kênh truyền chính cho mọi dữ liệu (clipboard, SMS, call metadata, notifications).
+Bluetooth HFP chỉ dùng cho một việc duy nhất: relay audio cuộc gọi sang macOS — vì đây là cách duy
+nhất đã chứng minh hiệu quả trên Android 10+. Khi HFP không khả dụng (user đang dùng AirPods, ngoài
+BT range), fallback sang Opus codec qua WebSocket với latency chấp nhận được (~100-150ms). Mỗi
+feature hoạt động độc lập — clipboard hỏng không kéo theo SMS chết.
 
 ---
 
@@ -69,9 +75,12 @@ Fallback khi BT HFP không khả dụng:
 | `crypto` | Tink 1.14+ (`XChaCha20Poly1305`, `X25519`) | E2E encryption mọi payload |
 | `capability-negotiator` | Custom protocol handler | Trao đổi feature set khi kết nối, version negotiation |
 
-**Foreground Service:** Chạy dạng `FOREGROUND_SERVICE_CONNECTED_DEVICE` (Android 14+). Notification hiển thị trạng thái kết nối.
+**Foreground Service:** Chạy dạng `FOREGROUND_SERVICE_CONNECTED_DEVICE` (Android 14+). Notification
+hiển thị trạng thái kết nối.
 
-**Clipboard background access (Android 10+):** mặc định là Accessibility Service phát hiện thao tác Sao chép rồi mở `ClipboardReadActivity` trong suốt để đọc (D4/D12, C15, C17), có công bố và xin đồng ý; dự phòng là gửi thủ công. Chi tiết: `docs/detailed-design/04-clipboard.md` CLIP-01.
+**Clipboard background access (Android 10+):** mặc định là Accessibility Service phát hiện thao tác
+Sao chép rồi mở `ClipboardReadActivity` trong suốt để đọc (D4/D12, C15, C17), có công bố và xin đồng
+ý; dự phòng là gửi thủ công. Chi tiết: `docs/detailed-design/04-clipboard.md` CLIP-01.
 
 ### 3.2 macOS App (Swift 6, AppKit, macOS 13+)
 
@@ -86,20 +95,23 @@ Fallback khi BT HFP không khả dụng:
 | `notification-center` | `UNUserNotificationCenter` | Native macOS notifications cho incoming call, SMS |
 | `crypto` | CryptoKit (`Curve25519`, `ChaChaPoly`) | E2E decryption/encryption |
 
-**Opus codec:** libopus 1.5+ linked via Swift Package Manager hoặc C bridge. Decode Opus frames từ WebSocket khi HFP không khả dụng.
+**Opus codec:** libopus 1.5+ linked via Swift Package Manager hoặc C bridge. Decode Opus frames từ
+WebSocket khi HFP không khả dụng.
 
 ### 3.3 iOS App (Swift 6, SwiftUI, iOS 16+)
 
 | Module | API/Thư viện | Chức năng |
 |--------|-------------|-----------|
 | `ws-client` | `URLSessionWebSocketTask`, `NWBrowser` | WebSocket tới Android |
-| `clipboard-sync` | `UIPasteboard.general` (foreground, iOS 16+ paste confirmation banner) |  Đồng bộ clipboard |
+| `clipboard-sync` | `UIPasteboard.general` (foreground, iOS 16+ paste confirmation banner) | Đồng bộ clipboard |
 | `sms-ui` | SwiftUI views | Hiển thị/trả lời SMS |
 | `call-metadata-ui` | SwiftUI views | Hiển thị caller ID, duration — KHÔNG có audio |
 | `push-handler` | APNs alert + Notification Service Extension (không PushKit/CallKit — §3.3, detailed design C7) | Background notification khi app suspended |
 | `crypto` | CryptoKit | E2E |
 
-**Giới hạn iOS rõ ràng:** Không có call audio relay. Apple không expose HFP HF role API. `CallKit` trên iOS yêu cầu VoIP provider, không phù hợp cho relay. Chấp nhận iOS là "notification + clipboard + SMS device".
+**Giới hạn iOS rõ ràng:** Không có call audio relay. Apple không expose HFP HF role API. `CallKit`
+trên iOS yêu cầu VoIP provider, không phù hợp cho relay. Chấp nhận iOS là "notification + clipboard
++ SMS device".
 
 ### 3.4 Cloud Relay Server (Rust, Actix-web 4)
 
@@ -110,7 +122,8 @@ Fallback khi BT HFP không khả dụng:
 | `push-proxy` | `a]2` (FCM), `apns2` (APNs) | Push notifications |
 | `store` | `sqlx` + PostgreSQL | Device registry, session metadata (KHÔNG lưu message content) |
 
-**Zero-knowledge:** Server chỉ relay encrypted blobs. Không decrypt, không log payload. Metadata tối thiểu: device_id (hashed), timestamp, message_size. Tự động xóa session data sau 30 ngày.
+**Zero-knowledge:** Server chỉ relay encrypted blobs. Không decrypt, không log payload. Metadata tối
+thiểu: device_id (hashed), timestamp, message_size. Tự động xóa session data sau 30 ngày.
 
 ---
 
@@ -125,7 +138,8 @@ Fallback khi BT HFP không khả dụng:
 | **Call audio** | BT HFP SCO (mSBC 16kHz) | Opus/WebSocket LAN | Opus/Cloud relay | <40ms (BT), <150ms (WS) |
 | **Notifications** | WebSocket LAN | APNs/FCM push | — | <500ms |
 
-**Fallback chain cho call audio:** Khi user có AirPods/headset đang chiếm HFP slot hoặc ngoài BT range:
+**Fallback chain cho call audio:** Khi user có AirPods/headset đang chiếm HFP slot hoặc ngoài BT
+range:
 1. Android capture audio qua `AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION)`
 2. Encode Opus 16kHz mono, 32kbps, frame size 20ms
 3. Gửi qua WebSocket LAN (hoặc cloud relay nếu ngoài LAN)
@@ -147,7 +161,9 @@ Fallback khi BT HFP không khả dụng:
 }
 ```
 
-Envelope là plaintext JSON. `payload` là XChaCha20-Poly1305 encrypted. Cho call audio, `type: "call_audio"` với payload là encrypted Opus frames, gửi dạng WebSocket binary frame (không JSON wrap) để giảm overhead.
+Envelope là plaintext JSON. `payload` là XChaCha20-Poly1305 encrypted. Cho call audio,
+`type: "call_audio"` với payload là encrypted Opus frames, gửi dạng WebSocket binary frame (không
+JSON wrap) để giảm overhead.
 
 Binary audio frame format:
 ```
@@ -173,7 +189,8 @@ Binary audio frame format:
 9. Lưu long-term identity keys vào Android Keystore / macOS Keychain / iOS Keychain
 ```
 
-**Ưu điểm so với 6-digit PIN:** 256-bit entropy (vs ~20-bit), không thể brute-force, xác thực implicit qua camera.
+**Ưu điểm so với 6-digit PIN:** 256-bit entropy (vs ~20-bit), không thể brute-force, xác thực
+implicit qua camera.
 
 ### 5.3 Capability Negotiation
 
@@ -187,11 +204,13 @@ Khi kết nối, mỗi device gửi message `type: "capability"`:
 }
 ```
 
-Devices chỉ kích hoạt features mà CẢ HAI hỗ trợ. iOS gửi không có `call_audio_*` → macOS biết không stream audio cho iOS.
+Devices chỉ kích hoạt features mà CẢ HAI hỗ trợ. iOS gửi không có `call_audio_*` → macOS biết không
+stream audio cho iOS.
 
 ### 5.4 Conflict Resolution
 
-**Clipboard:** Last-writer-wins dựa trên `ts` (UTC milliseconds). Nếu `|ts_a - ts_b| < 500ms` → giữ bản local, gửi `conflict` event cho user quyết định.
+**Clipboard:** Last-writer-wins dựa trên `ts` (UTC milliseconds). Nếu `|ts_a - ts_b| < 500ms` → giữ
+bản local, gửi `conflict` event cho user quyết định.
 
 **SMS reply:** Optimistic send. Nếu Android báo gửi thất bại → hiển thị retry trên macOS/iOS.
 
@@ -212,7 +231,9 @@ Devices chỉ kích hoạt features mà CẢ HAI hỗ trợ. iOS gửi không c�
 | Forward secrecy | Ratchet mỗi 24h hoặc 10,000 messages | Compromise 1 key không lộ history |
 | Key storage | Android Keystore (StrongBox khi có), macOS/iOS Keychain (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`) | Hardware-backed khi khả dụng |
 
-**Dual-layer cho BT audio (bắt buộc):** BT link encryption (SSP) chỉ là lớp 1. App-level XChaCha20-Poly1305 encrypt mỗi SCO frame trước khi truyền. Lý do: BT link encryption đã bị crack nhiều lần (KNOB attack, BIAS attack). Voice data CẦN app-level E2E.
+**Dual-layer cho BT audio (bắt buộc):** BT link encryption (SSP) chỉ là lớp 1. App-level
+XChaCha20-Poly1305 encrypt mỗi SCO frame trước khi truyền. Lý do: BT link encryption đã bị crack
+nhiều lần (KNOB attack, BIAS attack). Voice data CẦN app-level E2E.
 
 ### 6.2 Threat Model
 
@@ -227,7 +248,10 @@ Devices chỉ kích hoạt features mà CẢ HAI hỗ trợ. iOS gửi không c�
 
 ### 6.3 Pháp lý
 
-Call audio relay giữa devices CỦA CÙNG MỘT USER (tương tự Microsoft Phone Link, Apple Continuity) — rủi ro pháp lý thấp hơn relay cho bên thứ ba. Tuy nhiên: hiển thị disclosure rõ ràng khi bật call audio relay. Cần legal review cho các bang two-party consent (California, Florida, Illinois...). Không ghi âm — chỉ relay realtime.
+Call audio relay giữa devices CỦA CÙNG MỘT USER (tương tự Microsoft Phone Link, Apple Continuity) —
+rủi ro pháp lý thấp hơn relay cho bên thứ ba. Tuy nhiên: hiển thị disclosure rõ ràng khi bật call
+audio relay. Cần legal review cho các bang two-party consent (California, Florida, Illinois...).
+Không ghi âm — chỉ relay realtime.
 
 ---
 
@@ -282,15 +306,20 @@ macOS:
   → Mic capture → Opus encode → encrypt → gửi ngược Android
 ```
 
-**Jitter buffer:** Adaptive, 40-120ms. Bắt đầu 60ms, tăng/giảm theo network jitter measurement (running standard deviation of inter-arrival times).
+**Jitter buffer:** Adaptive, 40-120ms. Bắt đầu 60ms, tăng/giảm theo network jitter measurement
+(running standard deviation of inter-arrival times).
 
-**Phát hiện HFP conflict:** `BluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET)` — nếu đã có device khác kết nối HFP → tự động chuyển Opus/WebSocket, thông báo user.
+**Phát hiện HFP conflict:** `BluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET)` —
+nếu đã có device khác kết nối HFP → tự động chuyển Opus/WebSocket, thông báo user.
 
 ### 7.3 Echo Cancellation
 
-macOS: `AUVoiceProcessingIO` (AudioUnit component type `kAudioUnitType_Output`, subtype `kAudioUnitSubType_VoiceProcessingIO`) xử lý AEC, noise suppression, AGC tự động. Đây là cùng engine FaceTime dùng.
+macOS: `AUVoiceProcessingIO` (AudioUnit component type `kAudioUnitType_Output`, subtype
+`kAudioUnitSubType_VoiceProcessingIO`) xử lý AEC, noise suppression, AGC tự động. Đây là cùng engine
+FaceTime dùng.
 
-Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` tự động bật AEC phía Android.
+Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` tự động bật AEC phía
+Android.
 
 ---
 
@@ -319,7 +348,8 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 - Cloud relay server (Rust/Actix-web) cho ngoài LAN
 - APNs/FCM push notifications
 
-**Kết quả đo được:** SMS notification trên macOS <500ms từ lúc Android nhận. Reply delivery confirmed <2s.
+**Kết quả đo được:** SMS notification trên macOS <500ms từ lúc Android nhận. Reply delivery
+confirmed <2s.
 
 ### Phase 3: Call Metadata + Control
 **Mục tiêu:** Nhận/quản lý cuộc gọi từ macOS  
@@ -340,10 +370,12 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 - Opus/WebSocket fallback khi HFP unavailable
 - Adaptive jitter buffer
 - HFP conflict detection + automatic fallback
-- Đường HFP dựa vào mã hóa liên kết Bluetooth (D11, C14); đường Opus/WS mã hóa hai lớp (TLS + E2E) kèm test
+- Đường HFP dựa vào mã hóa liên kết Bluetooth (D11, C14); đường Opus/WS mã hóa hai lớp (TLS + E2E)
+  kèm test
 - Công bố rủi ro KNOB/BIAS trong AUDIO-01
 
-**Kết quả đo được:** Call audio MOS score >=3.5 (BT), >=3.0 (WebSocket). Echo cancellation: echo return loss >40dB.
+**Kết quả đo được:** Call audio MOS score >=3.5 (BT), >=3.0 (WebSocket). Echo cancellation: echo
+return loss >40dB.
 
 ---
 
@@ -352,30 +384,41 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 ### R1: `IOBluetoothHandsFreeDevice` bị deprecate (Impact: Critical)
 **Xác suất:** Trung bình (Apple đang dần chuyển sang DriverKit)  
 **Giảm thiểu:** Wrap mọi IOBluetooth calls trong protocol abstraction. Monitor WWDC hàng năm.  
-**Plan B:** CoreBluetooth BLE + custom GATT service + Opus stream. Chất lượng kém hơn SCO nhưng không phụ thuộc IOBluetooth legacy. Latency ước tính ~200-300ms — vẫn dùng được cho voice.  
-**Plan C:** Nếu cả IOBluetooth lẫn BLE custom đều fail → call audio chỉ qua Opus/WebSocket (đã có sẵn từ fallback path). Mất zero-network advantage nhưng feature vẫn hoạt động.
+**Plan B:** CoreBluetooth BLE + custom GATT service + Opus stream. Chất lượng kém hơn SCO nhưng
+không phụ thuộc IOBluetooth legacy. Latency ước tính ~200-300ms — vẫn dùng được cho voice.
+**Plan C:** Nếu cả IOBluetooth lẫn BLE custom đều fail → call audio chỉ qua Opus/WebSocket (đã có
+sẵn từ fallback path). Mất zero-network advantage nhưng feature vẫn hoạt động.
 
 ### R2: `BluetoothHeadsetClient` @SystemApi bị khóa (Impact: Critical)
 **Xác suất:** Thấp-Trung bình (Microsoft Phone Link cũng dùng, Google khó khóa hoàn toàn)  
 **Giảm thiểu:** Dùng Shizuku (ADB-level permission). Monitor AOSP changes mỗi Android beta.  
-**Plan B:** `CompanionDeviceManager` API (Android 12+) — Google đang mở rộng API này. Nếu Google thêm call audio relay vào CDM → migrate.  
-**Plan C:** Opus/WebSocket fallback là permanent path — call audio vẫn hoạt động không cần BT HFP, chỉ tăng latency ~100ms.
+**Plan B:** `CompanionDeviceManager` API (Android 12+) — Google đang mở rộng API này. Nếu Google
+thêm call audio relay vào CDM → migrate.
+**Plan C:** Opus/WebSocket fallback là permanent path — call audio vẫn hoạt động không cần BT HFP,
+chỉ tăng latency ~100ms.
 
 ### R3: Play Store reject SMS permissions (Impact: High)
 **Xác suất:** Trung bình (Google nghiêm với SMS)  
-**Giảm thiểu:** Chuẩn bị Permission Declaration Form chi tiết: video demo, use case documentation, privacy policy.  
-**Plan B:** Notification Listener Service — đọc SMS notifications thay vì SMS trực tiếp. Mất `SEND_SMS` nhưng giữ được nhận SMS.  
-**Plan C:** Distribute qua F-Droid + direct APK. Mất Play Store reach nhưng không bị hạn chế permissions.
+**Giảm thiểu:** Chuẩn bị Permission Declaration Form chi tiết: video demo, use case documentation,
+privacy policy.
+**Plan B:** Notification Listener Service — đọc SMS notifications thay vì SMS trực tiếp. Mất
+`SEND_SMS` nhưng giữ được nhận SMS.
+**Plan C:** Distribute qua F-Droid + direct APK. Mất Play Store reach nhưng không bị hạn chế
+permissions.
 
 ### R4: Opus/WebSocket call audio latency vượt ngưỡng chấp nhận (Impact: Medium)
 **Xác suất:** Thấp (LAN <10ms RTT, Opus encode/decode ~5ms)  
-**Giảm thiểu:** Adaptive jitter buffer. Opus `OPUS_APPLICATION_VOIP` mode. Frame size 20ms, không lớn hơn.  
-**Plan B:** Nếu LAN latency OK nhưng cloud relay quá chậm → deploy edge servers tại các region chính (SEA, US). Hoặc dùng TURN relay (coturn) thay vì custom relay.
+**Giảm thiểu:** Adaptive jitter buffer. Opus `OPUS_APPLICATION_VOIP` mode. Frame size 20ms, không
+lớn hơn.
+**Plan B:** Nếu LAN latency OK nhưng cloud relay quá chậm → deploy edge servers tại các region chính
+(SEA, US). Hoặc dùng TURN relay (coturn) thay vì custom relay.
 
 ### R5: Android OEM fragmentation (BT stack khác nhau) (Impact: Medium)
 **Xác suất:** Cao (đặc biệt Samsung, Xiaomi, OPPO)  
-**Giảm thiểu:** Test matrix: Samsung Galaxy S/A series, Pixel, Xiaomi Redmi, OPPO. Minimum 6 devices.  
-**Plan B:** OEM-specific workarounds wrapped trong strategy pattern. `BtAdapterStrategy` interface với `SamsungBtAdapter`, `PixelBtAdapter`, `GenericBtAdapter` implementations. Feature flags per OEM.
+**Giảm thiểu:** Test matrix: Samsung Galaxy S/A series, Pixel, Xiaomi Redmi, OPPO. Minimum 6
+devices.
+**Plan B:** OEM-specific workarounds wrapped trong strategy pattern. `BtAdapterStrategy` interface
+với `SamsungBtAdapter`, `PixelBtAdapter`, `GenericBtAdapter` implementations. Feature flags per OEM.
 
 ---
 
@@ -383,9 +426,13 @@ Android: `AudioRecord` với `MediaRecorder.AudioSource.VOICE_COMMUNICATION` t�
 
 ### 10.1 Tổng quan
 
-Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom, Google Meet, FaceTime, OBS như camera/mic thật. Mô hình đã chứng minh bởi DroidCam (~95-130ms), Camo (~50-70ms), scrcpy (~35-70ms).
+Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom, Google Meet, FaceTime, OBS
+như camera/mic thật. Mô hình đã chứng minh bởi DroidCam (~95-130ms), Camo (~50-70ms), scrcpy
+(~35-70ms).
 
-**Triết lý:** WiFi là primary — hoàn toàn không dây, zero-config. USB chỉ là optional boost tự kích hoạt khi cắm cáp (giảm latency, sạc pin đồng thời). Video dùng kênh WebSocket riêng, không chia sẻ với control channel (clipboard/SMS).
+**Triết lý:** WiFi là primary — hoàn toàn không dây, zero-config. USB chỉ là optional boost tự kích
+hoạt khi cắm cáp (giảm latency, sạc pin đồng thời). Video dùng kênh WebSocket riêng, không chia sẻ
+với control channel (clipboard/SMS).
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -424,7 +471,7 @@ Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom
 | `video-encoder` | MediaCodec HW (`video/avc`) | H.264 Constrained Baseline, Level 3.1 (720p) / 4.0 (1080p). `COLOR_FormatSurface`. `BITRATE_MODE_CBR` |
 | `audio-capture` | AudioRecord 48kHz PCM16 mono | `CAMCORDER` source. `setPerformanceMode(LOW_LATENCY)` (API 26+) |
 | `audio-encoder` | libopus via JNI | 32kbps, frame 10ms, `RESTRICTED_LOWDELAY`. Algorithmic delay ~13ms |
-| `stream-service` | ForegroundService `camera\|microphone` | Android 14+ bắt buộc. Notification persistent |
+| `stream-service` | ForegroundService `camera\ | microphone` | Android 14+ bắt buộc. Notification persistent |
 | `adaptive-quality` | `PowerManager.getThermalHeadroom()` | Headroom ≥0.7 → giảm resolution/fps. `setParameters(PARAMETER_KEY_VIDEO_BITRATE)` dynamic |
 
 **Cấu hình MediaCodec low-latency:**
@@ -446,16 +493,19 @@ Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom
 
 **Virtual Camera — CMIOExtension (macOS 12.3+, ổn định từ 14.2+):**
 - `CMIOExtensionProviderSource` + `CMIOExtensionDeviceSource` + `CMIOExtensionStreamSource`
-- Source/Sink topology: main app push `CMSampleBuffer` vào sink stream → extension forward ra source stream
+- Source/Sink topology: main app push `CMSampleBuffer` vào sink stream → extension forward ra source
+  stream
 - IOSurface-backed `CVPixelBuffer` cho zero-copy
 - Pixel format: `kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange` (NV12)
-- Tương thích: FaceTime, Zoom, Teams, Meet (Chrome), Safari, OBS, Slack. Discord/Webex cần workaround re-codesign
+- Tương thích: FaceTime, Zoom, Teams, Meet (Chrome), Safari, OBS, Slack. Discord/Webex cần
+  workaround re-codesign
 - Distribution: App Store compatible (system extension trong app bundle)
 
 **Video Decode — VideoToolbox:**
 - `VTDecompressionSession` HW decode H.264
 - `kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder: true`
-- Output: IOSurface-backed `CVPixelBuffer` → `CMSampleBufferCreateForImageBuffer()` → feed CMIOExtension
+- Output: IOSurface-backed `CVPixelBuffer` → `CMSampleBufferCreateForImageBuffer()` → feed
+  CMIOExtension
 - Latency decode: ~3ms (Apple Silicon, Baseline H.264 no B-frames)
 
 **Virtual Microphone — AudioServerPlugin:**
@@ -479,11 +529,16 @@ Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom
 | **USB (ADB forward)** | ~45-55ms | ~11 MiB/s (88 Mbps) | Latency thấp nhất, sạc pin, ổn định | Cần dây, USB debugging |
 | **WiFi UDP raw** | ~60-90ms | Tương tự | Không head-of-line blocking | Phải tự xây reliability |
 
-**Quyết định:** WiFi WebSocket binary frames là primary — kết nối RIÊNG cho video/audio, không chia sẻ với control channel (clipboard/SMS). Hoàn toàn không dây, zero-config, dùng mDNS discovery có sẵn.
+**Quyết định:** WiFi WebSocket binary frames là primary — kết nối RIÊNG cho video/audio, không chia
+sẻ với control channel (clipboard/SMS). Hoàn toàn không dây, zero-config, dùng mDNS discovery có
+sẵn.
 
-**USB auto-boost (optional):** Khi user cắm cáp USB, hệ thống tự detect và chuyển sang ADB forward TCP (latency ~45ms thay vì ~100ms). Khi rút cáp → tự fallback về WiFi, không gián đoạn stream.
+**USB auto-boost (optional):** Khi user cắm cáp USB, hệ thống tự detect và chuyển sang ADB forward
+TCP (latency ~45ms thay vì ~100ms). Khi rút cáp → tự fallback về WiFi, không gián đoạn stream.
 
-**Auto-detect USB:** macOS IOKit `IOServiceAddMatchingNotification` filter Android vendor/product ID. Khi detect → kiểm tra ADB available → `adb forward tcp:PORT tcp:PORT` → chuyển transport. Không yêu cầu user bật USB debugging trước — chỉ prompt khi cắm cáp lần đầu nếu ADB chưa bật.
+**Auto-detect USB:** macOS IOKit `IOServiceAddMatchingNotification` filter Android vendor/product
+ID. Khi detect → kiểm tra ADB available → `adb forward tcp:PORT tcp:PORT` → chuyển transport. Không
+yêu cầu user bật USB debugging trước — chỉ prompt khi cắm cáp lần đầu nếu ADB chưa bật.
 
 ### 10.5 Latency Budget (720p30)
 
@@ -509,7 +564,8 @@ Biến Android thành webcam + microphone cho macOS — xuất hiện trong Zoom
 | IOSurface → CMIOExtension | ~0 ms (zero-copy) |
 | **Tổng USB** | **~35-55 ms** |
 
-So sánh: Continuity Camera (Apple) ~30-50ms, Camo ~50-70ms, DroidCam ~95-130ms. HandLive target: **<120ms WiFi (primary), <70ms USB (khi cắm cáp)**.
+So sánh: Continuity Camera (Apple) ~30-50ms, Camo ~50-70ms, DroidCam ~95-130ms. HandLive target:
+**<120ms WiFi (primary), <70ms USB (khi cắm cáp)**.
 
 ### 10.6 Battery & Thermal
 
@@ -522,7 +578,9 @@ So sánh: Continuity Camera (Apple) ~30-50ms, Camo ~50-70ms, DroidCam ~95-130ms.
 
 ### 10.7 Encryption
 
-Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên USB LAN, overhead encrypt ~0.1ms/frame cho 720p — negligible. Không có option tắt encryption — bảo mật nhất quán toàn hệ thống.
+Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên USB LAN, overhead encrypt
+~0.1ms/frame cho 720p — negligible. Không có option tắt encryption — bảo mật nhất quán toàn hệ
+thống.
 
 ### 10.8 Rủi ro Phase 5
 
@@ -533,7 +591,8 @@ Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên U
 
 **R7: MediaCodec HW encoder fragmentation (Impact: Medium)**
 - Một số budget SoC cho H.264 kém chất lượng hoặc không hỗ trợ low-latency flags
-- **Plan B:** Software encode (libx264 via JNI) cho devices có HW encoder kém. Tốn pin hơn nhưng nhất quán
+- **Plan B:** Software encode (libx264 via JNI) cho devices có HW encoder kém. Tốn pin hơn nhưng
+  nhất quán
 
 **R8: AudioServerPlugin ký bằng Developer ID (Impact: Low)**
 - Bắt buộc ký Developer ID — ad-hoc bị reject
@@ -551,7 +610,7 @@ Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên U
 | **P3: Call Meta** | Telecom public API + call panel + control | 1 pm | 1 pm | 0.5 pm | — | 0.5 pm | **3 pm** |
 | **P4: Call Audio** | HFP + SCO + Opus fallback + AEC | 2 pm | 2 pm | — | 0.5 pm | 1.5 pm | **6 pm** |
 | **P5: Camera/Mic** | Camera2 + MediaCodec + CMIOExtension + AudioServerPlugin | 2 pm | 2.5 pm | — | — | 1 pm | **5.5 pm** |
-| **Tổng** | | **7.5 pm** | **7.5 pm** | **1.5 pm** | **1.5 pm** | **4 pm** | **22 pm** |
+| **Tổng** |  | **7.5 pm** | **7.5 pm** | **1.5 pm** | **1.5 pm** | **4 pm** | **22 pm** |
 
 **Với team 2 người:** ~11 tháng (P1→P5 tuần tự, một số task song song).  
 **Với team 3 người:** ~7.5 tháng.  
@@ -559,7 +618,9 @@ Video frames encrypt bằng XChaCha20-Poly1305 như mọi payload khác. Trên U
 **Usable product (P1+P2):** ~4 tháng với 2 người.  
 **Full product (P1-P5):** ~7.5 tháng với 3 người.
 
-**P5 breakdown:** Android Camera2+MediaCodec pipeline (1pm) + WiFi video channel + USB auto-detect (0.5pm) + adaptive quality (0.5pm) | macOS CMIOExtension (1pm) + VideoToolbox decode (0.5pm) + AudioServerPlugin (0.5pm) + PKG installer (0.5pm) | Testing OEM matrix + app compatibility (1pm).
+**P5 breakdown:** Android Camera2+MediaCodec pipeline (1pm) + WiFi video channel + USB auto-detect
+(0.5pm) + adaptive quality (0.5pm) | macOS CMIOExtension (1pm) + VideoToolbox decode (0.5pm) +
+AudioServerPlugin (0.5pm) + PKG installer (0.5pm) | Testing OEM matrix + app compatibility (1pm).
 
 ---
 
@@ -569,72 +630,112 @@ Tất cả câu hỏi mở đã được giải quyết. Dưới đây là quy�
 
 ### D1: IOBluetoothHandsFreeDevice — Spike + Dual-path
 
-**Quyết định:** Spike 1 tuần đầu Phase 4. Nếu SCO routing fail trên macOS 15+ → chuyển sang Opus/WebSocket permanent (đã có sẵn từ fallback path, chỉ cần promote thành primary). Không block Phase 1-3.
+**Quyết định:** Spike 1 tuần đầu Phase 4. Nếu SCO routing fail trên macOS 15+ → chuyển sang
+Opus/WebSocket permanent (đã có sẵn từ fallback path, chỉ cần promote thành primary). Không block
+Phase 1-3.
 
-**Lý do:** Dual-path architecture cho phép fail-safe. Opus/WS fallback đã được thiết kế sẵn, latency ~100-150ms vẫn chấp nhận được cho call audio. Spike chỉ mất 1 tuần = rủi ro thấp.
+**Lý do:** Dual-path architecture cho phép fail-safe. Opus/WS fallback đã được thiết kế sẵn, latency
+~100-150ms vẫn chấp nhận được cho call audio. Spike chỉ mất 1 tuần = rủi ro thấp.
 
 **Hành động:** Task đầu tiên của Phase 4 = spike. Pass/fail quyết định path ngay.
 
 ### D2: Legal — Disclosure-first, ship song song
 
-**Quyết định:** Implement disclosure flow TRƯỚC khi bật call audio relay. Flow: lần đầu bật call relay → dialog thông báo "Cuộc gọi sẽ được relay qua thiết bị này" → user confirm → ghi log consent timestamp. Không cần delay ship cho legal review — disclosure đủ cơ sở tự bảo vệ.
+**Quyết định:** Implement disclosure flow TRƯỚC khi bật call audio relay. Flow: lần đầu bật call
+relay → dialog thông báo "Cuộc gọi sẽ được relay qua thiết bị này" → user confirm → ghi log consent
+timestamp. Không cần delay ship cho legal review — disclosure đủ cơ sở tự bảo vệ.
 
-**Lý do:** Two-party consent (California, Illinois) yêu cầu "all parties aware", không yêu cầu "all parties consent". Disclosure rõ ràng + user opt-in đủ cho hầu hết jurisdictions. Nếu cần thêm, thêm disclaimer "User chịu trách nhiệm thông báo bên kia" trong settings.
+**Lý do:** Two-party consent (California, Illinois) yêu cầu "all parties aware", không yêu cầu "all
+parties consent". Disclosure rõ ràng + user opt-in đủ cho hầu hết jurisdictions. Nếu cần thêm, thêm
+disclaimer "User chịu trách nhiệm thông báo bên kia" trong settings.
 
-**Hành động:** Phase 4 bao gồm disclosure UI. Thuê luật sư review wording trước khi ship — không block development.
+**Hành động:** Phase 4 bao gồm disclosure UI. Thuê luật sư review wording trước khi ship — không
+block development.
 
 ### D3: CompanionDeviceManager — Monitor, không chờ
 
-**Quyết định:** Dùng `BluetoothHeadsetClient` @SystemApi + Shizuku ngay. Monitor CDM evolution mỗi Android release. Migration path sẵn nếu Google thêm call audio API vào CDM.
+**Quyết định:** Dùng `BluetoothHeadsetClient` @SystemApi + Shizuku ngay. Monitor CDM evolution mỗi
+Android release. Migration path sẵn nếu Google thêm call audio API vào CDM.
 
-**Lý do:** CDM hiện tại (Android 15) chưa có call audio relay API. Chờ = vô thời hạn. `BluetoothHeadsetClient` + Shizuku đã proven bởi Microsoft Phone Link. Wrap trong abstraction layer để migration CDM sau này là 1-2 tuần effort.
+**Lý do:** CDM hiện tại (Android 15) chưa có call audio relay API. Chờ = vô thời hạn.
+`BluetoothHeadsetClient` + Shizuku đã proven bởi Microsoft Phone Link. Wrap trong abstraction layer
+để migration CDM sau này là 1-2 tuần effort.
 
-**Hành động:** Implement `BluetoothHeadsetClient` path. Abstraction interface `CallAudioRelay` với 2 impl: `HfpCallAudioRelay` (hiện tại), `CdmCallAudioRelay` (future). Check CDM changelog mỗi Android beta release.
+**Hành động:** Implement `BluetoothHeadsetClient` path. Abstraction interface `CallAudioRelay` với 2
+impl: `HfpCallAudioRelay` (hiện tại), `CdmCallAudioRelay` (future). Check CDM changelog mỗi Android
+beta release.
 
 ### D4: Clipboard background — Accessibility Service
 
-**Quyết định:** Accessibility Service cho Phase 1. Notification Listener Service làm Plan B nếu Play Store reject.
+**Quyết định:** Accessibility Service cho Phase 1. Notification Listener Service làm Plan B nếu Play
+Store reject.
 
-**Lý do:** Target user = mass-market, không phải dev. Shizuku yêu cầu ADB setup ban đầu — đây là barrier lớn cho phần lớn user, đặc biệt khi triết lý app là "hoàn toàn không dây, zero-config". Accessibility Service không cần setup đặc biệt, chỉ cần user bật trong Settings. Play Store rejection risk thấp nếu declare đúng purpose ("cross-device clipboard sync") và chỉ dùng quyền tối thiểu. Samsung, Xiaomi clipboard managers dùng cùng approach.
+**Lý do:** Target user = mass-market, không phải dev. Shizuku yêu cầu ADB setup ban đầu — đây là
+barrier lớn cho phần lớn user, đặc biệt khi triết lý app là "hoàn toàn không dây, zero-config".
+Accessibility Service không cần setup đặc biệt, chỉ cần user bật trong Settings. Play Store
+rejection risk thấp nếu declare đúng purpose ("cross-device clipboard sync") và chỉ dùng quyền tối
+thiểu. Samsung, Xiaomi clipboard managers dùng cùng approach.
 
-**Hành động:** Implement `AccessibilityClipboardService`. Prepare `NotificationListenerClipboardService` sẵn. Play Store Permissions Declaration Form nộp sớm P1 milestone 2 để biết kết quả trước khi ship.
+**Hành động:** Implement `AccessibilityClipboardService`. Prepare
+`NotificationListenerClipboardService` sẵn. Play Store Permissions Declaration Form nộp sớm P1
+milestone 2 để biết kết quả trước khi ship.
 
 ### D5: Cloud relay — Self-host VPS, migrate khi scale
 
-**Quyết định:** Self-host trên 1 VPS (Hetzner/OVH, ~$20/tháng) cho Phase 2. Chuyển sang managed (fly.io/Railway) khi >500 concurrent users.
+**Quyết định:** Self-host trên 1 VPS (Hetzner/OVH, ~$20/tháng) cho Phase 2. Chuyển sang managed
+(fly.io/Railway) khi >500 concurrent users.
 
-**Lý do:** Bandwidth cost thấp ở scale nhỏ: 100 concurrent calls × 32kbps Opus = ~12GB/giờ ≈ $50/tháng. Commodity VPS 20TB bandwidth/tháng = đủ cho ~1000 users. Server code = Rust/Actix-web stateless → dễ scale horizontal. Managed service quá đắt cho giai đoạn đầu ($0.10-0.15/GB bandwidth).
+**Lý do:** Bandwidth cost thấp ở scale nhỏ: 100 concurrent calls × 32kbps Opus = ~12GB/giờ ≈
+$50/tháng. Commodity VPS 20TB bandwidth/tháng = đủ cho ~1000 users. Server code = Rust/Actix-web
+stateless → dễ scale horizontal. Managed service quá đắt cho giai đoạn đầu ($0.10-0.15/GB
+bandwidth).
 
-**Hành động:** Deploy Rust relay server trên 1 VPS. Docker + systemd. Auto-scaling script: monitor CPU/bandwidth → alert khi >70% → thêm VPS. Migrate managed khi revenue justify.
+**Hành động:** Deploy Rust relay server trên 1 VPS. Docker + systemd. Auto-scaling script: monitor
+CPU/bandwidth → alert khi >70% → thêm VPS. Migrate managed khi revenue justify.
 
 ### D6: CMIOExtension — Spike tuần 1 Phase 5
 
-**Quyết định:** Spike 1 tuần đầu Phase 5: build minimal Source+Sink extension, test với FaceTime/Zoom/Meet/OBS. Discord/Webex: document workaround, không block ship.
+**Quyết định:** Spike 1 tuần đầu Phase 5: build minimal Source+Sink extension, test với
+FaceTime/Zoom/Meet/OBS. Discord/Webex: document workaround, không block ship.
 
-**Lý do:** OBS Studio đã ship CMIOExtension production trên macOS 12.3+. Camo cũng dùng cùng stack. Codebase reference đầy đủ (OBS 5 Swift files). Risk thực sự chỉ là compatibility edge cases (Discord re-codesign, macOS minor version bugs). 1 tuần spike đủ để validate.
+**Lý do:** OBS Studio đã ship CMIOExtension production trên macOS 12.3+. Camo cũng dùng cùng stack.
+Codebase reference đầy đủ (OBS 5 Swift files). Risk thực sự chỉ là compatibility edge cases (Discord
+re-codesign, macOS minor version bugs). 1 tuần spike đủ để validate.
 
-**Hành động:** Spike deliverable = working extension hiện camera placeholder trong FaceTime + Zoom + Meet. Pass → continue P5. Fail (nếu macOS API thay đổi breaking) → evaluate DAL plugin legacy path hoặc OBS Virtual Camera piggyback.
+**Hành động:** Spike deliverable = working extension hiện camera placeholder trong FaceTime + Zoom +
+Meet. Pass → continue P5. Fail (nếu macOS API thay đổi breaking) → evaluate DAL plugin legacy path
+hoặc OBS Virtual Camera piggyback.
 
 ### D7: AudioServerPlugin distribution — PKG notarized + Homebrew
 
-**Quyết định:** PKG installer (signed + notarized) tích hợp trong macOS app. App detect plugin chưa cài → prompt → run embedded PKG → `killall -9 coreaudiod`. Song song distribute Homebrew cask.
+**Quyết định:** PKG installer (signed + notarized) tích hợp trong macOS app. App detect plugin chưa
+cài → prompt → run embedded PKG → `killall -9 coreaudiod`. Song song distribute Homebrew cask.
 
-**Lý do:** Mac App Store không thể cài vào `/Library/Audio/Plug-Ins/HAL/` (sandbox restriction). BlackHole, Loopback (Rogue Amoeba), Camo đều dùng PKG installer — proven path. Privileged helper (`SMAppService.register`) cho auto-install seamless. Homebrew cask cho tech-savvy users (1 command install).
+**Lý do:** Mac App Store không thể cài vào `/Library/Audio/Plug-Ins/HAL/` (sandbox restriction).
+BlackHole, Loopback (Rogue Amoeba), Camo đều dùng PKG installer — proven path. Privileged helper
+(`SMAppService.register`) cho auto-install seamless. Homebrew cask cho tech-savvy users (1 command
+install).
 
 **Hành động:** 
 - macOS app embed `.pkg` trong Resources
-- First-run: detect plugin missing → show dialog "Cần cài virtual microphone driver" → run `SMJobBless` privileged helper → copy plugin + restart coreaudiod
+- First-run: detect plugin missing → show dialog "Cần cài virtual microphone driver" → run
+  `SMJobBless` privileged helper → copy plugin + restart coreaudiod
 - `brew install --cask handlive` auto-install cả app + plugin
 - Notarize: `xcrun notarytool submit` + `stapler staple`
 
 ### D8: USB boost — ADB với wizard, UVC future
 
-**Quyết định:** ADB port forwarding cho version 1. In-app wizard hướng dẫn bật USB Debugging khi user cắm cáp lần đầu. UVC native (Android 14 QPR1+ `UvcDevice` API) evaluate cho version 2.
+**Quyết định:** ADB port forwarding cho version 1. In-app wizard hướng dẫn bật USB Debugging khi
+user cắm cáp lần đầu. UVC native (Android 14 QPR1+ `UvcDevice` API) evaluate cho version 2.
 
-**Lý do:** WiFi là mặc định — user không bao giờ cần USB để dùng app. USB boost là optional cho power users muốn latency thấp hơn. ADB setup một lần, wizard step-by-step với screenshot giảm barrier. UVC hấp dẫn (zero-setup, native) nhưng: chỉ Android 14 QPR1+ (tỉ lệ thấp 2026), API mới chưa proven ở quy mô, và không hỗ trợ audio — phải vẫn dùng WiFi cho mic.
+**Lý do:** WiFi là mặc định — user không bao giờ cần USB để dùng app. USB boost là optional cho
+power users muốn latency thấp hơn. ADB setup một lần, wizard step-by-step với screenshot giảm
+barrier. UVC hấp dẫn (zero-setup, native) nhưng: chỉ Android 14 QPR1+ (tỉ lệ thấp 2026), API mới
+chưa proven ở quy mô, và không hỗ trợ audio — phải vẫn dùng WiFi cho mic.
 
 **Hành động:**
-- Detect USB via IOKit → show "Bạn muốn tăng tốc kết nối?" → wizard 3 bước (Settings → Developer Options → USB Debugging)
+- Detect USB via IOKit → show "Bạn muốn tăng tốc kết nối?" → wizard 3 bước (Settings → Developer
+  Options → USB Debugging)
 - Sau setup lần đầu: auto-detect + auto-switch, không hỏi lại
 - Roadmap v2: evaluate UVC + AOA combo (video qua UVC, audio qua AOA bulk transfer)
 
@@ -642,26 +743,43 @@ Tất cả câu hỏi mở đã được giải quyết. Dưới đây là quy�
 
 ## 13. Quyết định bổ sung sau kiểm chứng nền tảng (2026-09-24)
 
-Khi soạn tài liệu thiết kế chi tiết, các giả định ở §3.1, §6.1, §7 và §10.3 được kiểm chứng lại với tài liệu Android/Apple và mã nguồn AOSP. Chủ dự án đã quyết định từng điểm; chi tiết và bằng chứng: `docs/detailed-design/README.md` §5 (C7–C15). Khi mâu thuẫn với các mục trước, mục này thắng.
+Khi soạn tài liệu thiết kế chi tiết, các giả định ở §3.1, §6.1, §7 và §10.3 được kiểm chứng lại với
+tài liệu Android/Apple và mã nguồn AOSP. Chủ dự án đã quyết định từng điểm; chi tiết và bằng chứng:
+`docs/detailed-design/README.md` §5 (C7–C15). Khi mâu thuẫn với các mục trước, mục này thắng.
 
 ### D9: Điều khiển cuộc gọi không dùng InCallService (thay §3.1 `call-controller`, §8 Phase 3)
 
-Telecom không gắn `InCallService` cho ứng dụng chỉ có `CALL_COMPANION_APP` (mã nguồn AOSP android10 → main). Qua Wi-Fi dùng API công khai: trạng thái và số gọi đến (`READ_PHONE_STATE`, `READ_CALL_LOG`), trả lời `TelecomManager.acceptRingingCall()`, từ chối/kết thúc `TelecomManager.endCall()` (`ANSWER_PHONE_CALLS`). Giữ máy, DTMF, tắt tiếng chỉ qua lệnh HFP khi Mac nối Bluetooth (Phase 4).
+Telecom không gắn `InCallService` cho ứng dụng chỉ có `CALL_COMPANION_APP` (mã nguồn AOSP android10
+→ main). Qua Wi-Fi dùng API công khai: trạng thái và số gọi đến (`READ_PHONE_STATE`,
+`READ_CALL_LOG`), trả lời `TelecomManager.acceptRingingCall()`, từ chối/kết thúc
+`TelecomManager.endCall()` (`ANSWER_PHONE_CALLS`). Giữ máy, DTMF, tắt tiếng chỉ qua lệnh HFP khi Mac
+nối Bluetooth (Phase 4).
 
 ### D10: Giữ D1/D3, ghi rõ giới hạn khả thi (bổ sung §7.2, D1, D3)
 
-Opus/WebSocket vẫn là đường dự phòng chính thức cho âm thanh cuộc gọi, chạy qua Shizuku (uid shell). Giới hạn: Android 10 không thu được; Android 11+ thu được trên một số máy; chèn giọng Mac vào cuộc gọi chỉ có qua `getCallUplinkInjectionAudioTrack()` (Android 13+, chưa kiểm chứng); Shizuku phải khởi động lại sau mỗi lần bật máy. `BluetoothHeadsetClient` là API vai trò HF, không dùng cho điện thoại ở vai trò AG; đường HFP dùng stack Bluetooth chuẩn của Android.
+Opus/WebSocket vẫn là đường dự phòng chính thức cho âm thanh cuộc gọi, chạy qua Shizuku (uid shell).
+Giới hạn: Android 10 không thu được; Android 11+ thu được trên một số máy; chèn giọng Mac vào cuộc
+gọi chỉ có qua `getCallUplinkInjectionAudioTrack()` (Android 13+, chưa kiểm chứng); Shizuku phải
+khởi động lại sau mỗi lần bật máy. `BluetoothHeadsetClient` là API vai trò HF, không dùng cho điện
+thoại ở vai trò AG; đường HFP dùng stack Bluetooth chuẩn của Android.
 
 ### D11: Âm thanh HFP dựa vào mã hóa liên kết Bluetooth (thay yêu cầu "dual-layer mỗi SCO frame" ở §6.1)
 
-Ứng dụng không chạm được tới từng khung SCO của cuộc gọi di động nên không mã hóa tầng ứng dụng được. Đường HFP dựa vào mã hóa Bluetooth của hệ điều hành; rủi ro KNOB/BIAS còn lại được công bố khi bật tính năng. Đường Opus/WS vẫn mã hóa hai lớp (TLS + E2E).
+Ứng dụng không chạm được tới từng khung SCO của cuộc gọi di động nên không mã hóa tầng ứng dụng
+được. Đường HFP dựa vào mã hóa Bluetooth của hệ điều hành; rủi ro KNOB/BIAS còn lại được công bố khi
+bật tính năng. Đường Opus/WS vẫn mã hóa hai lớp (TLS + E2E).
 
 ### D12: Giữ D4, làm rõ cơ chế (bổ sung D4)
 
-Accessibility phát hiện thao tác sao chép rồi mở Activity trong suốt để đọc clipboard (Accessibility không được miễn chặn đọc nền). Mặc định bật, có công bố và xin đồng ý; chấp nhận rủi ro chính sách Google Play. Dự phòng là gửi thủ công (nút thông báo, ô Cài đặt nhanh, menu Chia sẻ) thay cho Notification Listener.
+Accessibility phát hiện thao tác sao chép rồi mở Activity trong suốt để đọc clipboard (Accessibility
+không được miễn chặn đọc nền). Mặc định bật, có công bố và xin đồng ý; chấp nhận rủi ro chính sách
+Google Play. Dự phòng là gửi thủ công (nút thông báo, ô Cài đặt nhanh, menu Chia sẻ) thay cho
+Notification Listener.
 
 ### Điều chỉnh kỹ thuật kèm theo (không đổi quyết định sản phẩm)
 
-- Micro ảo dùng mô hình loopback của BlackHole (thiết bị ra ẩn + thiết bị vào hiển thị, chung ring buffer) thay cho POSIX shm (§10.3).
-- Cài driver micro bằng PKG mở qua Installer, `postinstall` chạy `killall coreaudiod`; không cần `SMJobBless` (deprecated từ macOS 13) (D7).
+- Micro ảo dùng mô hình loopback của BlackHole (thiết bị ra ẩn + thiết bị vào hiển thị, chung ring
+  buffer) thay cho POSIX shm (§10.3).
+- Cài driver micro bằng PKG mở qua Installer, `postinstall` chạy `killall coreaudiod`; không cần
+  `SMJobBless` (deprecated từ macOS 13) (D7).
 - iOS không dùng PushKit VoIP; dùng APNs alert + Notification Service Extension (§3.3).

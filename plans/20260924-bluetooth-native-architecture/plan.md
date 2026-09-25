@@ -1,6 +1,7 @@
 # Kiến trúc "Bluetooth-Native" — HandLive
 
-> Đề xuất kiến trúc cho ứng dụng Android đồng bộ clipboard, SMS và cuộc gọi (bao gồm audio) sang macOS và iOS.
+> Đề xuất kiến trúc cho ứng dụng Android đồng bộ clipboard, SMS và cuộc gọi (bao gồm audio) sang
+> macOS và iOS.
 
 **Ngày:** 2026-09-24  
 **Trạng thái:** Đề xuất
@@ -9,7 +10,10 @@
 
 ## 1. Tổng quan kiến trúc
 
-Kiến trúc xoay quanh Bluetooth làm kênh truyền chính. Lý do: Android 10+ chặn hoàn toàn truy cập audio cuộc gọi cellular qua API công khai — Bluetooth HFP (Hands-Free Profile) là cách duy nhất đã được chứng minh (Microsoft Phone Link dùng cách này). Vì Bluetooth HFP đã bắt buộc cho call audio, ta tận dụng luôn Bluetooth cho clipboard và SMS thay vì phụ thuộc mạng.
+Kiến trúc xoay quanh Bluetooth làm kênh truyền chính. Lý do: Android 10+ chặn hoàn toàn truy cập
+audio cuộc gọi cellular qua API công khai — Bluetooth HFP (Hands-Free Profile) là cách duy nhất đã
+được chứng minh (Microsoft Phone Link dùng cách này). Vì Bluetooth HFP đã bắt buộc cho call audio,
+ta tận dụng luôn Bluetooth cho clipboard và SMS thay vì phụ thuộc mạng.
 
 **Luồng tổng thể:**
 
@@ -20,7 +24,9 @@ Android (AG role)
   └── WebSocket (fallback) ─→ iOS: clipboard, SMS only (không có call audio)
 ```
 
-Android đóng vai Audio Gateway (AG). macOS đóng vai Hands-Free (HF) qua `IOBluetoothHandsFreeDevice`. iOS không thể nhận HFP call audio (không có public API), chỉ nhận clipboard/SMS qua WebSocket LAN.
+Android đóng vai Audio Gateway (AG). macOS đóng vai Hands-Free (HF) qua
+`IOBluetoothHandsFreeDevice`. iOS không thể nhận HFP call audio (không có public API), chỉ nhận
+clipboard/SMS qua WebSocket LAN.
 
 ---
 
@@ -38,7 +44,9 @@ Android đóng vai Audio Gateway (AG). macOS đóng vai Hands-Free (HF) qua `IOB
 | `ws-server` | Ktor/OkHttp WebSocket | Fallback cho iOS, mDNS broadcast qua `NsdManager` |
 | `crypto` | Tink (Google) — `XChaCha20Poly1305`, `X25519` | Mã hóa E2E trên RFCOMM và WebSocket |
 
-**Quyền đặc biệt:** `BIND_INCALL_SERVICE` (cuộc gọi), `READ_SMS`/`SEND_SMS` cần Play Store Permissions Declaration Form với lý do "cross-device sync". `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` (runtime permissions Android 12+).
+**Quyền đặc biệt:** `BIND_INCALL_SERVICE` (cuộc gọi), `READ_SMS` /`SEND_SMS` cần Play Store
+Permissions Declaration Form với lý do "cross-device sync". `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`
+(runtime permissions Android 12+).
 
 ### 2.2 macOS App (Swift, AppKit, macOS 12+)
 
@@ -52,7 +60,8 @@ Android đóng vai Audio Gateway (AG). macOS đóng vai Hands-Free (HF) qua `IOB
 | `sms-ui` | SwiftUI `NSWindow` | Hiển thị và trả lời SMS |
 | `crypto` | `CryptoKit` — `Curve25519`, `ChaChaPoly` | Mã hóa E2E |
 
-**Lưu ý:** CallKit KHÔNG khả dụng trên macOS native (chỉ có trên Catalyst/iOS). Call UI phải tự xây bằng `NSPanel` với level `.floating`.
+**Lưu ý:** CallKit KHÔNG khả dụng trên macOS native (chỉ có trên Catalyst/iOS). Call UI phải tự xây
+bằng `NSPanel` với level `.floating`.
 
 ### 2.3 iOS App (Swift, SwiftUI, iOS 16+)
 
@@ -63,11 +72,13 @@ Android đóng vai Audio Gateway (AG). macOS đóng vai Hands-Free (HF) qua `IOB
 | `sms-ui` | SwiftUI views |
 | `push-relay` | APNs (nhận notification khi app background) |
 
-**Giới hạn:** iOS không thể nhận BT HFP call audio — không có public API cho HFP HF role. Chỉ hỗ trợ clipboard + SMS. Cuộc gọi chỉ hiển thị metadata (caller ID, duration), không relay audio.
+**Giới hạn:** iOS không thể nhận BT HFP call audio — không có public API cho HFP HF role. Chỉ hỗ trợ
+clipboard + SMS. Cuộc gọi chỉ hiển thị metadata (caller ID, duration), không relay audio.
 
 ### 2.4 Server (Optional, Go/Rust)
 
-Chỉ cần khi muốn relay ngoài LAN. Chức năng: TURN-like relay cho WebSocket, push notification proxy (FCM/APNs), device registry. Không xử lý mã hóa — E2E giữa devices.
+Chỉ cần khi muốn relay ngoài LAN. Chức năng: TURN-like relay cho WebSocket, push notification proxy
+(FCM/APNs), device registry. Không xử lý mã hóa — E2E giữa devices.
 
 ---
 
@@ -134,27 +145,38 @@ Tận dụng AT commands chuẩn HFP 1.8:
 | SMS content | Encrypted at rest trên macOS (Core Data + SQLCipher hoặc encrypted container) |
 | Clipboard | Không lưu trữ — chỉ transit. Auto-clear sau 60s trên receiver |
 
-**Threat model:** Kẻ tấn công cần (1) ở trong BT range ~10m, (2) phá SSP pairing, VÀ (3) phá XChaCha20-Poly1305. Dual-layer encryption tạo defense-in-depth.
+**Threat model:** Kẻ tấn công cần (1) ở trong BT range ~10m, (2) phá SSP pairing, VÀ (3) phá
+XChaCha20-Poly1305. Dual-layer encryption tạo defense-in-depth.
 
 ---
 
 ## 6. Ưu điểm
 
-1. **Zero network dependency cho core features** — Clipboard, SMS, call audio đều hoạt động offline, không cần WiFi/internet. Phù hợp môi trường mạng kém.
-2. **Latency thấp cho call audio** — BT SCO ~40ms, rất dưới ngưỡng ITU-T G.114 (150ms). Trải nghiệm gọi tự nhiên.
-3. **Bảo mật mạnh** — Dual-layer encryption (BT SSP + app-level XChaCha20). Dữ liệu không đi qua server nào. Không có cloud dependency = không có attack surface trên server.
-4. **Proven approach** — Microsoft Phone Link đã chứng minh BT HFP hoạt động tốt cho call relay trên Windows. Kiến trúc này áp dụng cùng nguyên lý cho macOS.
-5. **Đơn giản hóa infra** — Không cần maintain server cho core flow. Server chỉ optional cho push notifications và relay ngoài LAN. Giảm chi phí vận hành.
+1. **Zero network dependency cho core features** — Clipboard, SMS, call audio đều hoạt động offline,
+   không cần WiFi/internet. Phù hợp môi trường mạng kém.
+2. **Latency thấp cho call audio** — BT SCO ~40ms, rất dưới ngưỡng ITU-T G.114 (150ms). Trải nghiệm
+   gọi tự nhiên.
+3. **Bảo mật mạnh** — Dual-layer encryption (BT SSP + app-level XChaCha20). Dữ liệu không đi qua
+   server nào. Không có cloud dependency = không có attack surface trên server.
+4. **Proven approach** — Microsoft Phone Link đã chứng minh BT HFP hoạt động tốt cho call relay trên
+   Windows. Kiến trúc này áp dụng cùng nguyên lý cho macOS.
+5. **Đơn giản hóa infra** — Không cần maintain server cho core flow. Server chỉ optional cho push
+   notifications và relay ngoài LAN. Giảm chi phí vận hành.
 
 ---
 
 ## 7. Nhược điểm
 
-1. **iOS bị cắt xén nghiêm trọng** — Không thể relay call audio sang iOS (Apple không expose HFP HF API). iOS chỉ nhận clipboard + SMS, biến nó thành "citizen hạng hai".
-2. **Phạm vi vật lý giới hạn** — BT range ~10m (thực tế 5-7m trong nhà). Ra khỏi phạm vi thì mất kết nối hoàn toàn cho call audio. WebSocket fallback chỉ cứu được clipboard/SMS.
-3. **HFP audio chất lượng thấp** — Mono 8/16kHz (CVSD/mSBC), tương đương chất lượng điện thoại cũ. Không thể stream nhạc hay media chất lượng cao qua kênh này.
-4. **Phức tạp BT stack** — `IOBluetoothHandsFreeDevice` trên macOS thiếu tài liệu, API cũ (Objective-C bridge). Bluetooth trên Android cũng nổi tiếng fragmented giữa các OEM. Debug khó.
-5. **Single connection** — HFP chỉ cho phép 1 HF device tại một thời điểm. Không thể đồng thời relay call audio sang cả macOS VÀ tai nghe BT của user.
+1. **iOS bị cắt xén nghiêm trọng** — Không thể relay call audio sang iOS (Apple không expose HFP HF
+   API). iOS chỉ nhận clipboard + SMS, biến nó thành "citizen hạng hai".
+2. **Phạm vi vật lý giới hạn** — BT range ~10m (thực tế 5-7m trong nhà). Ra khỏi phạm vi thì mất kết
+   nối hoàn toàn cho call audio. WebSocket fallback chỉ cứu được clipboard/SMS.
+3. **HFP audio chất lượng thấp** — Mono 8/16kHz (CVSD/mSBC), tương đương chất lượng điện thoại cũ.
+   Không thể stream nhạc hay media chất lượng cao qua kênh này.
+4. **Phức tạp BT stack** — `IOBluetoothHandsFreeDevice` trên macOS thiếu tài liệu, API cũ
+   (Objective-C bridge). Bluetooth trên Android cũng nổi tiếng fragmented giữa các OEM. Debug khó.
+5. **Single connection** — HFP chỉ cho phép 1 HF device tại một thời điểm. Không thể đồng thời relay
+   call audio sang cả macOS VÀ tai nghe BT của user.
 
 ---
 
@@ -162,21 +184,30 @@ Tận dụng AT commands chuẩn HFP 1.8:
 
 ### R1: `BluetoothHeadsetClient` là hidden API trên Android
 
-API này thuộc `@SystemApi` — chỉ system apps hoặc apps ký bằng platform key mới truy cập được. Giải pháp: dùng Shizuku (ADB-level permission grant) hoặc yêu cầu user cài qua ADB. **Nếu Google khóa luôn path này → dự án chết.**
+API này thuộc `@SystemApi` — chỉ system apps hoặc apps ký bằng platform key mới truy cập được. Giải
+pháp: dùng Shizuku (ADB-level permission grant) hoặc yêu cầu user cài qua ADB.
+**Nếu Google khóa luôn path này → dự án chết.**
 
-**Giảm thiểu:** Nghiên cứu sâu AIDL `IBluetoothHeadsetClient` qua reflection. Theo dõi thay đổi trong AOSP mỗi Android release. Chuẩn bị fallback dùng companion device profile (`CompanionDeviceManager`).
+**Giảm thiểu:** Nghiên cứu sâu AIDL `IBluetoothHeadsetClient` qua reflection. Theo dõi thay đổi
+trong AOSP mỗi Android release. Chuẩn bị fallback dùng companion device profile
+(`CompanionDeviceManager`).
 
 ### R2: `IOBluetoothHandsFreeDevice` bị deprecate hoặc sandbox
 
-Apple đang dần siết sandbox và chuyển sang DriverKit. Nếu macOS version tương lai deprecate IOBluetooth framework → mất khả năng HFP trên macOS.
+Apple đang dần siết sandbox và chuyển sang DriverKit. Nếu macOS version tương lai deprecate
+IOBluetooth framework → mất khả năng HFP trên macOS.
 
-**Giảm thiểu:** Wrap toàn bộ IOBluetooth calls trong abstraction layer. Theo dõi WWDC hàng năm. Chuẩn bị plan B dùng CoreBluetooth BLE + custom audio protocol (chất lượng kém hơn).
+**Giảm thiểu:** Wrap toàn bộ IOBluetooth calls trong abstraction layer. Theo dõi WWDC hàng năm.
+Chuẩn bị plan B dùng CoreBluetooth BLE + custom audio protocol (chất lượng kém hơn).
 
 ### R3: Play Store rejection cho SMS permissions
 
-Google rất nghiêm với `READ_SMS`/`SEND_SMS`. Permission Declaration Form có thể bị từ chối nếu reviewer không chấp nhận use case "cross-device sync".
+Google rất nghiêm với `READ_SMS` /`SEND_SMS`. Permission Declaration Form có thể bị từ chối nếu
+reviewer không chấp nhận use case "cross-device sync".
 
-**Giảm thiểu:** Chuẩn bị documentation chi tiết cho reviewer. Có plan B: distribute qua sideload (APK trực tiếp), F-Droid, hoặc dùng Notification Listener thay vì đọc SMS trực tiếp (mất khả năng gửi SMS).
+**Giảm thiểu:** Chuẩn bị documentation chi tiết cho reviewer. Có plan B: distribute qua sideload
+(APK trực tiếp), F-Droid, hoặc dùng Notification Listener thay vì đọc SMS trực tiếp (mất khả năng
+gửi SMS).
 
 ---
 

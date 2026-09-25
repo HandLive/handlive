@@ -1,12 +1,16 @@
 # Phase 3 — Thông tin và điều khiển cuộc gọi
 
-**Mục tiêu:** Mac và iPhone/iPad biết ai đang gọi; Mac trả lời, từ chối, từ chối kèm tin nhắn, kết thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Giữ máy, DTMF, tắt tiếng để Phase 4 (HFP).
+**Mục tiêu:** Mac và iPhone/iPad biết ai đang gọi; Mac trả lời, từ chối, từ chối kèm tin nhắn, kết
+thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Giữ máy, DTMF, tắt tiếng để Phase 4 (HFP).
 
 ## Ngữ cảnh
 
-- Chức năng lá: `06-call-control.md` CALL-01 (kể cả API 7 thông báo liên lạc trên Mac), CALL-02, CALL-03 (phần qua WebSocket), CALL-04.
-- Design system: thành phần `CallPanel`, `Notification`, `MenuBarMenu`; `2-patterns/03-thong-bao.md`; `3-platforms/01-macos.md` (Tập trung, phím tắt).
-- Quyết định: D9/C12 (API Telecom công khai, không `InCallService`), C19 (Tập trung → không panel; panel là lệch có chủ đích so với HIG).
+- Chức năng lá: `06-call-control.md` CALL-01 (kể cả API 7 thông báo liên lạc trên Mac), CALL-02,
+  CALL-03 (phần qua WebSocket), CALL-04.
+- Design system: thành phần `CallPanel`, `Notification`, `MenuBarMenu`;
+  `2-patterns/03-thong-bao.md`; `3-platforms/01-macos.md` (Tập trung, phím tắt).
+- Quyết định: D9/C12 (API Telecom công khai, không `InCallService`), C19 (Tập trung → không panel;
+  panel là lệch có chủ đích so với HIG).
 
 ## Yêu cầu và tiêu chí đo
 
@@ -28,10 +32,12 @@
 
 ## Kiểm thử
 
-- Đơn vị: máy trạng thái ngữ cảnh cuộc gọi (`ringing → offhook → idle`, `waiting`), tính `controls`, chống trùng `call_id`.
+- Đơn vị: máy trạng thái ngữ cảnh cuộc gọi (`ringing → offhook → idle`, `waiting`), tính `controls`,
+  chống trùng `call_id`.
 - Tay: cuộc gọi thật giữa hai SIM; AirPods đang nối (không ảnh hưởng ở phase này).
 
 ## Rủi ro và quay lui
 
-- `acceptRingingCall`/`endCall` đã deprecated từ API 29 nhưng vẫn hoạt động; nếu OEM chặn → chỉ còn từ chối/kết thúc qua HFP (Phase 4), ghi vào deployment-guide theo máy.
+- `acceptRingingCall` /`endCall` đã deprecated từ API 29 nhưng vẫn hoạt động; nếu OEM chặn → chỉ còn
+  từ chối/kết thúc qua HFP (Phase 4), ghi vào deployment-guide theo máy.
 - Thiếu `READ_CALL_LOG` (Play từ chối) → "Không rõ số" (E2), vẫn dùng được.

@@ -2,7 +2,8 @@
 
 > **Ngày:** 2026-09-24
 > **Trạng thái:** Hoàn tất nghiên cứu
-> **Mục đích:** Nghiên cứu phương pháp IPC cho HandLive macOS app giao tiếp với CMIOExtension (virtual camera) và AudioServerPlugin (virtual microphone)
+> **Mục đích:** Nghiên cứu phương pháp IPC cho HandLive macOS app giao tiếp với CMIOExtension
+> (virtual camera) và AudioServerPlugin (virtual microphone)
 
 ---
 
@@ -18,7 +19,10 @@
 - Sandbox-compatible: services chạy với quyền tối thiểu mặc định
 - Latency: message queuing + dispatch lên runtime-managed queues
 
-**Hạn chế cho CMIOExtension:** CMIOExtension chạy dưới user `_cmiodalassistants`, main app chạy dưới GUI user => XPC endpoints không truy cập được lẫn nhau. `CMIOExtensionMachServiceName` là cơ chế loading của hệ thống, KHÔNG phải endpoint XPC cho app dùng. Apple KHÔNG recommend XPC cho CMIOExtension IPC.
+**Hạn chế cho CMIOExtension:** CMIOExtension chạy dưới user `_cmiodalassistants`, main app chạy dưới
+GUI user => XPC endpoints không truy cập được lẫn nhau. `CMIOExtensionMachServiceName` là cơ chế
+loading của hệ thống, KHÔNG phải endpoint XPC cho app dùng. Apple KHÔNG recommend XPC cho
+CMIOExtension IPC.
 
 ### 1.2 Mach Ports
 
@@ -49,7 +53,9 @@ CFMessagePortSendRequest(remotePort, messageID, data, timeout, timeout, NULL, NU
 - Permissions: tạo với `umask(0)` cho `0666` để cho phép cross-user access
 - Phù hợp cho audio ring buffer (throughput cao, latency thấp)
 
-**Giới hạn với CMIOExtension:** App Groups KHÔNG hoạt động giữa main app và CMIOExtension vì chạy dưới user accounts khác nhau (`_cmiodalassistants` vs GUI user). POSIX shm vẫn khả thi nếu tạo với permissions mở (`0666`).
+**Giới hạn với CMIOExtension:** App Groups KHÔNG hoạt động giữa main app và CMIOExtension vì chạy
+dưới user accounts khác nhau (`_cmiodalassistants` vs GUI user). POSIX shm vẫn khả thi nếu tạo với
+permissions mở (`0666`).
 
 ### 1.4 IOSurface (Zero-copy Video Frame Sharing)
 
@@ -116,7 +122,8 @@ IOSurfaceRef surface = IOSurfaceLookupFromXPCObject(xpcObj);
 
 ### 1.7 Distributed Notifications
 
-**Cơ chế:** System-wide pub-sub qua `CFNotificationCenterGetDistributedCenter()` / `DistributedNotificationCenter`.
+**Cơ chế:** System-wide pub-sub qua `CFNotificationCenterGetDistributedCenter()` /
+`DistributedNotificationCenter`.
 
 - Broadcast-based, không đảm bảo delivery order
 - **Latency unbounded** — không phù hợp cho realtime
@@ -245,11 +252,13 @@ self._streamSink.stream.consumeSampleBuffer(buf, ...) { error in
 }
 ```
 
-**Cơ chế bên dưới:** Framework tự handle IPC layer, optimize performance. Sample buffers có thể chứa IOSurface-backed CVPixelBuffer => zero-copy potential.
+**Cơ chế bên dưới:** Framework tự handle IPC layer, optimize performance. Sample buffers có thể chứa
+IOSurface-backed CVPixelBuffer => zero-copy potential.
 
 **B. Command & Control — Custom Properties:**
 
-Dùng custom properties trên CMIOExtensionProviderSource cho low-bandwidth communication (start/stop, settings).
+Dùng custom properties trên CMIOExtensionProviderSource cho low-bandwidth communication (start/stop,
+settings).
 
 ```
 Property Address = {Selector (4cc), Scope, Element}
@@ -304,7 +313,8 @@ Restart: sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
 
 Plugin chạy TRONG `coreaudiod` process => mọi code trong plugin phải realtime-safe.
 
-**Apple guidance (2025):** Cho virtual audio device, tiếp tục dùng AudioServerPlugin. AudioDriverKit (dext) cho hardware drivers.
+**Apple guidance (2025):** Cho virtual audio device, tiếp tục dùng AudioServerPlugin. AudioDriverKit
+(dext) cho hardware drivers.
 
 ### 4.2 IPC Patterns
 
@@ -395,7 +405,8 @@ Thư viện giúp tạo AudioServerPlugin dễ hơn.
 
 Lý do:
 - HandLive nhận audio qua WebSocket, decode Opus → raw PCM
-- Cần inject PCM trực tiếp vào virtual mic — Pattern A (mirror device) yêu cầu AUHAL output, thêm overhead
+- Cần inject PCM trực tiếp vào virtual mic — Pattern A (mirror device) yêu cầu AUHAL output, thêm
+  overhead
 - Pattern B cho phép app write PCM trực tiếp vào shared ring
 - Driver (trong coreaudiod) đọc từ ring khi apps yêu cầu audio input
 
@@ -406,7 +417,9 @@ Lý do:
 4. App write decoded audio (Opus→PCM) vào ring buffer
 5. Driver đọc từ ring trong IO callback, deliver cho Zoom/FaceTime
 
-**Alternative:** Pattern A cũng khả thi. App decode Opus→PCM, output qua AUHAL tới hidden sink device. Driver forward từ sink ring tới visible mic device. Đơn giản hơn nhưng thêm một layer CoreAudio.
+**Alternative:** Pattern A cũng khả thi. App decode Opus→PCM, output qua AUHAL tới hidden sink
+device. Driver forward từ sink ring tới visible mic device. Đơn giản hơn nhưng thêm một layer
+CoreAudio.
 
 ---
 
@@ -435,7 +448,8 @@ Lý do:
 ### 5.3 Practical Numbers
 
 - BlackHole/OpenConnct: **"zero additional latency"** — mirror device pattern
-- Soundboard: shared memory ring, latency dominated by buffer size (typically 5-20ms depending on IO buffer size)
+- Soundboard: shared memory ring, latency dominated by buffer size (typically 5-20ms depending on IO
+  buffer size)
 - JackRouter: "synchronous graph activation and no additional latency"
 - CMIOExtension sink stream: framework-optimized, latency comparable to real camera input
 
@@ -462,7 +476,8 @@ Lý do:
 AudioServerPlugin chạy TRONG coreaudiod (system daemon).
 
 - IPC allowed: semaphores, shared memory
-- Older docs: "AudioServerPlugIn may not communicate with other processes" — nhưng thực tế nhiều plugin (Soundboard, JackRouter) dùng shm/Mach semaphores thành công
+- Older docs: "AudioServerPlugIn may not communicate with other processes" — nhưng thực tế nhiều
+  plugin (Soundboard, JackRouter) dùng shm/Mach semaphores thành công
 - Custom HAL properties: mechanism chính để app discover driver capabilities
 - POSIX shm: tạo bởi driver trong coreaudiod, permissions `0666` cho phép app access
 
@@ -501,14 +516,15 @@ AudioServerPlugin chạy TRONG coreaudiod (system daemon).
 
 ### 6.5 Distribution Differences
 
-| | App Store | Developer ID | Direct |
+|  | App Store | Developer ID | Direct |
 |---|-----------|-------------|--------|
 | App Sandbox | Required | Optional | Optional |
 | System Extension | Requires approval | Works with notarization | Works |
 | AudioServerPlugin | NOT on App Store | Installer package | Direct install |
 | Hardened Runtime | Required | Required for notarization | Optional |
 
-**AudioServerPlugin distribution:** KHÔNG thể đưa lên App Store. Phải distribute qua installer package (.pkg) cài vào `/Library/Audio/Plug-Ins/HAL/`.
+**AudioServerPlugin distribution:** KHÔNG thể đưa lên App Store. Phải distribute qua installer
+package (.pkg) cài vào `/Library/Audio/Plug-Ins/HAL/`.
 
 ---
 

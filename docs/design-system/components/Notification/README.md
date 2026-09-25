@@ -1,6 +1,8 @@
 # Notification
 
-Thông báo hệ thống của HandLive. Trên Mac, iPhone và iPad là thông báo của Apple (tin nhắn và cuộc gọi dùng kiểu **thông báo liên lạc** có avatar người gửi); trên Android là thông báo của Android với kênh riêng — không dựng lại theo kiểu Apple, vì đó là giao diện của hệ điều hành.
+Thông báo hệ thống của HandLive. Trên Mac, iPhone và iPad là thông báo của Apple (tin nhắn và cuộc
+gọi dùng kiểu **thông báo liên lạc** có avatar người gửi); trên Android là thông báo của Android với
+kênh riêng — không dựng lại theo kiểu Apple, vì đó là giao diện của hệ điều hành.
 
 ## Danh mục
 
@@ -18,9 +20,12 @@ Thông báo hệ thống của HandLive. Trên Mac, iPhone và iPad là thông b
 
 ## Nội dung
 
-- Tiêu đề ngắn, không dấu chấm, không có chữ "HandLive" (hệ thống đã hiện tên app). Nội dung là câu hoàn chỉnh, không tự cắt.
-- Tối đa bốn hành động, mỗi hành động là động từ ngắn, có SF Symbol; không có hành động chỉ để mở app.
-- Không gửi thông báo khi app đang mở ở phía trước — cập nhật giao diện thay vào đó. Không thông báo lặp cho cùng một việc; lỗi không đi bằng thông báo.
+- Tiêu đề ngắn, không dấu chấm, không có chữ "HandLive" (hệ thống đã hiện tên app). Nội dung là câu
+  hoàn chỉnh, không tự cắt.
+- Tối đa bốn hành động, mỗi hành động là động từ ngắn, có SF Symbol; không có hành động chỉ để mở
+  app.
+- Không gửi thông báo khi app đang mở ở phía trước — cập nhật giao diện thay vào đó. Không thông báo
+  lặp cho cùng một việc; lỗi không đi bằng thông báo.
 - Huy hiệu biểu tượng app chỉ đếm tin chưa đọc.
 - Tôn trọng Tập trung: thông báo liên lạc để hệ thống lọc theo người gửi hoặc người gọi.
 

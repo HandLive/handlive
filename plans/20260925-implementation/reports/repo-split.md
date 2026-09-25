@@ -1,14 +1,28 @@
 # Tách kho: năm repo trong một workspace (25/09/2026)
 
-**Lý do:** chủ dự án yêu cầu mỗi phần là một repo riêng để sau này đưa vào một group. Quyết định I1 trong `plan.md` cập nhật từ monorepo sang năm kho.
+**Lý do:** chủ dự án yêu cầu mỗi phần là một repo riêng để sau này đưa vào một group. Quyết định I1
+trong `plan.md` cập nhật từ monorepo sang năm kho.
 
 ## Bố cục đã chọn
 
-Kho hub `handlive` (thư mục `HandLive/`) giữ tài liệu, kế hoạch, `tools/docs/`, `tools/workspace.sh`. Bốn kho thành phần nằm **bên trong** thư mục hub và được hub git-ignore: `android/` = `handlive-android`, `apple/` = `handlive-apple`, `relay/` = `handlive-relay`, `shared/` = `handlive-shared`. Chọn bố cục lồng thay vì thư mục anh em vì mọi đường dẫn tương đối hiện có (`../shared` trong Gradle, test Kotlin, Swift, Rust; `../docs` trong test HLDesignSystem) giữ nguyên, không phải sửa mã build hay test, và agent làm việc như trước. CI của từng kho dựng lại đúng bố cục bằng `actions/checkout` (hub ở gốc khi cần tài liệu, phần vào `<phần>/`, `handlive-shared` vào `shared/`).
+Kho hub `handlive` (thư mục `HandLive/`) giữ tài liệu, kế hoạch, `tools/docs/`,
+`tools/workspace.sh`. Bốn kho thành phần nằm **bên trong** thư mục hub và được hub git-ignore:
+`android/` = `handlive-android`, `apple/` = `handlive-apple`, `relay/` = `handlive-relay`, `shared/`
+= `handlive-shared`. Chọn bố cục lồng thay vì thư mục anh em vì mọi đường dẫn tương đối hiện có
+(`../shared` trong Gradle, test Kotlin, Swift, Rust; `../docs` trong test HLDesignSystem) giữ
+nguyên, không phải sửa mã build hay test, và agent làm việc như trước. CI của từng kho dựng lại đúng
+bố cục bằng `actions/checkout` (hub ở gốc khi cần tài liệu, phần vào `<phần>/`, `handlive-shared`
+vào `shared/`).
 
-Thay đổi kèm theo: `tools/vectors`, `tools/schemas` và venv chuyển sang `shared/tools/` (đi cùng dữ liệu chúng sinh/kiểm; `check_schemas.py` đọc `../docs/detailed-design`, ghi đè bằng `HANDLIVE_DOCS_DIR`); mỗi kho có `.gitignore` đầy đủ, `CLAUDE.md`, `README.md`, workflow CI riêng (`workflow_dispatch` để chạy tay khi `shared/` đổi); hub chỉ còn `ci-docs.yml`; test HLDesignSystem phát hiện mã Swift sinh sẵn lệch với 4 token thêm sáng nay → sinh lại.
+Thay đổi kèm theo: `tools/vectors`, `tools/schemas` và venv chuyển sang `shared/tools/` (đi cùng dữ
+liệu chúng sinh/kiểm; `check_schemas.py` đọc `../docs/detailed-design`, ghi đè bằng
+`HANDLIVE_DOCS_DIR`); mỗi kho có `.gitignore` đầy đủ, `CLAUDE.md`, `README.md`, workflow CI riêng
+(`workflow_dispatch` để chạy tay khi `shared/` đổi); hub chỉ còn `ci-docs.yml`; test HLDesignSystem
+phát hiện mã Swift sinh sẵn lệch với 4 token thêm sáng nay → sinh lại.
 
-Lịch sử: tách bằng `git subtree split` nên mỗi kho con giữ các commit Phase 0 chạm tới phần mình (hash mới). Lịch sử của `tools/vectors`, `tools/schemas` trước khi chuyển chỉ còn trong kho hub. Hash trong `phase-00-*.md` là của kho hub trước khi tách.
+Lịch sử: tách bằng `git subtree split` nên mỗi kho con giữ các commit Phase 0 chạm tới phần mình
+(hash mới). Lịch sử của `tools/vectors`, `tools/schemas` trước khi chuyển chỉ còn trong kho hub.
+Hash trong `phase-00-*.md` là của kho hub trước khi tách.
 
 ## Commit
 
@@ -22,16 +36,24 @@ Lịch sử: tách bằng `git subtree split` nên mỗi kho con giữ các comm
 
 ## Kiểm chứng sau khi tách
 
-- Hub: `python3 tools/docs/validate_design_docs.py` → `problems=0`; `tools/workspace.sh status` cả năm kho sạch.
-- shared (chạy từ `shared/`): `verify_vectors.py` 360 phép kiểm 0 lỗi; `generate_vectors.py --check` 14 file 0 lệch; `check_schemas.py` XANH (đọc `../docs`); guard `HANDLIVE_DOCS_DIR` sai → thoát có thông báo.
-- apple: `HL_SWIFT_TESTING_PACKAGE=1 swift test` — HLCrypto 19/19, HLDesignSystem 16/16 (đọc `../shared/design-tokens`, `../docs/design-system`, `../shared/tools/.venv`).
-- android: `./gradlew :core:protocol:test :core:design:test --offline` xanh (JDK 21 tại `/opt/homebrew/opt/openjdk@21`).
-- relay: `cargo test` 9 passed, 6 ignored (test tích hợp cần Docker) — cargo tại `/opt/homebrew/opt/rustup/bin`.
+- Hub: `python3 tools/docs/validate_design_docs.py` → `problems=0`; `tools/workspace.sh status` cả
+  năm kho sạch.
+- shared (chạy từ `shared/`): `verify_vectors.py` 360 phép kiểm 0 lỗi; `generate_vectors.py --check`
+  14 file 0 lệch; `check_schemas.py` XANH (đọc `../docs`); guard `HANDLIVE_DOCS_DIR` sai → thoát có
+  thông báo.
+- apple: `HL_SWIFT_TESTING_PACKAGE=1 swift test` — HLCrypto 19/19, HLDesignSystem 16/16 (đọc
+  `../shared/design-tokens`, `../docs/design-system`, `../shared/tools/.venv`).
+- android: `./gradlew :core:protocol:test :core:design:test --offline` xanh (JDK 21 tại
+  `/opt/homebrew/opt/openjdk@21`).
+- relay: `cargo test` 9 passed, 6 ignored (test tích hợp cần Docker) — cargo tại
+  `/opt/homebrew/opt/rustup/bin`.
 - Chưa chạy: `./gradlew check` đầy đủ, `xcodebuild` (máy không có Xcode), CI thật (chưa có remote).
 
 ## Việc của chủ dự án
 
-1. Tạo group/organization và năm repo **đúng tên**: `handlive`, `handlive-android`, `handlive-apple`, `handlive-relay`, `handlive-shared` (CI tra tên kho theo `github.repository_owner`).
+1. Tạo group/organization và năm repo **đúng tên**: `handlive`, `handlive-android`,
+   `handlive-apple`, `handlive-relay`, `handlive-shared` (CI tra tên kho theo
+   `github.repository_owner`).
 2. Đẩy lên (thay `<group-url>`, ví dụ `git@github.com:handlive`):
 
 ```bash
@@ -40,8 +62,10 @@ for p in android apple relay shared; do git -C $p remote add origin $G/handlive-
 git remote add origin $G/handlive.git && git push -u origin main feat/phase-00-khung
 ```
 
-3. Kho private: secret `HANDLIVE_REPOS_TOKEN` cấp organization (quyền Contents: read trên năm kho). Bật branch protection theo check của từng kho.
-4. Khi muốn `main` của hub cập nhật tài liệu: `git checkout main && git merge --ff-only feat/phase-00-khung` (hub không còn mã, chỉ tài liệu).
+3. Kho private: secret `HANDLIVE_REPOS_TOKEN` cấp organization (quyền Contents: read trên năm kho).
+   Bật branch protection theo check của từng kho.
+4. Khi muốn `main` của hub cập nhật tài liệu:
+   `git checkout main && git merge --ff-only feat/phase-00-khung` (hub không còn mã, chỉ tài liệu).
 
 ```text
 Status: DONE_WITH_CONCERNS

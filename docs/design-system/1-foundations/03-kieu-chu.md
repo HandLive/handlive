@@ -1,6 +1,8 @@
 # Kiểu chữ
 
-HandLive dùng San Francisco qua text style của hệ thống trên Mac, iPhone và iPad; Inter với cùng thang cỡ trên Android; Be Vietnam Pro chỉ cho tiêu đề thương hiệu. Mục này gồm bảng cỡ chữ, cỡ tối thiểu và quy tắc cho chữ tiếng Việt.
+HandLive dùng San Francisco qua text style của hệ thống trên Mac, iPhone và iPad; Inter với cùng
+thang cỡ trên Android; Be Vietnam Pro chỉ cho tiêu đề thương hiệu. Mục này gồm bảng cỡ chữ, cỡ tối
+thiểu và quy tắc cho chữ tiếng Việt.
 
 Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/typography
 
@@ -12,7 +14,8 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/typog
 | Mã, số | SF Mono (`design: .monospaced`) | Roboto Mono |
 | Tiêu đề thương hiệu | Be Vietnam Pro, đóng gói trong app | Be Vietnam Pro |
 
-SF Pro và SF Mono chỉ dùng trên nền tảng Apple theo giấy phép của Apple: không nhúng vào app Android, không dùng trong logo.
+SF Pro và SF Mono chỉ dùng trên nền tảng Apple theo giấy phép của Apple: không nhúng vào app
+Android, không dùng trong logo.
 
 ## macOS: bảng cỡ cố định
 
@@ -36,7 +39,8 @@ Chữ trong control (nút, menu, ô nhập) để control tự chọn font; ch�
 
 ## iOS và iPadOS: Dynamic Type
 
-Cỡ mặc định (Large). Android dùng token `android-*` cùng tên đuôi (`ios-body` ↔ `android-body`), cùng cỡ, dòng và weight, tính bằng sp.
+Cỡ mặc định (Large). Android dùng token `android-*` cùng tên đuôi (`ios-body` ↔ `android-body`),
+cùng cỡ, dòng và weight, tính bằng sp.
 
 | Token | Text style | Cỡ/dòng (pt) | Weight | Nhấn mạnh |
 |---|---|---|---|---|
@@ -52,9 +56,12 @@ Cỡ mặc định (Large). Android dùng token `android-*` cùng tên đuôi (`
 | `ios-caption-1` | `.caption` | 12/16 | Regular | Semibold |
 | `ios-caption-2` | `.caption2` | 11/13 | Regular | Semibold |
 
-Tracking: SF tự chỉnh theo cỡ. Token `android-*` dùng tracking động của Inter (Body −0.013 em thay −0.026 em của SF).
+Tracking: SF tự chỉnh theo cỡ. Token `android-*` dùng tracking động của Inter (Body −0.013 em thay
+−0.026 em của SF).
 
-Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), `emphasisWeight` (cột Nhấn mạnh), `fontFeatures` (như `tnum` của `timer`) — nằm trong `shared/design-tokens/type-extras.json`, tách khỏi `tokens.json` để giữ định dạng của artifact; bộ sinh mã đọc cả hai.
+Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), `emphasisWeight` (cột Nhấn mạnh),
+`fontFeatures` (như `tnum` của `timer`) — nằm trong `shared/design-tokens/type-extras.json`, tách
+khỏi `tokens.json` để giữ định dạng của artifact; bộ sinh mã đọc cả hai.
 
 ## Body từ xSmall đến AX5
 
@@ -62,8 +69,10 @@ Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), 
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 14/19 | 15/20 | 16/21 | 17/22 | 19/24 | 21/26 | 23/29 | 28/34 | 33/40 | 40/48 | 47/56 | 53/62 |
 
-- Layout chịu được mọi cỡ, kể cả AX1–AX5 (Cỡ chữ lớn hơn trong Trợ năng). Ở cỡ trợ năng (`dynamicTypeSize.isAccessibilitySize`), dòng có biểu tượng, chữ và giá trị chuyển sang xếp dọc.
-- HIG yêu cầu phóng được ít nhất 200%. Android: font scale đến 200% (Android 14 phóng phi tuyến); cỡ chữ và line height đều tính bằng sp.
+- Layout chịu được mọi cỡ, kể cả AX1–AX5 (Cỡ chữ lớn hơn trong Trợ năng). Ở cỡ trợ năng
+  (`dynamicTypeSize.isAccessibilitySize`), dòng có biểu tượng, chữ và giá trị chuyển sang xếp dọc.
+- HIG yêu cầu phóng được ít nhất 200%. Android: font scale đến 200% (Android 14 phóng phi tuyến); cỡ
+  chữ và line height đều tính bằng sp.
 - Biểu tượng mang nghĩa phóng theo chữ; SF Symbols tự phóng khi đặt cùng text style.
 
 ## Cỡ tối thiểu và weight
@@ -74,9 +83,11 @@ Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), 
 | macOS | 13 pt | 10 pt |
 | Android | 17 sp | 11 sp |
 
-- Không dùng Ultralight, Thin, Light, nhất là ở cỡ nhỏ. Dùng Regular, Medium, Semibold, Bold; Heavy chỉ là mức nhấn của Headline trên macOS.
+- Không dùng Ultralight, Thin, Light, nhất là ở cỡ nhỏ. Dùng Regular, Medium, Semibold, Bold; Heavy
+  chỉ là mức nhấn của Headline trên macOS.
 - Nhấn mạnh theo cột "Nhấn mạnh": SwiftUI `.bold()` hoặc `.fontWeight(_:)`, UIKit `traitBold`.
-- Thứ bậc bằng weight, cỡ và màu (`label`, `secondary-label`); không thêm typeface nào ngoài font hệ thống và Be Vietnam Pro.
+- Thứ bậc bằng weight, cỡ và màu (`label`, `secondary-label`); không thêm typeface nào ngoài font hệ
+  thống và Be Vietnam Pro.
 
 ## Chữ thương hiệu
 
@@ -86,15 +97,22 @@ Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), 
 | `brand-title` | 22/28 | Semibold | `.title2` | Tiêu đề trạng thái trống, bước `Onboarding` |
 | `wordmark` | 20/24 | Bold | `.title3` | Chữ HandLive thay logo, màu `brand-fire` hoặc `label` |
 
-- Phóng theo Dynamic Type: `Font.custom("BeVietnamPro-Bold", size: 34, relativeTo: .largeTitle)`; UIKit `UIFontMetrics(forTextStyle:)`. macOS giữ cỡ cố định.
-- Hỗ trợ Chữ đậm (Bold Text): khi `legibilityWeight == .bold` thì tăng một bậc weight; Android 12+ đọc `Configuration.fontWeightAdjustment`.
+- Phóng theo Dynamic Type: `Font.custom("BeVietnamPro-Bold", size: 34, relativeTo: .largeTitle)`;
+  UIKit `UIFontMetrics(forTextStyle:)`. macOS giữ cỡ cố định.
+- Hỗ trợ Chữ đậm (Bold Text): khi `legibilityWeight == .bold` thì tăng một bậc weight; Android 12+
+  đọc `Configuration.fontWeightAdjustment`.
 - Không dùng Be Vietnam Pro cho chữ thân, nút hay nhãn control.
 
 ## Chữ tiếng Việt
 
-- Chữ hoa có dấu chồng (Ấ, Ổ, Ặ, Ộ) cao hơn chữ Latin thường: không giảm line height dưới giá trị của text style, không đặt chiều cao cố định rồi cắt khung chữ. Kiểm dòng đầu của tiêu đề và chữ trong nút.
-- Không viết HOA TOÀN BỘ: dấu khó đọc, và HIG đã bỏ header viết hoa. iOS 16–18 tự viết hoa section header của `List`, nên thêm `.textCase(nil)`.
-- Kiểm ở AX5 (iOS) và 200% (Android) với chuỗi dài thật: "Nguyễn Thị Ngọc Huyền", "Đã kết nối qua cùng mạng Wi-Fi". Chữ xuống dòng, không cắt giữa từ; tên người gọi được hai dòng trước khi cắt đuôi.
+- Chữ hoa có dấu chồng (Ấ, Ổ, Ặ, Ộ) cao hơn chữ Latin thường: không giảm line height dưới giá trị
+  của text style, không đặt chiều cao cố định rồi cắt khung chữ. Kiểm dòng đầu của tiêu đề và chữ
+  trong nút.
+- Không viết HOA TOÀN BỘ: dấu khó đọc, và HIG đã bỏ header viết hoa. iOS 16–18 tự viết hoa section
+  header của `List`, nên thêm `.textCase(nil)`.
+- Kiểm ở AX5 (iOS) và 200% (Android) với chuỗi dài thật: "Nguyễn Thị Ngọc Huyền", "Đã kết nối qua
+  cùng mạng Wi-Fi". Chữ xuống dòng, không cắt giữa từ; tên người gọi được hai dòng trước khi cắt
+  đuôi.
 - Không thêm letter-spacing ngoài token cho chữ có dấu.
 
 ## Số và mã

@@ -1,6 +1,7 @@
 # Feedback
 
-Phản hồi nhẹ sau một thao tác — đã gửi, đang chờ, bị chặn — đặt ngay chỗ người dùng đang nhìn, không bằng alert hay thông báo. Dùng nhiều kênh cùng lúc: biểu tượng, chữ, rung (iPhone, Android).
+Phản hồi nhẹ sau một thao tác — đã gửi, đang chờ, bị chặn — đặt ngay chỗ người dùng đang nhìn, không
+bằng alert hay thông báo. Dùng nhiều kênh cùng lúc: biểu tượng, chữ, rung (iPhone, Android).
 
 ## Theo nền tảng
 
@@ -12,7 +13,8 @@ Phản hồi nhẹ sau một thao tác — đã gửi, đang chờ, bị chặn 
 | Android (app mở) | Như iOS, HUD kính + rung `CONFIRM` | "Đã gửi tới MacBook của Lan" |
 | Android (app ở nền: ô Cài đặt nhanh, nút trong thông báo) | Toast của hệ thống | "Đã gửi tới MacBook của Lan" |
 
-HUD không có nút và không chứa việc cần làm. Việc cần làm (ví dụ "Vẫn gửi", "Gửi lại") đi bằng `Notification` hoặc nằm trong màn đang mở.
+HUD không có nút và không chứa việc cần làm. Việc cần làm (ví dụ "Vẫn gửi", "Gửi lại") đi bằng
+`Notification` hoặc nằm trong màn đang mở.
 
 ## Câu chữ (CLIP-01)
 

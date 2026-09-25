@@ -1,6 +1,7 @@
 # Điểm cần đồng bộ giữa design system (Apple HIG) và tài liệu thiết kế chi tiết
 
-Ngày: 24/09/2026. Nguồn: design system https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (bản theo Apple HIG), `docs/detailed-design/`, hai báo cáo nghiên cứu `research-01-*`, `research-02-*`.
+Ngày: 24/09/2026. Nguồn: design system https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (bản theo
+Apple HIG), `docs/detailed-design/`, hai báo cáo nghiên cứu `research-01-*`, `research-02-*`.
 
 **Trạng thái 25/09/2026: chủ dự án đã duyệt cả bốn câu hỏi; toàn bộ các mục dưới đây đã được áp dụng vào `docs/detailed-design/` (xem README §3.5 và C19), `CLAUDE.md`, `docs/system-architecture.md`. Cách bỏ dấu kiểu Apple đã áp cho `docs/`, `README.md`, `CLAUDE.md` và `plans/` (trừ thư mục này, vì các bảng ở đây trích dạng cũ để so sánh).**
 
@@ -45,9 +46,12 @@ Ngày: 24/09/2026. Nguồn: design system https://claude.ai/artifact/2rsmYxBjxXr
 
 ## Ngoài tài liệu chi tiết
 
-- `CLAUDE.md` còn ghi iOS dùng "APNs/PushKit"; tài liệu chi tiết đã chốt không dùng PushKit/CallKit (không dùng CallKit thì không được dùng PushKit).
-- Biểu tượng app chưa thiết kế: cần làm bằng Icon Composer, nhiều lớp, 6 giao diện; không dùng SF Symbol, không dùng font San Francisco.
+- `CLAUDE.md` còn ghi iOS dùng "APNs/PushKit"; tài liệu chi tiết đã chốt không dùng PushKit/CallKit
+  (không dùng CallKit thì không được dùng PushKit).
+- Biểu tượng app chưa thiết kế: cần làm bằng Icon Composer, nhiều lớp, 6 giao diện; không dùng SF
+  Symbol, không dùng font San Francisco.
 
 ## Câu hỏi còn mở
 
-Không còn. Cả hai câu hỏi ở bản trước (bỏ dấu kiểu Apple; thay đổi hành vi 1–7d) đã được duyệt và áp dụng ngày 25/09/2026.
+Không còn. Cả hai câu hỏi ở bản trước (bỏ dấu kiểu Apple; thay đổi hành vi 1–7d) đã được duyệt và áp
+dụng ngày 25/09/2026.

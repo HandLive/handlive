@@ -1,8 +1,12 @@
 # Biểu tượng
 
-HandLive dùng SF Symbols trên Mac, iPhone, iPad và Material Symbols Rounded trên Android. Mục này gồm cách dùng SF Symbols, bảng đối chiếu hai bộ biểu tượng, biểu tượng trên thanh menu Mac và quy cách biểu tượng app.
+HandLive dùng SF Symbols trên Mac, iPhone, iPad và Material Symbols Rounded trên Android. Mục này
+gồm cách dùng SF Symbols, bảng đối chiếu hai bộ biểu tượng, biểu tượng trên thanh menu Mac và quy
+cách biểu tượng app.
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/icons · https://developer.apple.com/design/human-interface-guidelines/sf-symbols · https://developer.apple.com/design/human-interface-guidelines/app-icons
+Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/icons ·
+https://developer.apple.com/design/human-interface-guidelines/sf-symbols ·
+https://developer.apple.com/design/human-interface-guidelines/app-icons
 
 ## SF Symbols
 
@@ -14,14 +18,21 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/icons
 | Cỡ | Đặt cùng text style để symbol phóng theo Dynamic Type; không đặt cỡ point cố định |
 | Chuyển động | Hiếm và có mục đích (xem Chuyển động và xúc giác). Symbol effect cần macOS 14, iOS 17; Magic Replace cần macOS 15, iOS 18 |
 
-- Hành động quen thuộc dùng biểu tượng chuẩn của HIG: sao chép `document.on.document`, dán `document.on.clipboard`, xóa `trash`, đóng `xmark`, xong `checkmark`, soạn `square.and.pencil`, tìm `magnifyingglass`, thêm `ellipsis`, tài khoản `person.crop.circle`, chia sẻ `square.and.arrow.up`. Tên `document.*` chỉ có ở bản SF Symbols mới; bản hệ điều hành cũ dùng `doc.on.doc`, `doc.on.clipboard` (kiểm cột availability trong app SF Symbols).
-- Menu: dùng lệnh chuẩn (Sao chép, Dán…) để hệ thống tự gắn biểu tượng. Trong một nhóm, hoặc mọi mục có biểu tượng, hoặc không mục nào có.
-- Không vẽ lại phần cứng Apple; dùng symbol sản phẩm (`laptopcomputer`, `iphone`, `ipad`) và không sửa chúng.
+- Hành động quen thuộc dùng biểu tượng chuẩn của HIG: sao chép `document.on.document`, dán
+  `document.on.clipboard`, xóa `trash`, đóng `xmark`, xong `checkmark`, soạn `square.and.pencil`,
+  tìm `magnifyingglass`, thêm `ellipsis`, tài khoản `person.crop.circle`, chia sẻ
+  `square.and.arrow.up`. Tên `document.*` chỉ có ở bản SF Symbols mới; bản hệ điều hành cũ dùng
+  `doc.on.doc`, `doc.on.clipboard` (kiểm cột availability trong app SF Symbols).
+- Menu: dùng lệnh chuẩn (Sao chép, Dán…) để hệ thống tự gắn biểu tượng. Trong một nhóm, hoặc mọi mục
+  có biểu tượng, hoặc không mục nào có.
+- Không vẽ lại phần cứng Apple; dùng symbol sản phẩm (`laptopcomputer`, `iphone`, `ipad`) và không
+  sửa chúng.
 - Biểu tượng tự vẽ: vector (SVG, PDF), căn giữa theo thị giác, có accessibility label.
 
 ## Bảng đối chiếu
 
-Material Symbols Rounded: weight 400, grade 0, optical size 24, FILL 0 trừ khi ghi khác ở mục Android.
+Material Symbols Rounded: weight 400, grade 0, optical size 24, FILL 0 trừ khi ghi khác ở mục
+Android.
 
 | Khái niệm | SF Symbol | Material Symbols Rounded |
 |---|---|---|
@@ -59,7 +70,8 @@ Material Symbols Rounded: weight 400, grade 0, optical size 24, FILL 0 trừ khi
 | Người, liên hệ | `person.crop.circle` | `account_circle` |
 | Trạng thái kết nối | `antenna.radiowaves.left.and.right`, `antenna.radiowaves.left.and.right.slash` | `sensors`, `sensors_off` |
 
-Bluetooth: SF Symbols không có biểu tượng Bluetooth, nên HandLive viết chữ "Bluetooth" ở mọi nền tảng. Android không dùng `bluetooth` để hai bên giống nhau.
+Bluetooth: SF Symbols không có biểu tượng Bluetooth, nên HandLive viết chữ "Bluetooth" ở mọi nền
+tảng. Android không dùng `bluetooth` để hai bên giống nhau.
 
 ## Biểu tượng thanh menu (macOS)
 
@@ -72,8 +84,11 @@ Bluetooth: SF Symbols không có biểu tượng Bluetooth, nên HandLive viết
 | Có hội thoại chưa đọc | Biểu tượng trạng thái, ngay sau là số hội thoại bằng chữ ("3") |
 | Vừa gửi bảng nhớ tạm | `checkmark` khoảng 1 giây rồi trở lại biểu tượng trạng thái |
 
-- Luôn là ảnh template (đen và trong suốt); hệ thống tô theo thanh menu sáng, tối và khi đang chọn. Không tô màu, không đổi màu theo trạng thái.
-- HIG không nêu cỡ glyph; dùng SF Symbol để hệ thống tự căn trong thanh menu cao 24 pt. API: `MenuBarExtra(_:systemImage:isInserted:content:)` (macOS 13); ảnh tự vẽ dùng `init(_:image:isInserted:content:)` (macOS 14).
+- Luôn là ảnh template (đen và trong suốt); hệ thống tô theo thanh menu sáng, tối và khi đang chọn.
+  Không tô màu, không đổi màu theo trạng thái.
+- HIG không nêu cỡ glyph; dùng SF Symbol để hệ thống tự căn trong thanh menu cao 24 pt. API:
+  `MenuBarExtra(_:systemImage:isInserted:content:)` (macOS 13); ảnh tự vẽ dùng
+  `init(_:image:isInserted:content:)` (macOS 14).
 
 ## Biểu tượng app
 
@@ -86,13 +101,16 @@ Bluetooth: SF Symbols không có biểu tượng Bluetooth, nên HandLive viết
 | Không dùng | SF Symbols hay hình dễ lẫn với symbol, font SF, hình phần cứng Apple, chữ; không tự thêm bóng, vệt sáng, viền nổi, glow vì hệ thống tự thêm |
 | Hiện tại | Chưa có biểu tượng. Preview dùng khối gradient lửa `brand-flame` → `brand-fire` → `brand-ember` (145°) làm chỗ giữ |
 
-Android: adaptive icon dùng cùng lớp nền và lớp trước (lớp 108 dp, vùng an toàn 66 dp), có lớp monochrome cho biểu tượng theo chủ đề (Android 13+); hình dạng do Android cắt.
+Android: adaptive icon dùng cùng lớp nền và lớp trước (lớp 108 dp, vùng an toàn 66 dp), có lớp
+monochrome cho biểu tượng theo chủ đề (Android 13+); hình dạng do Android cắt.
 
 ## Android
 
-- Material Symbols Rounded (Apache 2.0) đóng gói trong app; weight 400, grade 0, 24 dp; vùng chạm 48 dp.
+- Material Symbols Rounded (Apache 2.0) đóng gói trong app; weight 400, grade 0, 24 dp; vùng chạm 48
+  dp.
 - FILL 0 mặc định; FILL 1 cho tab đang chọn (như fill của iOS), nút tròn cuộc gọi và nút nổi.
-- Màu lấy từ token (`label`, `secondary-label`, `accent`). Biểu tượng nhỏ của thông báo là hình đơn sắc, do Android tô màu.
+- Màu lấy từ token (`label`, `secondary-label`, `accent`). Biểu tượng nhỏ của thông báo là hình đơn
+  sắc, do Android tô màu.
 
 ## Nên và không nên
 

@@ -1,8 +1,13 @@
 # macOS
 
-HandLive trên Mac là app thanh menu, mở cửa sổ khi cần. Mục này quy định cấu trúc app, cách chuyển giữa chế độ chỉ-thanh-menu và chế độ có Dock, thanh menu của app, phím tắt, Liquid Glass và API theo phiên bản (macOS 13 trở lên).
+HandLive trên Mac là app thanh menu, mở cửa sổ khi cần. Mục này quy định cấu trúc app, cách chuyển
+giữa chế độ chỉ-thanh-menu và chế độ có Dock, thanh menu của app, phím tắt, Liquid Glass và API theo
+phiên bản (macOS 13 trở lên).
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/designing-for-macos · https://developer.apple.com/design/human-interface-guidelines/the-menu-bar · https://developer.apple.com/design/human-interface-guidelines/windows · https://developer.apple.com/design/human-interface-guidelines/panels
+Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/designing-for-macos ·
+https://developer.apple.com/design/human-interface-guidelines/the-menu-bar ·
+https://developer.apple.com/design/human-interface-guidelines/windows ·
+https://developer.apple.com/design/human-interface-guidelines/panels
 
 ## Cấu trúc
 
@@ -16,7 +21,8 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/desig
 | Ghép nối, công bố, hướng dẫn gỡ lỗi USB | Sheet | `sheet(isPresented:onDismiss:content:)` | `PairingCard`, `ConsentSheet`, wizard CAM-04 |
 | Cuộc gọi | Panel (ngoại lệ) | `NSPanel` `.nonactivatingPanel`, `level = .floating`, `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `hidesOnDeactivate = false` | `CallPanel` |
 
-Nút "Tin nhắn mới" nằm trên toolbar cửa sổ Tin nhắn, không ở đáy thanh bên. Không đặt thông tin hay nút quan trọng ở đáy cửa sổ.
+Nút "Tin nhắn mới" nằm trên toolbar cửa sổ Tin nhắn, không ở đáy thanh bên. Không đặt thông tin hay
+nút quan trọng ở đáy cửa sổ.
 
 ## Chế độ kích hoạt
 
@@ -28,9 +34,14 @@ Nút "Tin nhắn mới" nằm trên toolbar cửa sổ Tin nhắn, không ở đ
 | Đóng hết hai cửa sổ trên và biểu tượng thanh menu đang hiện | Về `.accessory` | — |
 
 - Chuyển bằng `NSApp.setActivationPolicy(_:)` rồi kích hoạt app để cửa sổ ra trước.
-- Cửa sổ Cài đặt và Chào mừng không đổi chế độ. Ở `.accessory` không có thanh menu, nên hai cửa sổ này tự nhận ⌘W và Esc (kiểm trên máy thật).
-- Mở lại HandLive từ Finder, Launchpad hay Spotlight khi app đang chạy (`applicationShouldHandleReopen(_:hasVisibleWindows:)`): mở cửa sổ Tin nhắn, chưa ghép nối thì mở cửa sổ Chào mừng.
-- Biểu tượng hiện theo cài đặt "Hiện HandLive trên thanh menu" (`isInserted`, mặc định bật). Hệ thống có thể giấu bớt biểu tượng khi thanh menu chật, nên mọi lệnh của `MenuBarMenu` cũng có ở nơi khác.
+- Cửa sổ Cài đặt và Chào mừng không đổi chế độ. Ở `.accessory` không có thanh menu, nên hai cửa sổ
+  này tự nhận ⌘W và Esc (kiểm trên máy thật).
+- Mở lại HandLive từ Finder, Launchpad hay Spotlight khi app đang chạy
+  (`applicationShouldHandleReopen(_:hasVisibleWindows:)`): mở cửa sổ Tin nhắn, chưa ghép nối thì mở
+  cửa sổ Chào mừng.
+- Biểu tượng hiện theo cài đặt "Hiện HandLive trên thanh menu" (`isInserted`, mặc định bật). Hệ
+  thống có thể giấu bớt biểu tượng khi thanh menu chật, nên mọi lệnh của `MenuBarMenu` cũng có ở nơi
+  khác.
 
 ## Thanh menu của app (chế độ `.regular`)
 
@@ -45,7 +56,8 @@ Nút "Tin nhắn mới" nằm trên toolbar cửa sổ Tin nhắn, không ở đ
 
 Mục chưa dùng được thì mờ, không ẩn; mọi nút toolbar đều có lệnh ở đây.
 
-Dock menu (`applicationDockMenu(_:)`): "Tin nhắn mới", "Gửi bảng nhớ tạm sang điện thoại", "Xem trước camera", cùng danh sách cửa sổ của hệ thống.
+Dock menu (`applicationDockMenu(_:)`): "Tin nhắn mới", "Gửi bảng nhớ tạm sang điện thoại", "Xem
+trước camera", cùng danh sách cửa sổ của hệ thống.
 
 ## Phím tắt
 
@@ -60,29 +72,47 @@ Dock menu (`applicationDockMenu(_:)`): "Tin nhắn mới", "Gửi bảng nhớ t
 | Return · Esc · ⌘⌫ | Trả lời · Bỏ qua (đóng panel, tắt chuông trên Mac, không từ chối) · Từ chối — trong `CallPanel` |
 | 0–9, *, # | Bấm số khi bàn phím của `CallPanel` đang mở (CALL-03 trường 7) |
 
-`CallPanel` không tự lấy focus của app người dùng đang gõ; phím của panel chỉ có tác dụng sau khi người dùng bấm vào panel.
+`CallPanel` không tự lấy focus của app người dùng đang gõ; phím của panel chỉ có tác dụng sau khi
+người dùng bấm vào panel.
 
 ## Liquid Glass và bản cũ
 
-- Build bằng SDK 27: menu, toolbar, thanh bên, sheet tự thành kính trên macOS 26+; không dùng `UIDesignRequiresCompatibility` để né.
-- Chỉ tự áp kính cho `CallPanel` (`NSGlassEffectView`) và HUD `Feedback`. Control tự dựng dùng `ConcentricRectangle` (26+).
-- macOS 13–15: `NSVisualEffectView` `.popover` cho `CallPanel`, `.hudWindow` cho HUD; góc bo theo token `radius-control-mac`, `radius-panel` (mục Vật liệu).
+- Build bằng SDK 27: menu, toolbar, thanh bên, sheet tự thành kính trên macOS 26+; không dùng
+  `UIDesignRequiresCompatibility` để né.
+- Chỉ tự áp kính cho `CallPanel` (`NSGlassEffectView`) và HUD `Feedback`. Control tự dựng dùng
+  `ConcentricRectangle` (26+).
+- macOS 13–15: `NSVisualEffectView` `.popover` cho `CallPanel`, `.hudWindow` cho HUD; góc bo theo
+  token `radius-control-mac`, `radius-panel` (mục Vật liệu).
 
 ## Control
 
-- Mỗi cửa sổ hoặc sheet một nút nổi bật ở cạnh phải hàng nút (`.borderedProminent`, 26+ `.glassProminent`) với `.keyboardShortcut(.defaultAction)`; nút khác là push button thường; "Hủy" bên trái với `.cancelAction`.
-- Nút mở cửa sổ, sheet hoặc alert có "…": "Ghép điện thoại…", "Chi tiết…", "Hủy ghép nối…", "Từ chối kèm tin nhắn…".
+- Mỗi cửa sổ hoặc sheet một nút nổi bật ở cạnh phải hàng nút (`.borderedProminent`, 26+
+  `.glassProminent`) với `.keyboardShortcut(.defaultAction)`; nút khác là push button thường; "Hủy"
+  bên trái với `.cancelAction`.
+- Nút mở cửa sổ, sheet hoặc alert có "…": "Ghép điện thoại…", "Chi tiết…", "Hủy ghép nối…", "Từ chối
+  kèm tin nhắn…".
 - Switch và checkbox chỉ trong thân cửa sổ, không trên toolbar; trong menu dùng dấu kiểm.
 - Nút chỉ có biểu tượng có tooltip `help(_:)`, bắt đầu bằng động từ, 60–75 ký tự trở xuống.
-- AccentColor là `accent`; người dùng chọn màu nhấn khác Multicolor thì control theo màu đó. Màu mang nghĩa (`call-accept-fill`, `call-decline-fill`, trạng thái) không đổi theo màu nhấn.
+- AccentColor là `accent`; người dùng chọn màu nhấn khác Multicolor thì control theo màu đó. Màu
+  mang nghĩa (`call-accept-fill`, `call-decline-fill`, trạng thái) không đổi theo màu nhấn.
 
 ## Thông báo, Tập trung, đăng nhập, khôi phục
 
-- Mac không nhận push: thông báo cục bộ `UNUserNotificationCenter`; tin nhắn, cuộc gọi là thông báo liên lạc (`INSendMessageIntent`, `INStartCallIntent`), cần capability Communication Notifications và `NSUserActivityTypes` (mục Thông báo).
-- Tập trung: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, khóa `NSFocusStatusUsageDescription`). Tập trung đang bật thì không panel, không chuông; cuộc gọi vẫn có trong `MenuBarMenu`. Chưa đọc được trạng thái Tập trung thì vẫn hiện panel nhưng không đổ chuông.
-- Không hiện hai lớp cho một cuộc gọi: khi `CallPanel` đang hiện, thông báo cuộc gọi gửi ở mức passive (vào Trung tâm thông báo, không banner, không âm); khi không hiện panel (Tập trung), thông báo ở mức time-sensitive để hệ thống quyết định theo người gọi và cài đặt Tập trung. Trả lời từ thông báo thì mở `CallPanel` ở trạng thái đang gọi.
-- Mở khi đăng nhập: `SMAppService.mainApp.register()` / `unregister()`, trạng thái luôn đọc từ `status`; `.requiresApproval` thì nút mở `SMAppService.openSystemSettingsLoginItems()`.
-- Mac không có launch screen. Mở lại thì khôi phục khung cửa sổ, hội thoại đang chọn, vị trí cuộn; Cài đặt mở lại pane cuối.
+- Mac không nhận push: thông báo cục bộ `UNUserNotificationCenter`; tin nhắn, cuộc gọi là thông báo
+  liên lạc (`INSendMessageIntent`, `INStartCallIntent`), cần capability Communication Notifications
+  và `NSUserActivityTypes` (mục Thông báo).
+- Tập trung: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, khóa
+  `NSFocusStatusUsageDescription`). Tập trung đang bật thì không panel, không chuông; cuộc gọi vẫn
+  có trong `MenuBarMenu`. Chưa đọc được trạng thái Tập trung thì vẫn hiện panel nhưng không đổ
+  chuông.
+- Không hiện hai lớp cho một cuộc gọi: khi `CallPanel` đang hiện, thông báo cuộc gọi gửi ở mức
+  passive (vào Trung tâm thông báo, không banner, không âm); khi không hiện panel (Tập trung), thông
+  báo ở mức time-sensitive để hệ thống quyết định theo người gọi và cài đặt Tập trung. Trả lời từ
+  thông báo thì mở `CallPanel` ở trạng thái đang gọi.
+- Mở khi đăng nhập: `SMAppService.mainApp.register()` / `unregister()`, trạng thái luôn đọc từ
+  `status`; `.requiresApproval` thì nút mở `SMAppService.openSystemSettingsLoginItems()`.
+- Mac không có launch screen. Mở lại thì khôi phục khung cửa sổ, hội thoại đang chọn, vị trí cuộn;
+  Cài đặt mở lại pane cuối.
 
 ## API theo phiên bản
 
@@ -99,9 +129,12 @@ Dock menu (`applicationDockMenu(_:)`): "Tin nhắn mới", "Gửi bảng nhớ t
 ## Điểm lệch
 
 - Lệch có chủ đích: `CallPanel` nổi trên mọi Space và không ẩn khi app không active (quyết định 10).
-- Giữ menu Tệp như app Tin nhắn của Apple ("Tin nhắn mới", "Đóng") dù HandLive không xử lý tệp, để ⌘N và ⌘W nằm đúng chỗ người dùng tìm.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 (bước 6, Yêu cầu đặc biệt) mô tả đổi activation policy `.accessory` ↔ `.regular`; SET-02 trường 31 `mac.menu_bar_extra`.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-04 trường 1 đặt nhật ký ở thanh bên cửa sổ Tin nhắn; CAM-03 dùng menu con Camera trong `MenuBarMenu` và cửa sổ Xem trước camera.
+- Giữ menu Tệp như app Tin nhắn của Apple ("Tin nhắn mới", "Đóng") dù HandLive không xử lý tệp, để
+  ⌘N và ⌘W nằm đúng chỗ người dùng tìm.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 (bước 6, Yêu cầu đặc biệt) mô tả đổi
+  activation policy `.accessory` ↔ `.regular`; SET-02 trường 31 `mac.menu_bar_extra`.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-04 trường 1 đặt nhật ký ở thanh bên cửa sổ Tin
+  nhắn; CAM-03 dùng menu con Camera trong `MenuBarMenu` và cửa sổ Xem trước camera.
 - Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
 
 ## Nên và không nên

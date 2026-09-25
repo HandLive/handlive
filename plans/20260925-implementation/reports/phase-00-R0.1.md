@@ -4,32 +4,79 @@ Ngày: 2026-09-25 · Nhánh: `feat/phase-00-khung` · Chưa commit (điều ph�
 
 ## Việc đã làm
 
-- Cargo workspace `relay/` (edition 2024, `rust-version` 1.88 vì `jsonwebtoken` 11 cần), một crate `crates/relay-server` (lib + bin). Stack ghim ở `[workspace.dependencies]`: actix-web 4.15, sqlx 0.9 (postgres, migrate; chỉ dùng query lúc chạy, không cần `DATABASE_URL` khi build), redis 1.7 (`ConnectionManager`), jsonwebtoken 11.1 (`rust_crypto`), ed25519-dalek 3.0 (`verify_strict`), ring 0.17 (SHA-256, `SystemRandom`), subtle (so hằng thời gian).
-- `docker-compose.yml` dev: `postgres:16-alpine` → `127.0.0.1:55432`, `redis:7-alpine` → `127.0.0.1:56379` (tránh postgresql@18 của brew ở 5432), có healthcheck, volume `pgdata` riêng.
-- Migration `migrations/20260925000000_initial_schema.sql`: chép nguyên lược đồ 0.9.4 (`devices`, `pairs`, `usage_daily`, hai index một phần). Server chạy `MIGRATOR.run` lúc khởi động (`sqlx::migrate!` nhúng file).
+- Cargo workspace `relay/` (edition 2024, `rust-version` 1.88 vì `jsonwebtoken` 11 cần), một crate
+  `crates/relay-server` (lib + bin). Stack ghim ở `[workspace.dependencies]`: actix-web 4.15, sqlx
+  0.9 (postgres, migrate; chỉ dùng query lúc chạy, không cần `DATABASE_URL` khi build), redis 1.7
+  (`ConnectionManager`), jsonwebtoken 11.1 (`rust_crypto`), ed25519-dalek 3.0 (`verify_strict`),
+  ring 0.17 (SHA-256, `SystemRandom`), subtle (so hằng thời gian).
+- `docker-compose.yml` dev: `postgres:16-alpine` → `127.0.0.1:55432`, `redis:7-alpine` →
+  `127.0.0.1:56379` (tránh postgresql@18 của brew ở 5432), có healthcheck, volume `pgdata` riêng.
+- Migration `migrations/20260925000000_initial_schema.sql`: chép nguyên lược đồ 0.9.4 (`devices`,
+  `pairs`, `usage_daily`, hai index một phần). Server chạy `MIGRATOR.run` lúc khởi động
+  (`sqlx::migrate!` nhúng file).
 - Endpoint (đúng 0.6.4, 0.7.4, CONN-03 API 1–3):
-  - `POST /v1/devices` — spec có endpoint đăng ký (CONN-03 API 1) nên làm đúng nó, không bịa: kiểm `platform`, `app_version` ≤ 32 ký tự, `ts` lệch ≤ 5 phút, `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)) (C4), chữ ký `"HLREG1"` ‖ device_id(16) ‖ ik_sig_pub(32) ‖ UTF-8(platform) ‖ ts(int64 BE). Upsert đúng query spec; 201 mới / 200 cập nhật (phân biệt bằng `xmax = 0`), 410 `DEVICE_REVOKED`.
-  - `POST /v1/auth/challenge` — thiết bị phải có trong `devices` (404/410), rate limit 10/phút/thiết bị bằng `rl:<device_id>:chal:<phút>` (TTL 120 s, 429 + `Retry-After`), 32 byte ngẫu nhiên → `SET chal:<device_id> EX 60` (ghi đè), trả `{challenge (b64u), expires_at (ms)}`.
-  - `POST /v1/auth/token` — `GETDEL chal:<device_id>`; không có/khác → 401 `CHALLENGE_EXPIRED` (so hằng thời gian); kiểm Ed25519(`"HLAUTH1"` ‖ challenge 32 byte ‖ device_id 16 byte) bằng `ik_sig_pub` trong `devices` → 401 `SIGNATURE_INVALID`; cập nhật `last_seen_at`; trả `{access_token, expires_in: 900}`.
-- JWT **HS256** (theo quyết định điều phối viên), claim `sub` (device_id), `iat`, `exp` (= iat + 900), `jti` (UUIDv4), leeway 0. Khóa từ biến môi trường `RELAY_JWT_SECRET` (≥ 32 byte, từ chối nếu ngắn). Hết hạn → `TOKEN_EXPIRED`; mọi lỗi khác (sai khóa, `alg: none`, hỏng) → `SIGNATURE_INVALID`.
-- Extractor `AuthenticatedDevice` (`src/auth_extractor.rs`): `Authorization: Bearer`, kiểm JWT, rồi kiểm `sub` còn dòng trong `devices` → 404 `DEVICE_NOT_FOUND` dù JWT còn hạn (0.6.4 bước 4); dòng có `revoked_at` → 410. Chưa có endpoint JWT nào thuộc Phase 0, nên extractor được kiểm qua route chỉ có trong test (`/test/whoami`).
-- Lỗi đúng 0.4.3/0.8.2: `{"error":{"code","message"}}`, message cố định, không lặp lại body. JSON hỏng → 400, body > 4 KiB → 413.
-- Zero-knowledge: log truy cập chỉ `%U %s %b %D` (đường dẫn, status, kích thước, thời gian — không query, không body); lỗi nội bộ chỉ log ngữ cảnh + lỗi hạ tầng.
-- Bí mật: `.env.example` chỉ giá trị giả; `relay/.env` bị gitignore (quy tắc gốc `.env`); `relay/target/` bị gitignore. Quy tắc gốc `.env.*` nuốt luôn `.env.example` → thêm `relay/.gitignore` với `!.env.example`.
+  - `POST /v1/devices` — spec có endpoint đăng ký (CONN-03 API 1) nên làm đúng nó, không bịa: kiểm
+    `platform`, `app_version` ≤ 32 ký tự, `ts` lệch ≤ 5 phút, `device_id` =
+    UUIDv8(SHA-256(`ik_sig_pub`)) (C4), chữ ký `"HLREG1"` ‖ device_id(16) ‖ ik_sig_pub(32) ‖
+    UTF-8(platform) ‖ ts(int64 BE). Upsert đúng query spec; 201 mới / 200 cập nhật (phân biệt bằng
+    `xmax = 0`), 410 `DEVICE_REVOKED`.
+  - `POST /v1/auth/challenge` — thiết bị phải có trong `devices` (404/410), rate limit 10/phút/thiết
+    bị bằng `rl:<device_id>:chal:<phút>` (TTL 120 s, 429 + `Retry-After`), 32 byte ngẫu nhiên →
+    `SET chal:<device_id> EX 60` (ghi đè), trả `{challenge (b64u), expires_at (ms)}`.
+  - `POST /v1/auth/token` — `GETDEL chal:<device_id>`; không có/khác → 401 `CHALLENGE_EXPIRED` (so
+    hằng thời gian); kiểm Ed25519(`"HLAUTH1"` ‖ challenge 32 byte ‖ device_id 16 byte) bằng
+    `ik_sig_pub` trong `devices` → 401 `SIGNATURE_INVALID`; cập nhật `last_seen_at`; trả
+    `{access_token, expires_in: 900}`.
+- JWT **HS256** (theo quyết định điều phối viên), claim `sub` (device_id), `iat`, `exp` (= iat +
+  900), `jti` (UUIDv4), leeway 0. Khóa từ biến môi trường `RELAY_JWT_SECRET` (≥ 32 byte, từ chối nếu
+  ngắn). Hết hạn → `TOKEN_EXPIRED`; mọi lỗi khác (sai khóa, `alg: none`, hỏng) →
+  `SIGNATURE_INVALID`.
+- Extractor `AuthenticatedDevice` (`src/auth_extractor.rs`): `Authorization: Bearer`, kiểm JWT, rồi
+  kiểm `sub` còn dòng trong `devices` → 404 `DEVICE_NOT_FOUND` dù JWT còn hạn (0.6.4 bước 4); dòng
+  có `revoked_at` → 410. Chưa có endpoint JWT nào thuộc Phase 0, nên extractor được kiểm qua route
+  chỉ có trong test (`/test/whoami`).
+- Lỗi đúng 0.4.3/0.8.2: `{"error":{"code","message"}}`, message cố định, không lặp lại body. JSON
+  hỏng → 400, body > 4 KiB → 413.
+- Zero-knowledge: log truy cập chỉ `%U %s %b %D` (đường dẫn, status, kích thước, thời gian — không
+  query, không body); lỗi nội bộ chỉ log ngữ cảnh + lỗi hạ tầng.
+- Bí mật: `.env.example` chỉ giá trị giả; `relay/.env` bị gitignore (quy tắc gốc `.env`);
+  `relay/target/` bị gitignore. Quy tắc gốc `.env.*` nuốt luôn `.env.example` → thêm
+  `relay/.gitignore` với `!.env.example`.
 
 ## File tạo mới
 
-- `relay/Cargo.toml`, `relay/Cargo.lock`, `relay/.gitignore`, `relay/.env.example`, `relay/docker-compose.yml`, `relay/README.md` (cổng, lệnh chạy, biến môi trường)
+- `relay/Cargo.toml`, `relay/Cargo.lock`, `relay/.gitignore`, `relay/.env.example`,
+  `relay/docker-compose.yml`, `relay/README.md` (cổng, lệnh chạy, biến môi trường)
 - `relay/migrations/20260925000000_initial_schema.sql`
 - `relay/crates/relay-server/Cargo.toml`
-- `relay/crates/relay-server/src/`: `main.rs`, `lib.rs`, `config.rs`, `state.rs`, `error.rs`, `b64u.rs`, `clock.rs`, `device_identity.rs`, `signatures.rs`, `challenge.rs`, `jwt.rs`, `auth_extractor.rs`, `routes/{mod,auth,devices}.rs`, `store/{mod,challenges,devices}.rs` (file lớn nhất 114 dòng)
-- `relay/crates/relay-server/tests/`: `common/{mod,http_harness}.rs`, `device_identity_vectors.rs`, `signature_verification.rs`, `challenge_and_token_proof.rs`, `jwt_tokens.rs`, `registration_validation.rs`, `error_responses.rs` (không cần Docker); `db_schema_and_registration.rs`, `db_auth_and_jwt.rs` (`#[ignore]`, cần `DATABASE_URL`, `REDIS_URL`)
+- `relay/crates/relay-server/src/`: `main.rs`, `lib.rs`, `config.rs`, `state.rs`, `error.rs`,
+  `b64u.rs`, `clock.rs`, `device_identity.rs`, `signatures.rs`, `challenge.rs`, `jwt.rs`,
+  `auth_extractor.rs`, `routes/{mod,auth,devices}.rs`, `store/{mod,challenges,devices}.rs` (file lớn
+  nhất 114 dòng)
+- `relay/crates/relay-server/tests/`: `common/{mod,http_harness}.rs`, `device_identity_vectors.rs`,
+  `signature_verification.rs`, `challenge_and_token_proof.rs`, `jwt_tokens.rs`,
+  `registration_validation.rs`, `error_responses.rs` (không cần Docker);
+  `db_schema_and_registration.rs`, `db_auth_and_jwt.rs` (`#[ignore]`, cần `DATABASE_URL`,
+  `REDIS_URL`)
 
 ## Test
 
-Không cần Docker (26 test): vector `shared/test-vectors/device-id.json` (3 vector: device_id, byte, version 8/variant, seed → pub); chữ ký RFC 8032 §7.1 TEST 1–2 (hằng trong test, cùng khóa với `device-id.json`) qua `verify_device_signature`, sửa 1 bit → sai; bố cục `HLAUTH1` (55 byte) và `HLREG1`; chữ ký khóa khác / `device_id` không khớp khóa / challenge khác → `SIGNATURE_INVALID`; challenge không có (hết hạn hoặc đã dùng) / khác / hỏng → `CHALLENGE_EXPIRED`, thứ tự kiểm (challenge trước chữ ký); `DEVICE_NOT_FOUND`/`DEVICE_REVOKED`; rate limit 10/phút + `Retry-After`; JWT HS256 đủ claim, 900 s, `jti` khác nhau, hết hạn → `TOKEN_EXPIRED`, sai khóa / sửa / `alg: none` → `SIGNATURE_INVALID`; đăng ký: ts lệch, platform/app_version/b64u sai → 400, chữ ký không phủ trường bị sửa; bảng status + body của mọi mã; phân tích header Bearer.
+Không cần Docker (26 test): vector `shared/test-vectors/device-id.json` (3 vector: device_id, byte,
+version 8/variant, seed → pub); chữ ký RFC 8032 §7.1 TEST 1–2 (hằng trong test, cùng khóa với
+`device-id.json`) qua `verify_device_signature`, sửa 1 bit → sai; bố cục `HLAUTH1` (55 byte) và
+`HLREG1`; chữ ký khóa khác / `device_id` không khớp khóa / challenge khác → `SIGNATURE_INVALID`;
+challenge không có (hết hạn hoặc đã dùng) / khác / hỏng → `CHALLENGE_EXPIRED`, thứ tự kiểm
+(challenge trước chữ ký); `DEVICE_NOT_FOUND` /`DEVICE_REVOKED`; rate limit 10/phút + `Retry-After`;
+JWT HS256 đủ claim, 900 s, `jti` khác nhau, hết hạn → `TOKEN_EXPIRED`, sai khóa / sửa / `alg: none`
+→ `SIGNATURE_INVALID`; đăng ký: ts lệch, platform/app_version/b64u sai → 400, chữ ký không phủ
+trường bị sửa; bảng status + body của mọi mã; phân tích header Bearer.
 
-Tích hợp (6 test, Postgres 16 + Redis 7 thật): lược đồ (3 bảng + 2 index); đăng ký 201 → 200 cùng `created_at`, `device_id` giả → 401, dòng thu hồi → 410; challenge thiết bị lạ → 404; luồng đủ challenge → token → extractor; dùng lại challenge → `CHALLENGE_EXPIRED`; TTL Redis hết thật (`PEXPIRE` 1 ms) → `CHALLENGE_EXPIRED`; chữ ký khóa khác → `SIGNATURE_INVALID` và challenge bị tiêu; không header → 401, JWT hết hạn → `TOKEN_EXPIRED`, JWT còn hạn nhưng thiết bị thu hồi → 410, bị xóa → 404 `DEVICE_NOT_FOUND`; rate limit 429 + `Retry-After`; JSON hỏng → 400; body 8 KiB → 413.
+Tích hợp (6 test, Postgres 16 + Redis 7 thật): lược đồ (3 bảng + 2 index); đăng ký 201 → 200 cùng
+`created_at`, `device_id` giả → 401, dòng thu hồi → 410; challenge thiết bị lạ → 404; luồng đủ
+challenge → token → extractor; dùng lại challenge → `CHALLENGE_EXPIRED`; TTL Redis hết thật
+(`PEXPIRE` 1 ms) → `CHALLENGE_EXPIRED`; chữ ký khóa khác → `SIGNATURE_INVALID` và challenge bị tiêu;
+không header → 401, JWT hết hạn → `TOKEN_EXPIRED`, JWT còn hạn nhưng thiết bị thu hồi → 410, bị xóa
+→ 404 `DEVICE_NOT_FOUND`; rate limit 429 + `Retry-After`; JSON hỏng → 400; body 8 KiB → 413.
 
 ```
 $ cd relay && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
@@ -90,7 +137,8 @@ $ psql ... -c 'SELECT version, description, success FROM _sqlx_migrations'
  20260925000000 | initial schema | t
 ```
 
-Sau khi kiểm: `docker compose down -v` (chỉ volume `handlive-relay-dev_pgdata`). Ảnh `postgres:16-alpine`, `redis:7-alpine` vẫn nằm trong cache Docker.
+Sau khi kiểm: `docker compose down -v` (chỉ volume `handlive-relay-dev_pgdata`). Ảnh
+`postgres:16-alpine`, `redis:7-alpine` vẫn nằm trong cache Docker.
 
 ## Điểm lệch với tài liệu
 
@@ -108,17 +156,25 @@ Sau khi kiểm: `docker compose down -v` (chỉ volume `handlive-relay-dev_pgdat
 
 ## Test vector
 
-- Đã dùng `device-id.json` (đủ 3 vector). Không dùng `hkdf-sha256.json`: relay Phase 0 không có HKDF. `shared/` không có file Ed25519 → dùng chữ ký RFC 8032 §7.1 TEST 1–2 (cùng khóa với `device-id.json`) viết thẳng trong `signature_verification.rs`.
-- **Đề xuất cho S0.1** (không sửa `shared/`): thêm `relay-auth.json` với khóa RFC 8032 TEST 1–3: `hlreg1_message`/`hlreg1_sig` (platform, ts cố định) và `hlauth1_message`/`hlauth1_sig` (challenge cố định), để Android/Apple ký đúng byte relay kiểm; và `ed25519.json` (RFC 8032 §7.1 TEST 1–3 + vector âm) cho `attestation` của PAIR-01.
+- Đã dùng `device-id.json` (đủ 3 vector). Không dùng `hkdf-sha256.json`: relay Phase 0 không có
+  HKDF. `shared/` không có file Ed25519 → dùng chữ ký RFC 8032 §7.1 TEST 1–2 (cùng khóa với
+  `device-id.json`) viết thẳng trong `signature_verification.rs`.
+- **Đề xuất cho S0.1** (không sửa `shared/`): thêm `relay-auth.json` với khóa RFC 8032 TEST 1–3:
+  `hlreg1_message` /`hlreg1_sig` (platform, ts cố định) và `hlauth1_message` /`hlauth1_sig`
+  (challenge cố định), để Android/Apple ký đúng byte relay kiểm; và `ed25519.json` (RFC 8032 §7.1
+  TEST 1–3 + vector âm) cho `attestation` của PAIR-01.
 
 ## Gợi ý cho T0.1 (CI relay)
 
-`cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` chạy không cần dịch vụ. Muốn chạy test tích hợp: service container `postgres:16` + `redis:7`, đặt `DATABASE_URL`, `REDIS_URL`, rồi `cargo test -- --ignored`. Toolchain ≥ 1.88.
+`cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` chạy không cần dịch
+vụ. Muốn chạy test tích hợp: service container `postgres:16` + `redis:7`, đặt `DATABASE_URL`,
+`REDIS_URL`, rồi `cargo test -- --ignored`. Toolchain ≥ 1.88.
 
 ## Câu hỏi còn mở
 
 - `devices.revoked_at` dùng khi nào (điểm lệch 2)?
-- IP rate limit đăng ký: nguồn IP (header `X-Forwarded-For` của proxy nào) — quyết khi triển khai Phase 2.
+- IP rate limit đăng ký: nguồn IP (header `X-Forwarded-For` của proxy nào) — quyết khi triển khai
+  Phase 2.
 
 ```text
 Status: DONE_WITH_CONCERNS

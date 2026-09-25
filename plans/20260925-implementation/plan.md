@@ -1,6 +1,9 @@
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Sẵn sàng giao việc (25/09/2026) · **Nguồn:** `plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.1 (33 chức năng lá, C1–C19), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`, `docs/project-roadmap.md`.
+**Trạng thái:** Sẵn sàng giao việc (25/09/2026) · **Nguồn:**
+`plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.1
+(33 chức năng lá, C1–C19), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
+`docs/project-roadmap.md`.
 
 ## 1. Quyết định lập kế hoạch
 
@@ -28,20 +31,39 @@
 
 ## 3. Cách giao việc cho agent
 
-Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = nền tảng: A Android, M macOS, I iOS, R relay, S shared, T test), đầu vào (mục tài liệu phải đọc), đầu ra (đường dẫn được tạo/sửa), tiêu chí chấp nhận, kiểm thử. Prompt giao việc gồm đúng các mục theo `~/.claude/rules/orchestration-protocol.md`: task, files to read, files it may modify, acceptance criteria, constraints, work context path (`/Users/hxd/HandLive` — gốc workspace, chứa cả năm kho; agent làm việc trong kho của phần mình), reports path (`plans/20260925-implementation/reports/`).
+Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1` …, chữ đầu = nền tảng: A Android, M macOS, I
+iOS, R relay, S shared, T test), đầu vào (mục tài liệu phải đọc), đầu ra (đường dẫn được tạo/sửa),
+tiêu chí chấp nhận, kiểm thử. Prompt giao việc gồm đúng các mục theo
+`~/.claude/rules/orchestration-protocol.md`: task, files to read, files it may modify, acceptance
+criteria, constraints, work context path (`/Users/hxd/HandLive` — gốc workspace, chứa cả năm kho;
+agent làm việc trong kho của phần mình), reports path (`plans/20260925-implementation/reports/`).
 
-**Thứ tự đọc bắt buộc trước khi viết mã:** `CLAUDE.md` → `docs/detailed-design/README.md` (danh mục, quy ước §3, quyết định C1–C19) → `docs/detailed-design/00-common-specs.md` → file phase → các chức năng lá được nêu → `docs/code-standards.md`. Việc có giao diện đọc thêm `docs/design-system/README.md`, mục nền tảng tương ứng trong `docs/design-system/3-platforms/` và README của thành phần liên quan.
+**Thứ tự đọc bắt buộc trước khi viết mã:** `CLAUDE.md` → `docs/detailed-design/README.md` (danh mục,
+quy ước §3, quyết định C1–C19) → `docs/detailed-design/00-common-specs.md` → file phase → các chức
+năng lá được nêu → `docs/code-standards.md`. Việc có giao diện đọc thêm
+`docs/design-system/README.md`, mục nền tảng tương ứng trong `docs/design-system/3-platforms/` và
+README của thành phần liên quan.
 
-**Ranh giới sửa file:** mỗi phần là một kho git riêng. Agent Android chỉ sửa `android/` (handlive-android) và `shared/` (handlive-shared, commit riêng); agent Apple chỉ `apple/` và `shared/`; agent relay chỉ `relay/` và `shared/`. Sửa `shared/` (test vector, schema, token) phải nêu trong báo cáo để agent nền tảng khác chạy lại (CI nền tảng không tự chạy khi shared đổi). Sửa `docs/detailed-design/` (kho hub) chỉ khi phát hiện lệch, kèm chạy validator.
+**Ranh giới sửa file:** mỗi phần là một kho git riêng. Agent Android chỉ sửa `android/`
+(handlive-android) và `shared/` (handlive-shared, commit riêng); agent Apple chỉ `apple/` và
+`shared/`; agent relay chỉ `relay/` và `shared/`. Sửa `shared/` (test vector, schema, token) phải
+nêu trong báo cáo để agent nền tảng khác chạy lại (CI nền tảng không tự chạy khi shared đổi). Sửa
+`docs/detailed-design/` (kho hub) chỉ khi phát hiện lệch, kèm chạy validator.
 
 **Định nghĩa "xong" chung cho mọi thẻ việc:**
-1. Mã dựng và test xanh trên toolchain của nền tảng (lệnh ghi trong file phase); không giấu lỗi lint, type, build.
+1. Mã dựng và test xanh trên toolchain của nền tảng (lệnh ghi trong file phase); không giấu lỗi
+   lint, type, build.
 2. Mọi ngoại lệ `E<k>` của chức năng lá liên quan có test hoặc kiểm thử tay ghi trong báo cáo.
-3. Chuỗi giao diện đúng nguyên văn tài liệu chi tiết; thành phần theo design system; VoiceOver/TalkBack đọc được trạng thái.
+3. Chuỗi giao diện đúng nguyên văn tài liệu chi tiết; thành phần theo design system;
+   VoiceOver/TalkBack đọc được trạng thái.
 4. Không có secret, khóa, chứng chỉ, dotenv trong commit.
 5. `docs/codebase-summary.md` cập nhật khi cấu trúc mã thay đổi.
-6. Báo cáo trong `reports/<phase>-<mã việc>.md`, kết thúc bằng khối `Status:` / `Summary:` / `Concerns/Blockers:`.
-7. **Commit nhỏ, commit sớm:** ít nhất một commit cho mỗi thẻ việc, và tách commit theo từng bước hợp lý bên trong (khung → module → test → tài liệu). Không gom cả phase vào một commit; một commit không bao giờ trải hai kho (commit `shared/` trước, rồi kho nền tảng). Commit trước khi viết báo cáo và ghi danh sách hash kèm tên kho vào báo cáo.
+6. Báo cáo trong `reports/<phase>-<mã việc>.md`, kết thúc bằng khối `Status:` / `Summary:` /
+   `Concerns/Blockers:`.
+7. **Commit nhỏ, commit sớm:** ít nhất một commit cho mỗi thẻ việc, và tách commit theo từng bước
+   hợp lý bên trong (khung → module → test → tài liệu). Không gom cả phase vào một commit; một
+   commit không bao giờ trải hai kho (commit `shared/` trước, rồi kho nền tảng). Commit trước khi
+   viết báo cáo và ghi danh sách hash kèm tên kho vào báo cáo.
 
 ## 4. Cổng và rủi ro
 
@@ -53,18 +75,28 @@ Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = 
 | G4 (spike D1) | Tuần đầu Phase 4 | `IOBluetoothHandsFreeDevice` nhận được âm thanh SCO ở vai HF trên macOS 13, 14, 15, 26 với Pixel và Samsung | Opus/WS thành đường chính; HFP chỉ giữ điều khiển; cập nhật AUDIO-02, plan D1 |
 | G5 (spike D6) | Tuần đầu Phase 5 | CMIOExtension xuất khung vào Zoom/Meet/FaceTime; AudioServerPlugin loopback nghe được trong ứng dụng họp | Dừng Phase 5, ghi báo cáo |
 
-Điểm phải kiểm trên máy thật (không phải câu hỏi mở, là việc trong phase): tên mục hệ thống tiếng Việt ("Quyền riêng tư & Bảo mật", "Tập trung", "Dán từ ứng dụng khác") — A1.4, M1.1; hiệu ứng Magic Replace trên biểu tượng thanh menu — M1.4; `AudioRecord` thu được âm cuộc gọi qua Shizuku trên từng máy — A4.3.
+Điểm phải kiểm trên máy thật (không phải câu hỏi mở, là việc trong phase): tên mục hệ thống tiếng
+Việt ("Quyền riêng tư & Bảo mật", "Tập trung", "Dán từ ứng dụng khác") — A1.4, M1.1; hiệu ứng Magic
+Replace trên biểu tượng thanh menu — M1.4; `AudioRecord` thu được âm cuộc gọi qua Shizuku trên từng
+máy — A4.3.
 
 ## 5. Kiểm thử và thiết bị
 
-- Đơn vị: mã hóa, envelope, chunking, máy trạng thái kết nối (0.11), chống trùng `clip_id`, quy tắc xung đột QC8.
-- Tích hợp: Android (máy thật hoặc emulator) ↔ Mac trên cùng Wi-Fi; kịch bản đo trễ có script trong `tools/bench/`.
-- Ma trận máy thật: Android — Pixel 8 (14/15), Galaxy S22/S23 (14), Xiaomi hoặc OPPO (Android 13); Apple — Mac Apple silicon macOS 26, Mac Intel macOS 13 hoặc 14; iPhone iOS 16 và 26. Phase 4, 5 thêm AirPods (xung đột HFP) và cáp USB.
+- Đơn vị: mã hóa, envelope, chunking, máy trạng thái kết nối (0.11), chống trùng `clip_id`, quy tắc
+  xung đột QC8.
+- Tích hợp: Android (máy thật hoặc emulator) ↔ Mac trên cùng Wi-Fi; kịch bản đo trễ có script trong
+  `tools/bench/`.
+- Ma trận máy thật: Android — Pixel 8 (14/15), Galaxy S22/S23 (14), Xiaomi hoặc OPPO (Android 13);
+  Apple — Mac Apple silicon macOS 26, Mac Intel macOS 13 hoặc 14; iPhone iOS 16 và 26. Phase 4, 5
+  thêm AirPods (xung đột HFP) và cáp USB.
 
 ## 6. Tài liệu phải cập nhật trong lúc làm
 
-`docs/codebase-summary.md` (cấu trúc mã), `docs/deployment-guide.md` (ký, notarize, PKG, Play Console), `docs/code-standards.md` (khi có quy ước mới), tài liệu chi tiết khi lệch (theo I6), `docs/design-system/` khi đổi giao diện (rồi xuất bản lại artifact).
+`docs/codebase-summary.md` (cấu trúc mã), `docs/deployment-guide.md` (ký, notarize, PKG, Play
+Console), `docs/code-standards.md` (khi có quy ước mới), tài liệu chi tiết khi lệch (theo I6),
+`docs/design-system/` khi đổi giao diện (rồi xuất bản lại artifact).
 
 ## 7. Câu hỏi mở
 
-Không còn. Mọi điểm chưa chắc đã chuyển thành cổng (mục 4) hoặc việc kiểm trên máy thật trong file phase.
+Không còn. Mọi điểm chưa chắc đã chuyển thành cổng (mục 4) hoặc việc kiểm trên máy thật trong file
+phase.

@@ -67,11 +67,19 @@ Mỗi nhóm chức năng là một mục. Mỗi chức năng lá có đúng năm
 
 Mỗi chức năng lá có đúng năm mục con, đánh số `<nhóm>.<chức năng>.<1..5>`:
 
-1. **Thông tin chung** — bảng hai cột với đúng các dòng: Tên, Mô tả, Tác nhân, Điều kiện trước, Điều kiện sau, Ngoại lệ, Yêu cầu đặc biệt. Ngoại lệ đánh mã `E1`, `E2`… để luồng nghiệp vụ tham chiếu.
-2. **Màn hình** — `N/A` khi chưa có wireframe được duyệt. Tại phiên bản này **chưa có wireframe nào được duyệt**, nên mọi chức năng ghi `N/A`.
-3. **Mô tả chi tiết các thành phần** — bảng: `#`, Trường, Kiểu dữ liệu, Input/Output, Giá trị khởi tạo, Mô tả. Chỉ gồm trường người dùng nhập hoặc hệ thống trả về/hiển thị; kiểu dữ liệu và giá trị Input/Output theo 0.3.
-4. **Luồng nghiệp vụ** — lưu đồ Mermaid hai cột `Người dùng` và `Hệ thống`, kèm bảng bước: Bước, Tác nhân, Thành phần (mã theo 0.1), Mô tả, Ngoại lệ/Ghi chú. Số bước trong lưu đồ trùng số bước trong bảng.
-5. **Đặc tả API/service** — danh sách lời gọi, rồi từng lời gọi gồm URL, Method, Request, Response, Ví dụ, Logic nghiệp vụ; cuối cùng là Query. Không có lời gọi thì ghi `N/A`.
+1. **Thông tin chung** — bảng hai cột với đúng các dòng: Tên, Mô tả, Tác nhân, Điều kiện trước, Điều
+   kiện sau, Ngoại lệ, Yêu cầu đặc biệt. Ngoại lệ đánh mã `E1`, `E2` … để luồng nghiệp vụ tham
+   chiếu.
+2. **Màn hình** — `N/A` khi chưa có wireframe được duyệt. Tại phiên bản này
+   **chưa có wireframe nào được duyệt**, nên mọi chức năng ghi `N/A`.
+3. **Mô tả chi tiết các thành phần** — bảng: `#`, Trường, Kiểu dữ liệu, Input/Output, Giá trị khởi
+   tạo, Mô tả. Chỉ gồm trường người dùng nhập hoặc hệ thống trả về/hiển thị; kiểu dữ liệu và giá trị
+   Input/Output theo 0.3.
+4. **Luồng nghiệp vụ** — lưu đồ Mermaid hai cột `Người dùng` và `Hệ thống`, kèm bảng bước: Bước, Tác
+   nhân, Thành phần (mã theo 0.1), Mô tả, Ngoại lệ/Ghi chú. Số bước trong lưu đồ trùng số bước trong
+   bảng.
+5. **Đặc tả API/service** — danh sách lời gọi, rồi từng lời gọi gồm URL, Method, Request, Response,
+   Ví dụ, Logic nghiệp vụ; cuối cùng là Query. Không có lời gọi thì ghi `N/A`.
 
 ### 3.2 Cách ghi URL và Method
 
@@ -83,29 +91,41 @@ Mỗi chức năng lá có đúng năm mục con, đánh số `<nhóm>.<chức n
 | Push | `https://fcm.googleapis.com/v1/projects/{project}/messages:send` hoặc `https://api.push.apple.com/3/device/{token}` (relay gọi) | `POST` |
 | Dịch vụ hệ điều hành | `N/A` | Tên API, ví dụ `SmsManager.sendMultipartTextMessage` |
 
-Request/Response của envelope mô tả phần `data` trong plaintext của payload; envelope bao ngoài và `ack` theo 0.5.1, không lặp lại.
+Request/Response của envelope mô tả phần `data` trong plaintext của payload; envelope bao ngoài và
+`ack` theo 0.5.1, không lặp lại.
 
 ### 3.3 Query
 
-Repo chưa có mã nguồn (2026-09-24), nên **không có query nào trích được từ mã**. Query trong tài liệu là thiết kế, gắn nhãn `[Thiết kế]`, dựa trên lược đồ ở 0.9. Query tới ContentProvider của Android ghi dưới dạng `ContentResolver.query(uri, projection, selection, args, sortOrder)`.
+Repo chưa có mã nguồn (2026-09-24), nên **không có query nào trích được từ mã**. Query trong tài
+liệu là thiết kế, gắn nhãn `[Thiết kế]`, dựa trên lược đồ ở 0.9. Query tới ContentProvider của
+Android ghi dưới dạng `ContentResolver.query(uri, projection, selection, args, sortOrder)`.
 
 ### 3.4 Lưu đồ
 
-- `flowchart TB`, khai báo `subgraph ND["Người dùng"]` trước `subgraph HT["Hệ thống"]` để cột Người dùng nằm bên trái.
-- Nút người dùng `U<n>`, nút hệ thống `S<n>`, nút rẽ nhánh `D<n>`; nhãn bắt đầu bằng số bước trong ngoặc, ví dụ `"(4) Mã hóa và gửi"`. Không viết `"4. …"`: Mermaid 11 hiểu `4. ` ở đầu nhãn là danh sách markdown và hiển thị lỗi.
+- `flowchart TB`, khai báo `subgraph ND["Người dùng"]` trước `subgraph HT["Hệ thống"]` để cột Người
+  dùng nằm bên trái.
+- Nút người dùng `U<n>`, nút hệ thống `S<n>`, nút rẽ nhánh `D<n>`; nhãn bắt đầu bằng số bước trong
+  ngoặc, ví dụ `"(4) Mã hóa và gửi"`. Không viết `"4. …"`: Mermaid 11 hiểu `4. ` ở đầu nhãn là danh
+  sách markdown và hiển thị lỗi.
 - Nhánh ngoại lệ ghi mã `E<k>` trên cạnh.
 - Tối đa khoảng 15 nút; chi tiết đưa vào bảng bước.
 
 ### 3.5 Câu chữ giao diện
 
-- Chuỗi hiển thị cho người dùng theo design system HandLive (Apple HIG), mục "Viết nội dung": https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT
-- Bỏ dấu theo bản tiếng Việt của Apple: hóa, xóa, hủy, tùy, thủy, khỏe (không viết hoá, xoá, huỷ, tuỳ). Toàn bộ tài liệu chuyển sang cách này ngày 2026-09-25.
-- Thuật ngữ trên giao diện: "bảng nhớ tạm" (chữ "clipboard" trong tài liệu chỉ là thuật ngữ kỹ thuật), "kết nối qua Internet" (không "relay"), "cùng mạng Wi-Fi" (LAN chỉ trong nhãn ngắn), "Hủy" luôn là nút hủy, nút bắt đầu bằng động từ, viết hoa đầu câu.
-- Màn hình giải thích trước hộp thoại xin quyền chỉ có một nút "Tiếp tục"; chỉ công bố cần đồng ý pháp lý (AUDIO-01, Hỗ trợ tiếp cận) mới có hai lựa chọn.
+- Chuỗi hiển thị cho người dùng theo design system HandLive (Apple HIG), mục "Viết nội dung":
+  https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT
+- Bỏ dấu theo bản tiếng Việt của Apple: hóa, xóa, hủy, tùy, thủy, khỏe (không viết hoá, xoá, huỷ,
+  tuỳ). Toàn bộ tài liệu chuyển sang cách này ngày 2026-09-25.
+- Thuật ngữ trên giao diện: "bảng nhớ tạm" (chữ "clipboard" trong tài liệu chỉ là thuật ngữ kỹ
+  thuật), "kết nối qua Internet" (không "relay"), "cùng mạng Wi-Fi" (LAN chỉ trong nhãn ngắn), "Hủy"
+  luôn là nút hủy, nút bắt đầu bằng động từ, viết hoa đầu câu.
+- Màn hình giải thích trước hộp thoại xin quyền chỉ có một nút "Tiếp tục"; chỉ công bố cần đồng ý
+  pháp lý (AUDIO-01, Hỗ trợ tiếp cận) mới có hai lựa chọn.
 
 ## 4. Phạm vi
 
-**Trong phạm vi:** các chức năng ở phần 2. Mỗi Mac/iPhone/iPad ghép với một điện thoại Android tại một thời điểm; mỗi điện thoại ghép tối đa 8 thiết bị.
+**Trong phạm vi:** các chức năng ở phần 2. Mỗi Mac/iPhone/iPad ghép với một điện thoại Android tại
+một thời điểm; mỗi điện thoại ghép tối đa 8 thiết bị.
 
 **Ngoài phạm vi phiên bản này:**
 - MMS, RCS, tin nhắn nhóm có ảnh.
@@ -117,7 +137,9 @@ Repo chưa có mã nguồn (2026-09-24), nên **không có query nào trích đ�
 
 ## 5. Điều chỉnh và quyết định
 
-Mục này liệt kê các điểm tài liệu thiết kế chi tiết làm rõ hoặc khác với kiến trúc gốc, kèm lý do và bằng chứng. Điểm nào đụng tới quyết định đã chốt thì không đổi âm thầm: chủ dự án đã quyết định từng điểm ngày 2026-09-24 (C12–C15).
+Mục này liệt kê các điểm tài liệu thiết kế chi tiết làm rõ hoặc khác với kiến trúc gốc, kèm lý do và
+bằng chứng. Điểm nào đụng tới quyết định đã chốt thì không đổi âm thầm: chủ dự án đã quyết định từng
+điểm ngày 2026-09-24 (C12–C15).
 
 | # | Nội dung | Loại | Trạng thái |
 |---|----------|------|------------|
@@ -128,15 +150,15 @@ Mục này liệt kê các điểm tài liệu thiết kế chi tiết làm rõ 
 | C5 | Relay dùng thêm Redis 7 (presence, pub/sub) để giữ đúng nguyên tắc "stateless để scale horizontal". | Bổ sung | Áp dụng |
 | C6 | Hint mDNS đổi theo giờ, tên instance ngẫu nhiên, để người lạ trong LAN không theo dõi được điện thoại. | Bổ sung | Áp dụng |
 | C7 | iOS không dùng PushKit VoIP (kiến trúc §3.3): từ iOS 13 mỗi VoIP push bắt buộc phải báo một cuộc gọi cho CallKit, HandLive không phải ứng dụng VoIP. Thay bằng APNs alert (`time-sensitive` cho cuộc gọi đến) + Notification Service Extension giải mã nội dung. | Bắt buộc theo nền tảng | Áp dụng |
-| C8 | Micro ảo dùng mô hình loopback của BlackHole (đã kiểm chứng trong mã nguồn BlackHole): M-MIC có một thiết bị ra bị ẩn (`kAudioDevicePropertyIsHidden`) và một thiết bị vào hiển thị "HandLive Microphone", dùng chung ring buffer trong tiến trình driver; M-APP phát PCM vào thiết bị ẩn như một client CoreAudio bình thường. Thay cho POSIX shm (kiến trúc §10.3, `docs/system-architecture.md` §8): driver chạy dưới user `_coreaudiod`, nên vùng shm do ứng dụng tạo phải mở quyền 0666, khi đó mọi tiến trình cục bộ đọc/ghi được âm thanh micro. | Điều chỉnh có bằng chứng | Áp dụng |
-| C9 | Cài driver micro: PKG ký + notarize nhúng trong ứng dụng, mở bằng Installer (Installer tự xin quyền quản trị), script `postinstall` chạy `killall coreaudiod` với quyền root. Không cần privileged helper: `SMJobBless` đã deprecated từ macOS 13; `launchctl kickstart -k` bị chặn với tiến trình hệ thống từ macOS 14.4. Đúng tinh thần D7 ("run embedded PKG"). | Làm rõ D7 | Áp dụng |
-| C10 | Quyền dán trên macOS (preview từ macOS 15.4, chưa bật mặc định ở macOS 26): nếu `NSPasteboard.accessBehavior` là `.ask` hoặc `.alwaysDeny`, onboarding hướng người dùng tới Cài đặt › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác; Apple không có API xin "Luôn cho phép". Phát hiện thay đổi bằng `changeCount` trước khi đọc nội dung. | Bổ sung | Áp dụng |
-| C11 | Camera Extension: cập nhật extension có thể cần khởi động lại máy (lỗi Apple ghi nhận từ macOS 14.5); ứng dụng phải chạy từ `/Applications` mới kích hoạt được extension. Rủi ro R6 về Discord chỉ đúng với DAL plug-in cũ (bị tắt từ macOS 14.1), không áp dụng cho CMIOExtension. Ứng dụng đẩy khung vào sink stream khai báo thêm quyền camera cho chắc chắn (chưa có tài liệu Apple khẳng định có cần hay không). | Bổ sung | Áp dụng |
-| C12 | **Điều khiển cuộc gọi không dùng `InCallService`.** Bằng chứng (mã nguồn AOSP Telecom, android10 → main): quyền `CALL_COMPANION_APP` không khiến Telecom gắn `InCallService` của ứng dụng; đường duy nhất là `MANAGE_ONGOING_CALLS` (Android 12+) qua vai trò "đồng hồ" của CompanionDeviceManager. **Quyết định:** qua Wi-Fi dùng API công khai — trạng thái và số gọi đến (`READ_PHONE_STATE`, `READ_CALL_LOG`), trả lời (`TelecomManager.acceptRingingCall`), từ chối/kết thúc (`TelecomManager.endCall`, quyền `ANSWER_PHONE_CALLS`; hai hàm đã deprecated từ API 29 nhưng vẫn hoạt động); giữ máy, DTMF, tắt tiếng chỉ qua lệnh HFP khi Mac nối Bluetooth. | Quyết định của chủ dự án | Áp dụng |
-| C13 | **Giữ D1/D3 (Opus/WS + Shizuku).** Bằng chứng: ứng dụng thường không thu được âm cuộc gọi (`VOICE_CALL`/`VOICE_UPLINK`/`VOICE_DOWNLINK` cần `CAPTURE_AUDIO_OUTPUT`) và không có API công khai chèn âm vào cuộc gọi. Qua Shizuku (uid shell): Android 10 không thu được; Android 11+ thu được trên một số máy (Pixel 8/9 có, Galaxy S22 Ultra Android 14 ra im lặng); chèn giọng chỉ có `AudioManager.getCallUplinkInjectionAudioTrack()` (Android 13, `@SystemApi`, chưa ai kiểm chứng); Shizuku phải khởi động lại sau mỗi lần bật máy. `BluetoothHeadsetClient` là API của vai trò HF, không phục vụ điện thoại ở vai trò AG — chức năng AG do stack Bluetooth chuẩn của Android đảm nhiệm. **Quyết định:** giữ Opus/WS là đường dự phòng chính thức (AUDIO-04), tài liệu ghi rõ giới hạn theo phiên bản và theo máy; Shizuku dùng cho đường này. | Quyết định của chủ dự án | Áp dụng, kèm cảnh báo khả thi |
-| C14 | **Mã hóa âm thanh HFP.** Bằng chứng: với cuộc gọi di động, âm thanh SCO đi thẳng modem ↔ chip Bluetooth, ứng dụng không chạm tới từng khung, nên không mã hóa tầng ứng dụng được. **Quyết định:** đường HFP dựa vào mã hóa liên kết Bluetooth của hệ điều hành; rủi ro KNOB/BIAS còn lại được ghi và công bố trong AUDIO-01. Đường Opus/WS vẫn mã hóa hai lớp (TLS + E2E). | Quyết định của chủ dự án | Áp dụng |
-| C15 | **Giữ D4 (Accessibility mặc định).** Bằng chứng: Accessibility không được miễn chặn đọc clipboard nền từ Android 10; cách hoạt động được là Accessibility phát hiện thao tác sao chép rồi mở `ClipboardReadActivity` trong suốt để đọc (như ClipRelay); Android 12+ hiện toast mỗi lần đọc. Chính sách Google Play cấm dùng Accessibility API để lách kiểm soát quyền riêng tư của Android → rủi ro bị từ chối. **Quyết định:** tự gửi qua Accessibility là mặc định, có công bố và xin đồng ý rõ ràng; dự phòng là gửi thủ công (nút trên thông báo, ô Cài đặt nhanh, menu Chia sẻ) thay cho Notification Listener (Notification Listener không đọc được clipboard). | Quyết định của chủ dự án | Áp dụng |
-| C16 | "Xóa thiết bị khỏi máy chủ" chỉ gỡ đăng ký trên relay, giữ mọi cặp (vẫn dùng trong LAN/USB); "Xóa toàn bộ dữ liệu HandLive" mới thu hồi cặp và báo đối phương — `DELETE /v1/devices/me?revoke_pairs=false|true`. Đối phương thấy cặp biến mất khỏi relay thì chỉ chuyển sang dùng LAN, không hủy cặp. | Quyết định thiết kế (SET-02) | Áp dụng |
-| C17 | Tự xóa clipboard trên Android: mã nguồn AOSP cho thấy `OnPrimaryClipChangedListener` không được gọi khi ứng dụng ở nền. Chỉ xóa khi đọc được `ClipDescription` của chính clip HandLive đã ghi (khi có focus, hoặc lấy focus thoáng qua bằng `ClipboardReadActivity` khi Accessibility đang chạy); không bao giờ suy ra "còn nguyên" từ việc không thấy tín hiệu sao chép, nên không xóa nhầm nội dung người dùng. | Điều chỉnh có bằng chứng | Áp dụng |
+| C8 | Micro ảo dùng mô hình loopback của BlackHole (đã kiểm chứng trong mã nguồn BlackHole): M-MIC có một thiết bị ra bị ẩn (`kAudioDevicePropertyIsHidden`) và một thiết bị vào hiển thị "HandLive Microphone", dùng chung ring buffer trong tiến trình driver; M-APP phát PCM vào thiết bị ẩn như một client CoreAudio bình thường.<br>Thay cho POSIX shm (kiến trúc §10.3, `docs/system-architecture.md` §8): driver chạy dưới user `_coreaudiod`, nên vùng shm do ứng dụng tạo phải mở quyền 0666, khi đó mọi tiến trình cục bộ đọc/ghi được âm thanh micro. | Điều chỉnh có bằng chứng | Áp dụng |
+| C9 | Cài driver micro: PKG ký + notarize nhúng trong ứng dụng, mở bằng Installer (Installer tự xin quyền quản trị), script `postinstall` chạy `killall coreaudiod` với quyền root.<br>Không cần privileged helper: `SMJobBless` đã deprecated từ macOS 13; `launchctl kickstart -k` bị chặn với tiến trình hệ thống từ macOS 14.4.<br>Đúng tinh thần D7 ("run embedded PKG"). | Làm rõ D7 | Áp dụng |
+| C10 | Quyền dán trên macOS (preview từ macOS 15.4, chưa bật mặc định ở macOS 26): nếu `NSPasteboard.accessBehavior` là `.ask` hoặc `.alwaysDeny`, onboarding hướng người dùng tới Cài đặt › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác; Apple không có API xin "Luôn cho phép".<br>Phát hiện thay đổi bằng `changeCount` trước khi đọc nội dung. | Bổ sung | Áp dụng |
+| C11 | Camera Extension: cập nhật extension có thể cần khởi động lại máy (lỗi Apple ghi nhận từ macOS 14.5); ứng dụng phải chạy từ `/Applications` mới kích hoạt được extension.<br>Rủi ro R6 về Discord chỉ đúng với DAL plug-in cũ (bị tắt từ macOS 14.1), không áp dụng cho CMIOExtension.<br>Ứng dụng đẩy khung vào sink stream khai báo thêm quyền camera cho chắc chắn (chưa có tài liệu Apple khẳng định có cần hay không). | Bổ sung | Áp dụng |
+| C12 | **Điều khiển cuộc gọi không dùng `InCallService`.** Bằng chứng (mã nguồn AOSP Telecom, android10 → main): quyền `CALL_COMPANION_APP` không khiến Telecom gắn `InCallService` của ứng dụng; đường duy nhất là `MANAGE_ONGOING_CALLS` (Android 12+) qua vai trò "đồng hồ" của CompanionDeviceManager.<br>**Quyết định:** qua Wi-Fi dùng API công khai — trạng thái và số gọi đến (`READ_PHONE_STATE`, `READ_CALL_LOG`), trả lời (`TelecomManager.acceptRingingCall`), từ chối/kết thúc (`TelecomManager.endCall`, quyền `ANSWER_PHONE_CALLS`; hai hàm đã deprecated từ API 29 nhưng vẫn hoạt động); giữ máy, DTMF, tắt tiếng chỉ qua lệnh HFP khi Mac nối Bluetooth. | Quyết định của chủ dự án | Áp dụng |
+| C13 | **Giữ D1/D3 (Opus/WS + Shizuku).** Bằng chứng: ứng dụng thường không thu được âm cuộc gọi (`VOICE_CALL`/`VOICE_UPLINK`/`VOICE_DOWNLINK` cần `CAPTURE_AUDIO_OUTPUT`) và không có API công khai chèn âm vào cuộc gọi.<br>Qua Shizuku (uid shell): Android 10 không thu được; Android 11+ thu được trên một số máy (Pixel 8/9 có, Galaxy S22 Ultra Android 14 ra im lặng); chèn giọng chỉ có `AudioManager.getCallUplinkInjectionAudioTrack()` (Android 13, `@SystemApi`, chưa ai kiểm chứng); Shizuku phải khởi động lại sau mỗi lần bật máy. `BluetoothHeadsetClient` là API của vai trò HF, không phục vụ điện thoại ở vai trò AG — chức năng AG do stack Bluetooth chuẩn của Android đảm nhiệm.<br>**Quyết định:** giữ Opus/WS là đường dự phòng chính thức (AUDIO-04), tài liệu ghi rõ giới hạn theo phiên bản và theo máy; Shizuku dùng cho đường này. | Quyết định của chủ dự án | Áp dụng, kèm cảnh báo khả thi |
+| C14 | **Mã hóa âm thanh HFP.** Bằng chứng: với cuộc gọi di động, âm thanh SCO đi thẳng modem ↔ chip Bluetooth, ứng dụng không chạm tới từng khung, nên không mã hóa tầng ứng dụng được.<br>**Quyết định:** đường HFP dựa vào mã hóa liên kết Bluetooth của hệ điều hành; rủi ro KNOB/BIAS còn lại được ghi và công bố trong AUDIO-01.<br>Đường Opus/WS vẫn mã hóa hai lớp (TLS + E2E). | Quyết định của chủ dự án | Áp dụng |
+| C15 | **Giữ D4 (Accessibility mặc định).** Bằng chứng: Accessibility không được miễn chặn đọc clipboard nền từ Android 10; cách hoạt động được là Accessibility phát hiện thao tác sao chép rồi mở `ClipboardReadActivity` trong suốt để đọc (như ClipRelay); Android 12+ hiện toast mỗi lần đọc.<br>Chính sách Google Play cấm dùng Accessibility API để lách kiểm soát quyền riêng tư của Android → rủi ro bị từ chối.<br>**Quyết định:** tự gửi qua Accessibility là mặc định, có công bố và xin đồng ý rõ ràng; dự phòng là gửi thủ công (nút trên thông báo, ô Cài đặt nhanh, menu Chia sẻ) thay cho Notification Listener (Notification Listener không đọc được clipboard). | Quyết định của chủ dự án | Áp dụng |
+| C16 | "Xóa thiết bị khỏi máy chủ" chỉ gỡ đăng ký trên relay, giữ mọi cặp (vẫn dùng trong LAN/USB); "Xóa toàn bộ dữ liệu HandLive" mới thu hồi cặp và báo đối phương — `DELETE /v1/devices/me?revoke_pairs=false | true`. Đối phương thấy cặp biến mất khỏi relay thì chỉ chuyển sang dùng LAN, không hủy cặp. | Quyết định thiết kế (SET-02) | Áp dụng |
+| C17 | Tự xóa clipboard trên Android: mã nguồn AOSP cho thấy `OnPrimaryClipChangedListener` không được gọi khi ứng dụng ở nền.<br>Chỉ xóa khi đọc được `ClipDescription` của chính clip HandLive đã ghi (khi có focus, hoặc lấy focus thoáng qua bằng `ClipboardReadActivity` khi Accessibility đang chạy); không bao giờ suy ra "còn nguyên" từ việc không thấy tín hiệu sao chép, nên không xóa nhầm nội dung người dùng. | Điều chỉnh có bằng chứng | Áp dụng |
 | C18 | Tin SMS mới phát hiện bằng `ContentObserver` trên provider, không cần `RECEIVE_SMS` — bớt một quyền bị Google Play hạn chế. | Điều chỉnh | Áp dụng |
 | C19 | **Đồng bộ với design system theo Apple HIG** (chủ dự án duyệt 2026-09-25): màn hình giải thích quyền chỉ có "Tiếp tục" (SET-01, SET-03); Mac: biểu tượng thanh menu mở menu, không popover (CONN-01), cài đặt "Hiện HandLive trên thanh menu" (`mac.menu_bar_extra`) và đổi activation policy `.accessory` ↔ `.regular` khi mở cửa sổ (SET-02, SET-03); cuộc gọi đến trên Mac kèm thông báo liên lạc `INStartCallIntent`, chế độ Tập trung bật thì không hiện panel — panel nổi là lệch có chủ đích so với HIG (CALL-01); nhật ký cuộc gọi ở thanh bên cửa sổ Tin nhắn (CALL-04); dòng hội thoại chỉ có chấm chưa đọc (SMS-03); lỗi bảng nhớ tạm báo tại chỗ, không đẩy thông báo (CLIP-01…03); kênh thông báo Android `clipboard`, `permission`; Mac khai báo `NSMicrophoneUsageDescription`, `NSFocusStatusUsageDescription` (SET-03, AUDIO-01, CALL-01); hộp thoại hủy ghép nối theo alert (Mac) và hộp chọn hành động (iPhone, Android) (PAIR-03); câu chữ theo 3.5. | Quyết định của chủ dự án | Áp dụng |

@@ -1,17 +1,24 @@
 # Phase 2 — SMS, app iPhone/iPad, relay và push
 
-**Mục tiêu:** đọc và trả lời SMS từ Mac và iPhone/iPad; kết nối qua Internet khi ngoài LAN; đánh thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đặt.
+**Mục tiêu:** đọc và trả lời SMS từ Mac và iPhone/iPad; kết nối qua Internet khi ngoài LAN; đánh
+thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đặt.
 
 ## Ngữ cảnh
 
-- Chức năng lá: `05-sms.md` SMS-01…05; `03-connectivity.md` CONN-03, CONN-04; `04-clipboard.md` CLIP-04; `02-pairing.md` PAIR-01 qua relay (`rv`), PAIR-03 luồng B; `01-setup-settings.md` SET-02 (trường 7–9, 21, 24–30), SET-03 (iOS).
-- Common specs: 0.9.4 lược đồ relay (PostgreSQL), 0.9.5 Redis (`presence`, `dev:<device_id>`, `revoked_notice`), REST relay, `DELETE /v1/devices/me?revoke_pairs=` (C16).
-- Design system: `3-platforms/02-ios-ipados.md`; thành phần `ThreadRow`, `MessageBubble`, `PasteCard`, `Notification`, `GroupedList`; `2-patterns/03-thong-bao.md`.
-- Quyết định: C3 (Keychain khi khóa), C7 (không PushKit/CallKit), C18 (`ContentObserver`, không `RECEIVE_SMS`), cổng G2 (Play Console).
+- Chức năng lá: `05-sms.md` SMS-01…05; `03-connectivity.md` CONN-03, CONN-04; `04-clipboard.md`
+  CLIP-04; `02-pairing.md` PAIR-01 qua relay (`rv`), PAIR-03 luồng B; `01-setup-settings.md` SET-02
+  (trường 7–9, 21, 24–30), SET-03 (iOS).
+- Common specs: 0.9.4 lược đồ relay (PostgreSQL), 0.9.5 Redis (`presence`, `dev:<device_id>`,
+  `revoked_notice`), REST relay, `DELETE /v1/devices/me?revoke_pairs=` (C16).
+- Design system: `3-platforms/02-ios-ipados.md`; thành phần `ThreadRow`, `MessageBubble`,
+  `PasteCard`, `Notification`, `GroupedList`; `2-patterns/03-thong-bao.md`.
+- Quyết định: C3 (Keychain khi khóa), C7 (không PushKit/CallKit), C18 (`ContentObserver`, không
+  `RECEIVE_SMS`), cổng G2 (Play Console).
 
 ## Yêu cầu và tiêu chí đo
 
-- Thông báo SMS mới trên Mac < 500 ms từ lúc điện thoại nhận (LAN); trả lời có xác nhận "Đã gửi" < 2 s.
+- Thông báo SMS mới trên Mac < 500 ms từ lúc điện thoại nhận (LAN); trả lời có xác nhận "Đã gửi" < 2
+  s.
 - Relay zero-knowledge: không giải mã, không log payload; dữ liệu phiên tự xóa sau 30 ngày.
 - iPhone đang khóa: thông báo chỉ hiện nội dung chung (C3).
 
@@ -32,10 +39,12 @@
 
 ## Kiểm thử
 
-- Đơn vị: phân trang `sms/history`, khớp `local_id` với hộp Sent (SMS-04 API 4), quy tắc trạng thái chỉ đi tiến.
+- Đơn vị: phân trang `sms/history`, khớp `local_id` với hộp Sent (SMS-04 API 4), quy tắc trạng thái
+  chỉ đi tiến.
 - Tích hợp: kịch bản mất mạng giữa chừng (CONN-02 E), relay khởi động lại (presence Redis mất).
 
 ## Rủi ro và quay lui
 
-- Play Store từ chối SMS → Plan B: Notification Listener đọc thông báo SMS (mất gửi), phân phối F-Droid/APK; ghi trong deployment-guide.
+- Play Store từ chối SMS → Plan B: Notification Listener đọc thông báo SMS (mất gửi), phân phối
+  F-Droid/APK; ghi trong deployment-guide.
 - APNs payload 4 KB → nội dung SMS cắt 1 000 ký tự trong push, đầy đủ sau SMS-01.

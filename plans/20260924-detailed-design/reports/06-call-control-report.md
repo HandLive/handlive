@@ -4,11 +4,14 @@
 
 ## Cần bổ sung vào 00-common-specs
 
-1. `call_event/state` thêm `sub_id`, `sim_label`, `waiting_number`, `waiting_display_name`; `log_new` thêm `call_id`; ack `log_sync` thêm `reset`.
+1. `call_event/state` thêm `sub_id`, `sim_label`, `waiting_number`, `waiting_display_name`;
+   `log_new` thêm `call_id`; ack `log_sync` thêm `reset`.
 2. 0.7.2: `features.call.notify` (iOS gửi; Android chỉ push cuộc gọi khi `true`).
-3. 0.8.1: `CALL_ACTION_NOT_ALLOWED.details.reason` ∈ {state, waiting, platform, system}; `CALL_HFP_REQUIRED.details.action`.
+3. 0.8.1: `CALL_ACTION_NOT_ALLOWED.details.reason` ∈ {state, waiting, platform, system};
+   `CALL_HFP_REQUIRED.details.action`.
 4. 0.9.5: `call.ringtone` (Mac, `true`), `call.quick_replies` (Mac, ≤ 6 mẫu × 160 ký tự).
-5. 0.10 đề xuất: `CALL_REJECT_BG_TIMEOUT` 15 s, `CALL_HFP_CMD_TIMEOUT` 2 s, khóa thao tác 3 s, ghép nhật ký ±5 s/60 s.
+5. 0.10 đề xuất: `CALL_REJECT_BG_TIMEOUT` 15 s, `CALL_HFP_CMD_TIMEOUT` 2 s, khóa thao tác 3 s, ghép
+   nhật ký ±5 s/60 s.
 6. CONN-04 API 4: nội dung mặc định theo `reason`; collapse `calllog:<entry_id>`.
 
 ## Giả định

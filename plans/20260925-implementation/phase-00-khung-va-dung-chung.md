@@ -1,16 +1,24 @@
 # Phase 0 — Khung kho, giao thức, mã hóa, token, CI
 
-**Mục tiêu:** ba nền tảng dựng được từ kho trống, dùng chung một bộ test vector cho mã hóa và envelope, có token giao diện sinh từ `shared/design-tokens/tokens.json`, CI chạy test. Không có tính năng người dùng nào ở phase này.
+**Mục tiêu:** ba nền tảng dựng được từ kho trống, dùng chung một bộ test vector cho mã hóa và
+envelope, có token giao diện sinh từ `shared/design-tokens/tokens.json`, CI chạy test. Không có tính
+năng người dùng nào ở phase này.
 
 ## Ngữ cảnh
 
-- `docs/detailed-design/00-common-specs.md`: 0.2 định danh (`device_id` UUIDv8 từ SHA-256 khóa ký), 0.3 kiểu dữ liệu, 0.5 envelope và khung HL, 0.6 mã hóa (XChaCha20-Poly1305 = HChaCha20 + ChaCha20-Poly1305; X25519 + HKDF-SHA256; `HLSTREAM1|welcome|` MAC), 0.7 bắt tay phiên và capability, 0.8 mã lỗi, 0.9 mô hình dữ liệu, 0.10 hằng số.
-- `docs/code-standards.md`; `docs/design-system/1-foundations/01-mau-sac.md`, `03-kieu-chu.md`; `shared/design-tokens/README.md`.
+- `docs/detailed-design/00-common-specs.md`: 0.2 định danh (`device_id` UUIDv8 từ SHA-256 khóa ký),
+  0.3 kiểu dữ liệu, 0.5 envelope và khung HL, 0.6 mã hóa (XChaCha20-Poly1305 = HChaCha20 +
+  ChaCha20-Poly1305; X25519 + HKDF-SHA256; `HLSTREAM1|welcome|` MAC), 0.7 bắt tay phiên và
+  capability, 0.8 mã lỗi, 0.9 mô hình dữ liệu, 0.10 hằng số.
+- `docs/code-standards.md`; `docs/design-system/1-foundations/01-mau-sac.md`, `03-kieu-chu.md`;
+  `shared/design-tokens/README.md`.
 - Kiến trúc: `plans/20260924-definitive-architecture/plan.md` §3, §5, §6.
 
 ## Yêu cầu
 
-- Bố cục kho (I1; từ 25/09/2026 mỗi phần là kho riêng trong cùng thư mục workspace — xem `plan.md` I1 và `reports/repo-split.md`; `tools/vectors`, `tools/schemas` nay ở `shared/tools/`, workflow CI nằm trong từng kho) — tạo đủ, dựng xanh dù rỗng:
+- Bố cục kho (I1; từ 25/09/2026 mỗi phần là kho riêng trong cùng thư mục workspace — xem `plan.md`
+  I1 và `reports/repo-split.md`; `tools/vectors`, `tools/schemas` nay ở `shared/tools/`, workflow CI
+  nằm trong từng kho) — tạo đủ, dựng xanh dù rỗng:
 
 ```
 android/                      Gradle Kotlin DSL, AGP mới nhất ổn định, Kotlin 2.x, minSdk 29, targetSdk 35
@@ -52,11 +60,14 @@ tools/docs/                   đã có; tools/bench/ (Phase 1)
 
 ## Kiểm thử
 
-- Vector liên nền tảng: cùng một envelope mã hóa trên Android giải mã được trên Apple và ngược lại (test fixture ghi ra `shared/test-vectors/envelope-roundtrip.json` bởi A0.1, kiểm bởi M0.1).
+- Vector liên nền tảng: cùng một envelope mã hóa trên Android giải mã được trên Apple và ngược lại
+  (test fixture ghi ra `shared/test-vectors/envelope-roundtrip.json` bởi A0.1, kiểm bởi M0.1).
 - `device_id` giống nhau khi tính từ cùng khóa ký trên hai nền tảng.
 
 ## Rủi ro và quay lui
 
-- Tink không có API XChaCha20 với nonce 24 byte trên mọi phiên bản → dùng `XChaCha20Poly1305` của Tink (có sẵn) hoặc BouncyCastle; ghi rõ trong báo cáo.
+- Tink không có API XChaCha20 với nonce 24 byte trên mọi phiên bản → dùng `XChaCha20Poly1305` của
+  Tink (có sẵn) hoặc BouncyCastle; ghi rõ trong báo cáo.
 - HChaCha20 tự cài sai → chỉ lộ qua vector; không được bỏ vector nào.
-- XcodeGen làm lệch cấu hình ký → giữ `project.yml` tối giản, ký Developer ID cấu hình ở `docs/deployment-guide.md`.
+- XcodeGen làm lệch cấu hình ký → giữ `project.yml` tối giản, ký Developer ID cấu hình ở
+  `docs/deployment-guide.md`.

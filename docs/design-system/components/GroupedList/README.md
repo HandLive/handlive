@@ -1,6 +1,8 @@
 # GroupedList
 
-Danh sách nhóm kiểu Cài đặt của iPhone — các nhóm bo góc trên nền `system-grouped-background`, có tiêu đề và chú thích — dùng cho Cài đặt, Thiết bị và các màn quyền trên iOS/iPadOS và Android. Trên Mac, cùng cấu trúc là `Form` kiểu `.grouped` (xem `Toggle`).
+Danh sách nhóm kiểu Cài đặt của iPhone — các nhóm bo góc trên nền `system-grouped-background`, có
+tiêu đề và chú thích — dùng cho Cài đặt, Thiết bị và các màn quyền trên iOS/iPadOS và Android. Trên
+Mac, cùng cấu trúc là `Form` kiểu `.grouped` (xem `Toggle`).
 
 ## Cấu tạo
 
@@ -14,13 +16,20 @@ Danh sách nhóm kiểu Cài đặt của iPhone — các nhóm bo góc trên n�
 | Chú thích nhóm | Câu hoàn chỉnh giải thích hệ quả | `secondary-label` |
 | Lý do chưa dùng được | Dưới tiêu đề dòng, có biểu tượng thông tin | `text-orange` |
 
-Loại dòng: điều hướng (tiêu đề + giá trị + mũi tên), công tắc (`Toggle`), hành động (chữ `accent`, ví dụ "Đồng bộ lại toàn bộ SMS"), phá hủy (chữ `destructive-text`, luôn ở nhóm cuối, luôn hỏi xác nhận bằng `Alert`).
+Loại dòng: điều hướng (tiêu đề + giá trị + mũi tên), công tắc (`Toggle`), hành động (chữ `accent`,
+ví dụ "Đồng bộ lại toàn bộ SMS"), phá hủy (chữ `destructive-text`, luôn ở nhóm cuối, luôn hỏi xác
+nhận bằng `Alert`).
 
-Màu ô biểu tượng theo nhóm chức năng, tránh xanh dương: Thiết bị `system-gray`, Bảng nhớ tạm `system-orange`, Tin nhắn `system-green`, Cuộc gọi `call-accept-fill`, Thông báo `system-red`, Kết nối qua Internet `system-purple`.
+Màu ô biểu tượng theo nhóm chức năng, tránh xanh dương: Thiết bị `system-gray`, Bảng nhớ tạm
+`system-orange`, Tin nhắn `system-green`, Cuộc gọi `call-accept-fill`, Thông báo `system-red`, Kết
+nối qua Internet `system-purple`.
 
 ## API
 
-SwiftUI `Form` hoặc `List` với `.listStyle(.insetGrouped)`, `Section(header:footer:)`, `LabeledContent`, `NavigationLink`. Android: `HLGroupedList { section(title, footer) { row(...) } }` dựng bằng `LazyColumn`; dòng là một vùng chạm, có `Modifier.semantics { role = Role.Switch }` cho dòng công tắc.
+SwiftUI `Form` hoặc `List` với `.listStyle(.insetGrouped)`, `Section(header:footer:)`,
+`LabeledContent`, `NavigationLink`. Android: `HLGroupedList { section(title, footer) { row(...) } }`
+dựng bằng `LazyColumn`; dòng là một vùng chạm, có `Modifier.semantics { role = Role.Switch }` cho
+dòng công tắc.
 
 ## Nên và không nên
 

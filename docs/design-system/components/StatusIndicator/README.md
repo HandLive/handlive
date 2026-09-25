@@ -1,6 +1,7 @@
 # StatusIndicator
 
-Cho biết liên kết giữa hai máy đang ra sao: biểu tượng tô màu trạng thái đi kèm chữ. Là chỉ báo trong ngữ cảnh — HIG khuyên dùng chỉ báo thay cho alert khi mất kết nối.
+Cho biết liên kết giữa hai máy đang ra sao: biểu tượng tô màu trạng thái đi kèm chữ. Là chỉ báo
+trong ngữ cảnh — HIG khuyên dùng chỉ báo thay cho alert khi mất kết nối.
 
 ## Trạng thái
 
@@ -15,17 +16,23 @@ Cho biết liên kết giữa hai máy đang ra sao: biểu tượng tô màu tr
 | Cần ghép nối lại | "Cần ghép nối lại" | `exclamationmark.triangle.fill` ↔ `warning` | `status-error` |
 | Đang phát camera | "Đang phát camera" | chấm nhấp nháy | `status-connected` |
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CONN-01 và PAIR-02 dùng "Đã kết nối qua Wi-Fi", "Đã kết nối qua Internet"; "LAN" chỉ còn trong nhãn ngắn dạng viên.
-- Chữ dùng `secondary-label`, kiểu `mac-subheadline` / `ios-subheadline` / `android-subheadline` cho cả dạng dòng và dạng viên; chỉ biểu tượng hoặc chấm mang màu. Không bao giờ chỉ có chấm màu.
-- Dạng viên (`pill`) dùng cho nhãn ngắn trên đầu popover, cửa sổ: nền `tertiary-system-fill`, biểu tượng màu trạng thái, chữ `label`.
+- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CONN-01 và PAIR-02 dùng "Đã kết nối qua Wi-Fi", "Đã
+  kết nối qua Internet"; "LAN" chỉ còn trong nhãn ngắn dạng viên.
+- Chữ dùng `secondary-label`, kiểu `mac-subheadline` / `ios-subheadline` / `android-subheadline` cho
+  cả dạng dòng và dạng viên; chỉ biểu tượng hoặc chấm mang màu. Không bao giờ chỉ có chấm màu.
+- Dạng viên (`pill`) dùng cho nhãn ngắn trên đầu popover, cửa sổ: nền `tertiary-system-fill`, biểu
+  tượng màu trạng thái, chữ `label`.
 - VoiceOver/TalkBack đọc câu đầy đủ: "Đã kết nối qua Wi-Fi với Pixel 8 của Lan".
-- Nhấp nháy chỉ cho "Đang kết nối" và "Đang phát camera", tắt khi bật Giảm chuyển động (`duration-pulse`).
+- Nhấp nháy chỉ cho "Đang kết nối" và "Đang phát camera", tắt khi bật Giảm chuyển động
+  (`duration-pulse`).
 
 ## Ở đâu
 
-Menu của thanh menu Mac (dòng đầu), đầu cửa sổ Tin nhắn khi mất kết nối, dòng `DeviceRow`, màn Thiết bị trên Android và iPhone, panel cuộc gọi khi mất phiên ("Mất kết nối với điện thoại").
+Menu của thanh menu Mac (dòng đầu), đầu cửa sổ Tin nhắn khi mất kết nối, dòng `DeviceRow`, màn Thiết
+bị trên Android và iPhone, panel cuộc gọi khi mất phiên ("Mất kết nối với điện thoại").
 
 ## Nên và không nên
 
 - Nên cập nhật tại chỗ, không đẩy thông báo mỗi lần kết nối lại.
-- Không dùng đỏ cho ngoại tuyến thông thường — ngoại tuyến là xám; đỏ chỉ khi người dùng phải làm gì đó.
+- Không dùng đỏ cho ngoại tuyến thông thường — ngoại tuyến là xám; đỏ chỉ khi người dùng phải làm gì
+  đó.

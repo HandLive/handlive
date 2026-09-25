@@ -1,6 +1,7 @@
 # CameraPreview
 
-Cửa sổ "Xem trước camera" trên Mac khi điện thoại làm webcam (CAM-02…05): hình từ điện thoại, trạng thái phiên, kênh truyền và các điều khiển. Điều khiển nhanh cũng có trong `MenuBarMenu`.
+Cửa sổ "Xem trước camera" trên Mac khi điện thoại làm webcam (CAM-02…05): hình từ điện thoại, trạng
+thái phiên, kênh truyền và các điều khiển. Điều khiển nhanh cũng có trong `MenuBarMenu`.
 
 ## Cấu tạo
 
@@ -13,12 +14,15 @@ Cửa sổ "Xem trước camera" trên Mac khi điện thoại làm webcam (CAM-
 | Hạ chất lượng | Dòng `text-orange` có biểu tượng: "Đang hạ chất lượng · Điện thoại nóng" (lý do khác: "Mạng Wi-Fi chậm", "Pin điện thoại yếu (18 %)", "Theo ứng dụng họp", "Theo lựa chọn của bạn") |
 | Dùng bởi | "Có ứng dụng đang dùng HandLive Camera và HandLive Microphone" |
 
-"Dừng" là nút thường, không phải phá hủy: dừng camera không mất dữ liệu. Không có tùy chọn lật gương.
+"Dừng" là nút thường, không phải phá hủy: dừng camera không mất dữ liệu. Không có tùy chọn lật
+gương.
 
 ## Theo nền tảng
 
-- **macOS:** cửa sổ thường, co giãn giữ tỉ lệ; ⌘W đóng (không dừng camera nếu ứng dụng họp đang dùng); từ macOS 26 thanh điều khiển là `GlassEffectContainer` với `.clear`, trước đó `.hudWindow`.
-- **Android:** không có cửa sổ này; trong lúc phát, thông báo kênh `camera_live` có "Đổi camera", "Tắt micro" / "Bật micro", "Dừng", cùng chỉ báo quyền riêng tư của Android.
+- **macOS:** cửa sổ thường, co giãn giữ tỉ lệ; ⌘W đóng (không dừng camera nếu ứng dụng họp đang
+  dùng); từ macOS 26 thanh điều khiển là `GlassEffectContainer` với `.clear`, trước đó `.hudWindow`.
+- **Android:** không có cửa sổ này; trong lúc phát, thông báo kênh `camera_live` có "Đổi camera",
+  "Tắt micro" / "Bật micro", "Dừng", cùng chỉ báo quyền riêng tư của Android.
 
 ## Nên và không nên
 
