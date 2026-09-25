@@ -10,7 +10,7 @@ the phone, the session status, the transport, and the controls. The quick contro
 
 | Part | Specification |
 |------|---------|
-| Video frame | `video-background`, 16:9, `radius-card` corners; while waiting: "Waiting for phone…"; with the video paused: "Video paused" |
+| Video frame | `video-background`, 16:9, `radius-card` corners; while waiting: "Waiting for the phone…"; with the video paused: "Video paused" |
 | Status (top left) | A glass pill: a pulsing dot + "Live" · "Via Wi-Fi" or "Via USB"; other states: "Requesting…", "Tap Turn On on the phone", "Starting…", "Stopping…", "Error" |
 | Control bar (bottom, floating over the picture) | **Clear** glass with a 35% dark layer (`glass-dim`), because it sits over video: `SegmentedControl` "Front / Back" (hidden when the phone has one camera), a microphone on/off button, a pause video button, a "Quality" pop-up (Automatic, 480p, 720p, 1080p; levels beyond the phone's capability are dimmed with a reason), a "Stop" button |
 | Stats | "Front camera · 1280×720 · 24 fps · 1.9 Mbps", `mac-caption-2`, tabular digits |

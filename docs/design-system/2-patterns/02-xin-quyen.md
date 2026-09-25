@@ -30,14 +30,14 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-
 | Permission | Platform | When it's requested | Primer | Purpose string or system permission |
 |---|---|---|---|---|
 | Notifications | macOS, iOS | Initial setup | "Get Notified About Messages and Calls" | No purpose string; `requestAuthorization(options: [.alert, .sound, .badge])`. Time-sensitive comes with the entitlement, not with a separate request |
-| Local network | iOS, macOS 15+ | Initial setup | "Find Your Phone on Wi-Fi" | `NSLocalNetworkUsageDescription`: "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, without going through the internet." |
-| Notifications | Android 13+ | Initial setup | "Notifications keep you up to date on the connection status and let you confirm requests from your Mac, such as turning on the camera." | `POST_NOTIFICATIONS` |
+| Local network | iOS, macOS 15+ | Initial setup | "Find Your Phone on Wi-Fi" | `NSLocalNetworkUsageDescription`: "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet." |
+| Notifications | Android 13+ | Initial setup | "Notifications show the connection status and let you confirm requests from your Mac, such as turning on the camera." | `POST_NOTIFICATIONS` |
 | Background activity | Android | Initial setup | "So your Mac and iPhone can always reach this phone, HandLive needs to run in the background without being stopped by the system." | The battery optimization exemption dialog |
 | Camera (QR scanning) | Android | Tapping "Scan QR Code" | Proposed: "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad." | `CAMERA`; if denied, use "Enter PIN" |
-| SMS | Android | The feature card after the first pairing, or when "SMS Messages" is turned on | "To view and reply to SMS on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
+| SMS | Android | The feature card after the first pairing, or when "SMS Messages" is turned on | "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
 | Calls | Android | Like SMS, when "Calls" is turned on | Proposed: "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
-| Auto-sending the clipboard | Android | Turning on "Auto-Send When Copying" | `ConsentSheet` (CLIP-01 field 2) | The service in Settings › Accessibility |
-| Bluetooth, microphone | macOS | Turning on "Call Audio on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive uses Bluetooth to receive call audio from your phone." · `NSMicrophoneUsageDescription` (proposed): "HandLive uses the microphone so you can speak on calls transferred from your phone." |
+| Auto-sending the clipboard | Android | Turning on "Auto-Send on Copy" | `ConsentSheet` (CLIP-01 field 2) | The service in Settings › Accessibility |
+| Bluetooth, microphone | macOS | Turning on "Call Audio on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive uses Bluetooth to receive call audio from your phone." · `NSMicrophoneUsageDescription` (proposed): "HandLive uses the microphone so you can talk during calls transferred from your phone." |
 | Nearby devices | Android 12+ | Turning on "Call Audio on Mac" on the phone | Proposed: "To move call audio to your Mac, HandLive needs to connect to the Mac over Bluetooth." | `BLUETOOTH_CONNECT` (granted at install time on Android 10–11) |
 | Focus status | macOS | Turning on "Ring on Mac" | Not needed | `NSFocusStatusUsageDescription` (proposed): "HandLive checks whether you have a Focus on so it doesn't ring during that time." Until it's allowed, the Mac doesn't ring |
 | Camera | macOS | Turning on "Use Phone as Webcam" (CAM-01 step 3) | The CAM-01 checklist | `NSCameraUsageDescription`: "HandLive brings the picture from your phone into the HandLive Camera virtual camera." |
@@ -63,7 +63,7 @@ Shizuku permission (AUDIO-01 step 10).
   `shouldShowRequestPermissionRationale` (Android 11+ blocks the dialog on its own after two denials).
   From then on, don't call the dialog; show "Open Settings" instead.
 - The Mac and iPhone see the permissions missing on the phone (`permissions_missing`) on the Devices
-  page, for example "SMS permission missing on the phone"; the phone posts a suggestion notification
+  page, for example "Missing SMS permission on the phone"; the phone posts a suggestion notification
   at most once per feature every 24 h (SET-01 field 17).
 
 ## Android specifics
@@ -74,14 +74,14 @@ Shizuku permission (AUDIO-01 step 10).
   Accessibility open. The disclosure mentions in advance the system toast "HandLive pasted from your
   clipboard" (Android 12+).
 - Installs from outside Google Play on Android 13+: before opening Accessibility, walk people through
-  "Restricted settings": Settings › Apps › HandLive › ⋮ › "Allow restricted settings" (SET-01 API 6).
+  "Restricted setting": Settings › Apps › HandLive › ⋮ › "Allow restricted settings" (SET-01 API 6).
 
 ## Two choices: only in ConsentSheet
 
 | Disclosure | Platform | Choices | Recorded in |
 |---|---|---|---|
 | Call Audio on Mac (`call-audio-v1`) | macOS | "Cancel" (left) · "Agree" (right, default, not red) | `consent_record` |
-| Auto-send when copying (CLIP-01 field 3) | Android | "Send Manually" · "Agree" (the detailed design says "No, I'll send manually"; a button should start with a verb) | `clip.a11y_consent_at` |
+| Auto-Send on Copy (CLIP-01 field 3) | Android | "Send Manually" · "Agree" (the detailed design says "No, I'll send manually"; a button should start with a verb) | `clip.a11y_consent_at` |
 
 Nothing is preselected. When the disclosure's content changes, bump the text version and ask again.
 
@@ -107,5 +107,5 @@ Nothing is preselected. When the disclosure's content changes, bump the text ver
 | Do | Don't |
 |---|---|
 | State the benefit and where data goes in one or two sentences | Write "for a better experience" |
-| Let people answer in the system dialog | Add a "Later" button to the primer |
+| Let people answer in the system dialog | Add a "Not Now" button to the primer |
 | Keep other features working when one permission is denied | Block the whole app over one missing permission |

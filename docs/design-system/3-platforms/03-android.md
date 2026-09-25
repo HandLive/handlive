@@ -68,7 +68,7 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 | Notifications | `NotificationCompat` with the channels `hl_service`, `camera_request`, `camera_live`, `camera_alert` (Notifications section) |
 | Runtime permission dialog | The system's own, not redrawn; `PermissionPrimer` comes before it (Requesting permission section) |
 | Quick Settings tile | `TileService`, label "Send Clipboard", subtitle "To Lan's MacBook", "To 2 devices", or "Not connected"; on API 34+ call `startActivityAndCollapse(PendingIntent)` |
-| Share sheet | The target "Send to Device (HandLive)", accepting only `text/plain` |
+| Share sheet | The target "Send to Devices (HandLive)", accepting only `text/plain` |
 | Toast | Send results while the app isn't visible ("Sent to Lan's MacBook"); the toast "HandLive pasted from your clipboard" (Android 12+) is shown by the system and can't be turned off |
 | Accessibility | The system's Settings › Accessibility page; HandLive only links there after `ConsentSheet` |
 | Status bar, navigation bar | Edge-to-edge: `enableEdgeToEdge()`, padded with `WindowInsets.safeDrawing` |

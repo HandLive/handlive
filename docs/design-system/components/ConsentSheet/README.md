@@ -9,7 +9,7 @@ allows this when legal consent is needed). The choice and the version of the tex
 | Where it's used | Platform | Recorded in |
 |----------|---------|---------|
 | Call Audio on Mac (AUDIO-01, text `call-audio-v1`) | macOS — a sheet attached to the Settings window | `consent_record` |
-| Auto-send when copying, through Accessibility (CLIP-01) | Android — a sheet that rises from the bottom | `clip.a11y_consent_at` |
+| Auto-Send on Copy, through Accessibility (CLIP-01) | Android — a sheet that rises from the bottom | `clip.a11y_consent_at` |
 
 ## Content
 

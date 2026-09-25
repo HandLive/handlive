@@ -89,7 +89,7 @@ HIG source: https://developer.apple.com/design/human-interface-guidelines/color
 | Connected | `status-connected` (systemGreen) | `text-green` | "Connected" |
 | Connecting, needs attention | `status-connecting` (systemOrange) | `text-orange` | "Connecting…" |
 | Offline | `status-offline` (systemGray) | `secondary-label` | "Offline" |
-| Error | `status-error` (systemRed) | `text-red` | "Needs re-pairing" |
+| Error | `status-error` (systemRed) | `text-red` | "Needs to be paired again" |
 
 - In the Light appearance, systemGreen and systemOrange reach only 1.9–2.3:1 on white or gray
   backgrounds: use them only for dots and icons. Small colored text uses `text-red`, `text-orange`,

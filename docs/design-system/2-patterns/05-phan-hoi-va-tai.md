@@ -17,9 +17,9 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 |---|---|---|
 | An action the user started completes | `Feedback`. Mac: the menu bar icon changes to `checkmark` for ~1 second, then changes back. iPhone, Android: a glass HUD for ~1.5 seconds with a haptic | "Sent to Lan's Pixel 8" |
 | An automatic task succeeds | Silence; the status updates in place. Only the first copy from phone to Mac gets the `checkmark` above (a Delight moment) | — |
-| Waiting, queued | Status text right on the item | "Waiting for phone", "2 messages waiting for phone", "Tap Turn On on the phone" |
+| Waiting, queued | Status text right on the item | "Waiting for the phone", "2 messages waiting for the phone", "Tap Turn On on the phone" |
 | An error that can be fixed | Right where the error happened, with a button that fixes it | "Not sent · No service" and "Try Again" under the bubble |
-| Connection lost | `StatusIndicator` only | "Connection lost" and "Reconnect Now" |
+| Connection lost | `StatusIndicator` only | "Disconnected" and "Reconnect Now" |
 | An action that can't be undone | A confirmation `Alert` | "Unpair Lan's Pixel 8?" |
 | An error the app can't recover from on its own | An `Alert` with a button that leads to the fix | Key generation failed during setup (SET-03 E1), with a "Try Again" button |
 
@@ -45,10 +45,10 @@ blaming the user.
 | Loading older messages without a session (SMS-03 E2) | Banner at the top of the conversation | "Connect the phone to load older messages" | Loads automatically on reconnection |
 | A call command didn't get through (CALL-02 E5) | In `CallPanel` | "Couldn't send the command to the phone" | The panel returns to its previous state |
 | Actions available only over Bluetooth (CALL-03 E2) | In `CallPanel`, in place of the three hidden buttons | "Connect to the phone over Bluetooth to hold, use the keypad, or mute" | — |
-| Copied content too large (CLIP-01 E5) | Mac: the `MenuBarMenu` status line; Android: a toast | "Content is too large to send (1 MB of text at most)" | — |
-| The phone couldn't write it (CLIP-02 E8) | Mac: the `MenuBarMenu` status line | "Couldn't write to the clipboard on the phone" | — |
+| Copied content too large (CLIP-01 E5) | Mac: the `MenuBarMenu` status line; Android: a toast | "Content is too large to send (up to 1 MB of text)" | — |
+| The phone couldn't write it (CLIP-02 E8) | Mac: the `MenuBarMenu` status line | "Couldn't update the clipboard on the phone" | — |
 | Camera while connected over the internet (CAM-02 E1) | Camera preview, `MenuBarMenu` | "Requires the same Wi-Fi network or a USB cable" | — |
-| Pairing failed authentication (PAIR-01 E4) | In the pairing sheet | "Couldn't pair securely. Try again." | A new QR code |
+| Pairing failed authentication (PAIR-01 E4) | In the pairing sheet | "Pairing isn't secure — try again" | A new QR code |
 | Server not responding (SET-02 E5) | Under the button just used | "Couldn't connect to the server. Try again later." | — |
 
 ## Alerts: only two jobs
@@ -57,7 +57,7 @@ blaming the user.
   All HandLive Data" (wording from SET-02 field 29), "Resync All SMS" (SMS-01 field 6), "Remove Virtual
   Camera and Microphone" (CAM-01 A1), turning off a feature that's running (SET-02 E9).
 - Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
-  start the connection service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Remove
+  Start the Connection Service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Remove
   from this device anyway?" (SET-02 E7).
 - Mac: "Cancel" on the left, the action on the right as the default button, not red, because the user
   chose it deliberately (decision 12); Esc or ⌘. means Cancel. iPhone, Android: an action sheet, with
@@ -67,13 +67,13 @@ blaming the user.
 ## Connection lost
 
 - No alert and no notification, even when the connection drops and comes back many times. Only
-  `StatusIndicator`: the menu bar icon adds `.slash`, and the row reads "Connection lost", "Phone
+  `StatusIndicator`: the menu bar icon adds `.slash`, and the row reads "Disconnected", "Phone
   offline · last seen 2:05 PM", or "Connecting…"; while waiting to retry: "Retrying in 8 s" and
   "Reconnect Now" (CONN-02 fields 3–4).
-- Synced data stays viewable. Tasks that need the phone are queued ("Waiting for phone") or dimmed with
+- Synced data stays viewable. Tasks that need the phone are queued ("Waiting for the phone") or dimmed with
   a reason: the Paste button is disabled with "Not connected to the phone" (CLIP-04 field 4).
-- `CallPanel` losing its session: "Lost connection to the phone" (CALL-03 E6).
-- "Needs re-pairing" (the pairing was revoked) is `status-error` because the user has to do something:
+- `CallPanel` losing its session: "Disconnected from the phone" (CALL-03 E6).
+- "Needs to be paired again" (the pairing was revoked) is `status-error` because the user has to do something:
   it comes with "Pair Phone…".
 
 ## Loading and progress
@@ -94,8 +94,8 @@ blaming the user.
 
 | Where | Text | Next step |
 |---|---|---|
-| Mac, iPhone not paired | "Not Paired" | "Pair Phone…" |
-| Android with no devices | "No Devices" | "Add Device" |
+| Mac, iPhone not paired | "Not paired" | "Pair Phone…" |
+| Android with no devices | "No Devices Yet" | "Add Device" |
 | No messages (SMS-03 E1) | "No Messages" with the sync status | Wait for the sync, or "New Message" |
 | Feature off or permission missing on the phone | The reason, as in Settings | "View Instructions" |
 | The clipboard on iPhone | "Nothing Received Yet" | A sentence explaining how to copy on the phone |
@@ -111,7 +111,7 @@ content.
 - Synced with the detailed design (September 25, 2026): CAM-05 field 1 uses orange
   (`status-connecting`) for both "Adapting to the network" and "Limited by heat/battery", told apart by
   text and icon; "Good" uses `status-connected`.
-- Synced with the detailed design (September 25, 2026): "Couldn't write to the clipboard on the phone";
+- Synced with the detailed design (September 25, 2026): "Couldn't update the clipboard on the phone";
   Apple-style tone marks.
 
 ## Dos and don'ts

@@ -24,7 +24,7 @@ permissions missing on the phone, the **Security Code** of 8 hex characters (sho
   the status in `mac-subheadline`, the "Details…" and "Unpair…" buttons on the right.
 - **iOS/iPadOS:** Settings › Phone, a 60 pt row in `GroupedList`.
 - **Android:** the Devices screen (the main tab), 72 dp rows; the empty state has the `brand-title`
-  title "No Devices" and the "Add Device" button.
+  title "No Devices Yet" and the "Add Device" button.
 
 ## Dos and don'ts
 

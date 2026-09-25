@@ -25,7 +25,7 @@ when a Focus is on and the panel isn't shown.
 Mute, Hold, and Keypad are only available over Bluetooth HFP. When the Mac isn't connected, **hide**
 these three buttons and replace them with the line "Connect to the phone over Bluetooth to hold, use
 the keypad, or mute" (CALL-03 E2). Errors show right in the panel: "The phone couldn't perform this
-action", "Lost connection to the phone".
+action", "Disconnected from the phone".
 
 ## Behavior
 

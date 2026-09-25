@@ -40,7 +40,7 @@ On first launch, the menu bar icon shows "Not paired" and the welcome window ope
 | # | Screen | Content | Buttons |
 |---|-----|----------|-----|
 | 1 | Welcome | "Welcome to HandLive", feature rows with a privacy summary: end-to-end encrypted, travels only between your devices, no account needed | "Get Started" |
-| 2 | Move to the Applications folder (when needed) | "The virtual camera only works when HandLive is in the Applications folder." | "Not Now", "Move" |
+| 2 | Move to the Applications folder (when needed) | "The virtual camera works only when HandLive is in the Applications folder." | "Not Now", "Move" |
 | 3 | Notifications | `PermissionPrimer` | "Continue" |
 | 4 | Local network (macOS 15+) | `PermissionPrimer` | "Continue" |
 | 5 | Menu bar | Checkboxes "Show HandLive in Menu Bar" and "Open HandLive at Login", checked by default; caption "When this is off, HandLive appears in the Dock." | "Continue" |
@@ -68,9 +68,9 @@ Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a 
 | 2 | Notifications (Android 13+) | `PermissionPrimer`, then the system dialog | "Continue" |
 | 3 | Background activity | `PermissionPrimer`, then the battery optimization exemption dialog; on Android 11+, suggest turning off "Pause app activity if unused" | "Continue" |
 | 4 | Autostart (Xiaomi, OPPO, Samsung…) | Manufacturer-specific instructions (SET-01 API 5) | "Open Manufacturer Settings", "Done", "Skip" |
-| 5 | Pair device | "Scan QR Code" (the camera permission is explained right before the scanner) or "Enter PIN" | — |
+| 5 | Pair a Device | "Scan QR Code" (the camera permission is explained right before the scanner) or "Enter PIN" | — |
 | 6 | Confirm | "Pair with Lan's MacBook?" with the Security Code | "Cancel", "Pair" |
-| 7 | Paired | Feature cards (SET-01 field 10) with "Grant Access" for SMS, calls, and auto-sending the clipboard | "Done" |
+| 7 | Paired | Feature cards (SET-01 field 10) with "Grant Permission" for SMS, calls, and auto-sending the clipboard | "Done" |
 
 ## Components
 
@@ -86,7 +86,7 @@ Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a 
 - The Mac and iPhone/iPad show the QR code; Android scans it. The code refreshes itself after 120 s.
 - The 6-digit PIN is the fallback, usable only on the same Wi-Fi network; it's shown in `code-pin`, in
   groups of three digits "482 915"; after more than 3 wrong attempts, a new code is generated.
-- Errors show right inside the sheet, not as an alert: "Couldn't pair securely. Try again." (E4). When
+- Errors show right inside the sheet, not as an alert: "Pairing isn't secure — try again" (E4). When
   the code expires, a new one replaces it automatically, with no error.
 - Once paired: the sheet closes itself, and both devices show "Paired with <name>". This is a Delight
   moment: an illustration on `brand-glow`, a `success` haptic on iPhone; with Reduce Motion on, drop

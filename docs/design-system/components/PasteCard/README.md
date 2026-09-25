@@ -23,7 +23,7 @@ in `badge`), "Calls", "Settings"; filled icons, the selected tab in `accent`.
 
 Android is the hub, so it has no such tab: manual sending goes through the "Send Clipboard" Quick
 Settings tile, the button in the ongoing notification, or the share sheet — all of them Android
-interfaces. Auto-send when copying is turned on in Settings (it needs Accessibility; see
+interfaces. Auto-Send on Copy is turned on in Settings (it needs Accessibility; see
 `ConsentSheet`).
 
 ## Dos and don'ts

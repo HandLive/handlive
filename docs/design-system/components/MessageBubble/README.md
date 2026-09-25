@@ -21,7 +21,7 @@ The status of an outgoing message only moves forward, and each status has its ow
 
 | Status | Text | SF Symbol ↔ Material |
 |-----------|-----|----------------------|
-| `pending` | "Waiting for phone" | `clock` ↔ `schedule` |
+| `pending` | "Waiting for the phone" | `clock` ↔ `schedule` |
 | `sending` | "Sending…" | A small `ProgressView` |
 | `sent` | "Sent" | `checkmark` ↔ `check` |
 | `delivered` | "Delivered" | `checkmark.circle` ↔ `done_all` |
@@ -42,6 +42,6 @@ conversations on the phone" takes its place. If the phone can't send SMS: hide t
 
 ## Dos and don'ts
 
-- Do show a temporary bubble as soon as the user sends (≤ 100 ms), with "Waiting for phone".
+- Do show a temporary bubble as soon as the user sends (≤ 100 ms), with "Waiting for the phone".
 - Don't resend failed messages automatically; the user decides with "Try Again".
 - Don't change bubble colors to follow the system accent color.

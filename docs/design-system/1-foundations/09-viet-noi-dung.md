@@ -19,8 +19,8 @@ HIG source: https://developer.apple.com/design/human-interface-guidelines/writin
   warm and short ("Đã ghép nối với Pixel 8 của Lan" — Paired with Lan's Pixel 8); calls are minimal.
 - No "chúng tôi" (we), no exclamation marks, no emoji, no "Rất tiếc" (Sorry) or "Úi" (Oops). No slang
   or idioms.
-- Avoid unnecessary pronouns and possessives ("Thiết bị" rather than "Thiết bị của bạn" — Device
-  rather than Your device); address the user as "bạn" (you) only when a missing subject would be
+- Avoid unnecessary pronouns and possessives ("Thiết bị" rather than "Thiết bị của bạn" — Devices
+  rather than Your Devices); address the user as "bạn" (you) only when a missing subject would be
   misleading.
 - "Chạm" (tap) for touchscreens (iPhone, iPad, Android), "bấm" (click) for the mouse and keyboard
   (Mac).
@@ -95,7 +95,7 @@ the user; no error codes, no generic "Lỗi" (Error) title.
 
 | Write | Avoid |
 |---|---|
-| "Mã PIN không đúng. Kiểm tra mã trên Mac rồi nhập lại." (The PIN is incorrect. Check the code on the Mac and enter it again.) | "PIN_INVALID" |
+| "Mã PIN không đúng. Kiểm tra mã trên Mac rồi nhập lại." (The PIN is incorrect. Check the code on your Mac and try again.) | "PIN_INVALID" |
 | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" (Requires the same Wi-Fi network or a USB cable) | "Không hỗ trợ kênh truyền" (Transport not supported) |
 | "Chưa gửi được. Điện thoại đang ở chế độ máy bay." (Not sent yet. The phone is in Airplane Mode.) | "Gửi thất bại" (Send failed) |
 
@@ -103,7 +103,7 @@ the user; no error codes, no generic "Lỗi" (Error) title.
 
 Always offer a next step: a `brand-title` title, one sentence, one button; don't put important
 information here. Example: "Chưa có điện thoại" (No Phone Yet) · "Ghép điện thoại Android để nhận bảng
-nhớ tạm, tin nhắn và cuộc gọi." (Pair an Android phone to receive its clipboard, messages, and calls.)
+nhớ tạm, tin nhắn và cuộc gọi." (Pair an Android phone to get its clipboard, messages, and calls.)
 · button "Thêm điện thoại…" (Add Phone…).
 
 ## The "…" character
@@ -124,7 +124,7 @@ includes a task to check them on real devices.
 | Detailed design | Design system | Where |
 |---|---|---|
 | huỷ, xoá, tuỳ, hoá, khoá, hoà, hoạ, thoả | hủy, xóa, tùy, hóa, khóa, hòa, họa, thỏa | About 800 places: khoá 253, xoá 238, hoá 155, huỷ 95, tuỳ 46, hoà 6, hoạ 4, thoả 2 |
-| "Gửi clipboard", "Đồng bộ clipboard", "Tự xoá clipboard đã nhận", "Clipboard trống hoặc không phải văn bản" | "Gửi bảng nhớ tạm", "Đồng bộ bảng nhớ tạm", "Tự xóa bảng nhớ tạm đã nhận", "Bảng nhớ tạm trống hoặc không phải văn bản" (Send Clipboard, Sync Clipboard, Auto-Clear Received Clipboard, Clipboard is empty or isn't text) | CLIP-01 to CLIP-04, SET-01, SET-03 |
+| "Gửi clipboard", "Đồng bộ clipboard", "Tự xoá clipboard đã nhận", "Clipboard trống hoặc không phải văn bản" | "Gửi bảng nhớ tạm", "Đồng bộ bảng nhớ tạm", "Tự xóa bảng nhớ tạm đã nhận", "Bảng nhớ tạm trống hoặc không phải văn bản" (Send Clipboard, Sync Clipboard, Auto-Clear Received Clipboard, The clipboard is empty or doesn't contain text) | CLIP-01 to CLIP-04, SET-01, SET-03 |
 | "máy chủ relay không đọc được nội dung" | "máy chủ không đọc được nội dung" (the server can't read the content) | SET-01, SET-03 field 1 |
 | "Đã kết nối (LAN)", "Đã kết nối (qua Internet)" | "Đã kết nối qua Wi-Fi", "Đã kết nối qua Internet" (Connected via Wi-Fi, Connected over the internet) | 0.11, CONN-01, PAIR-02; "LAN" is still allowed as a short label |
 | "Quyền riêng tư và bảo mật" | "Quyền riêng tư & Bảo mật" (Privacy & Security) | SET-03, CLIP-02, AUDIO-01, CAM-01 |

@@ -17,8 +17,8 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 | Incoming call (CALL-01) | iOS | Communication `INStartCallIntent`, time-sensitive | "Nguyễn Văn A" · "Incoming call · SIM 1" | "Decline" (destructive, requires unlocking the device) |
 | Incoming call | Mac | Communication `INStartCallIntent`: passive while `CallPanel` is showing (goes only to Notification Center); time-sensitive when a Focus is on and the panel isn't shown | Same as above | "Answer", "Decline" |
 | Missed call (CALL-04) | Mac, iOS | Active | Name, number, or "No Caller ID" · "Missed call · 2:05 PM" (plus "· SIM 1") | "Message" (text field) — only when there's a number and SMS can be sent |
-| Sensitive content blocked (QC3) | Mac | Passive | "Sensitive content blocked" · "HandLive doesn't send content that looks like a password or card number." | "Send Anyway" (expires after 2 minutes) |
-| Clipboard conflict (QC8) | Mac | Active | "Not copied to Lan's Pixel 8" · "That device just copied something new." | "Send Again" (expires after 2 minutes) |
+| Sensitive content blocked (QC3) | Mac | Passive | "Sensitive Content Blocked" · "HandLive doesn't send content that looks like a password or card number." | "Send Anyway" (expires after 2 minutes) |
+| Clipboard conflict (QC8) | Mac | Active | "Clipboard Not Updated on Lan's Pixel 8" · "That device just copied something new." | "Send Again" (expires after 2 minutes) |
 | Camera (CAM-05) | Mac | Active (overheating), passive (low battery) | No title of its own. Overheating: "The phone is too hot — the camera has stopped. Let the phone cool down, then try again." Low battery: "Phone battery is below 20% — HandLive lowered the quality to 720p. Plug in a charger or a USB cable to keep the quality." | — |
 
 - Hidden content: with `sms.preview` off, the body is "New SMS message" (SMS-02 field 2). When the user
@@ -36,7 +36,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 
 | Channel (id) | Level | Notification | Actions |
 |---|---|---|---|
-| `hl_service` "Connection Service" | `IMPORTANCE_LOW`, ongoing, no badge | "HandLive is waiting for a connection" · "Connected to Lan's MacBook" · "Connected to 2 devices" | "Send Clipboard" |
+| `hl_service` "Connection service" | `IMPORTANCE_LOW`, ongoing, no badge | "HandLive is waiting for a connection" · "Connected to Lan's MacBook" · "Connected to 2 devices" | "Send Clipboard" |
 | `camera_request` | `IMPORTANCE_HIGH` (heads-up), cancels itself after 60 s | "Lan's MacBook wants to use the camera and microphone" | "Turn On", "Decline" |
 | `camera_live` | `IMPORTANCE_LOW`, ongoing | "Using the camera for Lan's MacBook" | "Switch Camera", "Turn Off Microphone" or "Turn On Microphone", "Stop" (3 at most) |
 | `camera_alert` | `IMPORTANCE_DEFAULT` | Overheating, low battery — the same wording as on the Mac | — |

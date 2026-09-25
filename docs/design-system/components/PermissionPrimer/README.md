@@ -28,8 +28,8 @@ run.
 
 A large icon in an `accent-tint` circle, a bold `ios-title-2` title (Mac `mac-title-2`), one or two
 sentences on the benefit and where the data goes, a sentence saying the system will ask in the next
-step, and a prominent full-width "Continue" button. Small print at the bottom: "You can change this in
-Settings at any time."
+step, and a prominent full-width "Continue" button. Small print at the bottom:
+"You can change this in Settings at any time."
 
 Permission already denied: this screen doesn't appear anymore; in Settings, the feature's row shows the
 reason in `text-orange` and an "Open Settings" button that goes straight to the app's page in the
@@ -38,7 +38,6 @@ system settings.
 ## Dos and don'ts
 
 - Do write purpose strings that are active, in sentence case, and end with a period: "HandLive looks
-  for your Android phone on your Wi-Fi network to connect to it directly, without going through the
-  internet."
+  for your Android phone on your Wi-Fi network to connect to it directly, not over the internet."
 - Don't use the label "Allow" on the primer (that label belongs to the system dialog); don't redraw the
   system dialog; don't promise rewards in exchange for a permission.

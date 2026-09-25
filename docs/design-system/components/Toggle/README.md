@@ -27,7 +27,7 @@ checkboxes (secondary options); iPhone/iPad and Android use only switches in lis
 
 If the feature is off on the other device or a permission is missing (comparing the capabilities of
 the two sides, SET-02), the switch is disabled and the row shows a reason in `text-orange` with the
-fix: "SMS permission missing on the phone · Grant Access". When turning on a feature that needs a
+fix: "Missing SMS permission on the phone · Grant Permission". When turning on a feature that needs a
 disclosure (Call Audio on Mac, Accessibility on Android), the switch only turns on once `ConsentSheet`
 is complete.
 

@@ -15,8 +15,8 @@ connection is lost.
 | Connected over USB (camera) | "Using USB" | `cable.connector` ↔ `usb` | `status-connected` |
 | Connecting | "Connecting…" | A pulsing dot | `status-connecting` |
 | Phone offline | "Phone offline · last seen 2:05 PM" | `antenna.radiowaves.left.and.right.slash` ↔ `mobile_off` | `status-offline` |
-| This device has lost its network | "Connection lost" | `wifi.slash` ↔ `wifi_off` | `status-offline` |
-| Needs re-pairing | "Needs re-pairing" | `exclamationmark.triangle.fill` ↔ `warning` | `status-error` |
+| This device has lost its network | "Disconnected" | `wifi.slash` ↔ `wifi_off` | `status-offline` |
+| Needs to be paired again | "Needs to be paired again" | `exclamationmark.triangle.fill` ↔ `warning` | `status-error` |
 | Camera live | "Camera live" | A pulsing dot | `status-connected` |
 
 - Synced with the detailed design (September 25, 2026): CONN-01 and PAIR-02 use "Connected via Wi-Fi",
@@ -34,7 +34,7 @@ connection is lost.
 
 The Mac menu bar menu (the first row), the top of the Messages window when the connection is lost,
 `DeviceRow` rows, the Devices screen on Android and iPhone, and the call panel when the session is lost
-("Lost connection to the phone").
+("Disconnected from the phone").
 
 ## Dos and don'ts
 

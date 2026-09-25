@@ -25,9 +25,9 @@ The HUD has no buttons and holds no tasks. Tasks (for example "Send Anyway", "Se
 |---------|-----|-----------|
 | Success | "Sent to <device name>" | `checkmark.circle.fill` ↔ `check_circle` (`status-connected`) |
 | Not connected | "Not connected — will send if reconnected within 2 minutes" | `clock` ↔ `schedule` (`status-connecting`) |
-| Couldn't read | "Clipboard is empty or isn't text" | `exclamationmark.circle` ↔ `error` (`status-offline`) |
+| Couldn't read | "The clipboard is empty or doesn't contain text" | `exclamationmark.circle` ↔ `error` (`status-offline`) |
 
-Synced with the detailed design (September 25, 2026): CLIP-01 field 11 says "Clipboard is empty…".
+Synced with the detailed design (September 25, 2026): CLIP-01 field 11 says "The clipboard is empty…".
 
 ## Dos and don'ts
 

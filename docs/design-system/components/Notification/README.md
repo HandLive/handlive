@@ -15,8 +15,8 @@ of the operating system's interface.
 | Incoming call (CALL-01) | iOS | Communication (`INStartCallIntent`), time-sensitive | Name or number · "Incoming call · SIM 1" | "Decline" |
 | Incoming call (CALL-01) | Mac | Communication; passive while `CallPanel` is showing, time-sensitive when a Focus is on and there's no panel | Same as above | "Answer", "Decline" |
 | Missed call | Mac, iOS | Active | Name or number · "Missed call · 2:05 PM" | "Message" |
-| Sensitive content blocked (CLIP-01) | Mac, Android | Passive | "Sensitive content blocked" · "HandLive doesn't send content that looks like a password or card number." | "Send Anyway" (expires after 2 minutes) |
-| Clipboard conflict | Mac, Android | Active | "Not copied to Lan's MacBook" · "That device just copied something new." | "Send Again" |
+| Sensitive content blocked (CLIP-01) | Mac, Android | Passive | "Sensitive Content Blocked" · "HandLive doesn't send content that looks like a password or card number." | "Send Anyway" (expires after 2 minutes) |
+| Clipboard conflict | Mac, Android | Active | "Clipboard Not Updated on Lan's MacBook" · "That device just copied something new." | "Send Again" |
 | The Mac asks for the camera (CAM-02) | Android | `camera_request` channel, high level | "Lan's MacBook wants to use the camera and microphone" | "Turn On", "Decline" (cancels itself after 60 seconds) |
 | Camera live | Android | `camera_live` channel, ongoing | "Using the camera for Lan's MacBook" | "Switch Camera", "Turn Off Microphone", "Stop" |
 | Connection service | Android | `hl_service` channel, low | "Connected to Lan's MacBook" | "Send Clipboard" |
