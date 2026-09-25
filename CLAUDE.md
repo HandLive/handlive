@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project status: pre-implementation
+## Project status: Phase 0 done (scaffold, protocol, crypto, tokens, CI)
 
-There is **no code yet**. The repository holds architecture/research documents under `plans/`, project docs under `docs/`, and the implementation-level spec under `docs/detailed-design/`. The implementation plan with per-phase task cards for coding agents is `plans/20260925-implementation/plan.md` (see the hand-off section below); the UI design system is mirrored in `docs/design-system/`. Everything below describes the *decided* design that future code must implement, not existing code. When you start implementing, treat the "Definitive Architecture" plan as the source of truth and the three research plans as supporting detail.
+Phase 0 code lives in `android/`, `apple/`, `relay/`, `shared/` and `tools/` (layout and test commands: `docs/codebase-summary.md`); no user-facing feature exists yet. The repository also holds architecture/research documents under `plans/`, project docs under `docs/`, and the implementation-level spec under `docs/detailed-design/`. The implementation plan with per-phase task cards for coding agents is `plans/20260925-implementation/plan.md` (see the hand-off section below); the UI design system is mirrored in `docs/design-system/`. Everything below describes the *decided* design that future code must implement, not existing code. When you start implementing, treat the "Definitive Architecture" plan as the source of truth and the three research plans as supporting detail.
 
 Planning docs are written in **Vietnamese** (with diacritics). Keep that convention for new plans, reports, and user-facing communication.
 
@@ -53,7 +53,7 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 - **Read in this order before coding a task:** this file → `docs/detailed-design/README.md` (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C19) → `docs/detailed-design/00-common-specs.md` (protocol, errors, data model, settings keys) → the phase file → the leaf functions it names → `docs/code-standards.md`. UI work also reads `docs/design-system/README.md`, the platform section in `docs/design-system/3-platforms/` and the component READMEs.
 - **Contracts:** wire format, error codes, settings keys and tables live in `00-common-specs.md`; change them there first, then the leaf spec (run `python3 tools/docs/validate_design_docs.py`, must print `problems=0`), then code. Never invent message types, error codes or UI strings in code — UI strings come verbatim from the leaf specs.
 - **File ownership:** Android agents edit `android/` + `shared/`; Apple agents `apple/` + `shared/`; relay agents `relay/` + `shared/`. Any change under `shared/` (test vectors, schemas, tokens) is called out in the report so the other platforms re-run their tests.
-- **Branches:** one branch per phase (`feat/phase-0N-<slug>`), conventional commits, no AI references in messages.
+- **Branches and commits:** one branch per phase (`feat/phase-0N-<slug>`). **Commit early and small:** at least one commit per task card, and a separate commit for each logical step inside it (scaffold, then a module, then its tests, then docs) — never one commit per phase and never a commit that mixes platforms or mixes `shared/` changes with platform code. Commit before writing the report and list the commit hashes in it. Conventional commits (`feat(android): …`, `test(relay): …`, `docs: …`), no AI references in messages.
 - **Doc tools:** `tools/docs/validate_design_docs.py` (template + Mermaid check), `tools/docs/apple_diacritics.py` (Apple-style tone marks; dry run by default, `--write` to apply), `tools/docs/build_design_html.py` (HTML export to `build/docs/`; needs the `markdown` package: `$HOME/.claude/skills/.venv/bin/python3`). Design-system edits go to `docs/design-system/` first, then the artifact is republished.
 
 ## Key risks the design already commits to mitigating

@@ -41,6 +41,7 @@ Mỗi thẻ việc trong file phase có: mã (`A1.3`, `M2.1`…, chữ đầu = 
 4. Không có secret, khóa, chứng chỉ, dotenv trong commit.
 5. `docs/codebase-summary.md` cập nhật khi cấu trúc mã thay đổi.
 6. Báo cáo trong `reports/<phase>-<mã việc>.md`, kết thúc bằng khối `Status:` / `Summary:` / `Concerns/Blockers:`.
+7. **Commit nhỏ, commit sớm:** ít nhất một commit cho mỗi thẻ việc, và tách commit theo từng bước hợp lý bên trong (khung → module → test → tài liệu). Không gom cả phase vào một commit; không trộn hai nền tảng hoặc trộn `shared/` với mã nền tảng trong một commit. Commit trước khi viết báo cáo và ghi danh sách hash vào báo cáo.
 
 ## 4. Cổng và rủi ro
 
