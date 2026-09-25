@@ -1,16 +1,19 @@
-# Báo cáo của agent
+English | [Tiếng Việt](README.vi.md)
 
-Mỗi thẻ việc một file `phase-0N-<mã việc>.md` (ví dụ `phase-01-A1.3.md`), spike:
-`phase-04-spike-d1.md`, `phase-05-spike-d6.md`. Nội dung: việc đã làm,
-**danh sách commit (kho + hash + tiêu đề) của thẻ việc — mỗi bước hợp lý một commit, không gom; một commit không bao giờ trải hai kho**,
-đường dẫn tạo/sửa, lệnh test và kết quả (dán đầu ra thật), số đo (nếu có), điểm lệch với tài liệu và
-cách xử lý, và kết thúc bằng:
+# Agent reports
+
+One file per task card, `phase-0N-<task code>.md` (for example `phase-01-A1.3.md`); spikes:
+`phase-04-spike-d1.md`, `phase-05-spike-d6.md`. Contents: the work done,
+**the list of commits (repository + hash + subject) for the task card — one commit per logical step, never bundled; a commit never spans two repositories**,
+the paths created or changed, the test commands and their results (paste the real output),
+measurements (if any), deviations from the docs and how they were handled, ending with:
 
 ```text
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-Summary: một hai câu
-Concerns/Blockers: nếu có
+Summary: one or two sentences
+Concerns/Blockers: optional
 ```
 
-Hash trong các báo cáo `phase-00-*` là của kho hub trước khi tách kho và trước khi viết lại lịch sử
-(25/09/2026, xem `repo-split.md`); tra theo tiêu đề commit trong `main` của từng kho.
+The hashes in the `phase-00-*` reports belong to the hub repository before the repository split and
+before the history rewrite (2026-09-25, see `repo-split.md`); look the commits up by subject in the
+`main` branch of each repository.
