@@ -59,12 +59,16 @@ class SecretStoreTlsIdentityStorage(
     }
 }
 
-/** Nạp khóa TLS đã lưu; lần chạy đầu (hoặc dữ liệu hỏng) thì sinh mới và lưu lại. */
+/**
+ * Nạp khóa TLS đã lưu; lần chạy đầu hoặc dữ liệu hỏng (kể cả mật khẩu không giải mã được vì keyset hay
+ * `hl_master` hỏng) thì sinh mới và lưu đè — ghim cũ mất hiệu lực, client phải ghép nối lại, nhưng service
+ * không crash lặp mỗi lần khởi động.
+ */
 object TlsIdentityProvider {
     fun loadOrCreate(storage: TlsIdentityStorage): TlsIdentity {
-        storage.read()?.let { stored ->
-            runCatching { TlsIdentity.fromPkcs12(stored.pkcs12, stored.password) }.onSuccess { return it }
-        }
+        runCatching { storage.read()?.let { TlsIdentity.fromPkcs12(it.pkcs12, it.password) } }
+            .getOrNull()
+            ?.let { return it }
         val identity = TlsIdentity.generate()
         storage.write(StoredTlsIdentity(identity.toPkcs12(), identity.password()))
         return identity

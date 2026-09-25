@@ -8,6 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.security.GeneralSecurityException
 import java.security.interfaces.ECPublicKey
 import java.time.Instant
 import java.time.ZoneOffset
@@ -59,6 +60,19 @@ class TlsIdentityTest {
     }
 
     @Test
+    fun undecryptablePasswordRegeneratesIdentityInsteadOfCrashing() {
+        val secrets = MapSecretStore()
+        val file = folder.root.resolve("tls.p12")
+        val first = TlsIdentityProvider.loadOrCreate(SecretStoreTlsIdentityStorage(secrets, file))
+        secrets.failReads = true
+        val second = TlsIdentityProvider.loadOrCreate(SecretStoreTlsIdentityStorage(secrets, file))
+        assertFalse(first.certificateSha256().contentEquals(second.certificateSha256()))
+        secrets.failReads = false
+        val reloaded = TlsIdentityProvider.loadOrCreate(SecretStoreTlsIdentityStorage(secrets, file))
+        assertTrue(second.certificateSha256().contentEquals(reloaded.certificateSha256()))
+    }
+
+    @Test
     fun inMemoryStorageKeepsIdentityForProcessLifetime() {
         val storage = InMemoryTlsIdentityStorage()
         val first = TlsIdentityProvider.loadOrCreate(storage)
@@ -71,6 +85,9 @@ class TlsIdentityTest {
     private class MapSecretStore : SecretStore {
         private val values = HashMap<String, ByteArray>()
 
+        /** Giả lập keyset hoặc `hl_master` hỏng: `AeadSecretStore.get` ném khi không giải mã được. */
+        var failReads = false
+
         override fun put(
             name: String,
             secret: ByteArray,
@@ -78,7 +95,10 @@ class TlsIdentityTest {
             values[name] = secret.copyOf()
         }
 
-        override fun get(name: String): ByteArray? = values[name]?.copyOf()
+        override fun get(name: String): ByteArray? {
+            if (failReads) throw GeneralSecurityException("decryption failed")
+            return values[name]?.copyOf()
+        }
 
         override fun delete(name: String) {
             values.remove(name)
