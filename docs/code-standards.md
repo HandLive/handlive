@@ -54,3 +54,10 @@
 - Audio: verify E2E trên đường Opus/WS; đường HFP dựa vào mã hóa Bluetooth (plan §13 D11). BT và
   Shizuku capture: test matrix ≥6 device thật (Samsung/Pixel/Xiaomi/OPPO).
 - Không giấu test/lint/type/build fail.
+
+## Giấy phép và phụ thuộc
+
+- Mọi kho: Apache License 2.0 (`LICENSE`); không cần header giấy phép trong từng file nguồn.
+- Phụ thuộc mới chỉ dùng giấy phép tương thích Apache-2.0: Apache, MIT, BSD, ISC, MPL-2.0, OFL (font). Không GPL, LGPL, AGPL dưới mọi hình thức (kể cả liên kết động).
+- Tài nguyên bên thứ ba đóng gói trong app (font, biểu tượng) ghi vào `NOTICE` của kho kèm bản quyền và đường dẫn file giấy phép.
+- Commit đứng tên người thật, ký DCO (`git commit -s`); không ghi công cụ AI làm tác giả hay đồng tác giả (hook `.githooks/commit-msg`, job CI `commit-policy`).

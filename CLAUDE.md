@@ -98,6 +98,13 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
   Vietnamese UI strings use Apple-style diacritics (hủy, xóa, tùy, mã hóa) and the design system's
   terminology ("bảng nhớ tạm", not "clipboard").
 
+- **License and commits:** every repository is Apache-2.0 (`LICENSE`). New third-party code or assets must be
+  Apache-2.0-compatible (Apache, MIT, BSD, ISC, MPL-2.0; OFL for fonts — never GPL, LGPL or AGPL) and bundled
+  assets are listed in that repo's `NOTICE`. Commits carry a real person's name and a DCO sign-off
+  (`git commit -s`); `.githooks/commit-msg` and the `commit-policy` CI job reject AI identities and co-author
+  trailers — enable the hooks with `tools/workspace.sh hooks`. Community files (CONTRIBUTING, SECURITY,
+  CODE_OF_CONDUCT, PR/issue templates) live in the org repo `HandLive/.github`, checked out as `.github-org/`.
+
 ## Implementation hand-off (coding agents start here)
 
 - **Plan:** `plans/20260925-implementation/plan.md` — workspace layout (hub + the `android/`,

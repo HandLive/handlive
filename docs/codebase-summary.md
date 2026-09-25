@@ -45,6 +45,8 @@ HandLive/                          # kho hub "handlive"
     └── .github/workflows/ci-shared.yml
 ```
 
+Kho thứ sáu `HandLive/.github` (clone thành `.github-org/`) giữ hồ sơ org và file cộng đồng mặc định cho mọi kho: CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, mẫu PR/issue.
+
 Đường dẫn giữa các kho là tương đối và **bắt buộc**: Gradle và test Android đọc `../shared` (system
 property `hl.shared.dir`); test Apple đọc `../shared` và
 `../docs/design-system/1-foundations/03-kieu-chu.md`; test relay đọc `../shared/test-vectors`;
