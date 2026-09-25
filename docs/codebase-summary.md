@@ -47,8 +47,8 @@ HandLive/                          # kho hub "handlive"
 
 Kho thứ sáu `HandLive/.github` (clone thành `.github-org/`) giữ hồ sơ org và file cộng đồng mặc định cho mọi kho: CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, mẫu PR/issue.
 
-Đường dẫn giữa các kho là tương đối và **bắt buộc**: Gradle và test Android đọc `../shared` (system
-property `hl.shared.dir`); test Apple đọc `../shared` và
+Đường dẫn giữa các kho là tương đối và **bắt buộc**: Gradle và test Android đọc `../shared` (system property `hl.shared.dir`), test `core:design` đọc thêm
+`../docs/design-system/1-foundations` (`hl.docs.dir`); test Apple đọc `../shared` và
 `../docs/design-system/1-foundations/03-kieu-chu.md`; test relay đọc `../shared/test-vectors`;
 `shared/tools/schemas/check_schemas.py` đọc `../docs/detailed-design` (ghi đè bằng
 `HANDLIVE_DOCS_DIR`). CI của từng kho dựng lại đúng bố cục này bằng `actions/checkout` (hub ở gốc
