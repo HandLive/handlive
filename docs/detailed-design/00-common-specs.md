@@ -151,9 +151,7 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
 
 - **Android (FCM):** data message ưu tiên cao, TTL 60 s, **không chứa nội dung**:
   `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
-- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc
-  định chung chung; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội
-  dung. Tổng payload ≤ 4 KB.
+- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung, gửi bằng `loc-key` (khóa catalog nhóm `push`, 0.12.4) để iPhone tự dịch; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. Tổng payload ≤ 4 KB.
 - Mac không đăng ký push; khi thức dậy, M-APP kết nối lại và đồng bộ theo con trỏ.
 
 ## 0.5 Khung tin
@@ -472,6 +470,9 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | GET (WS) | `/v1/relay` | JWT | Kênh relay | CONN-03 |
 
 ## 0.8 Mã lỗi
+
+Mã lỗi là định danh tiếng Anh cố định. Trường `message` đi kèm là chuỗi chẩn đoán tiếng Anh cho
+log, không hiển thị cho người dùng; giao diện chọn câu chữ theo mã qua catalog (0.12.4).
 
 ### 0.8.1 Mã lỗi ứng dụng (trong `ack.error.code`)
 
@@ -918,3 +919,121 @@ Trạng thái hiển thị cho người dùng (PAIR-02): `Idle` /`Backoff` → "
 /`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến";
 `Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh
 camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại".
+
+## 0.12 Bản địa hóa và catalog chuỗi giao diện
+
+Quyết định C20: tiếng Anh (`en`) là ngôn ngữ mặc định, ngôn ngữ nguồn và ngôn ngữ dự phòng; tiếng
+Việt (`vi`) là ngôn ngữ thứ hai. Thêm một ngôn ngữ về sau chỉ cần thêm bản dịch vào catalog và mã
+ngôn ngữ vào danh sách của từng nền tảng.
+
+### 0.12.1 Catalog `shared/strings/ui-strings.json`
+
+Nguồn duy nhất của mọi chuỗi hiển thị trên Android, macOS, iOS/iPadOS: nhãn, nút, menu, thông báo,
+tên kênh thông báo, purpose string xin quyền, nhãn trợ năng, câu lỗi. Mã không chứa câu chữ hiển
+thị. Schema: `shared/strings/ui-strings.schema.json`.
+
+```jsonc
+{
+  "version": 1,
+  "source_language": "en",
+  "languages": ["en", "vi"],
+  "strings": [
+    {
+      "key": "status.connected_wifi",
+      "en": "Connected via Wi-Fi",
+      "vi": "Đã kết nối qua Wi-Fi",
+      "comment": "StatusIndicator khi phiên đi qua LAN (0.11)",
+      "platforms": ["android", "macos", "ios"],
+      "specs": ["PAIR-02", "CONN-01"]
+    },
+    {
+      "key": "pairing.paired_with",
+      "en": "Paired with {device_name}",
+      "vi": "Đã ghép nối với {device_name}",
+      "comment": "Phản hồi khi ghép nối xong",
+      "platforms": ["android", "macos", "ios"],
+      "args": [{"name": "device_name", "type": "string"}],
+      "specs": ["PAIR-01"]
+    },
+    {
+      "key": "sms.unread_count",
+      "en": {"one": "{count} unread message", "other": "{count} unread messages"},
+      "vi": {"other": "{count} tin chưa đọc"},
+      "comment": "Nhãn trợ năng của ThreadRow",
+      "platforms": ["macos", "ios"],
+      "args": [{"name": "count", "type": "int"}],
+      "specs": ["SMS-03"]
+    },
+    {
+      "key": "infoplist.microphone_usage",
+      "plist_key": "NSMicrophoneUsageDescription",
+      "en": "HandLive uses the microphone to send your voice during calls taken on this Mac.",
+      "vi": "HandLive dùng micro để gửi giọng nói của bạn trong cuộc gọi nghe trên Mac này.",
+      "comment": "Purpose string xin quyền micro (SET-03, AUDIO-01)",
+      "platforms": ["macos"],
+      "specs": ["SET-03", "AUDIO-01"]
+    }
+  ]
+}
+```
+
+| Trường | Quy tắc |
+|--------|---------|
+| `key` | Chữ thường `[a-z0-9_]`, 2–5 đoạn nối bằng dấu chấm; đoạn đầu là nhóm: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. Khóa không đổi khi sửa câu chữ; đổi nghĩa thì tạo khóa mới. Sau khi đổi `.` thành `_` (tên tài nguyên Android) khóa vẫn duy nhất |
+| `en`, `vi` | Chuỗi; hoặc object số nhiều theo CLDR: `en` có `one` và `other`, `vi` chỉ có `other`. Không rỗng; mỗi khóa có đủ mọi ngôn ngữ trong `languages` |
+| `args` | Tham số `{tên}` với `type` ∈ `string`, `int`, `double`. Mọi bản dịch dùng đúng tập tham số, thứ tự trong câu tự do (bộ sinh đổi sang tham số có vị trí). Ngày, giờ, số được định dạng trước khi truyền vào (0.12.3) |
+| `comment` | Bắt buộc: chuỗi xuất hiện ở đâu, giới hạn độ dài nếu có — ngữ cảnh cho người dịch |
+| `platforms` | Tập con của `android`, `macos`, `ios` |
+| `specs` | Mã chức năng lá (hoặc mục `0.x`) đặc tả chuỗi |
+| `plist_key` | Chỉ nhóm `infoplist`: tên khóa Info.plist (purpose string, tên hiển thị) |
+
+Văn phong theo design system, mục "Viết nội dung": tiếng Anh viết hoa kiểu tiêu đề cho nút, menu,
+tiêu đề cửa sổ; tiếng Việt viết hoa đầu câu, dấu kiểu Apple; ký tự "…" một ký tự; tên riêng không
+dịch (HandLive, Wi-Fi, Bluetooth, USB, SIM, Mac, iPhone, iPad, Android); tên mục hệ thống theo đúng
+bản của hệ điều hành ở từng ngôn ngữ ("Privacy & Security" / "Quyền riêng tư & Bảo mật"). Tài liệu
+chi tiết bản tiếng Anh (`X.md`) ghi chuỗi `en`, bản tiếng Việt (`X.vi.md`) ghi chuỗi `vi`; catalog
+và tài liệu phải khớp.
+
+### 0.12.2 Sinh tài nguyên của từng nền tảng
+
+| Nền tảng | Đầu ra | Quy tắc |
+|----------|--------|---------|
+| Android | `values/strings.xml` (en, mặc định), `values-vi/strings.xml` | Task Gradle trong `buildSrc` sinh vào thư mục build (không commit) và gắn vào nguồn `res`; tên tài nguyên = khóa đổi `.` thành `_`; số nhiều thành `<plurals>`; `{tên}` thành `%1$s` / `%1$d` theo thứ tự `args`; thoát `'`, `"`, `@`, `?` đầu chuỗi và xuống dòng. `res/xml/locales_config.xml` (en, vi) với `android:localeConfig`; `androidResources.localeFilters` = en, vi |
+| Apple | `Localizable.xcstrings`, `InfoPlist.xcstrings` (`sourceLanguage` en) cho từng target dùng; accessor Swift sinh kèm | Script trong `apple/` (như bộ sinh token) sinh và commit; test `--check` so với catalog; khóa giữ dạng chấm; số nhiều thành biến thể plural của String Catalog; `{tên}` thành `%1$@` / `%1$lld`. `project.yml`: `developmentLanguage: en`, `knownRegions` gồm en và vi |
+
+### 0.12.3 Chọn ngôn ngữ và định dạng
+
+- Mặc định theo danh sách ngôn ngữ ưu tiên của hệ thống: ngôn ngữ đầu tiên có trong catalog được
+  dùng, không có thì tiếng Anh.
+- Chọn riêng cho HandLive: Android 13+ trang ngôn ngữ ứng dụng của hệ thống (nhờ
+  `locales_config`); Android 10–12 SET-02 trường 32; iOS/iPadOS Cài đặt › HandLive › Ngôn ngữ; macOS
+  Cài đặt hệ thống › Chung › Ngôn ngữ & Vùng › Ứng dụng.
+- Đổi ngôn ngữ không làm mất phiên; giao diện dựng lại theo cơ chế của hệ điều hành.
+- Ngày, giờ, số, dung lượng, thời lượng, số điện thoại định dạng bằng formatter của hệ thống theo
+  locale đang hiển thị (design system, mục "Viết nội dung").
+- Hai máy trong một cặp có thể khác ngôn ngữ; mỗi máy hiển thị bằng ngôn ngữ của chính nó.
+
+### 0.12.4 Giao thức không mang câu chữ hiển thị
+
+- Mã lỗi (0.8) là định danh; `message` đi kèm (`ack.error.message`, `session/error`, lỗi REST của
+  relay) là chuỗi chẩn đoán tiếng Anh cho log. Giao diện chọn câu theo mã qua catalog (nhóm
+  `error`).
+- Push (0.4.4, CONN-04): FCM không mang nội dung; APNs `aps.alert` chỉ có `loc-key` (khóa catalog
+  nhóm `push`), iPhone dịch theo ngôn ngữ của nó; I-NSE dựng nội dung đã giải mã bằng catalog của
+  app.
+- Nội dung của người dùng (tin SMS, tên thiết bị, tên liên hệ, tin trả lời nhanh đã lưu) không dịch.
+  Tin trả lời nhanh mặc định (`call.quick_replies`) lấy từ catalog theo ngôn ngữ lúc tạo, sau đó là
+  dữ liệu của người dùng.
+- Relay không có giao diện và không gửi câu chữ hiển thị.
+
+### 0.12.5 Kiểm tra
+
+- `shared/tools/strings/check_strings.py`: đúng schema; khóa duy nhất (kể cả sau khi đổi `.` thành
+  `_`); đủ mọi ngôn ngữ; cùng tập tham số giữa các bản dịch; plural hợp lệ; không chuỗi rỗng, không
+  khoảng trắng đầu hoặc cuối, dùng "…" thay "..."; `vi` dùng dấu kiểu Apple; `specs` là mã có thật.
+  `--docs <docs/detailed-design>` báo chuỗi không tìm thấy trong tài liệu (chỉ cảnh báo).
+- Android: lint `HardcodedText`, `MissingTranslation`, `ExtraTranslation` là lỗi; pseudo-locale
+  `en-XA`, `ar-XB` bật cho bản debug.
+- Apple: test so file sinh với catalog; không có chuỗi hiển thị viết cứng ngoài accessor sinh ra.
+- Kiểm giao diện ở cả `en` và `vi` với cỡ chữ lớn nhất (AX5, font scale 200%); câu tiếng Việt
+  thường dài hơn tiếng Anh 20–30%.

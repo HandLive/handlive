@@ -698,7 +698,7 @@ INCR      rl:<device_id>:relay:<phút>                  # rate limit
 | Điều kiện trước | 1. `relay.enabled = true`; thiết bị đích đã đăng ký relay và có push token. 2. iOS: người dùng đã cho phép thông báo (SET-03). 3. Cặp hợp lệ trên relay. |
 | Điều kiện sau | Token mới nhất nằm trong `devices`; push tới đúng thiết bị; điện thoại kết nối relay trong ≤ 10 s sau wake (mục tiêu tham khảo); iPhone hiển thị thông báo có nội dung khi máy đang mở khóa, nội dung chung khi đang khóa. |
 | Ngoại lệ | E1 — Thiết bị đích chưa có token (409 `PUSH_TOKEN_MISSING`) → bỏ qua; dữ liệu sẽ đến qua đồng bộ khi kết nối.<br>E2 — FCM/APNs lỗi tạm thời (502 `PUSH_PROVIDER_ERROR`) → Android xếp vào `push_outbox`, thử lại theo backoff tới `expires_at`.<br>E3 — Token không còn hợp lệ (FCM `UNREGISTERED`, APNs 410) → relay xóa token; thiết bị đăng ký lại lần mở ứng dụng sau.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE không đọc được khóa (máy khóa) hoặc giải mã lỗi → hiển thị "Có thông báo mới từ điện thoại".<br>E6 — Điện thoại ở chế độ hạn chế nền, FCM bị hạ ưu tiên → thức dậy chậm; SET-01 đã hướng dẫn tắt tối ưu pin.<br>E7 — Envelope cũ hơn 24 h hoặc `id` đã xử lý → I-NSE hiển thị nội dung chung, không xử lý lại. |
-| Yêu cầu đặc biệt | **Bảo mật:** FCM không chứa nội dung; APNs chỉ chứa envelope mã hóa (`K_push`), phần `aps.alert` là chữ chung.<br>**Giới hạn:** payload APNs ≤ 4 KB → nội dung SMS trong push cắt ở 1 000 ký tự, đầy đủ sau SMS-01.<br>**Chính sách nền tảng:** không dùng PushKit VoIP (iOS 13+ buộc mỗi VoIP push phải báo cuộc gọi cho CallKit); thông báo cuộc gọi đến dùng alert `interruption-level: time-sensitive`; FCM ưu tiên cao chỉ dùng cho việc người dùng cần ngay.<br>**Chống spam:** `apns-collapse-id` theo hội thoại/cuộc gọi; tối đa 30 push/phút mỗi thiết bị gửi. |
+| Yêu cầu đặc biệt | **Bảo mật:** FCM không chứa nội dung; APNs chỉ chứa envelope mã hóa (`K_push`), phần `aps.alert` chỉ có `loc-key` — câu chữ chung do iPhone dịch theo ngôn ngữ của nó (0.12.4).<br>**Giới hạn:** payload APNs ≤ 4 KB → nội dung SMS trong push cắt ở 1 000 ký tự, đầy đủ sau SMS-01.<br>**Chính sách nền tảng:** không dùng PushKit VoIP (iOS 13+ buộc mỗi VoIP push phải báo cuộc gọi cho CallKit); thông báo cuộc gọi đến dùng alert `interruption-level: time-sensitive`; FCM ưu tiên cao chỉ dùng cho việc người dùng cần ngay.<br>**Chống spam:** `apns-collapse-id` theo hội thoại/cuộc gọi; tối đa 30 push/phút mỗi thiết bị gửi. |
 
 ### 3.4.2 Màn hình
 
@@ -844,7 +844,7 @@ flowchart TB
 - **Request:**
 
 ```json
-{"aps":{"alert":{"body":"Có thông báo mới từ điện thoại"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
+{"aps":{"alert":{"loc-key":"push.sms_new"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
 ```
 
 - **Response:** 200 (header `apns-id`); 410 `Unregistered` → xóa token (E3); 400/403 → ghi lỗi cấu
@@ -853,14 +853,13 @@ flowchart TB
   `thread-id` = `calls`.
 - **Logic nghiệp vụ:**
   1. Khóa .p8 nằm ngoài repo; JWT nhà cung cấp làm mới mỗi 50 phút; tổng payload ≤ 4 KB.
-  2. Nội dung mặc định (hiện khi I-NSE không giải mã được, ví dụ iPhone đang khóa) và khóa gộp theo
-     `reason` — không chứa số điện thoại hay nội dung:
+  2. Nội dung mặc định (hiện khi I-NSE không giải mã được, ví dụ iPhone đang khóa) gửi bằng `aps.alert.loc-key` — relay không gửi câu chữ, iPhone tra khóa trong catalog của app theo ngôn ngữ của máy (0.12.4); không chứa số điện thoại hay nội dung. Khóa gộp theo `reason`:
 
-| `reason` | `aps.alert.title` | `aps.alert.body` | `interruption-level` | `apns-collapse-id` / `thread-id` |
+| `reason` | `aps.alert.loc-key` | Câu chữ (`vi`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | — (không đặt; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | `sms:<message_key>` / `sms:<thread_id>` |
-| `call_incoming` | — | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
-| `call_missed` | — | Cuộc gọi nhỡ trên điện thoại | `active` | `calllog:<entry_id>` (không có `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
+| `sms_new` | `push.sms_new` (không có tiêu đề; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | `sms:<message_key>` / `sms:<thread_id>` |
+| `call_incoming` | `push.call_incoming` | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
+| `call_missed` | `push.call_missed` | Cuộc gọi nhỡ trên điện thoại | `active` | `calllog:<entry_id>` (không có `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
 
 #### Query
 

@@ -395,6 +395,7 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 | 29 | Nội dung cảnh báo | string | Output | Theo hành động | Xóa khỏi máy chủ: "Xóa đăng ký của thiết bị này khỏi máy chủ HandLive.<br>Các thiết bị đã ghép vẫn dùng được khi ở cùng mạng Wi-Fi; kết nối qua Internet sẽ tắt cho tới khi bạn bật lại." Xóa toàn bộ: "Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này.<br>Không thể hoàn tác." |
 | 30 | Thông báo kết quả, lỗi | string | Output | Rỗng | "Đã xóa khỏi máy chủ" hoặc nội dung theo E1–E9 |
 | 31 | Hiện HandLive trên thanh menu (`mac.menu_bar_extra`) | bool | Input/Output | `true` | Mac.<br>**Cục bộ**. `true` → biểu tượng trên thanh menu (`MenuBarExtra`, `isInserted`), app ở chế độ `.accessory` khi không mở cửa sổ chính; `false` → gỡ biểu tượng, app chuyển `.regular` (biểu tượng Dock, thanh menu của app, Dock menu) làm lối vào chính.<br>Hỏi lúc thiết lập (SET-03 trường 16, bước 6) |
+| 32 | Ngôn ngữ | enum{Theo hệ thống\ | English\ | Tiếng Việt} | Input/Output | Theo hệ thống | Android.<br>**Cục bộ**, không phải khóa cài đặt (C20, 0.12.3). Android 13+: mở trang ngôn ngữ ứng dụng của hệ thống (`Settings.ACTION_APP_LOCALE_SETTINGS`); Android 10–12: chọn trong app, áp dụng bằng `AppCompatDelegate.setApplicationLocales` (tự lưu). Tên ngôn ngữ viết bằng chính ngôn ngữ đó. Mac, iPhone, iPad dùng cài đặt ngôn ngữ theo ứng dụng của hệ thống |
 
 ### 1.2.4 Luồng nghiệp vụ
 

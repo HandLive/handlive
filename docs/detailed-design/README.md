@@ -2,7 +2,7 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Phiên bản | 1.1 (bản để triển khai; đã đồng bộ với design system theo Apple HIG) |
+| Phiên bản | 1.2 (bản để triển khai; đồng bộ design system theo Apple HIG; đa ngôn ngữ en/vi — C20) |
 | Ngày | 2026-09-25 |
 | Nguồn | `plans/20260924-definitive-architecture/plan.md`, `docs/system-architecture.md`, `docs/code-standards.md`; giao diện: design system HandLive (Apple HIG) https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT |
 | Phạm vi | Android (hub), macOS, iOS/iPadOS, Cloud relay — Phase 1 đến Phase 5 |
@@ -22,6 +22,9 @@
 | [`08-camera-mic.md`](08-camera-mic.md) | 8 | Nhóm chức năng Camera và micro |
 
 Mỗi nhóm chức năng là một mục. Mỗi chức năng lá có đúng năm mục con theo khuôn mẫu ở phần 3.
+
+Mỗi file có hai bản cùng cấu trúc (C20): tiếng Anh `X.md` là bản chuẩn, tiếng Việt `X.vi.md`; sửa
+một bản thì sửa bản kia trong cùng commit (`tools/docs/check_bilingual_docs.py`).
 
 ## 2. Danh mục chức năng
 
@@ -81,6 +84,19 @@ Mỗi chức năng lá có đúng năm mục con, đánh số `<nhóm>.<chức n
 5. **Đặc tả API/service** — danh sách lời gọi, rồi từng lời gọi gồm URL, Method, Request, Response,
    Ví dụ, Logic nghiệp vụ; cuối cùng là Query. Không có lời gọi thì ghi `N/A`.
 
+Nhãn của khuôn mẫu ở hai bản (validator đọc đúng các nhãn này):
+
+| Tiếng Việt (`X.vi.md`) | Tiếng Anh (`X.md`) |
+|------------------------|--------------------|
+| Thông tin chung · Màn hình · Mô tả chi tiết các thành phần · Luồng nghiệp vụ · Đặc tả API/service | General information · Screens · Component details · Business flow · API/service specification |
+| Tên, Mô tả, Tác nhân, Điều kiện trước, Điều kiện sau, Ngoại lệ, Yêu cầu đặc biệt | Name, Description, Actors, Preconditions, Postconditions, Exceptions, Special requirements |
+| `#`, Trường, Kiểu dữ liệu, Input/Output, Giá trị khởi tạo, Mô tả | `#`, Field, Data type, Input/Output, Initial value, Description |
+| Bước, Tác nhân, Thành phần, Mô tả, Ngoại lệ / Ghi chú | Step, Actor, Component, Description, Exceptions / Notes |
+| "N/A — chưa có wireframe được duyệt." | "N/A — no approved wireframe yet." |
+| Làn `ND["Người dùng"]`, `HT["Hệ thống"]` | Lanes `ND["User"]`, `HT["System"]` |
+| URL, Method, Request, Response, Ví dụ, Logic nghiệp vụ, Query | URL, Method, Request, Response, Example, Business logic, Query |
+| Nhãn `[Thiết kế]` trong SQL | Label `[Design]` in SQL |
+
 ### 3.2 Cách ghi URL và Method
 
 | Loại lời gọi | URL | Method |
@@ -111,6 +127,14 @@ Android ghi dưới dạng `ContentResolver.query(uri, projection, selection, ar
 - Tối đa khoảng 15 nút; chi tiết đưa vào bảng bước.
 
 ### 3.5 Câu chữ giao diện
+
+- Đa ngôn ngữ (C20, 0.12): tiếng Anh là ngôn ngữ mặc định, tiếng Việt là ngôn ngữ thứ hai. Bản
+  tiếng Anh của tài liệu (`X.md`) ghi chuỗi tiếng Anh, bản tiếng Việt (`X.vi.md`) ghi chuỗi tiếng
+  Việt. Mỗi chuỗi có khóa ổn định trong catalog `shared/strings/ui-strings.json`; tài liệu và
+  catalog phải khớp — sửa câu chữ thì sửa tài liệu trước, catalog sau, mã không viết cứng câu chữ.
+- Tiếng Anh theo văn phong tiếng Anh của Apple: viết hoa kiểu tiêu đề cho nút, mục menu, tiêu đề
+  cửa sổ và tab; viết hoa kiểu câu cho mô tả, nội dung alert, thông báo, trạng thái. Tiếng Việt
+  viết hoa đầu câu theo các quy tắc dưới.
 
 - Chuỗi hiển thị cho người dùng theo design system HandLive (Apple HIG), mục "Viết nội dung":
   https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT
@@ -162,3 +186,4 @@ bằng chứng. Điểm nào đụng tới quyết định đã chốt thì khô
 | C17 | Tự xóa clipboard trên Android: mã nguồn AOSP cho thấy `OnPrimaryClipChangedListener` không được gọi khi ứng dụng ở nền.<br>Chỉ xóa khi đọc được `ClipDescription` của chính clip HandLive đã ghi (khi có focus, hoặc lấy focus thoáng qua bằng `ClipboardReadActivity` khi Accessibility đang chạy); không bao giờ suy ra "còn nguyên" từ việc không thấy tín hiệu sao chép, nên không xóa nhầm nội dung người dùng. | Điều chỉnh có bằng chứng | Áp dụng |
 | C18 | Tin SMS mới phát hiện bằng `ContentObserver` trên provider, không cần `RECEIVE_SMS` — bớt một quyền bị Google Play hạn chế. | Điều chỉnh | Áp dụng |
 | C19 | **Đồng bộ với design system theo Apple HIG** (chủ dự án duyệt 2026-09-25): màn hình giải thích quyền chỉ có "Tiếp tục" (SET-01, SET-03); Mac: biểu tượng thanh menu mở menu, không popover (CONN-01), cài đặt "Hiện HandLive trên thanh menu" (`mac.menu_bar_extra`) và đổi activation policy `.accessory` ↔ `.regular` khi mở cửa sổ (SET-02, SET-03); cuộc gọi đến trên Mac kèm thông báo liên lạc `INStartCallIntent`, chế độ Tập trung bật thì không hiện panel — panel nổi là lệch có chủ đích so với HIG (CALL-01); nhật ký cuộc gọi ở thanh bên cửa sổ Tin nhắn (CALL-04); dòng hội thoại chỉ có chấm chưa đọc (SMS-03); lỗi bảng nhớ tạm báo tại chỗ, không đẩy thông báo (CLIP-01…03); kênh thông báo Android `clipboard`, `permission`; Mac khai báo `NSMicrophoneUsageDescription`, `NSFocusStatusUsageDescription` (SET-03, AUDIO-01, CALL-01); hộp thoại hủy ghép nối theo alert (Mac) và hộp chọn hành động (iPhone, Android) (PAIR-03); câu chữ theo 3.5. | Quyết định của chủ dự án | Áp dụng |
+| C20 | **Đa ngôn ngữ và tài liệu song ngữ** (chủ dự án quyết định 2026-09-25): tiếng Anh (`en`) là ngôn ngữ mặc định, ngôn ngữ nguồn và dự phòng; tiếng Việt (`vi`) là ngôn ngữ thứ hai. Giao diện theo ngôn ngữ ưu tiên của hệ thống; chọn riêng cho HandLive bằng cài đặt ngôn ngữ theo ứng dụng của hệ điều hành (Android 13+, iOS/iPadOS, macOS) và SET-02 trường 32 trên Android 10–12.<br>Mọi chuỗi giao diện có khóa ổn định trong catalog `shared/strings/ui-strings.json`, sinh ra tài nguyên của từng nền tảng (0.12); mã không viết cứng câu chữ. Tin giữa các thiết bị, relay và push không mang câu chữ hiển thị — chỉ mã, khóa và tham số; máy nhận hiển thị bằng ngôn ngữ của nó (APNs dùng `loc-key`, CONN-04).<br>Tài liệu song ngữ: `X.md` tiếng Anh (bản chuẩn khi hai bản lệch nhau), `X.vi.md` tiếng Việt, cùng cấu trúc, cập nhật trong cùng commit. | Quyết định của chủ dự án | Áp dụng |
