@@ -1,158 +1,170 @@
-# Viết nội dung
+English | [Tiếng Việt](09-viet-noi-dung.vi.md)
 
-Câu chữ của HandLive ngắn, rõ và bình tĩnh như một công cụ của hệ thống. Giao diện có tiếng Anh
-(ngôn ngữ mặc định) và tiếng Việt (C20); các mục đầu nói về tiếng Việt, mục "Tiếng Anh" ở cuối. Mục này quy định giọng văn,
-cách viết hoa và bỏ dấu, cách viết từng thành phần, thuật ngữ, định dạng số và ngày, và những chỗ
-cần đồng bộ với tài liệu thiết kế chi tiết.
+# Writing
+<!-- i18n: mixed -->
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/writing
+HandLive's copy is short, clear, and calm, like a tool that's part of the system. The interface comes
+in English (the default language) and Vietnamese (C20); the first sections cover Vietnamese, and the
+section "English — the default language" comes at the end. This section sets the voice and tone,
+capitalization and diacritics, how to write each component, terminology, number and date formats, and
+the places that must stay in sync with the detailed design. Vietnamese examples are quoted verbatim,
+with English glosses in parentheses.
 
-## Giọng văn
+HIG source: https://developer.apple.com/design/human-interface-guidelines/writing
 
-- Rõ ràng, bình tĩnh, đáng tin. Nói việc đang xảy ra và việc cần làm; điều quan trọng nhất đặt
-  trước.
-- Giọng đổi theo ngữ cảnh: lỗi và quyền riêng tư thì trung tính, cụ thể; ghép nối xong thì ấm và
-  ngắn ("Đã ghép nối với Pixel 8 của Lan"); cuộc gọi thì tối giản.
-- Không "chúng tôi", không dấu chấm than, không emoji, không "Rất tiếc" hay "Úi". Không tiếng lóng,
-  thành ngữ.
-- Tránh đại từ và sở hữu thừa ("Thiết bị" thay "Thiết bị của bạn"); chỉ xưng "bạn" khi thiếu chủ ngữ
-  gây hiểu lầm.
-- "Chạm" cho màn hình cảm ứng (iPhone, iPad, Android), "bấm" cho chuột và bàn phím (Mac).
+## Voice and tone
 
-## Viết hoa và dấu
+- Clear, calm, trustworthy. Say what's happening and what to do; put the most important thing first.
+- The tone shifts with the context: errors and privacy are neutral and specific; a completed pairing is
+  warm and short ("Đã ghép nối với Pixel 8 của Lan" — Paired with Lan's Pixel 8); calls are minimal.
+- No "chúng tôi" (we), no exclamation marks, no emoji, no "Rất tiếc" (Sorry) or "Úi" (Oops). No slang
+  or idioms.
+- Avoid unnecessary pronouns and possessives ("Thiết bị" rather than "Thiết bị của bạn" — Device
+  rather than Your device); address the user as "bạn" (you) only when a missing subject would be
+  misleading.
+- "Chạm" (tap) for touchscreens (iPhone, iPad, Android), "bấm" (click) for the mouse and keyboard
+  (Mac).
 
-- Sentence case cho mọi thành phần: nút, mục menu, tiêu đề cửa sổ, tab, alert, thông báo. Chỉ viết
-  hoa chữ đầu và tên riêng: "Hủy ghép nối", "Gửi bảng nhớ tạm sang điện thoại".
-- Lệch có chủ đích: HIG dùng title-style cho nút, menu, tab theo tiếng Anh; tiếng Việt không có lối
-  viết hoa từng từ nên HandLive dùng sentence case.
-- Tên riêng giữ nguyên: HandLive, Mac, iPhone, iPad, Android, Wi-Fi, Bluetooth, USB, SIM. Tên cài
-  đặt hệ thống viết đúng bản tiếng Việt của hệ thống: "Cài đặt hệ thống", "Quyền riêng tư & Bảo
-  mật", "Tập trung", "Trung tâm thông báo"; Apple gọi Accessibility là "Trợ năng", Android gọi là
+## Capitalization and diacritics
+
+- Vietnamese uses sentence case for every component: buttons, menu items, window titles, tabs, alerts,
+  notifications. Capitalize only the first word and proper nouns: "Hủy ghép nối" (Unpair), "Gửi bảng
+  nhớ tạm sang điện thoại" (Send Clipboard to Phone).
+- Intentional deviation: the HIG uses title-style capitalization for buttons, menus, and tabs in
+  English; Vietnamese has no convention of capitalizing every word, so HandLive uses sentence case.
+- Proper nouns stay as they are: HandLive, Mac, iPhone, iPad, Android, Wi-Fi, Bluetooth, USB, SIM.
+  System setting names are written exactly as the system's Vietnamese version shows them: "Cài đặt hệ
+  thống" (System Settings), "Quyền riêng tư & Bảo mật" (Privacy & Security), "Tập trung" (Focus),
+  "Trung tâm thông báo" (Notification Center); Apple calls Accessibility "Trợ năng", Android calls it
   "Hỗ trợ tiếp cận".
-- Không viết HOA TOÀN BỘ.
-- Bỏ dấu kiểu Apple, dấu nằm trên nguyên âm chính của vần oa, oe, uy: hóa, xóa, hủy, tùy, thủy,
-  khỏe, lũy, khóa, hòa, họa, thỏa. Không viết hoá, xoá, huỷ, tuỳ.
+- No ALL CAPS.
+- Apple-style tone marks: the mark sits on the main vowel of the rhymes oa, oe, uy: hóa, xóa, hủy, tùy,
+  thủy, khỏe, lũy, khóa, hòa, họa, thỏa. Don't write hoá, xoá, huỷ, tuỳ.
 
-## Từng thành phần
+## Component by component
 
-| Thành phần | Quy tắc | Ví dụ |
+| Component | Rule | Example |
 |---|---|---|
-| Nút | Bắt đầu bằng động từ, 1–3 từ; không dùng "Có", "Không" | "Gửi", "Trả lời", "Ghép nối" |
-| Nút hủy | Luôn là "Hủy" | "Hủy" |
-| OK | Chỉ cho alert thuần thông báo | — |
-| Luồng nhiều bước | "Bắt đầu" → "Tiếp tục" → "Xong" | `Onboarding` |
-| Alert | Tiêu đề nêu tình huống cụ thể, tối đa 2 dòng; nội dung là câu hoàn chỉnh, chỉ khi thêm giá trị; tối đa 3 nút | "Hủy ghép nối với Pixel 8 của Lan?"; nút "Hủy" (trái), "Hủy ghép nối" (phải) |
-| Mục menu | Động từ; mục bật tắt dùng dấu kiểm | "Gửi bảng nhớ tạm sang điện thoại" |
-| Thông báo | Tiêu đề ngắn, không dấu chấm, không chèn "HandLive"; nội dung là câu hoàn chỉnh | "Cuộc gọi nhỡ" |
-| Tooltip (Mac) | Bắt đầu bằng động từ, tối đa 60–75 ký tự, không lặp tên control | "Tắt tiếng micro trên Mac" |
-| Tiêu đề cửa sổ | Danh từ, dưới 15 ký tự | "Tin nhắn" |
-| Mô tả cài đặt | Nói tác dụng khi bật | "Thông báo tin nhắn hiện cả nội dung tin." |
+| Button | Starts with a verb, 1–3 words; never "Có" (Yes) or "Không" (No) | "Gửi" (Send), "Trả lời" (Answer), "Ghép nối" (Pair) |
+| Cancel button | Always "Hủy" | "Hủy" (Cancel) |
+| OK | Only for purely informational alerts | — |
+| Multi-step flow | "Bắt đầu" → "Tiếp tục" → "Xong" (Get Started → Continue → Done) | `Onboarding` |
+| Alert | The title states the specific situation, 2 lines at most; the message is a complete sentence, used only when it adds value; 3 buttons at most | "Hủy ghép nối với Pixel 8 của Lan?" (Unpair Lan's Pixel 8?); buttons "Hủy" (left), "Hủy ghép nối" (right) |
+| Menu item | A verb; toggle items use a checkmark | "Gửi bảng nhớ tạm sang điện thoại" (Send Clipboard to Phone) |
+| Notification | Short title, no period, no "HandLive"; the body is a complete sentence | "Cuộc gọi nhỡ" (Missed call) |
+| Tooltip (Mac) | Starts with a verb, 60–75 characters at most, doesn't repeat the control's name | "Tắt tiếng micro trên Mac" (Mute the microphone on the Mac) |
+| Window title | A noun, under 15 characters | "Tin nhắn" (Messages) |
+| Setting description | Says what happens when it's on | "Thông báo tin nhắn hiện cả nội dung tin." (Message notifications include the message text.) |
 
-Purpose string xin quyền: xem mục Quyền riêng tư.
+Permission purpose strings: see Privacy.
 
-## Thuật ngữ
+## Terminology
 
-| Dùng | Không dùng |
+| Use | Don't use |
 |---|---|
-| Bảng nhớ tạm | Clipboard, bộ nhớ đệm |
-| Ghép nối, Hủy ghép nối | Pair, kết đôi |
-| Kết nối qua Internet | Relay, máy chủ relay |
-| Cùng mạng Wi-Fi (nhãn ngắn: LAN) | LAN trong câu |
-| Hỗ trợ tiếp cận (Android), Trợ năng (Apple) | Accessibility |
-| Gỡ lỗi USB | USB debugging |
-| Micro | Microphone, mic |
-| Cuộc gọi nhỡ | Cuộc gọi lỡ |
-| Mã an toàn | Vân tay, fingerprint |
-| Tập trung | Focus, Không làm phiền |
-| Ngoại tuyến | Offline |
+| Bảng nhớ tạm (clipboard) | Clipboard, bộ nhớ đệm (buffer) |
+| Ghép nối, Hủy ghép nối (pair, unpair) | Pair, kết đôi (couple) |
+| Kết nối qua Internet (internet connection) | Relay, máy chủ relay (relay server) |
+| Cùng mạng Wi-Fi (same Wi-Fi network; short label: LAN) | LAN inside a sentence |
+| Hỗ trợ tiếp cận (Android), Trợ năng (Apple) — Accessibility | Accessibility |
+| Gỡ lỗi USB (USB debugging) | USB debugging |
+| Micro (microphone) | Microphone, mic |
+| Cuộc gọi nhỡ (missed call) | Cuộc gọi lỡ (a less common variant) |
+| Mã an toàn (Security Code) | Vân tay (fingerprint), fingerprint |
+| Tập trung (Focus) | Focus, Không làm phiền (Do Not Disturb) |
+| Ngoại tuyến (offline) | Offline |
 
-## Số, ngày, giờ
+## Numbers, dates, times
 
-Dùng formatter của hệ thống với locale tiếng Việt, không tự ghép chuỗi.
+Use the system formatters with the Vietnamese locale; don't build strings by hand.
 
-| Loại | Dạng | API |
+| Type | Format | API |
 |---|---|---|
-| Giờ | "14:05" | `Date.FormatStyle`; Android `DateFormat.getTimeFormat` |
-| Ngày | "24/09"; khác năm "24/09/2025"; "Hôm qua" | `Date.FormatStyle` |
-| Thời lượng | "02:15" khi đang đếm; lịch sử "2 phút 5 giây" | `DateComponentsFormatter` |
-| Tương đối | "5 phút trước" | `RelativeDateTimeFormatter` |
-| Số điện thoại | "090 000 0123" | Android `PhoneNumberUtils.formatNumber` |
-| Số | "1.500"; thập phân "0,5" | `.formatted()`, `NumberFormatter` |
-| Dung lượng | "5 MB" | `ByteCountFormatStyle`; Android `Formatter.formatShortFileSize` |
+| Time | "14:05" | `Date.FormatStyle`; Android `DateFormat.getTimeFormat` |
+| Date | "24/09"; a different year "24/09/2025"; "Hôm qua" (Yesterday) | `Date.FormatStyle` |
+| Duration | "02:15" while counting; in history "2 phút 5 giây" (2 min 5 s) | `DateComponentsFormatter` |
+| Relative | "5 phút trước" (5 minutes ago) | `RelativeDateTimeFormatter` |
+| Phone number | "090 000 0123" | Android `PhoneNumberUtils.formatNumber` |
+| Number | "1.500"; decimal "0,5" | `.formatted()`, `NumberFormatter` |
+| File size | "5 MB" | `ByteCountFormatStyle`; Android `Formatter.formatShortFileSize` |
 
-## Lỗi
+## Errors
 
-Mẫu: chuyện gì xảy ra, rồi cách xử lý. Đặt ngay cạnh chỗ lỗi; không đổ lỗi cho người dùng; không mã
-lỗi, không tiêu đề chung chung "Lỗi".
+Pattern: what happened, then how to fix it. Show it right next to where the error happened; don't blame
+the user; no error codes, no generic "Lỗi" (Error) title.
 
-| Viết | Tránh |
+| Write | Avoid |
 |---|---|
-| "Mã PIN không đúng. Kiểm tra mã trên Mac rồi nhập lại." | "PIN_INVALID" |
-| "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" | "Không hỗ trợ kênh truyền" |
-| "Chưa gửi được. Điện thoại đang ở chế độ máy bay." | "Gửi thất bại" |
+| "Mã PIN không đúng. Kiểm tra mã trên Mac rồi nhập lại." (The PIN is incorrect. Check the code on the Mac and enter it again.) | "PIN_INVALID" |
+| "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" (Requires the same Wi-Fi network or a USB cable) | "Không hỗ trợ kênh truyền" (Transport not supported) |
+| "Chưa gửi được. Điện thoại đang ở chế độ máy bay." (Not sent yet. The phone is in Airplane Mode.) | "Gửi thất bại" (Send failed) |
 
-## Trạng thái trống
+## Empty states
 
-Luôn có bước tiếp theo: tiêu đề `brand-title`, một câu, một nút; không đặt thông tin quan trọng ở
-đây. Ví dụ: "Chưa có điện thoại" · "Ghép điện thoại Android để nhận bảng nhớ tạm, tin nhắn và cuộc
-gọi." · nút "Thêm điện thoại…".
+Always offer a next step: a `brand-title` title, one sentence, one button; don't put important
+information here. Example: "Chưa có điện thoại" (No Phone Yet) · "Ghép điện thoại Android để nhận bảng
+nhớ tạm, tin nhắn và cuộc gọi." (Pair an Android phone to receive its clipboard, messages, and calls.)
+· button "Thêm điện thoại…" (Add Phone…).
 
-## Dấu "…"
+## The "…" character
 
-- Dùng ký tự "…" (một ký tự), không gõ ba dấu chấm.
-- Cho lệnh cần thêm bước nhập hoặc chọn ("Cài đặt…", "Từ chối kèm tin nhắn…") và nút Mac mở cửa sổ
-  hay sheet khác ("Thêm điện thoại…").
-- Cho trạng thái đang diễn ra: "Đang kết nối…", "Đang gửi…".
-- Không dùng cho lệnh chạy ngay ("Gửi", "Trả lời").
+- Use the "…" character (a single character); don't type three periods.
+- For commands that need more input or a choice ("Cài đặt…" — Settings…, "Từ chối kèm tin nhắn…" —
+  Decline with Message…) and for Mac buttons that open another window or sheet ("Thêm điện thoại…" —
+  Add Phone…).
+- For states in progress: "Đang kết nối…" (Connecting…), "Đang gửi…" (Sending…).
+- Not for commands that run immediately ("Gửi" — Send, "Trả lời" — Answer).
 
-## Đã đồng bộ với tài liệu chi tiết
+## Synced with the detailed design
 
-Đã áp dụng toàn bộ vào `docs/detailed-design/` ngày 25/09/2026 (README §3.5, C19). Tên mục hệ thống
-("Quyền riêng tư & Bảo mật") lấy theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối
-chiếu trên máy thật.
+Applied in full to `docs/detailed-design/` on September 25, 2026 (README §3.5, C19). System section
+names ("Quyền riêng tư & Bảo mật") follow Apple's Vietnamese localization; the implementation plan
+includes a task to check them on real devices.
 
-| Tài liệu chi tiết | Design system | Nơi |
+| Detailed design | Design system | Where |
 |---|---|---|
-| huỷ, xoá, tuỳ, hoá, khoá, hoà, hoạ, thoả | hủy, xóa, tùy, hóa, khóa, hòa, họa, thỏa | Khoảng 800 chỗ: khoá 253, xoá 238, hoá 155, huỷ 95, tuỳ 46, hoà 6, hoạ 4, thoả 2 |
-| "Gửi clipboard", "Đồng bộ clipboard", "Tự xoá clipboard đã nhận", "Clipboard trống hoặc không phải văn bản" | "Gửi bảng nhớ tạm", "Đồng bộ bảng nhớ tạm", "Tự xóa bảng nhớ tạm đã nhận", "Bảng nhớ tạm trống hoặc không phải văn bản" | CLIP-01 đến CLIP-04, SET-01, SET-03 |
-| "máy chủ relay không đọc được nội dung" | "máy chủ không đọc được nội dung" | SET-01, SET-03 trường 1 |
-| "Đã kết nối (LAN)", "Đã kết nối (qua Internet)" | "Đã kết nối qua Wi-Fi", "Đã kết nối qua Internet" | 0.11, CONN-01, PAIR-02; nhãn ngắn vẫn được "LAN" |
-| "Quyền riêng tư và bảo mật" | "Quyền riêng tư & Bảo mật" | SET-03, CLIP-02, AUDIO-01, CAM-01 |
-| "Không, tôi sẽ gửi thủ công" | "Gửi thủ công" | CLIP-01 trường 3; nút bắt đầu bằng động từ |
-| "Thêm điện thoại" (nút Mac mở sheet mã QR) | "Thêm điện thoại…" | PAIR-01 |
-| "Đã tải 1 500 tin" | "Đã tải 1.500 tin" | SMS-01; dấu ngăn nghìn của tiếng Việt |
+| huỷ, xoá, tuỳ, hoá, khoá, hoà, hoạ, thoả | hủy, xóa, tùy, hóa, khóa, hòa, họa, thỏa | About 800 places: khoá 253, xoá 238, hoá 155, huỷ 95, tuỳ 46, hoà 6, hoạ 4, thoả 2 |
+| "Gửi clipboard", "Đồng bộ clipboard", "Tự xoá clipboard đã nhận", "Clipboard trống hoặc không phải văn bản" | "Gửi bảng nhớ tạm", "Đồng bộ bảng nhớ tạm", "Tự xóa bảng nhớ tạm đã nhận", "Bảng nhớ tạm trống hoặc không phải văn bản" (Send Clipboard, Sync Clipboard, Auto-Clear Received Clipboard, Clipboard is empty or isn't text) | CLIP-01 to CLIP-04, SET-01, SET-03 |
+| "máy chủ relay không đọc được nội dung" | "máy chủ không đọc được nội dung" (the server can't read the content) | SET-01, SET-03 field 1 |
+| "Đã kết nối (LAN)", "Đã kết nối (qua Internet)" | "Đã kết nối qua Wi-Fi", "Đã kết nối qua Internet" (Connected via Wi-Fi, Connected over the internet) | 0.11, CONN-01, PAIR-02; "LAN" is still allowed as a short label |
+| "Quyền riêng tư và bảo mật" | "Quyền riêng tư & Bảo mật" (Privacy & Security) | SET-03, CLIP-02, AUDIO-01, CAM-01 |
+| "Không, tôi sẽ gửi thủ công" (No, I'll send manually) | "Gửi thủ công" (Send Manually) | CLIP-01 field 3; buttons start with a verb |
+| "Thêm điện thoại" (the Mac button that opens the QR code sheet) | "Thêm điện thoại…" (Add Phone…) | PAIR-01 |
+| "Đã tải 1 500 tin" | "Đã tải 1.500 tin" (Loaded 1,500 messages) | SMS-01; the Vietnamese thousands separator |
 
-## Tiếng Anh — ngôn ngữ mặc định
+## English — the default language
 
-HandLive viết tiếng Anh theo Apple Style Guide và bản tiếng Anh của HIG. Tiếng Anh là ngôn ngữ nguồn
-của catalog chuỗi (`shared/strings/ui-strings.json`, tài liệu chi tiết 0.12); mỗi chuỗi có bản tiếng
-Việt theo các mục trên (C20).
+HandLive writes English following the Apple Style Guide and the English edition of the HIG. English is
+the source language of the string catalog (`shared/strings/ui-strings.json`, detailed design 0.12);
+every string has a Vietnamese version that follows the sections above (C20).
 
-- Viết hoa kiểu tiêu đề (title-style) cho nút, mục menu, tiêu đề cửa sổ và sheet, tab, nhãn dòng
-  cài đặt, tiêu đề alert: "Send Clipboard to Phone", "Unpair", "Add Phone…". Viết hoa mọi từ trừ mạo
-  từ (a, an, the), liên từ (and, but, or, nor) và giới từ từ ba chữ cái trở xuống (to, in, on, via,
-  for) khi không đứng đầu hay cuối.
-- Viết hoa kiểu câu (sentence-style) cho mô tả, chú thích, nội dung alert, nội dung thông báo, chuỗi
-  trạng thái, tooltip: "Connected via Wi-Fi", "Keep the phone and this Mac on the same Wi-Fi
+- Title-style capitalization for buttons, menu items, window and sheet titles, tabs, settings row
+  labels, and alert titles: "Send Clipboard to Phone", "Unpair", "Add Phone…". Capitalize every word
+  except articles (a, an, the), coordinating conjunctions (and, but, or, nor), and prepositions of
+  three letters or fewer (to, in, on, via, for) unless they come first or last.
+- Sentence-style capitalization for descriptions, captions, alert messages, notification bodies,
+  status strings, and tooltips: "Connected via Wi-Fi", "Keep the phone and this Mac on the same Wi-Fi
   network."
-- Giọng ngắn, chủ động, thì hiện tại; không "please", "sorry", "oops", dấu chấm than, emoji; chỉ dùng
-  "you" khi câu thiếu chủ ngữ gây hiểu lầm. "Tap" cho màn hình cảm ứng, "click" cho Mac.
-- Tên mục của hệ điều hành viết đúng bản tiếng Anh: "System Settings", "Privacy & Security",
-  "Focus", "Notification Center", "Accessibility" (cả Apple và Android), "Paste from Other Apps".
-- "internet" viết thường trong câu ("Connected over the internet"), viết hoa khi cả chuỗi viết hoa
-  kiểu tiêu đề.
-- Số, ngày, giờ theo locale tiếng Anh qua formatter của hệ thống ("2:05 PM" ở en-US, "Sep 24",
-  "1,500", "0.5", "5 MB"); không tự ghép chuỗi.
-- Lỗi: chuyện gì xảy ra rồi cách xử lý — "The PIN is incorrect. Check the code on your Mac and try
-  again."; không mã lỗi, không tiêu đề chung chung "Error".
-- Dấu "…" và các quy tắc về nút, alert, thông báo, trạng thái trống như bản tiếng Việt.
+- Short, active, present tense; no "please", "sorry", "oops", exclamation marks, or emoji; use "you"
+  only when a missing subject would be misleading. "Tap" for touchscreens, "click" for the Mac.
+- Operating system section names are written exactly as the English system shows them: "System
+  Settings", "Privacy & Security", "Focus", "Notification Center", "Accessibility" (on both Apple and
+  Android), "Paste from Other Apps".
+- "internet" is lowercase in sentences ("Connected over the internet") and capitalized when the whole
+  string uses title-style capitalization.
+- Numbers, dates, and times follow the English locale through the system formatters ("2:05 PM" in
+  en-US, "Sep 24", "1,500", "0.5", "5 MB"); don't build strings by hand.
+- Errors: what happened, then how to fix it — "The PIN is incorrect. Check the code on your Mac and try
+  again."; no error codes, no generic "Error" title.
+- The "…" character and the rules for buttons, alerts, notifications, and empty states are the same as
+  in Vietnamese.
 
-| Tiếng Anh | Tiếng Việt | Ghi chú |
+| English | Vietnamese | Notes |
 |-----------|------------|---------|
 | Clipboard | Bảng nhớ tạm | |
 | Pair, Unpair | Ghép nối, Hủy ghép nối | |
-| Internet connection ("Connected over the internet") | Kết nối qua Internet | Không dùng "relay" ở cả hai ngôn ngữ |
-| Same Wi-Fi network (nhãn ngắn: LAN) | Cùng mạng Wi-Fi (nhãn ngắn: LAN) | |
+| Internet connection ("Connected over the internet") | Kết nối qua Internet | Don't use "relay" in either language |
+| Same Wi-Fi network (short label: LAN) | Cùng mạng Wi-Fi (nhãn ngắn: LAN) | |
 | Accessibility | Hỗ trợ tiếp cận (Android), Trợ năng (Apple) | |
 | USB debugging | Gỡ lỗi USB | |
 | Microphone | Micro | |
@@ -160,13 +172,13 @@ Việt theo các mục trên (C20).
 | Security Code | Mã an toàn | |
 | Focus | Tập trung | |
 | Offline | Ngoại tuyến | |
-| Phone | Điện thoại | Điện thoại Android đã ghép |
+| Phone | Điện thoại | The paired Android phone |
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| "Hủy ghép nối" | "Huỷ Ghép Nối" |
-| "Bảng nhớ tạm" | "Clipboard" |
-| "Không gửi được ảnh lớn hơn 10 MB." | "Ảnh quá lớn" |
-| "Đang kết nối…" | "Đang kết nối..." |
+| "Hủy ghép nối" (Unpair) | "Huỷ Ghép Nối" (old-style tone mark, every word capitalized) |
+| "Bảng nhớ tạm" (clipboard) | "Clipboard" |
+| "Không gửi được ảnh lớn hơn 10 MB." (Can't send images larger than 10 MB.) | "Ảnh quá lớn" (Image too large) |
+| "Đang kết nối…" (one "…" character) | "Đang kết nối..." (three periods) |

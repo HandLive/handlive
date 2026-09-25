@@ -1,100 +1,105 @@
-# Thương hiệu
+English | [Tiếng Việt](11-thuong-hieu.vi.md)
 
-Thương hiệu HandLive nằm ở lớp nội dung: màn chào, màn ghép nối, trạng thái trống, biểu tượng app và
-chữ HandLive. Control, trạng thái và thanh điều hướng giữ diện mạo của hệ thống. Mục này gồm câu
-chuyện, bảng màu, chữ và các giới hạn.
+# Branding
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/branding
+HandLive's brand lives in the content layer: the welcome screen, the pairing screen, empty states, the
+app icon, and the HandLive wordmark. Controls, status, and navigation bars keep the system's look.
+This section covers the story, the palette, the type, and the limits.
 
-## Câu chuyện
+HIG source: https://developer.apple.com/design/human-interface-guidelines/branding
 
-Bảng màu chọn theo phong thủy mệnh Sơn Đầu Hỏa, lửa trên đỉnh núi. Người xưa đốt lửa hiệu trên đỉnh
-núi để truyền tin từ trạm này sang trạm khác; HandLive làm việc tương tự giữa điện thoại và máy
-tính. Tính cách: đáng tin, kín đáo, ấm. Theo HIG, thương hiệu nhường chỗ cho nội dung: không rải
-logo, không trang trí thừa.
+## Story
 
-## Bảng màu
+The palette is the Sơn Đầu Hỏa feng-shui palette: Sơn Đầu Hỏa, "fire on the mountaintop", is one of
+the Fire destiny elements in Vietnamese feng shui. In the past, people lit signal fires on mountaintops
+to pass messages from one station to the next; HandLive does the same between a phone and a computer.
+Personality: trustworthy, discreet, warm. Following the HIG, the brand makes room for content: no
+logos scattered around, no unnecessary decoration.
 
-| Vai trò | Token | Sáng / Tối | Ngũ hành | Dùng cho |
+## Palette
+
+| Role | Token | Light / Dark | Five Elements | Used for |
 |---|---|---|---|---|
-| Nhận diện | `brand-fire` (đỏ son) | #d2381f / #ff6b4a | Hỏa, màu bản mệnh | Chữ HandLive, biểu tượng app, màn chào |
-| Mảng sâu | `brand-ember` (đỏ than) | #8a2210 / #b43a20 | Hỏa | Khối lớn ở bìa, lớp nền biểu tượng app, thay cho đen |
-| Điểm sáng | `brand-flame` (cam lửa) | #f07a1a / #ff9a3d | Hỏa | Gradient thương hiệu, minh họa; không làm màu chữ |
-| Nền thương hiệu | `brand-glow` (hồng đào) | #fde9e2 / #3b1a12 | Hỏa | Nền màn chào, màn ghép nối |
-| Thao tác | `accent`, `accent-fill` (xanh lá) | #197934 / #3ddc6c | Mộc sinh Hỏa, tương sinh | AccentColor |
-| Trung tính | Xám hệ thống | Theo hệ thống | Kim; Hỏa khắc Kim, dùng được | Nền, chữ, viền |
-| Nhấn phụ | `system-pink`, `system-purple`; ít dùng `system-yellow`, `system-brown` | Theo hệ thống | Hỏa; Thổ | Ảnh đại diện chữ cái, minh họa |
-| Không dùng | Đen, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Thủy khắc Hỏa | Không cho thương hiệu hay mảng màu lớn |
+| Identity | `brand-fire` (vermilion) | #d2381f / #ff6b4a | Fire, the destiny element's own color | The HandLive wordmark, app icon, welcome screen |
+| Deep areas | `brand-ember` (ember red) | #8a2210 / #b43a20 | Fire | Large blocks on covers, the app icon's background layer, in place of black |
+| Highlights | `brand-flame` (flame orange) | #f07a1a / #ff9a3d | Fire | Brand gradient, illustrations; never a text color |
+| Brand background | `brand-glow` (peach) | #fde9e2 / #3b1a12 | Fire | Background of the welcome and pairing screens |
+| Actions | `accent`, `accent-fill` (green) | #197934 / #3ddc6c | "Wood feeds Fire", a supporting element | AccentColor |
+| Neutral | System grays | Follows the system | Metal; Fire overcomes Metal, so it may be used | Backgrounds, text, borders |
+| Secondary accents | `system-pink`, `system-purple`; rarely `system-yellow`, `system-brown` | Follows the system | Fire; Earth | Letter avatars, illustrations |
+| Not used | Black, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Water overcomes Fire | Not for the brand or large color areas |
 
-Nền tối của hệ thống (đen trên iPhone, xám trên Mac) là của Apple; HandLive không thêm mảng đen hay
-xanh dương nào của riêng mình. Mỗi màu thương hiệu có đủ 4 biến thể, kể cả hai bản tương phản cao
-(xem Màu sắc).
+The system's dark backgrounds (black on iPhone, gray on Mac) belong to Apple; HandLive adds no black or
+blue areas of its own. Every brand color has all 4 variants, including the two Increased Contrast ones
+(see Color).
 
-## Màu thương hiệu ở đâu
+## Where brand color goes
 
-| Có | Không |
+| Yes | No |
 |---|---|
-| `Onboarding`: màn chào nền `brand-glow`, tiêu đề `brand-large-title` | Nút, công tắc, `SegmentedControl`, liên kết |
-| `PairingCard`: nền `brand-glow` quanh khung mã QR trắng | Chấm trạng thái, huy hiệu, chữ lỗi |
-| Trạng thái trống: minh họa lửa hiệu | `MenuBarMenu`, `CallPanel`, thanh tab, `Notification` |
-| Biểu tượng app, chữ HandLive (`wordmark`) | Cài đặt, danh sách tin nhắn |
+| `Onboarding`: the welcome screen with a `brand-glow` background and a `brand-large-title` title | Buttons, switches, `SegmentedControl`, links |
+| `PairingCard`: a `brand-glow` background around the white QR code frame | Status dots, badges, error text |
+| Empty states: a signal-fire illustration | `MenuBarMenu`, `CallPanel`, tab bars, `Notification` |
+| The app icon, the HandLive wordmark (`wordmark`) | Settings, the message list |
 
-- HIG: muốn thể hiện thương hiệu bằng màu thì đưa màu vào lớp nội dung, nơi nó cuộn bên dưới control
-  kính và được kính "bắt" màu; không tô màu thương hiệu lên control.
-- Đỏ son không dùng cho nút hay trạng thái, để không lẫn với màu hủy, xóa, lỗi (systemRed).
-- Mỗi màn tối đa một khoảnh khắc thương hiệu.
+- HIG: to express the brand with color, put the color in the content layer, where it scrolls under the
+  glass controls and the glass "picks up" the color; don't tint controls with the brand color.
+- Vermilion isn't used for buttons or status, so it can't be mistaken for the cancel, delete, and
+  error color (systemRed).
+- At most one brand moment per screen.
 
-## Màu nhấn trên control
+## Accent color on controls
 
-Theo HIG, màu nhấn dùng tiết chế trên control:
+Per the HIG, the accent color is used sparingly on controls:
 
-- Nút chính: một nút tô `accent-fill` mỗi màn, tối đa hai.
-- Chỉ báo trạng thái: dấu chưa đọc `unread`, biểu tượng tab đang chọn, bong bóng tin mình gửi
-  `bubble-outgoing`, liên kết.
-- Trên kính: tô nền của một hành động chính, không tô chữ hay symbol.
-- Công tắc iOS giữ xanh lá mặc định của hệ thống.
-- Mac: người dùng chọn màu nhấn khác Nhiều màu thì control theo màu đó; nhận diện thương hiệu không
-  phụ thuộc màu nhấn.
+- Primary button: one button tinted `accent-fill` per screen, two at most.
+- Status indicators: the `unread` indicator, the selected tab icon, the `bubble-outgoing` bubbles of
+  messages you send, links.
+- On glass: tint the background of one primary action, never text or symbols.
+- iOS switches keep the system's default green.
+- Mac: when the user chooses an accent color other than Multicolor, controls follow that color; the
+  brand identity doesn't depend on the accent color.
 
-## Chữ thương hiệu
+## Brand type
 
-- Be Vietnam Pro (OFL), thiết kế cho tiếng Việt, dấu rõ ở cỡ lớn; đóng gói trong app trên cả Apple
-  và Android.
-- Chỉ cho `brand-large-title`, `brand-title`, `wordmark`; phóng theo Dynamic Type và hỗ trợ Chữ đậm
-  (xem Kiểu chữ). Chữ thân, nút và nhãn control dùng font hệ thống.
+- Be Vietnam Pro (OFL), designed for Vietnamese, with clear diacritics at large sizes; bundled with the
+  app on both Apple platforms and Android.
+- Only for `brand-large-title`, `brand-title`, `wordmark`; scales with Dynamic Type and supports Bold
+  Text (see Typography). Body text, buttons, and control labels use the system font.
 
-## Logo và chữ HandLive
+## Logo and the HandLive wordmark
 
-- Chưa có logo. Cho tới khi có, dùng chữ "HandLive" kiểu `wordmark` (Be Vietnam Pro Bold 20/24), màu
-  `brand-fire` hoặc `label`.
-- Wordmark chỉ ở màn chào và cửa sổ Giới thiệu; không rải logo khắp app, không đặt trên thanh điều
-  hướng.
-- Không dùng SF Symbols, font San Francisco hay hình dễ lẫn với symbol trong logo và biểu tượng app:
-  giấy phép của Apple không cho phép.
+- There's no logo yet. Until there is, use the word "HandLive" in the `wordmark` style (Be Vietnam Pro
+  Bold 20/24), in `brand-fire` or `label`.
+- The wordmark appears only on the welcome screen and in the About window; don't scatter logos across
+  the app, and don't put one in navigation bars.
+- Don't use SF Symbols, the San Francisco font, or shapes easily mistaken for symbols in the logo or
+  the app icon: Apple's license doesn't allow it.
 
-## Màn khởi động
+## Launch screen
 
-- Không làm thương hiệu trên launch screen. iOS: launch screen giống màn đầu tiên của app, không
-  chữ, không logo. macOS không có launch screen.
-- Android 12+: màn khởi động của hệ thống (biểu tượng app trên nền), không thêm splash riêng.
-- Khoảnh khắc thương hiệu đặt ở `Onboarding`: màn chào nền `brand-glow`, tiêu đề
-  `brand-large-title`.
+- No branding on the launch screen. iOS: the launch screen looks like the app's first screen, with no
+  text and no logo. macOS has no launch screen.
+- Android 12+: the system's launch screen (the app icon on a background); don't add a custom splash
+  screen.
+- The brand moment belongs in `Onboarding`: the welcome screen with a `brand-glow` background and a
+  `brand-large-title` title.
 
-## Nhãn hiệu của Apple
+## Apple trademarks
 
-- Tên app là "HandLive"; không ghép nhãn hiệu Apple vào tên app hay biểu tượng app. Mô tả trên store
-  dùng "cho Mac", "cho iPhone và iPad". Tên nội bộ "HandLive for Mac", "HandLive for iOS/iPadOS"
-  trong tài liệu chi tiết không dùng làm tên hiển thị.
-- Viết đúng: iPhone, iPad, Mac, macOS, iOS, iPadOS, Liquid Glass; không "IPhone", "MacOS",
+- The app's name is "HandLive"; don't combine Apple trademarks with the app name or the app icon. Store
+  descriptions use "for Mac", "for iPhone and iPad". The internal names "HandLive for Mac" and
+  "HandLive for iOS/iPadOS" in the detailed design aren't used as display names.
+- Spell them correctly: iPhone, iPad, Mac, macOS, iOS, iPadOS, Liquid Glass; not "IPhone", "MacOS",
   "Macbook".
-- Không vẽ phần cứng Apple trong minh họa; cần hình thiết bị thì dùng SF Symbol sản phẩm, chỉ trên
-  nền tảng Apple.
+- Don't draw Apple hardware in illustrations; when you need a picture of a device, use the SF Symbols
+  product symbols, and only on Apple platforms.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Màu thương hiệu ở màn chào, màn ghép nối | Nút chính màu `brand-fire` |
-| Chữ HandLive bằng `wordmark` | Logo ghép từ SF Symbol |
-| Màn chào trong `Onboarding` | Logo trên launch screen |
-| Đỏ than thay cho đen | Nền đen hay xanh dương tự vẽ |
+| Brand color on the welcome and pairing screens | Primary buttons in `brand-fire` |
+| The HandLive wordmark set in `wordmark` | A logo assembled from SF Symbols |
+| The welcome screen in `Onboarding` | A logo on the launch screen |
+| Ember red in place of black | Custom black or blue backgrounds |
