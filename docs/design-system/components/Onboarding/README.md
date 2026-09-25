@@ -23,7 +23,7 @@ feature is used.
 ## By platform
 
 - **macOS:** a 520×560 pt welcome window, not resizable, with a working close button (closing means
-  "later"; reopen it from the "Pair Phone…" menu item). macOS has no launch screen.
+  "later"; reopen it from the "Add Phone…" menu item). macOS has no launch screen.
 - **iOS/iPadOS:** full screen (iPad: a form sheet); the feature rows scale with Dynamic Type and scroll
   at the AX sizes.
 - **Android:** full screen, edge-to-edge; Be Vietnam Pro for the title, Inter for the content.

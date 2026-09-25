@@ -12,7 +12,7 @@ connection is lost.
 |-----------|-----|----------------------|----------------|
 | Connected over the same Wi-Fi network | "Connected via Wi-Fi" (short label "LAN") | `wifi` ↔ `wifi` | `status-connected` |
 | Connected over the internet | "Connected over the internet" | `globe` ↔ `public` | `status-connected` |
-| Connected over USB (camera) | "Using USB" | `cable.connector` ↔ `usb` | `status-connected` |
+| Connected over USB (camera) | "Connected via USB" | `cable.connector` ↔ `usb` | `status-connected` |
 | Connecting | "Connecting…" | A pulsing dot | `status-connecting` |
 | Phone offline | "Phone offline · last seen 2:05 PM" | `antenna.radiowaves.left.and.right.slash` ↔ `mobile_off` | `status-offline` |
 | This device has lost its network | "Disconnected" | `wifi.slash` ↔ `wifi_off` | `status-offline` |

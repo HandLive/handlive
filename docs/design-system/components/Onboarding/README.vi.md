@@ -22,7 +22,7 @@ menu" → `PairingCard` → xong. Mọi quyền khác hỏi khi dùng tính năn
 ## Theo nền tảng
 
 - **macOS:** cửa sổ chào 520×560 pt, không thay đổi cỡ, nút đóng hoạt động (đóng = để sau; mở lại từ
-  menu "Ghép điện thoại…"). macOS không có launch screen.
+  menu "Thêm điện thoại…"). macOS không có launch screen.
 - **iOS/iPadOS:** toàn màn hình (iPad: form sheet); dòng tính năng co giãn theo Dynamic Type, cuộn
   được ở cỡ AX.
 - **Android:** toàn màn hình, edge-to-edge; Be Vietnam Pro cho tiêu đề, Inter cho nội dung.

@@ -36,7 +36,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 
 | Kênh (id) | Mức | Thông báo | Hành động |
 |---|---|---|---|
-| `hl_service` "Dịch vụ kết nối" | `IMPORTANCE_LOW`, thường trực, không huy hiệu | "HandLive đang chờ kết nối" · "Đã kết nối với MacBook của Lan" · "Đã kết nối với 2 thiết bị" | "Gửi bảng nhớ tạm" |
+| `hl_service` "Dịch vụ kết nối" | `IMPORTANCE_LOW`, thường trực, không huy hiệu | "Đang chờ kết nối" · "Đã kết nối với MacBook của Lan" · "Đã kết nối với 2 thiết bị" | "Gửi bảng nhớ tạm" |
 | `camera_request` | `IMPORTANCE_HIGH` (heads-up), tự hủy sau 60 s | "MacBook của Lan muốn dùng camera và micro" | "Bật", "Từ chối" |
 | `camera_live` | `IMPORTANCE_LOW`, thường trực | "Đang dùng camera cho MacBook của Lan" | "Đổi camera", "Tắt micro" hoặc "Bật micro", "Dừng" (tối đa 3) |
 | `camera_alert` | `IMPORTANCE_DEFAULT` | Quá nóng, pin yếu — cùng câu như Mac | — |

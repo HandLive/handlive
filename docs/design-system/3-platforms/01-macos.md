@@ -49,7 +49,7 @@ Don't put important information or buttons at the bottom of a window.
 
 | Menu | HandLive's items (besides the standard items the system creates and localizes) |
 |---|---|
-| HandLive | "Settings…" ⌘, · "Pair Phone…" · "Quit HandLive" ⌘Q |
+| HandLive | "Settings…" ⌘, · "Add Phone…" · "Quit HandLive" ⌘Q |
 | File | "New Message" ⌘N · "Close" ⌘W |
 | Edit | Standard items (Undo, Cut, Copy, Paste…) · "Send Clipboard to Phone" · Find ⌘F (puts the cursor in the search field at the top of the sidebar) |
 | View | Show or hide the sidebar (the label follows the state) · Enter Full Screen |
@@ -91,7 +91,7 @@ after the user clicks the panel.
 - Each window or sheet has one prominent button at the right end of the button row
   (`.borderedProminent`, 26+ `.glassProminent`) with `.keyboardShortcut(.defaultAction)`; other
   buttons are regular push buttons; "Cancel" on the left with `.cancelAction`.
-- Buttons that open a window, a sheet, or an alert have "…": "Pair Phone…", "Details…", "Unpair…",
+- Buttons that open a window, a sheet, or an alert have "…": "Add Phone…", "Details…", "Unpair…",
   "Decline with Message…".
 - Switches and checkboxes go only in the window body, not in the toolbar; menus use checkmarks.
 - Icon-only buttons have a `help(_:)` tooltip that starts with a verb and is 60–75 characters or

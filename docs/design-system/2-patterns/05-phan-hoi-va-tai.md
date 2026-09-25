@@ -74,7 +74,7 @@ blaming the user.
   a reason: the Paste button is disabled with "Not connected to the phone" (CLIP-04 field 4).
 - `CallPanel` losing its session: "Disconnected from the phone" (CALL-03 E6).
 - "Needs to be paired again" (the pairing was revoked) is `status-error` because the user has to do something:
-  it comes with "Pair Phone…".
+  it comes with "Add Phone…".
 
 ## Loading and progress
 
@@ -94,7 +94,7 @@ blaming the user.
 
 | Where | Text | Next step |
 |---|---|---|
-| Mac, iPhone not paired | "Not paired" | "Pair Phone…" |
+| Mac, iPhone not paired | "Not paired" | "Add Phone…" |
 | Android with no devices | "No Devices Yet" | "Add Device" |
 | No messages (SMS-03 E1) | "No Messages Yet" with the sync status | Wait for the sync, or "New Message" |
 | Feature off or permission missing on the phone | The reason, as in Settings | "View Instructions" |

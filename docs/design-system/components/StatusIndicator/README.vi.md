@@ -11,7 +11,7 @@ trong ngữ cảnh — HIG khuyên dùng chỉ báo thay cho alert khi mất k�
 |-----------|-----|----------------------|----------------|
 | Kết nối qua cùng mạng Wi-Fi | "Đã kết nối qua Wi-Fi" (nhãn ngắn "LAN") | `wifi` ↔ `wifi` | `status-connected` |
 | Kết nối qua Internet | "Đã kết nối qua Internet" | `globe` ↔ `public` | `status-connected` |
-| Kết nối qua USB (camera) | "Đang dùng USB" | `cable.connector` ↔ `usb` | `status-connected` |
+| Kết nối qua USB (camera) | "Đã kết nối qua USB" | `cable.connector` ↔ `usb` | `status-connected` |
 | Đang kết nối | "Đang kết nối…" | chấm nhấp nháy | `status-connecting` |
 | Điện thoại ngoại tuyến | "Điện thoại ngoại tuyến · lần cuối 14:05" | `antenna.radiowaves.left.and.right.slash` ↔ `mobile_off` | `status-offline` |
 | Máy này mất mạng | "Mất kết nối" | `wifi.slash` ↔ `wifi_off` | `status-offline` |

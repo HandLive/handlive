@@ -92,7 +92,7 @@ cho người dùng.
 
 | Chỗ | Chữ | Bước tiếp |
 |---|---|---|
-| Mac, iPhone chưa ghép nối | "Chưa ghép nối" | "Ghép điện thoại…" |
+| Mac, iPhone chưa ghép nối | "Chưa ghép nối" | "Thêm điện thoại…" |
 | Android chưa có thiết bị | "Chưa có thiết bị nào" | "Thêm thiết bị" |
 | Tin nhắn trống (SMS-03 E1) | "Chưa có tin nhắn" kèm trạng thái đồng bộ | Chờ đồng bộ, hoặc "Tin nhắn mới" |
 | Tính năng tắt hoặc thiếu quyền trên điện thoại | Lý do như trong Cài đặt | "Xem hướng dẫn" |

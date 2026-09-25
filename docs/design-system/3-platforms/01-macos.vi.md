@@ -49,7 +49,7 @@ nút quan trọng ở đáy cửa sổ.
 
 | Menu | Mục của HandLive (ngoài mục chuẩn do hệ thống tạo và dịch) |
 |---|---|
-| HandLive | "Cài đặt…" ⌘, · "Ghép điện thoại…" · "Thoát HandLive" ⌘Q |
+| HandLive | "Cài đặt…" ⌘, · "Thêm điện thoại…" · "Thoát HandLive" ⌘Q |
 | Tệp | "Tin nhắn mới" ⌘N · "Đóng" ⌘W |
 | Sửa | Mục chuẩn (Hoàn tác, Cắt, Sao chép, Dán…) · "Gửi bảng nhớ tạm sang điện thoại" · Tìm ⌘F (đưa con trỏ vào ô tìm kiếm đầu thanh bên) |
 | Xem | Hiện hoặc ẩn thanh bên (nhãn theo trạng thái) · Vào toàn màn hình |
@@ -91,7 +91,7 @@ người dùng bấm vào panel.
 - Mỗi cửa sổ hoặc sheet một nút nổi bật ở cạnh phải hàng nút (`.borderedProminent`, 26+
   `.glassProminent`) với `.keyboardShortcut(.defaultAction)`; nút khác là push button thường; "Hủy"
   bên trái với `.cancelAction`.
-- Nút mở cửa sổ, sheet hoặc alert có "…": "Ghép điện thoại…", "Chi tiết…", "Hủy ghép nối…", "Từ chối
+- Nút mở cửa sổ, sheet hoặc alert có "…": "Thêm điện thoại…", "Chi tiết…", "Hủy ghép nối…", "Từ chối
   kèm tin nhắn…".
 - Switch và checkbox chỉ trong thân cửa sổ, không trên toolbar; trong menu dùng dấu kiểm.
 - Nút chỉ có biểu tượng có tooltip `help(_:)`, bắt đầu bằng động từ, 60–75 ký tự trở xuống.

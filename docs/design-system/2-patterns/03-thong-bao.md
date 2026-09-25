@@ -36,7 +36,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 
 | Channel (id) | Level | Notification | Actions |
 |---|---|---|---|
-| `hl_service` "Connection service" | `IMPORTANCE_LOW`, ongoing, no badge | "HandLive is waiting for a connection" · "Connected to Lan's MacBook" · "Connected to 2 devices" | "Send Clipboard" |
+| `hl_service` "Connection service" | `IMPORTANCE_LOW`, ongoing, no badge | "Waiting for a connection" · "Connected to Lan's MacBook" · "Connected to 2 devices" | "Send Clipboard" |
 | `camera_request` | `IMPORTANCE_HIGH` (heads-up), cancels itself after 60 s | "Lan's MacBook wants to use the camera and microphone" | "Turn On", "Decline" |
 | `camera_live` | `IMPORTANCE_LOW`, ongoing | "Using the camera for Lan's MacBook" | "Switch Camera", "Turn Off Microphone" or "Turn On Microphone", "Stop" (3 at most) |
 | `camera_alert` | `IMPORTANCE_DEFAULT` | Overheating, low battery — the same wording as on the Mac | — |

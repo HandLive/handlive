@@ -21,7 +21,7 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting
   sau lần ghép đầu. Chi tiết ở mục Xin quyền.
 - Màn giải thích quyền không có "Bỏ qua"; người dùng từ chối trong hộp thoại của hệ thống. "Bỏ qua"
   chỉ có ở bước không mở hộp thoại hệ thống, ví dụ hướng dẫn tự khởi chạy theo hãng.
-- Đóng giữa chừng vẫn vào được app: trạng thái trống mời "Ghép điện thoại…" (Android: "Thêm thiết
+- Đóng giữa chừng vẫn vào được app: trạng thái trống mời "Thêm điện thoại…" (Android: "Thêm thiết
   bị"). Bước đã đạt thì tự bỏ qua; lần mở sau chạy tiếp từ bước còn thiếu.
 - Launch screen không mang thương hiệu. iOS: nền `system-background` trơn, không chữ, không logo.
   macOS không có launch screen. Android 12+: giữ splash của hệ thống (biểu tượng app trên

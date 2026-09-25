@@ -23,7 +23,7 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting
   first pairing. Details in Requesting permission.
 - Permission primers have no "Skip"; people decline in the system dialog. "Skip" appears only on steps
   that don't open a system dialog, for example the manufacturer-specific autostart instructions.
-- Closing midway still lets people into the app: the empty state invites them to "Pair Phone…"
+- Closing midway still lets people into the app: the empty state invites them to "Add Phone…"
   (Android: "Add Device"). Steps already completed are skipped automatically; the next launch picks up
   from the first missing step.
 - The launch screen carries no branding. iOS: a plain `system-background`, no text, no logo. macOS has
