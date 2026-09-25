@@ -96,7 +96,7 @@ blaming the user.
 |---|---|---|
 | Mac, iPhone not paired | "Not paired" | "Pair Phone…" |
 | Android with no devices | "No Devices Yet" | "Add Device" |
-| No messages (SMS-03 E1) | "No Messages" with the sync status | Wait for the sync, or "New Message" |
+| No messages (SMS-03 E1) | "No Messages Yet" with the sync status | Wait for the sync, or "New Message" |
 | Feature off or permission missing on the phone | The reason, as in Settings | "View Instructions" |
 | The clipboard on iPhone | "Nothing Received Yet" | A sentence explaining how to copy on the phone |
 
