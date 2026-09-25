@@ -131,3 +131,36 @@ Status: DONE_WITH_CONCERNS
 Summary: feature:clipboard implements CLIP-01 (Accessibility detection, ClipboardReadActivity, notification button, tile, Share, disclosure choices), CLIP-02 writes and forwarding, CLIP-03 chunked transfers and CLIP-05 safe auto-clear with QC1–QC8 and HLBENCH hooks; 97 module tests (every E covered or listed for devices) and ./gradlew check green.
 Concerns/Blockers: nothing ran on a real phone yet — copy detection, focus behaviour and latency targets are unverified until devices and the Mac client (M1.4) are available.
 ```
+
+## Follow-up (controller update: catalog keys decided from this report)
+
+Repository handlive-android, branch `feat/phase-01-clipboard` (after the S1.3 commits up to 0dc94dd), pushed; CI `ci-android` run 36180009175 green on 4f40e22 (`gradlew check` 4 min, commit author check).
+
+- **`error.clip_write_failed_on_device`** (CLIP-01 field 11): a manual send the peer refuses with an error other than `FEATURE_DISABLED`, `CLIP_TOO_LARGE` (and `CLIP_CHECKSUM_MISMATCH`, which keeps its resend and "Couldn't send the image") now shows "Couldn't update the clipboard on <device>". The automatic path stays silent; a timeout (E8) is not a refusal and stays silent too.
+- **`clipboard.skipped_just_received`** (CLIP-01 field 11, QC4/E9): the loop guard now remembers which device the written clip came from; a manual send (notification button, tile or Share) of that same text or image within 5 s is skipped with "Not sent — this just came from <device>." instead of silence. The automatic path stays silent.
+- **Verified against the updated specs, no change needed:** the `clipboard` channel is `IMPORTANCE_LOW` with the catalog name and description (a new test checks the descriptions of all three channels); the too-large toast shows on both the automatic and the manual path (test now covers both).
+- The `ClipMessage` results that carry a device name are data classes now (clearer assertions).
+
+| Hash | Subject |
+|------|---------|
+| f24e63a | feat(android): explain refused and skipped manual clipboard sends |
+| 82221f0 | test(android): cover refused and skipped manual sends and too-large text on both paths |
+| 561d531 | docs: cite the specs for the low importance of the notification channels |
+| 4f40e22 | test(android): check the channel descriptions and the Security Code form |
+
+```text
+$ ./gradlew check
+BUILD SUCCESSFUL
+feature:clipboard tests=101, failures=0 — new: aRefusedManualSendSaysTheClipboardWasNotUpdated (INTERNAL on a manual
+  send → "Couldn't update…"; CLIP_UNSUPPORTED_MIME on an automatic send → silent),
+  theClipJustReceivedIsNotSentBackAndAManualSendSaysWhy (auto silent; manual and Share → the toast),
+  anImageJustReceivedIsNotSentBackEither, textOverOneMebibyteIsTooLargeOnBothPaths,
+  LoopGuardTest (origin device of the written clip), ClipNotifierTest (both toasts in English, Vietnamese)
+feature:connection ServiceNotificationTest tests=5 (descriptions of hl_service, clipboard, permission)
+```
+
+```text
+Status: DONE_WITH_CONCERNS
+Summary: The two decided clipboard texts are adopted (peer refusal of a manual send, manual send of the clip just received) and the channel and too-large clarifications are verified by tests; ./gradlew check and CI green.
+Concerns/Blockers: unchanged — nothing ran on a real phone yet; copy detection, focus behaviour and latency targets wait for devices and the Mac client (M1.4).
+```

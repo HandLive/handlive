@@ -86,3 +86,45 @@ Status: DONE_WITH_CONCERNS
 Summary: SET-01 part A, the Devices tab with details and unpairing, the PAIR-01 screens, Settings (clipboard group, Internet Connection, Permissions & Background, Language), the Accessibility ConsentSheet and the Feedback HUD are built from catalog strings in English and Vietnamese, with tests for 200 % text and TalkBack semantics; ./gradlew check green.
 Concerns/Blockers: 17 proposed texts await the specs; no real-device run yet (TalkBack, OEM pages, system setting names); the privacy page is undefined.
 ```
+
+## Follow-up (controller update: catalog keys and privacy page decided from this report)
+
+Repository handlive-android, branch `feat/phase-01-clipboard` (after the S1.3 commits up to 0dc94dd), pushed; CI `ci-android` run 36180009175 green on 4f40e22 (`gradlew check` 4 min, commit author check).
+
+- **`error.pairing_failed`** (PAIR-01 field 10): a lost connection (`DISCONNECTED`) or an internal error now shows "Pairing didn't finish. Try again." (with "Try Again"); "The QR code has changed…" stays for the expired window (E2) only.
+- **Privacy link** (SET-01 field 1): the welcome screen shows "HandLive and Your Privacy" as a plain button under the text; it opens https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md when the app's display language (the activity configuration, so the per-app language counts) is Vietnamese, https://github.com/HandLive/handlive/blob/main/docs/privacy.md otherwise; without a browser nothing happens.
+- **Spec clarifications verified against the code, no change needed:**
+
+| Clarification | Where it is |
+|---------------|-------------|
+| Clipboard channel `IMPORTANCE_LOW`, catalog descriptions for all three channels | `NotificationChannels` (comment now cites SET-01 fields 5, 17 and CLIP-01 field 8); new test checks the three descriptions |
+| Too-large toast on both paths | `LocalClipIntake.send`; test covers the automatic and manual path (A1.3 follow-up) |
+| Lowercase Security Code shown after pairing | `PairStore.safetyCode` (8 lowercase hex), shown on the pairing result and in the details as `fc64 7e0b`; new `SecurityCodeTest` |
+| IP blocking counts every `AUTH_FAILED` hello | `ConnectionAdmission` / `ControlConnectionHandler` since A1.0 (`ControlChannelLimitsTest`) |
+| Keyset names `hl_secret_keyset` in `handlive_keyset` | `AndroidKeystoreSecretStore` (`KEYSET_NAME`, `KEYSET_PREFS`) |
+| ZXing core in PAIR-01 field 4 | `feature/pairing/scan` (CameraX + ZXing core, no ML Kit) |
+
+| Hash | Subject |
+|------|---------|
+| c6eee69 | feat(android): show the generic pairing error for lost connections and internal failures |
+| 79fb1e8 | test(android): check the pairing error texts and fit the generic one at 200 percent |
+| 92b666e | feat(android): open the privacy page in the app's language from the welcome screen |
+| 21d6619 | test(android): check the privacy link and the page chosen for each language |
+| 4f40e22 | test(android): check the channel descriptions and the Security Code form |
+
+```text
+$ ./gradlew check
+BUILD SUCCESSFUL
+app tests=19, failures=0 — new: PairingFailureMessageTest 2 (E1–E9 texts kept; DISCONNECTED and INTERNAL →
+  error.pairing_failed), PrivacyPageTest 2 (vi, vi-VN → privacy.vi.md; en, en-US, en-XA, fr → privacy.md),
+  WelcomeScreenTest 2 (link is a button, both callbacks; Vietnamese text), SecurityCodeTest 1;
+  ScreenTextFitTest now covers 23 screens (the welcome screen with its link, "pairing lost") at 200 % in en and vi
+```
+
+The 17 proposed texts of this card are now in the specs (controller), so that concern is closed; the privacy page exists and is linked.
+
+```text
+Status: DONE_WITH_CONCERNS
+Summary: The generic pairing error and the privacy link are adopted, the six spec clarifications match the build (checked by tests where they are UI-visible); ./gradlew check and CI green.
+Concerns/Blockers: no real-device run yet (TalkBack, OEM pages, system setting names, pairing with the Mac).
+```
