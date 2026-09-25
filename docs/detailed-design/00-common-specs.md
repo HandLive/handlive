@@ -204,7 +204,7 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 
 | Khóa | Thuật toán | Nơi lưu | Vòng đời |
 |------|-----------|---------|----------|
-| `ik_sig` | Ed25519 | Android: Tink keyset bọc bởi khóa AES-256 trong Android Keystore (StrongBox nếu có). Mac/iOS: Keychain | Tạo lần chạy đầu; mất khi gỡ ứng dụng |
+| `ik_sig` | Ed25519 | Android: byte khóa riêng mã hóa bằng keyset Tink AEAD (AES256-GCM); keyset bọc bởi khóa AES-256 `hl_master` trong Android Keystore (StrongBox nếu có) — Tink không có kiểu keyset cho X25519 thô nên `ik_sig`, `ik_dh`, `PRK` cùng một cách lưu. Mac/iOS: Keychain | Tạo lần chạy đầu; mất khi gỡ ứng dụng |
 | `ik_dh` | X25519 | Như `ik_sig` | Như `ik_sig` |
 | Khóa TLS | ECDSA P-256 + chứng chỉ tự ký | Android: PKCS#12, mật khẩu bọc bởi Keystore | Lúc cài |
 | `pairing_secret` | 32 byte ngẫu nhiên | Chỉ trong bộ nhớ Mac/iOS và trong QR | 120 s |

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Biểu tượng giữ chỗ của Phase 0; thay bằng biểu tượng theo design system khi có. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FF0A84FF"
+        android:pathData="M24,2A22,22 0,1 1,23.99 2Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15,13h4v9h10v-9h4v22h-4v-9h-10v9h-4z" />
+</vector>

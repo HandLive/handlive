@@ -1,0 +1,63 @@
+{
+  "description": "Envelope do Android (Kotlin, Tink XChaCha20-Poly1305) mã hóa bằng khóa cố định của envelope.json; cùng định dạng envelope.json. Apple giải mã và so plaintext để chứng minh liên thông Kotlin → Swift.",
+  "source": "android/core/crypto EnvelopeRoundtripTest (HL_WRITE_ROUNDTRIP=1)",
+  "vectors": [
+    {
+      "name": "Kotlin clipboard push Android→Mac",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "clipboard",
+      "id": "01a0d648-588a-718c-8ec3-4ab566297d5b",
+      "ts": 1790301460597,
+      "aad": "1|clipboard|01a0d648-588a-718c-8ec3-4ab566297d5b|1790301460597",
+      "aad_hex": "317c636c6970626f6172647c30316130643634382d353838612d373138632d386563332d3461623536363239376435627c31373930333031343630353937",
+      "plaintext": "{\"op\":\"push\",\"data\":{\"clip_id\":\"01a0d648-5876-79ca-8194-44f6c09a7ba3\",\"kind\":\"text\",\"mime\":\"text/plain\",\"text\":\"Xin chào từ Android — mã đơn: HL-0042 ✓\",\"sensitive\":false,\"origin_ts\":1790301460594,\"source\":\"auto\",\"origin_device_id\":\"39f713d0-a644-853f-8452-9421b9f51b9b\"}}",
+      "nonce": "860c3567e517c26681b5eb4f3adb38668425b859691265fc",
+      "ciphertext": "55366616a7d8abba14f957d65b6c457fb2a7be506958d6ec2860c040ae3d7015185add0fcadaf6fbe2baf3723e1558fc99a342c071d4522d435c54a58fc9be604f207ae5e8b24af9dc004cffd8e6a15f46b4f699a49f5252f8c8e9ba1fc20cc6c3575d2c24ac454c78aac5c51eac8a0807277afc587fc3de31ad2437ab31dd8214f0e37753ec37f554d748866dadcd8b9db6f5a3284d652629b186039dc24ef1a37b5dd03a631df40a282b35040e3db32f56a5fdedb3da31df630d2b26029f530b96323ba08757ce10a8c7870d53c7175aa625aaec2b7ed675d4437438c1ddfe7cb1bc543007883fd2a649b1c11bb101df9bc85c0fbc48dea5aeb4b665ff761e00959430950a42ab322a20c2745b81cab0f7b71165e2dcb14dd6",
+      "tag": "8fa2dd22afd89fd08af6cc66354bf966",
+      "payload_b64": "hgw1Z+UXwmaBtetPOts4ZoQluFlpEmX8VTZmFqfYq7oU+VfWW2xFf7KnvlBpWNbsKGDAQK49cBUYWt0Pytr2++K683I+FVj8maNCwHHUUi1DXFSlj8m+YE8geuXoskr53ABM/9jmoV9GtPaZpJ9SUvjI6bofwgzGw1ddLCSsRUx4qsXFHqyKCAcnevxYf8PeMa0kN6sx3YIU8ON3U+w39VTXSIZtrc2Lnbb1oyhNZSYpsYYDncJO8aN7XdA6Yx30CigrNQQOPbMvVqX97bPaMd9jDSsmAp9TC5YyO6CHV84QqMeHDVPHF1qmJarsK37WddRDdDjB3f58sbxUMAeIP9KmSbHBG7EB35vIXA+8SN6lrrS2Zf92HgCVlDCVCkKrMiogwnRbgcqw97cRZeLcsU3Wj6LdIq/Yn9CK9sxmNUv5Zg==",
+      "envelope": "{\"v\":1,\"type\":\"clipboard\",\"id\":\"01a0d648-588a-718c-8ec3-4ab566297d5b\",\"ts\":1790301460597,\"payload\":\"hgw1Z+UXwmaBtetPOts4ZoQluFlpEmX8VTZmFqfYq7oU+VfWW2xFf7KnvlBpWNbsKGDAQK49cBUYWt0Pytr2++K683I+FVj8maNCwHHUUi1DXFSlj8m+YE8geuXoskr53ABM/9jmoV9GtPaZpJ9SUvjI6bofwgzGw1ddLCSsRUx4qsXFHqyKCAcnevxYf8PeMa0kN6sx3YIU8ON3U+w39VTXSIZtrc2Lnbb1oyhNZSYpsYYDncJO8aN7XdA6Yx30CigrNQQOPbMvVqX97bPaMd9jDSsmAp9TC5YyO6CHV84QqMeHDVPHF1qmJarsK37WddRDdDjB3f58sbxUMAeIP9KmSbHBG7EB35vIXA+8SN6lrrS2Zf92HgCVlDCVCkKrMiogwnRbgcqw97cRZeLcsU3Wj6LdIq/Yn9CK9sxmNUv5Zg==\"}"
+    },
+    {
+      "name": "Kotlin ack ok Android→Mac",
+      "encrypted": true,
+      "direction": "s2c",
+      "key": "72758561f3d8ddb6d7b335947788da931ae541c128ffe3084788d80c1eac07c6",
+      "key_source": "session-handshake cặp 1 k_s2c",
+      "v": 1,
+      "type": "ack",
+      "id": "01a0d648-5893-7404-9d6d-dc70043949fe",
+      "ts": 1790301460598,
+      "aad": "1|ack|01a0d648-5893-7404-9d6d-dc70043949fe|1790301460598",
+      "aad_hex": "317c61636b7c30316130643634382d353839332d373430342d396436642d6463373030343339343966657c31373930333031343630353938",
+      "plaintext": "{\"re\":\"01a0d648-5878-7deb-82ea-dcd745b9b7c9\",\"ok\":true,\"data\":{\"seq\":7}}",
+      "nonce": "48a2936606b76716e2684ca040114741b3676b2db8c8b08b",
+      "ciphertext": "ab67d6ffed312e0f1d3d4011a90d28f16186e278f6161a33e8c4c7693c3f677641cc6d0622ec470ed12e88a9c855ff448ed41ba8948bed9a4a4dc95dd1014024bd37036f2ec95e00",
+      "tag": "18706d7a92c5bf328a6ec47c80665ead",
+      "payload_b64": "SKKTZga3ZxbiaEygQBFHQbNnay24yLCLq2fW/+0xLg8dPUARqQ0o8WGG4nj2Fhoz6MTHaTw/Z3ZBzG0GIuxHDtEuiKnIVf9EjtQbqJSL7ZpKTcld0QFAJL03A28uyV4AGHBtepLFvzKKbsR8gGZerQ==",
+      "envelope": "{\"v\":1,\"type\":\"ack\",\"id\":\"01a0d648-5893-7404-9d6d-dc70043949fe\",\"ts\":1790301460598,\"payload\":\"SKKTZga3ZxbiaEygQBFHQbNnay24yLCLq2fW/+0xLg8dPUARqQ0o8WGG4nj2Fhoz6MTHaTw/Z3ZBzG0GIuxHDtEuiKnIVf9EjtQbqJSL7ZpKTcld0QFAJL03A28uyV4AGHBtepLFvzKKbsR8gGZerQ==\"}"
+    },
+    {
+      "name": "Kotlin ping Mac→Android",
+      "encrypted": true,
+      "direction": "c2s",
+      "key": "d1b0b3ee61101a6e1033556b7a40db3e24efca9814ca19b8550c1cda97afd2e1",
+      "key_source": "session-handshake cặp 1 k_c2s",
+      "v": 1,
+      "type": "ping",
+      "id": "01a0d648-5894-73a4-9be1-136ae00a8fc3",
+      "ts": 1790301460599,
+      "aad": "1|ping|01a0d648-5894-73a4-9be1-136ae00a8fc3|1790301460599",
+      "aad_hex": "317c70696e677c30316130643634382d353839342d373361342d396265312d3133366165303061386663337c31373930333031343630353939",
+      "plaintext": "{\"op\":\"ping\",\"data\":{\"seq\":7}}",
+      "nonce": "586016cafb691f1c36fae1100f9d0f3ff9edf04d5b238649",
+      "ciphertext": "74c74c6c05a858d73206a01626324736d9a19dbae7767cf09104a387c921",
+      "tag": "3a50889ce8a6945222f88ad6dec2f2cc",
+      "payload_b64": "WGAWyvtpHxw2+uEQD50PP/nt8E1bI4ZJdMdMbAWoWNcyBqAWJjJHNtmhnbrndnzwkQSjh8khOlCInOimlFIi+IrW3sLyzA==",
+      "envelope": "{\"v\":1,\"type\":\"ping\",\"id\":\"01a0d648-5894-73a4-9be1-136ae00a8fc3\",\"ts\":1790301460599,\"payload\":\"WGAWyvtpHxw2+uEQD50PP/nt8E1bI4ZJdMdMbAWoWNcyBqAWJjJHNtmhnbrndnzwkQSjh8khOlCInOimlFIi+IrW3sLyzA==\"}"
+    }
+  ]
+}
