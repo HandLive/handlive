@@ -77,8 +77,8 @@ Each leaf function has exactly five subsections, numbered `<group>.<function>.<1
 1. **General information** — a two-column table with exactly these rows: Name, Description, Actors,
    Preconditions, Postconditions, Exceptions, Special requirements. Exceptions are numbered `E1`,
    `E2` … so the business flow can refer to them.
-2. **Screens** — `N/A` when there is no approved wireframe yet. At this version **no wireframe has
-   been approved**, so every function says `N/A`.
+2. **Screens** — `N/A` when there is no approved wireframe yet. At this version
+   **no wireframe has been approved**, so every function says `N/A`.
 3. **Component details** — a table: `#`, Field, Data type, Input/Output, Initial value,
    Description. Only fields the user enters or the system returns/displays; data types and
    Input/Output values follow 0.3.
