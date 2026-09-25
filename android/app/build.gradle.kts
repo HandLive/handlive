@@ -37,6 +37,8 @@ android {
                     "META-INF/native-image/**",
                 )
         }
+        // Không cần excludes cho jniLibs: `:core:transport` đã loại QUIC, còn epoll/kqueue không kèm tệp .so
+        // (APK chỉ còn libandroidx.graphics.path.so của Compose).
     }
 
     buildFeatures {
