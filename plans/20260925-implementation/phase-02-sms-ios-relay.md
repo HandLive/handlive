@@ -20,14 +20,17 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 - Thông báo SMS mới trên Mac < 500 ms từ lúc điện thoại nhận (LAN); trả lời có xác nhận "Đã gửi" < 2
   s.
 - Relay zero-knowledge: không giải mã, không log payload; dữ liệu phiên tự xóa sau 30 ngày.
-- iPhone đang khóa: thông báo chỉ hiện nội dung chung (C3).
+- iPhone đang khóa: thông báo chỉ hiện nội dung chung (C3), gửi bằng `loc-key` để iPhone tự dịch
+  (0.12.4).
+- Chuỗi giao diện mới của Phase 2 (SMS, iOS, relay, push) vào catalog trước mã, đủ `en` và `vi`
+  (C20).
 
 ## Thẻ việc
 
 | Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
 |----|------|--------|--------------------|
 | R2.1 [relay] | REST: đăng ký thiết bị, cặp, thu hồi, `DELETE /v1/devices/me` (C16), push token; WS `/v1/relay` với lớp bọc `to`/`from`, presence Redis, chuyển tiếp giữa instance qua pub/sub (C5); rate limit; xóa dữ liệu 30 ngày | `relay/crates/relay-server` | Test tích hợp với hai client giả; `cargo clippy` sạch; không có payload trong log |
-| R2.2 [relay] | Push proxy: APNs (token .p8, `apns-collapse-id`, `interruption-level`), FCM; `push_outbox` hạn 30 s; nội dung mặc định theo CONN-04 API 4 (không tiêu đề) | `relay/crates/relay-push` | Push tới iPhone thật trong < 2 s; hết hạn đúng |
+| R2.2 [relay] | Push proxy: APNs (token .p8, `apns-collapse-id`, `interruption-level`), FCM; `push_outbox` hạn 30 s; nội dung mặc định theo CONN-04 API 4: chỉ `loc-key`, relay không gửi câu chữ | `relay/crates/relay-push` | Push tới iPhone thật trong < 2 s; hết hạn đúng |
 | A2.1 [android] | SMS: `ContentObserver` trên provider (SMS-02), đồng bộ lịch sử theo trang (SMS-01), gửi qua `SmsManager` với `SendRegistry` và trạng thái `sending → sent → delivered/failed` (SMS-04), đã đọc (SMS-05); quyền SMS theo SET-01 phần B | `android/feature/sms` | Mọi mã lỗi `SMS_*` (0.8) được trả đúng; test với hai SIM |
 | A2.2 [android] | Relay: kết nối `/v1/relay` khi không có LAN (CONN-03), đăng ký, gửi push qua relay khi client iOS không có phiên (CONN-04), FCM nhận đánh thức | `android/core/transport`, `feature/…` | Chuyển LAN ↔ relay không mất tin; `relay.enabled = false` đóng phiên relay |
 | M2.1 [macOS] | Cửa sổ Tin nhắn: `NavigationSplitView`, `ThreadRow`, `MessageBubble`, ô soạn tin với chọn SIM và số phần, thông báo liên lạc `INSendMessageIntent` với "Trả lời" và "Đánh dấu đã đọc" (SMS-02 API 4), lưu SQLCipher | `apple/macOS/HandLive` | Chuỗi trạng thái tin đúng SMS-04; thông báo hiện avatar người gửi; huy hiệu số chưa đọc trên thanh menu |
