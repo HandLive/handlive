@@ -1,5 +1,7 @@
 # tools/vectors — sinh và kiểm test vector mã hóa
 
+Chạy từ gốc kho `shared/` (handlive-shared); venv tại `tools/.venv` của kho này.
+
 Đầu ra: `shared/test-vectors/*.json` (mô tả trường trong `shared/test-vectors/README.md`).
 
 | Script | Việc | Chạy |
@@ -7,7 +9,7 @@
 | `generate_vectors.py` | Sinh lại toàn bộ file vector từ giá trị cố định; `--check` so byte-exact với file hiện có, lệch thì exit 1 | `tools/.venv/bin/python tools/vectors/generate_vectors.py [--check]` |
 | `verify_vectors.py` | Kiểm mọi vector (kể cả RFC) và mọi vector âm bằng thư viện độc lập với phía sinh; XChaCha20 kiểm hai đường (libsodium và HChaCha20 + ChaCha20-Poly1305) | `tools/.venv/bin/python tools/vectors/verify_vectors.py` — phải in `0 lỗi` |
 
-Cài: `python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/vectors/requirements.txt`.
+Cài (từ gốc `shared/`): `python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/vectors/requirements.txt -r tools/schemas/requirements.txt`.
 
 Mô-đun:
 

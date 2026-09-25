@@ -16,7 +16,7 @@ import verify_primitive_checks  # noqa: E402
 import verify_session_checks  # noqa: E402
 from verify_common import Checker  # noqa: E402
 
-VEC_DIR = Path(__file__).resolve().parents[2] / "shared" / "test-vectors"
+VEC_DIR = Path(__file__).resolve().parents[2] / "test-vectors"  # gốc kho shared/
 REQUIRED_KEYS = {"description", "source", "vectors"}
 
 

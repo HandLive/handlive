@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import re
+import os
 import sys
 from pathlib import Path
 
@@ -25,10 +26,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import doc_examples  # noqa: E402
 import sample_messages  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "shared" / "schemas"
-DOCS_DIR = ROOT / "docs" / "detailed-design"
+SHARED_ROOT = Path(__file__).resolve().parents[2]  # gốc kho shared/
+SCHEMA_DIR = SHARED_ROOT / "schemas"
+# Tài liệu thiết kế nằm ở kho hub (thư mục cha của shared/ trong workspace); ghi đè bằng HANDLIVE_DOCS_DIR.
+DOCS_DIR = Path(os.environ.get("HANDLIVE_DOCS_DIR") or SHARED_ROOT.parent / "docs" / "detailed-design")
 COMMON_SPECS = DOCS_DIR / "00-common-specs.md"
+if not COMMON_SPECS.is_file():
+    sys.exit(f"Không thấy {COMMON_SPECS}: đặt HANDLIVE_DOCS_DIR trỏ tới docs/detailed-design của kho hub")
 ID_BASE = "https://handlive.app/schemas/v1/"
 
 

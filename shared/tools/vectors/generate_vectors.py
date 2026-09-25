@@ -14,7 +14,7 @@ import build_identity_session_vectors  # noqa: E402
 import build_message_vectors  # noqa: E402
 import build_primitive_vectors  # noqa: E402
 
-OUT_DIR = Path(__file__).resolve().parents[2] / "shared" / "test-vectors"
+OUT_DIR = Path(__file__).resolve().parents[2] / "test-vectors"  # gốc kho shared/
 
 
 def render_all() -> dict[str, str]:

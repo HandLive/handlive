@@ -1,5 +1,7 @@
 # Kiểm JSON Schema
 
+Chạy từ gốc kho `shared/` (handlive-shared). Ví dụ được đọc từ `docs/detailed-design/` của kho hub — mặc định là thư mục cha của `shared/` trong workspace, ghi đè bằng `HANDLIVE_DOCS_DIR`.
+
 ```sh
 tools/.venv/bin/python -m pip install -r tools/schemas/requirements.txt   # nếu venv chưa có
 tools/.venv/bin/python tools/schemas/check_schemas.py
