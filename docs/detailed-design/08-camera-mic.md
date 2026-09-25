@@ -980,7 +980,7 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 
 ```json
 {"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"no_consumer"}}
-{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"Điện thoại quá nóng"}}
+{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"The phone is too hot"}}
 {"re":"0192f5b2-0a1b-7c2d-8e3f-4a5b6c7d8e9f","ok":true,"data":{}}
 ```
 
