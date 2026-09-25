@@ -349,8 +349,7 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 - E2E cannot be turned off. There is no unencrypted sending path.
 - No component logs content (clipboard, SMS, phone numbers, contact names).
 - SQLite on Mac/iOS is encrypted with SQLCipher (through GRDB); 32-byte key in the Keychain.
-- Ed25519 signatures are verified strictly: exactly 64 bytes and S < L (RFC 8032 §5.1.7); never use a lax verifier
-  (negative vectors in `shared/test-vectors/ed25519.json`).
+- Ed25519 signatures are verified strictly: exactly 64 bytes and S < L (RFC 8032 §5.1.7); never use a lax verifier (negative vectors in `shared/test-vectors/ed25519.json`). Signers may add randomness (CryptoKit does): signatures then differ byte for byte but stay valid, so no side compares signatures as bytes — always verify with the public key.
 - The relay only keeps statistics per `device_hash` = SHA-256(`device_id` ‖ monthly salt), for 30
   days.
 
@@ -642,6 +641,8 @@ writes messages sent through `SmsManager` into the Sent box).
 
 ### 0.9.3 Mac/iOS — SQLite `handlive.sqlite` (GRDB + SQLCipher)
 
+Phase 1 needs only `paired_device`: M-APP keeps it in a file sealed with `db_key` (XChaCha20-Poly1305, AAD `handlive/v1/paired-devices`) behind the same store API; the SQLCipher database below is used from Phase 2 (SMS tables). Data files on the Mac use the "until first unlock" protection class because the menu bar app keeps writing while the screen is locked; the content is sealed with `db_key` anyway.
+
 ```sql
 -- [Design] Pairs on the client side (the PRK lives in the Keychain, account = pair_id)
 CREATE TABLE paired_device (
@@ -927,7 +928,7 @@ stateDiagram-v2
   ConnectingRelay --> Handshaking: presence online
   Connected --> Backoff: connection lost
   Connected --> ConnectingLAN: on the relay and the LAN is found (upgrade)
-  Backoff --> Discovering: wait is over or the network changed
+  Backoff --> Discovering: wait is over, the network changed or the phone reappeared on mDNS
   Connected --> Idle: unpaired
 ```
 
@@ -935,6 +936,8 @@ Status shown to the user (PAIR-02): `Idle` /`Backoff` → "Disconnected"; `Disco
 /`Connecting*`/`Handshaking` → "Connecting…"; `WaitingPeer` → "Phone offline";
 `Connected` → "Connected via Wi-Fi" or "Connected over the internet" ("Connected via USB" while the
 camera channel uses USB); every instance fails the pin → "Needs to be paired again".
+
+From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule.
 
 ## 0.12 Localization and the UI string catalog
 
@@ -996,7 +999,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
 | Field | Rule |
 |--------|---------|
 | `key` | Lowercase `[a-z0-9_]`, 2–5 segments joined by dots; the first segment is the group: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. A key does not change when its wording is edited; a change of meaning creates a new key. Keys stay unique after `.` is turned into `_` (Android resource names) |
-| `en`, `vi` | A string; or a CLDR plural object: `en` has `one` and `other`, `vi` only has `other`. Never empty; every key has every language in `languages` |
+| `en`, `vi` | A string; or a CLDR plural object: `en` has `one` and `other`, `vi` only has `other`; a plural string takes exactly one argument, named `count`. Never empty; every key has every language in `languages` |
 | `args` | Parameters `{name}` with `type` ∈ `string`, `int`, `double`. Every translation uses exactly the same set of parameters, in any order within the sentence (the generator converts them to positional parameters). Dates, times and numbers are formatted before they are passed in (0.12.3) |
 | `comment` | Required: where the string appears and its length limit, if any — context for translators |
 | `platforms` | Subset of `android`, `macos`, `ios` |

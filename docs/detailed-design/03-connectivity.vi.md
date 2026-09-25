@@ -137,8 +137,7 @@ flowchart TB
 - **URL:** `wss://{android_host}:{port}/v1/ctl`
 - **Method:** WebSocket upgrade (HTTP/1.1 `GET` + `Upgrade: websocket`) trên TLS 1.3.
 - **Request:** header chuẩn WebSocket; không có header xác thực (xác thực nằm ở bắt tay phiên).
-  Client: `URLSessionWebSocketTask` với delegate `urlSession(_:didReceive:completionHandler:)` kiểm
-  chứng chỉ bằng ghim.
+  Client: Network.framework (`NWConnection` với `NWProtocolWebSocket`, TLS 1.3 tối thiểu), khối kiểm của TLS so chứng chỉ với ghim. Instance Bonjour được giải ra IPv4 bằng một kết nối TCP ngắn trước kết nối WSS, nên điện thoại thấy thêm một kết nối đóng trước TLS. Đường nhanh `last_host` lỗi (địa chỉ cũ, lệch ghim) thì bỏ im lặng; chỉ instance mDNS có hint khớp mới dẫn tới `Backoff` hoặc "Cần ghép nối lại".
 - **Response:** `101 Switching Protocols`. Android từ chối đường dẫn khác bằng `404`.
 - **Ví dụ:** `GET /v1/ctl HTTP/1.1` · `Host: 192.168.1.23:47800` · `Upgrade: websocket` ·
   `Sec-WebSocket-Version: 13`
@@ -353,17 +352,16 @@ flowchart TB
 | 2 | `WS ping/ping` | `/v1/ctl` qua relay | C→S | 1, 3 |
 | 3 | `WS session/rekey` | `/v1/ctl` | Hai chiều | 6 |
 | 4 | `WS session/bye` | `/v1/ctl` | Hai chiều | 7, 8 |
-| 5 | Dịch vụ hệ điều hành: `NWPathMonitor`, `NSWorkspace` sleep/wake, `scenePhase`, `ConnectivityManager.NetworkCallback`, `URLSessionWebSocketTask.sendPing` | Cục bộ | — | 1, 4, 5, 8 |
+| 5 | Dịch vụ hệ điều hành: `NWPathMonitor`, `NSWorkspace` sleep/wake, `scenePhase`, `ConnectivityManager.NetworkCallback`, ping WebSocket của Network.framework | Cục bộ | — | 1, 4, 5, 8 |
 
 #### API 1 — WS ping/pong
 
 - **URL:** kết nối hiện tại
 - **Method:** khung điều khiển WebSocket `0x9` (ping) / `0xA` (pong).
 - **Request:** payload ping 8 byte = bộ đếm uint64 BE.
-- **Response:** pong cùng payload (Ktor và `URLSessionWebSocketTask` tự trả).
+- **Response:** pong cùng payload (Ktor và Network.framework tự trả).
 - **Ví dụ:** ping `00 00 00 00 00 00 00 2A` → pong `00 00 00 00 00 00 00 2A`.
-- **Logic nghiệp vụ:** `URLSessionWebSocketTask.sendPing(pongReceiveHandler:)` với bộ hẹn 10 s;
-  handler không được gọi đúng hạn → coi như mất kết nối.
+- **Logic nghiệp vụ:** Mac/iOS gửi ping WebSocket của Network.framework (`NWProtocolWebSocket`, metadata `.ping` kèm pong handler) với bộ hẹn 10 s; pong không về đúng hạn → coi như mất kết nối. Ngay khi mạng mặc định đổi, gửi thêm một ping với hạn 2 s để phát hiện socket chết trong khoảng 2 s (mục tiêu kết nối lại < 3 s).
 
 #### API 2 — `WS ping/ping`
 

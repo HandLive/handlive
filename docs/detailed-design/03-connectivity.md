@@ -138,8 +138,7 @@ flowchart TB
 - **URL:** `wss://{android_host}:{port}/v1/ctl`
 - **Method:** WebSocket upgrade (HTTP/1.1 `GET` + `Upgrade: websocket`) over TLS 1.3.
 - **Request:** standard WebSocket headers; no authentication header (authentication happens in the
-  session handshake). Client: `URLSessionWebSocketTask` with the delegate
-  `urlSession(_:didReceive:completionHandler:)` checking the certificate against the pin.
+  session handshake). Client: Network.framework (`NWConnection` with `NWProtocolWebSocket`, TLS 1.3 minimum); the TLS verify block compares the certificate with the pin. A Bonjour instance is resolved to IPv4 with a short TCP connection before the WSS connection, so the phone sees one extra connection that closes before TLS. A failure on the `last_host` fast path (stale address, pin mismatch) is dropped silently; only hint-matching mDNS instances lead to `Backoff` or "Needs to be paired again".
 - **Response:** `101 Switching Protocols`. Android rejects any other path with `404`.
 - **Example:** `GET /v1/ctl HTTP/1.1` · `Host: 192.168.1.23:47800` · `Upgrade: websocket` ·
   `Sec-WebSocket-Version: 13`
@@ -356,17 +355,16 @@ flowchart TB
 | 2 | `WS ping/ping` | `/v1/ctl` via relay | C→S | 1, 3 |
 | 3 | `WS session/rekey` | `/v1/ctl` | Both ways | 6 |
 | 4 | `WS session/bye` | `/v1/ctl` | Both ways | 7, 8 |
-| 5 | Operating system services: `NWPathMonitor`, `NSWorkspace` sleep/wake, `scenePhase`, `ConnectivityManager.NetworkCallback`, `URLSessionWebSocketTask.sendPing` | Local | — | 1, 4, 5, 8 |
+| 5 | Operating system services: `NWPathMonitor`, `NSWorkspace` sleep/wake, `scenePhase`, `ConnectivityManager.NetworkCallback`, Network.framework WebSocket ping | Local | — | 1, 4, 5, 8 |
 
 #### API 1 — WS ping/pong
 
 - **URL:** the current connection
 - **Method:** WebSocket control frame `0x9` (ping) / `0xA` (pong).
 - **Request:** 8-byte ping payload = a uint64 BE counter.
-- **Response:** a pong with the same payload (Ktor and `URLSessionWebSocketTask` answer automatically).
+- **Response:** a pong with the same payload (Ktor and Network.framework answer automatically).
 - **Example:** ping `00 00 00 00 00 00 00 2A` → pong `00 00 00 00 00 00 00 2A`.
-- **Business logic:** `URLSessionWebSocketTask.sendPing(pongReceiveHandler:)` with a 10 s timer; if
-  the handler is not called in time → treat it as a lost connection.
+- **Business logic:** Mac/iOS send a Network.framework WebSocket ping (`NWProtocolWebSocket`, `.ping` metadata with a pong handler) with a 10 s timer; no pong in time → treat it as a lost connection. Right after the default network changes, one more ping with a 2 s deadline detects a dead socket in about 2 s (reconnect target < 3 s).
 
 #### API 2 — `WS ping/ping`
 
