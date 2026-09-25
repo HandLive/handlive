@@ -69,7 +69,8 @@ HandLive/                # kho hub "handlive"
 ├── android/             # kho "handlive-android"  (Kotlin, Gradle)
 ├── apple/               # kho "handlive-apple"    (Swift, macOS + iOS)
 ├── relay/               # kho "handlive-relay"    (Rust)
-└── shared/              # kho "handlive-shared"   (test vector, JSON Schema, design tokens, tools/vectors, tools/schemas)
+├── shared/              # kho "handlive-shared"   (test vector, JSON Schema, design tokens, tools/vectors, tools/schemas)
+└── .github-org/         # kho "HandLive/.github": hồ sơ org, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, mẫu PR/issue
 ```
 
 ```sh
@@ -90,3 +91,7 @@ tools/workspace.sh status
 | [`docs/deployment-guide.md`](docs/deployment-guide.md) | Đóng gói & phân phối (App Store, PKG, cloud relay) |
 | [`docs/codebase-summary.md`](docs/codebase-summary.md) | Bản đồ codebase (cập nhật khi code xuất hiện) |
 | [`docs/detailed-design/README.md`](docs/detailed-design/README.md) | Thiết kế chi tiết: 33 chức năng lá, giao thức, mã lỗi, mô hình dữ liệu |
+
+## Giấy phép
+
+Apache License 2.0 — xem [LICENSE](LICENSE); áp dụng cho cả năm kho của org [HandLive](https://github.com/HandLive). Đóng góp theo [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) (commit nhỏ, đứng tên người thật, ký DCO bằng `git commit -s`); báo lỗi bảo mật kín theo [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md).
