@@ -1,88 +1,91 @@
+English | [Tiếng Việt](code-standards.vi.md)
+
 # HandLive — Code Standards
 
-> Quy ước cho mọi kho của workspace. Bổ sung khi có quy ước mới.
+> Conventions for every repository in the workspace. Extend this file when a new convention appears.
 
-## Chung
+## General
 
-- Ưu tiên YAGNI, KISS, DRY (theo thứ tự đó).
-- File >200 dòng → cân nhắc modular hóa theo ranh giới logic (function/class/concern).
-- File mới: kebab-case, tên dài mô tả rõ (self-documenting cho công cụ LLM) cho script, tài liệu,
-  tài nguyên, web. Mã nguồn theo quy ước của nền tảng: Kotlin và Swift đặt tên file theo kiểu chính
-  bên trong (PascalCase), Rust snake_case.
-- Không fake data/mock/shortcut chỉ để pass check. Implement hành vi thật.
-- Không commit secret, dotenv, token, key, credential.
-- Conventional commits, không tham chiếu AI trong message.
+- Prefer YAGNI, KISS, DRY (in that order).
+- File >200 lines → consider modularizing along logical boundaries (function/class/concern).
+- New files: kebab-case, long descriptive names (self-documenting for LLM tools) for scripts, documents,
+  resources, web. Source code follows the platform convention: Kotlin and Swift name the file after the
+  main type inside it (PascalCase), Rust uses snake_case.
+- No fake data/mocks/shortcuts just to pass a check. Implement real behavior.
+- Never commit secrets, dotenv files, tokens, keys, credentials.
+- Conventional commits, no AI references in messages.
 
-## Wire protocol (ổn định — mọi nền tảng phải khớp)
+## Wire protocol (stable — every platform must match)
 
-- Envelope JSON: `{v, type, id (uuid-v7), ts (ms), payload (base64 XChaCha20-Poly1305)}`.
+- JSON envelope: `{v, type, id (uuid-v7), ts (ms), payload (base64 XChaCha20-Poly1305)}`.
 - Audio binary frame: `[0x48 0x4C][ver:1B][seq:4B][ts:4B][encrypted_opus:NB]`.
-- Magic bytes `0x484C` ("HL"). Không đổi format tùy tiện giữa các platform.
+- Magic bytes `0x484C` ("HL"). Do not change the format ad hoc between platforms.
 
 ## Android (Kotlin)
 
-- minSdk 29, targetSdk 35, compileSdk 37 (Compose 1.12 trở lên cần). Foreground Service đúng type
-  (`FOREGROUND_SERVICE_CONNECTED_DEVICE` / `camera|microphone`).
-- Crypto qua Tink (HKDF có thể tự cài trên `HmacSHA256`, kiểm bằng vector); audio codec libopus qua
-  JNI.
-- WSS server: Ktor 3 engine Netty (CIO không hỗ trợ TLS phía server); loại thư viện native không
-  dùng (QUIC, HTTP/3, epoll, kqueue) và tệp META-INF trùng để giữ APK nhỏ.
-- Mọi BT-HFP call sau abstraction `CallAudioRelay` (impl: `HfpCallAudioRelay`,
-  `OpusWsCallAudioRelay` qua Shizuku, `CdmCallAudioRelay` tương lai).
-- Điều khiển cuộc gọi bằng API công khai (`TelecomManager`, `TelephonyCallback`), không dùng
+- minSdk 29, targetSdk 35, compileSdk 37 (required by Compose 1.12 and later). Foreground Service with
+  the right type (`FOREGROUND_SERVICE_CONNECTED_DEVICE` / `camera|microphone`).
+- Crypto through Tink (HKDF may be implemented on top of `HmacSHA256`, checked against vectors); audio
+  codec libopus through JNI.
+- WSS server: Ktor 3 with the Netty engine (CIO does not support server-side TLS); exclude the native
+  libraries that are not used (QUIC, HTTP/3, epoll, kqueue) and duplicate META-INF files to keep the APK
+  small.
+- Every BT-HFP call sits behind the `CallAudioRelay` abstraction (impl: `HfpCallAudioRelay`,
+  `OpusWsCallAudioRelay` through Shizuku, `CdmCallAudioRelay` in the future).
+- Call control through public APIs (`TelecomManager`, `TelephonyCallback`), no
   `InCallService` (plan §13 D9).
 - OEM fragmentation → strategy pattern (`BtAdapterStrategy`: Samsung/Pixel/Generic).
-- Thư viện đóng gói trong app phải là mã nguồn mở, không thành phần độc quyền (ML Kit, Play
-  Services); ngoại lệ duy nhất là FCM ở flavor riêng (Phase 2). Quét QR: CameraX + ZXing core
+- Libraries bundled in the app must be open source, with no proprietary components (ML Kit, Play
+  Services); the only exception is FCM in a separate flavor (Phase 2). QR scanning: CameraX + ZXing core
   (Apache-2.0).
 
 ## macOS / iOS (Swift 6)
 
-- Crypto qua CryptoKit (`Curve25519`, `ChaChaPoly`). XChaCha20-Poly1305 = HChaCha20 tự cài +
-  `ChaChaPoly`, kiểm bằng test vector liên nền tảng (`docs/detailed-design/00-common-specs.md`
+- Crypto through CryptoKit (`Curve25519`, `ChaChaPoly`). XChaCha20-Poly1305 = hand-written HChaCha20 +
+  `ChaChaPoly`, checked against cross-platform test vectors (`docs/detailed-design/00-common-specs.md`
   §0.6.1).
-- Bọc mọi `IOBluetooth*` call trong protocol abstraction (API legacy, rủi ro deprecate).
-- CMIOExtension / AudioServerPlugin ký Developer ID (bắt buộc; ad-hoc bị reject).
-- Key vào Keychain với `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; macOS dùng data-protection
-  keychain (`kSecUseDataProtectionKeychain`) và entitlement `keychain-access-groups`.
+- Wrap every `IOBluetooth*` call in a protocol abstraction (legacy API, deprecation risk).
+- CMIOExtension / AudioServerPlugin are signed with Developer ID (mandatory; ad-hoc signing is rejected).
+- Keys go into the Keychain with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; macOS uses the
+  data-protection keychain (`kSecUseDataProtectionKeychain`) and the `keychain-access-groups` entitlement.
 
-## Bản địa hóa (C20, `docs/detailed-design/00-common-specs.md` 0.12)
+## Localization (C20, `docs/detailed-design/00-common-specs.md` 0.12)
 
-- Tiếng Anh là ngôn ngữ mặc định, tiếng Việt là ngôn ngữ thứ hai. Mọi chuỗi hiển thị lấy từ catalog
-  `shared/strings/ui-strings.json` qua tài nguyên sinh ra: Android `R.string`/`R.plurals`
-  (`stringResource`, `pluralStringResource`), Apple accessor sinh từ String Catalog. Không viết
-  cứng câu chữ hiển thị trong mã.
-- Thêm hay sửa chuỗi: sửa tài liệu chi tiết (cả hai bản), rồi catalog trong `shared` (commit riêng),
-  rồi mã.
-- Log, mã lỗi, tên sự kiện, thông điệp commit, báo cáo công việc: tiếng Anh, không dịch.
-- Định dạng ngày, giờ, số, dung lượng bằng formatter theo locale; không ghép chuỗi.
-- Android: lint `HardcodedText`, `MissingTranslation` là lỗi; `locales_config.xml`,
+- English is the default language, Vietnamese the second. Every displayed string comes from the catalog
+  `shared/strings/ui-strings.json` through generated resources: Android `R.string`/`R.plurals`
+  (`stringResource`, `pluralStringResource`), Apple accessors generated from the String Catalog. Never
+  hard-code displayed text in code.
+- Adding or changing a string: edit the detailed design (both versions), then the catalog in `shared`
+  (separate commit), then the code.
+- Logs, error codes, event names, commit messages, work reports: English, never translated.
+- Format dates, times, numbers and sizes with locale-aware formatters; never build strings by concatenation.
+- Android: lint `HardcodedText`, `MissingTranslation` are errors; `locales_config.xml`,
   `androidResources.localeFilters` = en, vi. Apple: `developmentLanguage: en`, `knownRegions` en,
-  vi; purpose string qua `InfoPlist.xcstrings`.
+  vi; purpose strings through `InfoPlist.xcstrings`.
 
-## Tài liệu
+## Documentation
 
-- Song ngữ: `X.md` tiếng Anh (bản chuẩn), `X.vi.md` tiếng Việt, cùng cấu trúc; sửa cả hai trong
-  cùng commit; dòng đầu là thanh chọn ngôn ngữ (`English | [Tiếng Việt](X.vi.md)` /
-  `[English](X.md) | Tiếng Việt`). Kiểm: `python3 tools/docs/check_bilingual_docs.py`.
-- Kế hoạch và báo cáo trước 2026-09-25 (`plans/20260924-*`, `reports/phase-00-*`) giữ tiếng Việt
-  làm lưu trữ; tên file giữ nguyên làm định danh.
+- Bilingual: `X.md` in English (canonical), `X.vi.md` in Vietnamese, same structure; edit both in the
+  same commit; line 1 is the language switcher (`English | [Tiếng Việt](X.vi.md)` /
+  `[English](X.md) | Tiếng Việt`). Check: `python3 tools/docs/check_bilingual_docs.py`.
+- Plans and reports from before 2026-09-25 (`plans/20260924-*`, `reports/phase-00-*`) stay in
+  Vietnamese as an archive; their file names stay unchanged as identifiers.
 
 ## Rust (cloud relay)
 
-- Actix-web + actix-ws. Stateless để scale horizontal.
-- Zero-knowledge: không decrypt, không log payload. Chỉ metadata tối thiểu.
+- Actix-web + actix-ws. Stateless so it scales horizontally.
+- Zero-knowledge: never decrypt, never log payloads. Minimal metadata only.
 
-## Test
+## Testing
 
-- Chạy test hẹp nhất trước, mở rộng khi đụng contract chung.
-- Audio: verify E2E trên đường Opus/WS; đường HFP dựa vào mã hóa Bluetooth (plan §13 D11). BT và
-  Shizuku capture: test matrix ≥6 device thật (Samsung/Pixel/Xiaomi/OPPO).
-- Không giấu test/lint/type/build fail.
+- Run the narrowest test first, broaden when a shared contract is touched.
+- Audio: verify E2E on the Opus/WS path; the HFP path relies on Bluetooth encryption (plan §13 D11). BT
+  and Shizuku capture: test matrix of ≥6 real devices (Samsung/Pixel/Xiaomi/OPPO).
+- Never hide test/lint/type/build failures.
 
-## Giấy phép và phụ thuộc
+## License and dependencies
 
-- Mọi kho: Apache License 2.0 (`LICENSE`); không cần header giấy phép trong từng file nguồn.
-- Phụ thuộc mới chỉ dùng giấy phép tương thích Apache-2.0: Apache, MIT, BSD, ISC, MPL-2.0, OFL (font). Không GPL, LGPL, AGPL dưới mọi hình thức (kể cả liên kết động).
-- Tài nguyên bên thứ ba đóng gói trong app (font, biểu tượng) ghi vào `NOTICE` của kho kèm bản quyền và đường dẫn file giấy phép.
-- Commit đứng tên người thật, ký DCO (`git commit -s`); không ghi công cụ AI làm tác giả hay đồng tác giả (hook `.githooks/commit-msg`, job CI `commit-policy`).
+- Every repository: Apache License 2.0 (`LICENSE`); no license header needed in each source file.
+- New dependencies only under Apache-2.0-compatible licenses: Apache, MIT, BSD, ISC, MPL-2.0, OFL (fonts). No GPL, LGPL or AGPL in any form (dynamic linking included).
+- Third-party assets bundled in the app (fonts, icons) are listed in the repository's `NOTICE` with their copyright and the path to the license file.
+- Commits are made under a real person's name with a DCO sign-off (`git commit -s`); never name an AI tool as author or co-author (hook `.githooks/commit-msg`, CI job `commit-policy`).
