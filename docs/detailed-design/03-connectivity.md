@@ -13,7 +13,7 @@
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng tác động gián tiếp (mở ứng dụng, bật WiFi, mở nắp máy) hoặc bấm "Kết nối lại ngay". |
 | Điều kiện trước | 1. Có một cặp hiệu lực (PAIR-01). 2. A-SVC đang chạy dưới dạng foreground service. 3. Hai thiết bị cùng LAN và mạng cho phép multicast mDNS. 4. Client đã được cấp quyền mạng cục bộ (iOS 14+, macOS 15+) theo SET-03. |
 | Điều kiện sau | **Thành công:** trạng thái `Connected` (LAN); khóa phiên sẵn sàng; capability của đối phương lưu vào `features_json`; `last_seen_at`, `last_host`, `last_port` cập nhật; tính năng hiệu lực được bật; thông báo foreground service trên Android ghi "Đã kết nối với <tên>". **Thất bại:** chuyển CONN-03 sau `LAN_DISCOVERY_GRACE` (nếu relay bật) hoặc sang `Backoff` (CONN-02). |
-| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt. E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp. E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục. E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại. E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn. E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff. E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1. E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
+| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt. E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp; mọi instance của cặp đều lệch ghim (điện thoại đã sinh lại khóa TLS, 0.6.1) → dừng thử, hiển thị "Cần ghép nối lại" (PAIR-02). E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục. E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại. E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn. E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff. E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1. E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
 | Yêu cầu đặc biệt | **Hiệu năng:** kết nối lại < 3 s khi đã biết `last_host` (chỉ số thành công của dự án); bắt tay ≤ 300 ms trong LAN. **Bảo mật:** chỉ TLS 1.3; ghim SHA-256 chứng chỉ, không kiểm hostname; TXT mDNS không chứa định danh tĩnh (0.4.1). **Nền tảng:** iOS/macOS khai báo `NSLocalNetworkUsageDescription` và `NSBonjourServices = ["_handlive._tcp"]`; Android chạy A-SVC type `connectedDevice` (quyền `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) với thông báo thường trực. **Độc lập tính năng:** capability quyết định từng tính năng; một tính năng thiếu quyền không chặn các tính năng khác. |
 
 ### 3.1.2 Màn hình
@@ -69,7 +69,7 @@ flowchart TB
 | 4 | Hệ thống | M-APP / I-APP → A-SVC | Mở `wss://<host>:<port>/v1/ctl`, TLS 1.3. A-SVC nhận kết nối, bắt đầu đếm `HANDSHAKE_TIMEOUT`. | |
 | 5 | Hệ thống | M-APP / I-APP | So SHA-256 chứng chỉ máy chủ với `peer_tls_sha256`. | Khác → đóng, E2. |
 | 6 | Hệ thống | M-APP / I-APP | Sinh khóa tạm X25519 và `nonce`, gửi `session/hello`. | |
-| 7 | Hệ thống | A-SVC | Kiểm `pair_id` tồn tại, chưa thu hồi, `device_id` đúng đối phương, `mac` đúng (hằng thời gian), phiên bản giao thức. Nếu cặp đang có phiên khác: phiên cũ nhận `session/bye {reason: replaced}` và đóng 4409 sau khi phiên mới bắt tay xong. | Sai → `session/error` + đóng 4401/4403/4426 (E3, E4, E5). |
+| 7 | Hệ thống | A-SVC | Kiểm `pair_id` tồn tại, chưa thu hồi, `device_id` đúng đối phương, `mac` đúng (hằng thời gian), phiên bản giao thức. Nếu cặp đang có phiên khác: phiên cũ nhận `session/bye {reason: replaced}` và đóng 4409 sau khi phiên mới xác nhận được khóa (A-SVC giải mã được `capability/hello` đầu tiên của phiên mới; một `hello` phát lại chỉ nhận được `welcome`, không bao giờ đá được phiên thật). | Sai → `session/error` + đóng 4401/4403/4426 (E3, E4, E5). |
 | 8 | Hệ thống | A-SVC → M-APP / I-APP | Android gửi `session/welcome`; client kiểm `mac`. Hai bên tính `k_c2s`, `k_s2c`. | Client kiểm sai → đóng 4401, E3. |
 | 9 | Hệ thống | Hai bên | Mỗi bên gửi envelope mã hóa đầu tiên `capability/hello` (0.7.2). Tính năng hiệu lực = bật ở hai bên và Android đủ quyền; lưu `features_json`. | |
 | 10 | Hệ thống | Hai bên | Cập nhật `last_seen_at`, `last_host`, `last_port`; phát trạng thái `Connected`; Android cập nhật thông báo foreground service và hint. Khởi chạy: SMS-01 (sms hiệu lực), CALL-04 (call hiệu lực), gửi clip mới nhất nếu tạo trong `CLIP_STALE_AFTER` (CLIP-01/02), xả `sms_outbox` (SMS-04). | Mỗi tác vụ chạy độc lập; lỗi một tác vụ không ảnh hưởng tác vụ khác. |
@@ -131,7 +131,7 @@ flowchart TB
 - **Ví dụ:** `GET /v1/ctl HTTP/1.1` · `Host: 192.168.1.23:47800` · `Upgrade: websocket` · `Sec-WebSocket-Version: 13`
 - **Logic nghiệp vụ:**
   1. Delegate TLS: lấy chứng chỉ lá từ `SecTrust`, tính SHA-256 trên DER, so với `peer_tls_sha256`; khớp → `.useCredential`, khác → `.cancelAuthenticationChallenge` (E2).
-  2. A-SVC giới hạn 16 kết nối `/v1/ctl` chưa bắt tay cùng lúc và đóng kết nối không gửi `session/hello` trong 5 s (chống cạn tài nguyên).
+  2. A-SVC giới hạn 16 kết nối `/v1/ctl` chưa bắt tay cùng lúc và đóng kết nối không gửi `session/hello` trong 5 s (chống cạn tài nguyên); kết nối thứ 17 bị đóng 4429 `RATE_LIMITED`, kết nối im lặng bị đóng 4408.
 
 #### API 4 — `WS session/hello`
 
@@ -159,7 +159,7 @@ Payload sau khi giải base64: `{"op":"hello","data":{"protocol":1,"pair_id":"3f
 
 - **Logic nghiệp vụ:**
   1. Thứ tự kiểm ở A-SVC: `protocol` (khác major → 4426) → cặp tồn tại (không → `PAIR_UNKNOWN`, 4401) → chưa thu hồi (4403) → `device_id` khớp → `mac`.
-  2. Sai `mac` 5 lần/phút từ cùng địa chỉ IP → chặn IP đó 5 phút.
+  2. Sai `mac` 5 lần/phút từ cùng địa chỉ IP → chặn IP đó 5 phút (kết nối từ IP bị chặn đóng 4429 `RATE_LIMITED` ngay sau TLS).
   3. Không lưu `nonce`; khóa tạm của Android sinh mới cho mỗi lần welcome nên hello bị phát lại không dẫn tới phiên dùng được.
 
 #### API 5 — `WS session/welcome`
@@ -185,7 +185,7 @@ Payload sau khi giải base64: `{"op":"hello","data":{"protocol":1,"pair_id":"3f
 
 - **URL:** như API 4
 - **Method:** `WS session/error` (S→C), payload chưa mã hóa; Android đóng kết nối ngay sau đó với mã tương ứng (0.8.3).
-- **Request (`data`):** `code` — enum{AUTH_FAILED\|PAIR_UNKNOWN\|PAIR_REVOKED\|UNSUPPORTED_VERSION\|RATE_LIMITED}; `message` — string; `min_protocol` — int32 (chỉ với `UNSUPPORTED_VERSION`).
+- **Request (`data`):** `code` — enum{AUTH_FAILED\|PAIR_UNKNOWN\|PAIR_REVOKED\|UNSUPPORTED_VERSION\|RATE_LIMITED}; `message` — string; `min_protocol` — int32 (bắt buộc khi `UNSUPPORTED_VERSION`, không có ở mã khác; client dùng để hiển thị "Cập nhật HandLive trên điện thoại" hoặc "trên máy này").
 - **Response:** N/A.
 - **Ví dụ:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Thiết bị chưa được ghép nối"}}`
 - **Logic nghiệp vụ:** Client xử lý theo E3–E5; không tự động thử lại với `AUTH_FAILED` trước 5 phút.
@@ -303,7 +303,7 @@ flowchart TB
 |------|----------|-----------|-------|--------------------|
 | 1 | Hệ thống | M-APP / I-APP, A-SVC | Client gửi WS ping mỗi 15 s; qua relay thêm envelope `ping/ping` mỗi 30 s (ping WS chỉ kiểm chặng tới relay). Theo dõi `NWPathMonitor`, `NSWorkspace.willSleepNotification`/`didWakeNotification` (Mac), `scenePhase` (iOS). Android theo dõi `ConnectivityManager.registerDefaultNetworkCallback`, đếm thời gian im lặng của từng phiên. Hai bên đếm envelope đã gửi và tuổi phiên. | |
 | 2 | Hệ thống | như trên | Phân loại sự kiện. | |
-| 3 | Hệ thống | M-APP / I-APP | Không nhận pong trong 10 s, hoặc socket lỗi, hoặc `ping/ping` không có `ack` 10 s → đóng phiên, trạng thái `Backoff`. Android: phiên im lặng quá 45 s → đóng. | E5, E6. |
+| 3 | Hệ thống | M-APP / I-APP | Không nhận pong trong 10 s, hoặc socket lỗi, hoặc `ping/ping` không có `ack` 10 s → đóng phiên, trạng thái `Backoff`. Android: phiên im lặng quá 45 s → đóng 4411 `IDLE_TIMEOUT`. | E5, E6. |
 | 4 | Hệ thống | M-APP / I-APP | Chờ theo bảng backoff (có jitter). Không có mạng → `Idle`, chờ sự kiện mạng. | E1. |
 | 5 | Hệ thống | M-APP / I-APP | Hủy chờ, chạy CONN-01 (LAN trước, rồi CONN-03 sau 10 s). | |
 | 6 | Hệ thống | Bên đạt ngưỡng trước | Gửi `session/rekey`; bên nhận trả `ack` kèm khóa tạm của mình, đổi khóa; bên gửi đổi khóa sau khi nhận `ack`. Giữ khóa cũ 30 s cho envelope đang bay. | Không có `ack` → E4. |
@@ -359,7 +359,7 @@ flowchart TB
 - **Ví dụ:** `{"op":"rekey","data":{"epoch":1,"eph":"…","nonce":"…"}}` → `{"re":"…","ok":true,"data":{"epoch":1,"eph":"…","nonce":"…"}}`
 - **Logic nghiệp vụ:**
   1. Khóa mới theo 0.6.3 bước 6; thiết bị dẫn xuất lại cả `k_c2s` và `k_s2c`.
-  2. Hai bên cùng khởi tạo rekey một lúc → bên có `device_id` nhỏ hơn thắng, bên kia hủy yêu cầu của mình và trả `ack`.
+  2. Hai bên cùng khởi tạo rekey một lúc → bên có `device_id` nhỏ hơn thắng, bên kia hủy yêu cầu của mình và trả `ack`; bên thắng bỏ qua yêu cầu của bên thua, không trả `ack`. Rekey thất bại (không `ack` trong 10 s, `ack` lỗi, dữ liệu sai) → đóng 4410 `REKEY_FAILED` rồi kết nối lại (E4).
   3. Envelope mã hóa bằng khóa cũ đến trong 30 s sau khi đổi vẫn được giải mã; sau đó → `DECRYPT_FAILED`.
 
 #### API 4 — `WS session/bye`
@@ -522,7 +522,7 @@ flowchart TB
 | `challenge` | b64u | Có | Giá trị vừa nhận |
 | `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig`, `"HLAUTH1"` ‖ challenge ‖ `device_id`(16)) |
 
-- **Response 200:** `access_token` — string (JWT HS256, claim `sub`, `iat`, `exp`, `jti`); `expires_in` — int32 (900). Lỗi: 401 `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`.
+- **Response 200:** `access_token` — string (JWT HS256, claim `sub`, `iat`, `exp`, `jti`); `expires_in` — int32 (900). Lỗi: 400 `BAD_REQUEST` (`sig` không phải b64u 64 byte), 401 `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`, 404 `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 500 `INTERNAL`.
 - **Ví dụ:** `{"access_token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YjFm…","expires_in":900}`
 - **Logic nghiệp vụ:** Lấy và xóa `chal:<device_id>` trong một lệnh (`GETDEL`); không có hoặc khác → `CHALLENGE_EXPIRED`; kiểm chữ ký bằng `ik_sig_pub` trong `devices`; cập nhật `last_seen_at`.
 

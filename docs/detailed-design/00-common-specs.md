@@ -148,7 +148,7 @@ Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đ
 | `type` | enum | Có | Nhóm tin (0.7.1) |
 | `id` | uuid | Có | UUIDv7 duy nhất |
 | `ts` | timestamp | Có | Thời điểm tạo ở bên gửi |
-| `payload` | b64 | Có | `nonce(24) ‖ ciphertext ‖ tag(16)` của XChaCha20-Poly1305. AAD = UTF-8 của `"<v>|<type>|<id>|<ts>"` |
+| `payload` | b64 | Có | `nonce(24) ‖ ciphertext ‖ tag(16)` của XChaCha20-Poly1305. AAD = UTF-8 của `"<v>|<type>|<id>|<ts>"` ở dạng chuẩn tắc: `v` và `ts` là số thập phân không số 0 đầu, `id` 36 ký tự chữ thường; bên nhận dựng lại AAD từ giá trị đã parse (khớp `shared/test-vectors/`) |
 
 Hai ngoại lệ:
 - Tin bắt tay (`pair` op `hello`/`offer`/`confirm`/`done`/`error`; `session` op `hello`/`welcome`/`error`; `camera` và `call_audio` op `stream_hello`/`stream_welcome`) có `payload` = b64 của JSON **chưa mã hóa** (khóa chưa tồn tại); toàn vẹn được bảo vệ bằng trường `mac` bên trong.
@@ -179,7 +179,7 @@ Quy tắc chung:
 3. `type` hoặc `op` không biết: nếu là yêu cầu → `ack` lỗi `UNSUPPORTED_TYPE`; nếu là sự kiện → bỏ qua.
 4. Envelope ≤ 256 KiB. Dữ liệu lớn hơn đi theo chunk (`clipboard` op `chunk`).
 5. Không ghi log `payload` hay nội dung đã giải mã ở bất kỳ thành phần nào; log chỉ gồm `type`, `op`, kích thước, mã lỗi.
-6. **Tương thích tiến** trong cùng major `protocol`: bên nhận bỏ qua trường lạ ở mọi cấp; giá trị enum lạ không làm hỏng tin — mã lỗi lạ xử lý như lỗi chung (giữ `message`), phần tử lạ trong danh sách (vd. `codecs`, `cameras`) bị bỏ qua, trường enum đơn lạ coi là "không biết" (tính năng phụ thuộc coi như không hỗ trợ). Bên gửi chỉ phát giá trị có trong tài liệu này; `shared/schemas/` kiểm phía gửi (chặt), không phải phía nhận.
+6. **Tương thích tiến** trong cùng major `protocol`: bên nhận bỏ qua trường lạ ở mọi cấp; giá trị enum lạ không làm hỏng tin — mã lỗi lạ xử lý như `INTERNAL` (giữ `message`, ghi log mã lạ), phần tử lạ trong danh sách (vd. `codecs`, `cameras`) bị bỏ qua, trường enum đơn lạ coi là "không biết" (tính năng phụ thuộc coi như không hỗ trợ). Bên gửi chỉ phát giá trị có trong tài liệu này; `shared/schemas/` kiểm phía gửi (chặt), không phải phía nhận.
 
 ### 0.5.2 Khung nhị phân HL (WS binary frame, chỉ trên kênh `/v1/stream/*`)
 
@@ -207,13 +207,13 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 |------|-----------|---------|----------|
 | `ik_sig` | Ed25519 | Android: byte khóa riêng mã hóa bằng keyset Tink AEAD (AES256-GCM); keyset bọc bởi khóa AES-256 `hl_master` trong Android Keystore (StrongBox nếu có) — Tink không có kiểu keyset cho X25519 thô nên `ik_sig`, `ik_dh`, `PRK` cùng một cách lưu. Mac/iOS: Keychain | Tạo lần chạy đầu; mất khi gỡ ứng dụng |
 | `ik_dh` | X25519 | Như `ik_sig` | Như `ik_sig` |
-| Khóa TLS | ECDSA P-256 + chứng chỉ tự ký | Android: PKCS#12, mật khẩu bọc bởi Keystore | Lúc cài |
+| Khóa TLS | ECDSA P-256 + chứng chỉ tự ký | Android: PKCS#12, mật khẩu bọc bởi Keystore | Lúc cài. Kho PKCS#12 hỏng hoặc mất mật khẩu → sinh lại khóa và chứng chỉ; mọi client thấy `TLS_PIN_MISMATCH` ở mọi instance → hiển thị "Cần ghép nối lại" (CONN-01 E2) |
 | `pairing_secret` | 32 byte ngẫu nhiên | Chỉ trong bộ nhớ Mac/iOS và trong QR | 120 s |
 | `PRK` | 32 byte | Android: cột `prk_enc` (Tink AEAD, khóa trong Keystore). Mac/iOS: Keychain, account = `pair_id` | Theo cặp ghép nối |
 | `K_push` | HKDF(`PRK`, info = `"handlive/v1/push"`) | Tính khi cần | Theo cặp |
 | `k_c2s`, `k_s2c` | 32 byte | Bộ nhớ | Theo kết nối; rekey sau 24 h hoặc 10 000 envelope mỗi chiều |
 
-- Keychain: `kSecClassGenericPassword`, service `app.handlive.keys`, `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (theo `docs/code-standards.md`). M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem CONN-04).
+- Keychain: `kSecClassGenericPassword`, service `app.handlive.keys`, `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (theo `docs/code-standards.md`). macOS dùng data-protection keychain (`kSecUseDataProtectionKeychain = true`) để thuộc tính này có hiệu lực như iOS; app phải ký với entitlement `keychain-access-groups` (`docs/deployment-guide.md`); tiến trình test không ký dùng kho khóa trong bộ nhớ. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem CONN-04).
 - Thư viện:
   - Android: Tink 1.14+ (`Ed25519Sign/Verify`, `X25519`, `Hkdf`, `subtle.XChaCha20Poly1305`).
   - Apple: CryptoKit (`Curve25519`, `HKDF`, `HMAC`, `SHA256`, `ChaChaPoly`). CryptoKit không có XChaCha20, nên XChaCha20-Poly1305 = HChaCha20 (tự cài theo draft-irtf-cfrg-xchacha-03 §2.2, kiểm bằng test vector §2.2.1) + `ChaChaPoly` với nonce 12 byte = `0x00000000` ‖ 8 byte cuối của nonce 24 byte.
@@ -251,9 +251,9 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 ### 0.6.4 Xác thực thiết bị với relay
 
 1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s).
-2. `POST /v1/auth/token` `{device_id, challenge, sig}` với `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖ challenge ‖ `device_id` 16 byte) → `{access_token, expires_in}`. Token JWT HS256, `sub` = `device_id`, hạn 15 phút.
+2. `POST /v1/auth/token` `{device_id, challenge, sig}` với `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖ challenge (32 byte thô đã giải b64u) ‖ `device_id` 16 byte) → `{access_token, expires_in}`. Token JWT HS256, `sub` = `device_id`, hạn 15 phút.
 3. Gọi REST và mở WSS với `Authorization: Bearer <token>`. Nhận 401 `TOKEN_EXPIRED` → lặp lại bước 1–2 rồi thử lại một lần.
-4. Mọi endpoint dùng JWT kiểm `sub` còn trong `devices`: không còn → 404 `DEVICE_NOT_FOUND` (thiết bị đã tự xóa khỏi relay, SET-02), dù JWT còn hạn.
+4. Mọi endpoint dùng JWT kiểm `sub` còn trong `devices`: không còn → 404 `DEVICE_NOT_FOUND` (thiết bị đã tự xóa khỏi relay, SET-02), dù JWT còn hạn. Dòng có `revoked_at` (vận hành khóa thiết bị lạm dụng; ứng dụng không bao giờ đặt) → 410 `DEVICE_REVOKED` ở đăng ký, challenge, token và mọi endpoint. Thiếu hoặc sai header `Authorization` → 401 `SIGNATURE_INVALID`.
 
 ### 0.6.5 Nguyên tắc bảo mật chung
 
@@ -327,7 +327,7 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
     "model": "Pixel 8",
     "features": {
       "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "image/png", "image/jpeg"]},
-      "sms": {"enabled": true, "can_send": true, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
+      "sms": {"enabled": true, "can_send": true, "default_sub_id": 1, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
       "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true},
       "call_audio": {"enabled": false, "bt_address": null, "hfp_connected": false,
                      "opus_fallback": {"available": false, "downlink": false, "uplink": false, "reason": "shizuku_not_running"}},
@@ -352,7 +352,7 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 | `features.call.can_answer`, `can_end` | bool | Android: có quyền `ANSWER_PHONE_CALLS` |
 | `features.call.caller_id` | bool | Android: có `READ_CALL_LOG` (số gọi đến) |
 | `features.call.notify` | bool | Chỉ iOS/iPadOS; bằng `call.notify` — Android chỉ push cuộc gọi đến/nhỡ khi `true` |
-| `features.call_audio.bt_address` | string | Chỉ Mac: địa chỉ Bluetooth của Mac (để Android nhận ra Mac trong danh sách thiết bị HFP) |
+| `features.call_audio.bt_address` | string | Chỉ Mac: địa chỉ Bluetooth của Mac (để Android nhận ra Mac trong danh sách thiết bị HFP). Dạng `AA:BB:CC:DD:EE:FF` chữ hoa, tách bằng `:`; M-APP chuẩn hóa từ `IOBluetoothDevice.addressString` (thường chữ thường, gạch ngang) |
 | `features.call_audio.hfp_connected` | bool | Android: Mac đang nối hồ sơ HFP tới điện thoại |
 | `features.call_audio.consented` | bool | Chỉ Mac: có `consent_record` hiệu lực (AUDIO-01). Android từ chối mọi yêu cầu âm thanh cuộc gọi bằng `CALL_CONSENT_REQUIRED` khi giá trị gần nhất là `false` |
 | `features.call_audio.opus_fallback` | object | Android: khả năng đường Opus/WS — `available`, `downlink` (thu được âm người gọi), `uplink` (chèn được giọng Mac), `reason` ∈ {`ok`, `disabled`, `android_10`, `shizuku_not_running`, `capture_silent`, `uplink_unsupported`} (`disabled` khi `call_audio.allow_opus_fallback = false`) |
@@ -446,7 +446,7 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 |------|----|---------|
 | 400 | `BAD_REQUEST` | Body sai |
 | 401 | `CHALLENGE_EXPIRED` | Challenge hết hạn hoặc đã dùng |
-| 401 | `SIGNATURE_INVALID` | Chữ ký sai hoặc `device_id` không khớp khóa |
+| 401 | `SIGNATURE_INVALID` | Chữ ký sai hoặc `device_id` không khớp khóa; cũng dùng khi thiếu hoặc sai header `Authorization` |
 | 401 | `TOKEN_EXPIRED` | JWT hết hạn |
 | 403 | `NOT_PAIRED` | Hai thiết bị không cùng cặp hợp lệ |
 | 404 | `DEVICE_NOT_FOUND` | Thiết bị chưa đăng ký |
@@ -455,6 +455,7 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 | 410 | `DEVICE_REVOKED` | Thiết bị đã bị xóa |
 | 413 | `PAYLOAD_TOO_LARGE` | Vượt giới hạn |
 | 429 | `RATE_LIMITED` | Vượt hạn mức; header `Retry-After` |
+| 500 | `INTERNAL` | Lỗi máy chủ; client thử lại theo backoff |
 | 502 | `PUSH_PROVIDER_ERROR` | FCM/APNs trả lỗi |
 
 ### 0.8.3 Mã đóng WebSocket
@@ -467,7 +468,10 @@ Hai bên gửi ngay sau bắt tay và mỗi khi cấu hình đổi. Tính năng 
 | 4403 | `PAIR_REVOKED` |
 | 4408 | Bắt tay quá hạn |
 | 4409 | Phiên bị thay bởi kết nối mới hơn |
+| 4410 | `REKEY_FAILED` — rekey không có `ack` trong 10 s, `ack` lỗi hoặc dữ liệu sai (CONN-02 E4) |
+| 4411 | `IDLE_TIMEOUT` — phiên im lặng quá 45 s (CONN-02) |
 | 4426 | `UNSUPPORTED_VERSION` |
+| 4429 | `RATE_LIMITED` — quá 16 kết nối chưa bắt tay, hoặc IP bị chặn 5 phút vì sai `mac` (CONN-01 API 3, API 4) |
 | 4500 | `INTERNAL` |
 
 ## 0.9 Mô hình dữ liệu
@@ -649,7 +653,7 @@ CREATE TABLE devices (
   push_topic     TEXT,                                  -- bundle id cho APNs
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_seen_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  revoked_at     TIMESTAMPTZ
+  revoked_at     TIMESTAMPTZ                            -- vận hành khóa thiết bị lạm dụng; mọi endpoint trả 410 (0.6.4)
 );
 
 -- [Thiết kế] Cặp ghép nối đã chứng thực
@@ -689,6 +693,7 @@ Khóa Redis `[Thiết kế]`:
 | `rv:<rv_id>` | set (device_id) | 180 s | Điểm hẹn ghép nối |
 | `revoked_notice:<device_id>` | set (`<pair_id>\|<by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
 | `rl:<device_id>:<nhóm>:<phút>` | counter | 120 s | Rate limit |
+| `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2) |
 
 Việc dọn dữ liệu chạy hằng ngày:
 
@@ -800,6 +805,13 @@ stateDiagram-v2
   ConnectingLAN --> Discovering: TLS_PIN_MISMATCH (bỏ instance)
   Handshaking --> Connected: welcome hợp lệ + capability
   Handshaking --> Backoff: lỗi hoặc 4408
+  ConnectingLAN --> Backoff: lỗi mạng hoặc TLS (không phải lệch ghim)
+  ConnectingLAN --> Idle: mọi instance của cặp lệch ghim (Cần ghép nối lại)
+  ConnectingRelay --> Backoff: relay không tới được, 401 hoặc 404 sau khi đăng ký lại
+  WaitingPeer --> Backoff: mất kết nối relay
+  Discovering --> Backoff: quá LAN_DISCOVERY_GRACE và relay.enabled = false
+  Discovering --> Idle: hủy cặp cuối cùng
+  Backoff --> Idle: hủy cặp cuối cùng
   Discovering --> ConnectingRelay: quá LAN_DISCOVERY_GRACE và relay.enabled
   ConnectingRelay --> WaitingPeer: relay OK, đối phương offline
   WaitingPeer --> Handshaking: presence online
@@ -810,4 +822,4 @@ stateDiagram-v2
   Connected --> Idle: hủy ghép nối
 ```
 
-Trạng thái hiển thị cho người dùng (PAIR-02): `Idle`/`Backoff` → "Mất kết nối"; `Discovering`/`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến"; `Connected` → "Đã kết nối (LAN)" hoặc "Đã kết nối (qua Internet)".
+Trạng thái hiển thị cho người dùng (PAIR-02): `Idle`/`Backoff` → "Mất kết nối"; `Discovering`/`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến"; `Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại".
