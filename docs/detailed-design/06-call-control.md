@@ -38,8 +38,8 @@ English | [Tiếng Việt](06-call-control.vi.md)
 | Actors | Primary: User (sees the call, chooses an action), Caller (places the call). System: A-CALL, A-SVC, A-AUD (HFP state, audio location), OS (Telephony, Contacts provider), M-APP, I-APP, I-NSE, R-API, PUSH (APNs). |
 | Preconditions | 1.<br>A valid pair (PAIR-01).<br>2.<br>Calls are in effect for the pair; A-SVC is running and A-CALL has registered its listeners (SET-01 has requested `READ_PHONE_STATE`, `READ_CALL_LOG`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS`).<br>3.<br>For immediate delivery: the client has a `/v1/ctl` session (CONN-01 or CONN-03); an iPhone/iPad without a session receives it via push once it has registered for push (CONN-04), `relay.enabled = true` and `features.call.notify = true`.<br>4. iOS: the user has allowed notifications, including time-sensitive notifications (SET-03). |
 | Postconditions | Connected clients show the call according to `call.notify` within ≤ 300 ms (LAN); a suspended iPhone/iPad has a notification (full content while the device is unlocked).<br>The UI always matches the latest `state`: `offhook` → the Mac switches to the in-call panel (CALL-03), iOS closes the banner; `idle` → close the panel, stop the ringtone, remove the incoming-call notification (missed calls are notified by CALL-04).<br>The call context on Android lives until `IDLE`, then stays another 60 s in the "recently ended" list so it can be matched with the call log (CALL-04).<br>No persistent data is written. |
-| Exceptions | E1 — Calls not in effect (turned off on one side, `READ_PHONE_STATE` missing): nothing is sent; PAIR-02 shows the reason.<br>E2 — `READ_CALL_LOG` missing: `number = null`, `presentation = unknown` → show "Unknown Number" with a hint to grant the permission; `READ_CONTACTS` missing: `display_name = null` → show the number.<br>E3 — `call.notify = false` on the client: the Mac opens no panel and does not ring, it only shows the call in the menu of the menu bar icon; iOS shows no banner; Android sends no push to that iPhone/iPad.<br>E4 — Focus is active on the Mac (`isFocused = true`): no panel, no ringing; a time-sensitive communication notification (API 7) lets the system decide based on the caller and the Focus settings; the call still appears in the menu of the menu bar icon.<br>Not yet allowed to read the Focus status → show the panel, no ringing.<br>E5 — Push not possible (relay off, no token yet, APNs error): handled per CONN-04 (`push_outbox` with a 30 s expiry); the missed call will arrive through CALL-04.<br>E6 — The iPhone is locked when the push arrives: I-NSE cannot read the key (C3) → generic content "Incoming call on the phone", no "Decline" button.<br>E7 — The push arrives late (more than 60 s after `started_at`): I-NSE shows "Incoming call at <time>", with no button.<br>E8 — A-SVC starts during a call, or a client connects midway: A-CALL builds the context from the current state (`direction = unknown` if `OFFHOOK`) and sends `state` right after the session exchanges capabilities.<br>E9 — Call waiting (`RINGING` while `OFFHOOK`): `waiting = true`, information only; handling it needs HFP (CALL-03).<br>E10 — The number arrives after the first `RINGING` (the broadcast arrives twice, in no fixed order): A-CALL re-sends `state` with the same `call_id` once the number and name are known. |
-| Special requirements | **Performance:** `state` reaches the client in < 200 ms on the LAN, counted from the OS callback (name lookup ≤ 30 ms thanks to an LRU cache); the Mac panel appears ≤ 300 ms after `RINGING`; via the relay ≤ 1 s when a session exists, ≤ 3 s when the phone has to open the relay; iOS push depends on APNs.<br>**Platform:** the Mac panel does not take focus from the app in use (non-activating) and shows on every Space, including full-screen apps — a deliberate deviation from the HIG (panels normally hide while their app is inactive), offset by always pairing it with a communication notification; the Mac needs the Communication Notifications capability, `NSUserActivityTypes` containing `INStartCallIntent`, the `com.apple.developer.focus-status` entitlement and `NSFocusStatusUsageDescription`; I-APP needs the Time Sensitive Notifications entitlement (`com.apple.developer.usernotifications.time-sensitive`); no PushKit/CallKit (C7).<br>**Privacy:** the relay and APNs see only `reason = call_incoming` and generic content; the number and name travel inside the envelope encrypted with `K_push`; numbers and names are never logged.<br>**Compliance:** `READ_CALL_LOG` falls under Google Play's "Cross-device synchronization or transfer of SMS or calls" exception and needs the Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` are runtime permissions (SET-01).<br>**Accessibility:** VoiceOver reads "Incoming call from <name or number>" when the panel or banner appears. |
+| Exceptions | E1 — Calls not in effect (turned off on one side, `READ_PHONE_STATE` missing): nothing is sent; PAIR-02 shows the reason.<br>E2 — `READ_CALL_LOG` missing: `number = null`, `presentation = unknown` → show "Unknown Caller" with a hint to grant the permission; `READ_CONTACTS` missing: `display_name = null` → show the number.<br>E3 — `call.notify = false` on the client: the Mac opens no panel and does not ring, it only shows the call in the menu of the menu bar icon; iOS shows no banner; Android sends no push to that iPhone/iPad.<br>E4 — Focus is active on the Mac (`isFocused = true`): no panel, no ringing; a time-sensitive communication notification (API 7) lets the system decide based on the caller and the Focus settings; the call still appears in the menu of the menu bar icon.<br>Not yet allowed to read the Focus status → show the panel, no ringing.<br>E5 — Push not possible (relay off, no token yet, APNs error): handled per CONN-04 (`push_outbox` with a 30 s expiry); the missed call will arrive through CALL-04.<br>E6 — The iPhone is locked when the push arrives: I-NSE cannot read the key (C3) → generic content "Incoming call on the phone", no "Decline" button.<br>E7 — The push arrives late (more than 60 s after `started_at`): I-NSE shows "Incoming call at \<time>", with no button.<br>E8 — A-SVC starts during a call, or a client connects midway: A-CALL builds the context from the current state (`direction = unknown` if `OFFHOOK`) and sends `state` right after the session exchanges capabilities.<br>E9 — Call waiting (`RINGING` while `OFFHOOK`): `waiting = true`, information only; handling it needs HFP (CALL-03).<br>E10 — The number arrives after the first `RINGING` (the broadcast arrives twice, in no fixed order): A-CALL re-sends `state` with the same `call_id` once the number and name are known. |
+| Special requirements | **Performance:** `state` reaches the client in < 200 ms on the LAN, counted from the OS callback (name lookup ≤ 30 ms thanks to an LRU cache); the Mac panel appears ≤ 300 ms after `RINGING`; via the relay ≤ 1 s when a session exists, ≤ 3 s when the phone has to open the relay; iOS push depends on APNs.<br>**Platform:** the Mac panel does not take focus from the app in use (non-activating) and shows on every Space, including full-screen apps — a deliberate deviation from the HIG (panels normally hide while their app is inactive), offset by always pairing it with a communication notification; the Mac needs the Communication Notifications capability, `NSUserActivityTypes` containing `INStartCallIntent`, the `com.apple.developer.focus-status` entitlement and `NSFocusStatusUsageDescription`; I-APP needs the Time Sensitive Notifications entitlement (`com.apple.developer.usernotifications.time-sensitive`); no PushKit/CallKit (C7).<br>**Privacy:** the relay and APNs see only `reason = call_incoming` and generic content; the number and name travel inside the envelope encrypted with `K_push`; numbers and names are never logged.<br>**Compliance:** `READ_CALL_LOG` falls under Google Play's "Cross-device synchronization or transfer of SMS or calls" exception and needs the Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` are runtime permissions (SET-01).<br>**Accessibility:** VoiceOver reads "Incoming call from \<name or number>" when the panel or banner appears. |
 
 ### 6.1.2 Screens
 
@@ -51,18 +51,18 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Title | string | Output | "Incoming Call" | "Call Waiting" when `waiting = true` |
 | 2 | Caller name | string | Output | `display_name` | `null` → this line shows the number (field 3) |
-| 3 | Caller number | e164 | Output | `number` | National format; `presentation = restricted` → "No Caller ID"; `unknown` or `null` → "Unknown Number" |
+| 3 | Caller number | e164 | Output | `number` | National format; `presentation = restricted` → "No Caller ID"; `unknown` or `null` → "Unknown Caller" |
 | 4 | SIM label | string | Output | Hidden | `sim_label`, only when the phone has > 1 SIM and the ringing SIM is known |
-| 5 | Waiting caller | string | Output | Hidden | Only when `waiting = true`: `waiting_display_name` or `waiting_number` ("Unknown Number" when both are `null`); plus "Handle it on the phone or connect via Bluetooth" when `hfp_connected = false` |
+| 5 | Waiting caller | string | Output | Hidden | Only when `waiting = true`: `waiting_display_name` or `waiting_number` ("Unknown Caller" when both are `null`); plus "Handle it on the phone or connect via Bluetooth" when `hfp_connected = false` |
 | 6 | "Answer" button | action | Input | Hidden | Mac only, when `controls.answer = true`; when call audio is in effect (AUDIO-01) it splits into "Answer on Phone" and "Answer on Mac" → CALL-02 |
 | 7 | "Decline" button | action | Input | Hidden | Mac panel, iOS banner, iOS notification action; when `controls.reject = true` → CALL-02 |
-| 8 | "Decline with Message" button | action | Input | Hidden | Mac only; when `controls.reject = true`, `number` is not `null`, SMS is in effect and `features.sms.can_send = true` → CALL-02 |
+| 8 | "Decline with Message…" button | action | Input | Hidden | Mac only; when `controls.reject = true`, `number` is not `null`, SMS is in effect and `features.sms.can_send = true` → CALL-02 |
 | 9 | "Ignore" button | action | Input | — | Mac only: closes the panel and silences the ringtone on the Mac; the call keeps ringing on the phone and stays in the menu of the menu bar icon |
 | 10 | Ringtone on the Mac | audio | Output | Off | Loops while the panel shows, `call.notify = true`, `call.ringtone = true` and Focus is off; stops when `state` changes, when field 6, 7, 8 or 9 is clicked, or after 60 s |
 | 11 | iOS notification | string | Output | No title (the system shows the app name), body "Incoming call on the phone" | I-NSE replaces the title with field 2 (or 3) and the body with "Incoming call" plus the SIM label; adds the "Decline" button |
 | 12 | Permission hint | string | Output | Hidden | "Allow HandLive to read the call log on the phone to show caller numbers" when `permissions_missing` contains `READ_CALL_LOG` (E2) |
 | 13 | "Call Notifications" option | bool | Input/Output | `call.notify` = `true` | Settings → Calls (SET-02), Mac and iOS |
-| 14 | "Ring on Mac" option | bool | Input/Output | `call.ringtone` = `true` | Settings → Calls, Mac only; new key, proposed for addition to 0.9.5 |
+| 14 | "Ring on Mac" option | bool | Input/Output | `call.ringtone` = `true` | Settings → Calls, Mac only; key in 0.9.5 |
 | 15 | Communication notification on the Mac | string | Output | Title: field 2 (or 3); body "Incoming call" plus the SIM label | `INStartCallIntent` (API 7): passive level while the panel shows (Notification Center only, no banner, no sound), time-sensitive when Focus is on; "Answer" and "Decline" buttons; removed when `state` is no longer `ringing` |
 
 ### 6.1.4 Business flow
@@ -109,7 +109,7 @@ flowchart TB
 | 7 | System | M-APP | Read the Focus status (API 5). Off: show the panel with fields 1–9, post a passive communication notification (field 15, API 7), play the ringtone (field 10) if `call.ringtone = true`. On: no panel, no ringtone, a time-sensitive communication notification. | E4. |
 | 8 | System | I-APP | App in the foreground: in-app banner with fields 1–5, 7 (API 6); no ringing because the phone is already ringing. |  |
 | 9 | System | I-NSE, OS | Receive the push (API 6). Device unlocked: decrypt, set the title and body (field 11), the `HL_CALL_INCOMING` category with the "Decline" button, `userInfo`. Device locked or decryption failed: keep the generic content. | E6, E7. |
-| 10 | User | M-APP / I-APP | Sees the caller; chooses "Answer", "Decline", "Decline with Message" (CALL-02), "Ignore", or does nothing. |  |
+| 10 | User | M-APP / I-APP | Sees the caller; chooses "Answer", "Decline", "Decline with Message…" (CALL-02), "Ignore", or does nothing. |  |
 | 11 | System | A-CALL, A-SVC | Any change (number or name known, `OFFHOOK`, `IDLE`, `waiting`, `hfp_connected`, `audio_on`) → send a new `state` with the same `call_id` to the sessions. `IDLE`: set `ended_at`, `end_reason`, move the context to the "recently ended" list (kept 60 s). |  |
 | 12 | System | M-APP / I-APP | `ringing` → update the fields; `offhook` → the Mac switches the panel to in-call mode (CALL-03) and removes the communication notification, iOS closes the banner and removes the incoming-call notification; `idle` → close the panel, stop the ringtone, remove the incoming-call notification. | Missed calls: CALL-04. |
 
@@ -138,23 +138,23 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `call_id` | uuid | Yes | UUIDv7 of the context; created on `RINGING` from `IDLE` (incoming call) or `OFFHOOK` from `IDLE` (outgoing call started on the phone) |
-| `direction` | enum{incoming\ | outgoing\ | unknown} | Yes | `unknown` when the context is built while the phone is already `OFFHOOK` (E8) |
-| `state` | enum{ringing\ | offhook\ | idle} | Yes | The phone's aggregate state |
+| `direction` | enum{incoming\| outgoing\| unknown} | Yes | `unknown` when the context is built while the phone is already `OFFHOOK` (E8) |
+| `state` | enum{ringing\| offhook\| idle} | Yes | The phone's aggregate state |
 | `waiting` | bool | Yes | `true` when `RINGING` appears while `OFFHOOK` (call waiting) |
-| `number` | e164 \ | null | Yes | Number of the main call; `null` when `READ_CALL_LOG` is missing, the number is withheld, or for an outgoing call |
-| `display_name` | string \ | null | Yes | Name from `PhoneLookup`; `null` when `READ_CONTACTS` is missing or the number is not in the contacts |
-| `presentation` | enum{allowed\ | restricted\ | unknown} | Yes | `allowed`: number available; `restricted`: `READ_CALL_LOG` granted but the number-carrying broadcast has an empty number (the caller withholds it); `unknown`: every other case |
-| `sub_id` | int32 \ | null | Yes | SIM of the call (API 2, per-SIM listeners); undetermined → `null` |
-| `sim_label` | string \ | null | Yes | SIM name (`SubscriptionInfo.getDisplayName()`) of `sub_id`; only when the phone has > 1 active SIM |
-| `waiting_number` | e164 \ | null | Yes | Number of the waiting call; `null` when `waiting = false` or unknown |
-| `waiting_display_name` | string \ | null | Yes | Name of the waiting caller |
+| `number` | e164 \| null | Yes | Number of the main call; `null` when `READ_CALL_LOG` is missing, the number is withheld, or for an outgoing call |
+| `display_name` | string \| null | Yes | Name from `PhoneLookup`; `null` when `READ_CONTACTS` is missing or the number is not in the contacts |
+| `presentation` | enum{allowed\| restricted\| unknown} | Yes | `allowed`: number available; `restricted`: `READ_CALL_LOG` granted but the number-carrying broadcast has an empty number (the caller withholds it); `unknown`: every other case |
+| `sub_id` | int32 \| null | Yes | SIM of the call (API 2, per-SIM listeners); undetermined → `null` |
+| `sim_label` | string \| null | Yes | SIM name (`SubscriptionInfo.getDisplayName()`) of `sub_id`; only when the phone has > 1 active SIM |
+| `waiting_number` | e164 \| null | Yes | Number of the waiting call; `null` when `waiting = false` or unknown |
+| `waiting_display_name` | string \| null | Yes | Name of the waiting caller |
 | `started_at` | timestamp | Yes | When the context was created (Android clock) |
-| `answered_at` | timestamp \ | null | Yes | When an incoming call went `RINGING` → `OFFHOOK`; always `null` for outgoing and `unknown` calls (the moment the other party picks up is unknown) |
-| `ended_at` | timestamp \ | null | Yes | Only when `state = idle` |
-| `end_reason` | enum{missed\ | rejected\ | ended\ | answered_elsewhere} \ | null | Yes | Only when `state = idle`; rules in logic 5 |
+| `answered_at` | timestamp \| null | Yes | When an incoming call went `RINGING` → `OFFHOOK`; always `null` for outgoing and `unknown` calls (the moment the other party picks up is unknown) |
+| `ended_at` | timestamp \| null | Yes | Only when `state = idle` |
+| `end_reason` | enum{missed\| rejected\| ended\| answered_elsewhere} \| null | Yes | Only when `state = idle`; rules in logic 5 |
 | `controls` | object | Yes | Actions the client may perform (table below) |
 | `hfp_connected` | bool | Yes | The receiving Mac has the HFP profile connected to the phone (A-AUD, AUDIO-02); always `false` for iPhone/iPad |
-| `audio_on` | enum{phone\ | mac} | Yes | `mac`: the call audio is on the receiving Mac itself (SCO to that Mac, or the Opus/WS path of that session — group 7); otherwise `phone` |
+| `audio_on` | enum{phone\| mac} | Yes | `mac`: the call audio is on the receiving Mac itself (SCO to that Mac, or the Opus/WS path of that session — group 7); otherwise `phone` |
 
 The `controls` object:
 
@@ -163,9 +163,9 @@ The `controls` object:
 | `answer` | bool | `true` when `state = ringing`, `waiting = false`, `ANSWER_PHONE_CALLS` is granted and the receiving client is a Mac |
 | `reject` | bool | `true` when `state = ringing`, `waiting = false`, `ANSWER_PHONE_CALLS` is granted |
 | `end` | bool | `true` when `state = offhook`, `waiting = false`, `ANSWER_PHONE_CALLS` is granted |
-| `hold` | enum{hfp\ | unavailable} | `hfp` when `state = offhook` and `hfp_connected = true` |
-| `dtmf` | enum{hfp\ | unavailable} | Same as `hold` |
-| `mute` | enum{hfp\ | unavailable} | `hfp` when `state = offhook`, `hfp_connected = true` and `audio_on = mac` |
+| `hold` | enum{hfp\| unavailable} | `hfp` when `state = offhook` and `hfp_connected = true` |
+| `dtmf` | enum{hfp\| unavailable} | Same as `hold` |
+| `mute` | enum{hfp\| unavailable} | `hfp` when `state = offhook`, `hfp_connected = true` and `audio_on = mac` |
 
 - **Response:** N/A (no ack; a client that missed a message because of a lost connection receives
   the current version when its new session exchanges capabilities — logic 3).
@@ -321,11 +321,11 @@ Content-Type: application/json
   Accessibility: `NSAccessibility.post(element:notification:userInfo:)` with
   `.announcementRequested`.
 - **Request (displayed data):** fields 1–10 from the latest `state`.
-- **Response:** the user's action → CALL-02 ("Answer", "Decline", "Decline with Message") or
+- **Response:** the user's action → CALL-02 ("Answer", "Decline", "Decline with Message…") or
   "Ignore" (local only).
 - **Example:** the `ringing` `state` from the API 1 example → panel in the top-right corner:
   "Incoming Call", "Nguyễn Văn A", the number in national format, "SIM 1", buttons "Answer",
-  "Decline", "Decline with Message", "Ignore"; the ringtone plays if Focus is off.
+  "Decline", "Decline with Message…", "Ignore"; the ringtone plays if Focus is off.
 - **Business logic:**
   1. One panel per call, placed in the top-right corner of the screen that has the mouse pointer.
      The panel takes no focus: a user typing in another app is not interrupted.
@@ -340,7 +340,7 @@ Content-Type: application/json
      of its own (the safe choice for Focus); the panel still shows.
   4. `call.notify = false` → no panel; the menu of the menu bar icon shows the call with buttons
      according to `controls` (E3).
-  5. When the panel appears, VoiceOver reads "Incoming call from <name or number>".
+  5. When the panel appears, VoiceOver reads "Incoming call from \<name or number>".
   6. `isFocused = true` → no panel (E4); a time-sensitive communication notification (API 7) takes
      its place. A panel that floats while the app is inactive is a deliberate deviation from the HIG
      (design system, Presentation section).
@@ -366,7 +366,7 @@ Content-Type: application/json
 | Property | Value |
 |------------|---------|
 | `title` | Field 2, or field 3 when there is no name |
-| `body` | "Incoming call", plus " · <SIM label>" when present |
+| `body` | "Incoming call", plus " · \<SIM label>" when present |
 | `threadIdentifier` | `calls` (the relay sets `thread-id`) |
 | `categoryIdentifier` | `HL_CALL_INCOMING` |
 | `interruptionLevel` | `.timeSensitive` (from the APNs `interruption-level`) |
@@ -384,7 +384,7 @@ Content-Type: application/json
   1. I-NSE decrypts per CONN-04 step 9b; a `call_event/state` envelope with `state = ringing` →
      incoming-call content. Device locked or decryption failed → keep the generic content, set no
      category (E6).
-  2. `now − started_at > 60 s` → body "Incoming call at <time>", no category (E7).
+  2. `now − started_at > 60 s` → body "Incoming call at \<time>", no category (E7).
   3. Foreground (`willPresent`): a banner already exists for the same `call_id` → do not present the
      system notification; no session yet → show the banner from the decrypted content and connect at
      the same time (CONN-01 or CONN-03).
@@ -408,7 +408,7 @@ Content-Type: application/json
 | Property | Value |
 |------------|---------|
 | `INPerson` | `displayName` = field 2, or field 3 when there is no name; `personHandle` = the E.164 number (`.phoneNumber`) so the system can filter by caller during Focus |
-| `body` | "Incoming call", plus " · <SIM label>" when present |
+| `body` | "Incoming call", plus " · \<SIM label>" when present |
 | `threadIdentifier` | `calls` |
 | `categoryIdentifier` | `HL_CALL_INCOMING_MAC`: actions "Answer" (`HL_CALL_ANSWER`), "Decline" (`HL_CALL_REJECT`, `.destructive`) |
 | `interruptionLevel` | `.passive` while the panel shows; `.timeSensitive` when Focus is on and there is no panel |
@@ -486,14 +486,14 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Answer" button | action | Input | — | Mac; when call audio is not in effect: answer on the phone (`audio = phone`) |
-| 2 | Where to answer | enum{phone\ | mac} | Input | `phone` | "Answer on Phone" / "Answer on Mac"; shown only when call audio is in effect (AUDIO-01) |
+| 2 | Where to answer | enum{phone\| mac} | Input | `phone` | "Answer on Phone" / "Answer on Mac"; shown only when call audio is in effect (AUDIO-01) |
 | 3 | "Decline" button | action | Input | — | Mac panel, iOS banner |
 | 4 | "Decline" action on the notification | action | Input | — | iOS (`HL_CALL_REJECT`); the system requires unlocking the device before it runs |
-| 5 | "Decline with Message" button | action | Input | — | Mac; opens the list of templates (fields 6, 7) |
+| 5 | "Decline with Message…" button | action | Input | — | Mac; opens the list of templates (fields 6, 7) |
 | 6 | Quick-reply template | string(160) | Input | "I'll call you back later", "I'm in a meeting" | Choosing a template from `call.quick_replies` → declines and sends right away |
 | 7 | Custom message | string(160) | Input | Empty | The "Custom Message…" item: a single-line field, click "Send"; nothing is sent when it is empty after trimming whitespace |
-| 8 | Template list | array<string(160)> | Input/Output | `call.quick_replies` | Settings → Calls (Mac): add, edit, delete, reorder; at most 6 templates; new key, proposed for addition to 0.9.5 |
-| 9 | In-progress state | enum{idle\ | answering\ | rejecting} | Output | `idle` | "Answering…", "Declining…"; the buttons are locked |
+| 8 | Template list | array<string(160)> | Input/Output | `call.quick_replies` | Settings → Calls (Mac): add, edit, delete, reorder; at most 6 templates; key in 0.9.5 |
+| 9 | In-progress state | enum{idle\| answering\| rejecting} | Output | `idle` | "Answering…", "Declining…"; the buttons are locked |
 | 10 | Error message | string | Output | Hidden | Per E1–E9: "The call has ended", "The call was answered on the phone", "The phone hasn't allowed HandLive to answer calls", "Couldn't send the command to the phone", "Couldn't switch the audio to the Mac" |
 | 11 | iOS notification "Couldn't decline the call" | string | Output | — | E8: "Couldn't decline the call. It's still ringing on the phone." |
 
@@ -533,7 +533,7 @@ flowchart TB
 
 | Step | Actor | Component | Description | Exceptions / Notes |
 |------|----------|-----------|-------|--------------------|
-| 1 | User | M-APP / I-APP | Mac: click "Answer" (or "Answer on Phone" / "Answer on Mac"), "Decline", or "Decline with Message" and then pick a template or type a message. iOS: tap "Decline" on the banner. The client locks the buttons and shows field 9. | Buttons exist only when `controls` allows them. |
+| 1 | User | M-APP / I-APP | Mac: click "Answer" (or "Answer on Phone" / "Answer on Mac"), "Decline", or "Decline with Message…" and then pick a template or type a message. iOS: tap "Decline" on the banner. The client locks the buttons and shows field 9. | Buttons exist only when `controls` allows them. |
 | 2 | System | M-APP | "Answer on Mac" and M-HFP has an HFP connection (`hfp_connected = true`) → step 3; every other case → step 4. |  |
 | 3 | System | M-HFP | Send the HFP command `ATA` (API 4); the phone answers and opens the SCO audio connection to the Mac. No `call_event/action` is sent. | `ERROR` or over 2 s → E6, go to step 4 with `audio = mac`. |
 | 4 | System | M-APP / I-APP | Send `call_event/action` (API 1) `{call_id, action, audio}`; wait for the `ack` up to `REQUEST_TIMEOUT`; session lost while waiting → re-send with the same `id` if the session reconnects before the deadline. | Timeout → E5. |
@@ -573,8 +573,8 @@ in B2 follows CONN-04 API 2 — no new call is introduced.
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `call_id` | uuid | Yes | Of the context the client is showing |
-| `action` | enum{answer\ | reject\ | end\ | hold\ | unhold\ | dtmf\ | mute} | Yes | Over WebSocket only `answer`, `reject`, `end` are carried out; the other values always get `CALL_HFP_REQUIRED` (0.7.1) |
-| `audio` | enum{phone\ | mac} | No | Only with `answer`: where the user wants to take the call; absent → `phone` |
+| `action` | enum{answer\| reject\| end\| hold\| unhold\| dtmf\| mute} | Yes | Over WebSocket only `answer`, `reject`, `end` are carried out; the other values always get `CALL_HFP_REQUIRED` (0.7.1) |
+| `audio` | enum{phone\| mac} | No | Only with `answer`: where the user wants to take the call; absent → `phone` |
 
 - **Response (`ack.data`):** `{}` when `ok = true` — Android has called the Telecom API; the actual
   result travels through `state`.
@@ -599,7 +599,7 @@ Errors (`ack.error.code`), in check order:
 
 ```json
 {"op":"action","data":{"call_id":"0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90","action":"reject"}}
-{"re":"0192f3f1-2c3d-7e4f-9a5b-6c7d8e9f0a12","ok":false,"error":{"code":"CALL_ACTION_NOT_ALLOWED","message":"Cuộc gọi không còn đổ chuông","details":{"state":"offhook","reason":"state"}}}
+{"re":"0192f3f1-2c3d-7e4f-9a5b-6c7d8e9f0a12","ok":false,"error":{"code":"CALL_ACTION_NOT_ALLOWED","message":"Call is no longer ringing","details":{"state":"offhook","reason":"state"}}}
 ```
 
 - **Business logic:**
@@ -677,7 +677,7 @@ Errors (`ack.error.code`), in check order:
   4. Declining never goes over HFP: it always uses `call_event/action reject`, so the Mac and
      iPhone/iPad share one path and A-CALL can set `end_reason = rejected`.
 
-#### API 5 — `WS sms/send` for "Decline with Message"
+#### API 5 — `WS sms/send` for "Decline with Message…"
 
 - **URL:** as in API 1
 - **Method:** `WS sms/send` (C→S), encrypted envelope, with ack — main specification in SMS-04 API 1.
@@ -786,15 +786,15 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Name or number | string | Output | `display_name` / `number` | As in CALL-01 fields 2–3; "Outgoing Call" when the number of an outgoing call is unknown (E8) |
 | 2 | Timer | string (mm:ss) | Output | "00:00" | Counts from `answered_at`; `answered_at = null` → counts from `started_at` |
-| 3 | Status | enum{active\ | held\ | waiting\ | ended} | Output | `active` | "On call", "On hold" (only with HFP connected), "Call waiting", "Call ended · mm:ss" |
-| 4 | Audio location | enum{phone\ | mac} | Output | `audio_on` | "Audio: Phone" / "Audio: Mac"; the switch button → AUDIO-03 |
+| 3 | Status | enum{active\| held\| waiting\| ended} | Output | `active` | "On call", "On hold" (only with HFP connected), "Call waiting", "Call ended · mm:ss" |
+| 4 | Audio location | enum{phone\| mac} | Output | `audio_on` | "Audio: Phone" / "Audio: Mac"; the switch button → AUDIO-03 |
 | 5 | "End" button | action | Input | — | Shown when `waiting = false` and (`controls.end = true` or M-HFP is connected) |
 | 6 | "Hold" / "Resume" button | action | Input | Hidden | Only when `controls.hold = hfp` and `waiting = false` |
 | 7 | DTMF keypad | string(1) | Input | Hidden | Only when `controls.dtmf = hfp`; one of `0`–`9`, `*`, `#`; also takes keys from the Mac keyboard while the panel has focus |
 | 8 | Dialed digits | string | Output | Empty | Below the keypad; cleared when the keypad closes; never stored, never logged |
 | 9 | "Mute" button | bool | Input/Output | `false` | Only when `controls.mute = hfp`; `true` = the Mac microphone is muted |
 | 10 | Waiting caller | string | Output | Hidden | `waiting_display_name` / `waiting_number`, or the number from `+CCWA` with HFP connected |
-| 11 | Call-waiting buttons | enum{reject_waiting\ | end_and_accept\ | hold_and_accept} | Input | Hidden | Only when `waiting = true` and M-HFP is connected: "Decline Waiting Call" (`AT+CHLD=0`), "End & Answer" (`AT+CHLD=1`), "Hold & Answer" (`AT+CHLD=2`) |
+| 11 | Call-waiting buttons | enum{reject_waiting\| end_and_accept\| hold_and_accept} | Input | Hidden | Only when `waiting = true` and M-HFP is connected: "Decline Waiting Call" (`AT+CHLD=0`), "End & Answer" (`AT+CHLD=1`), "Hold & Answer" (`AT+CHLD=2`) |
 | 12 | Error message, guidance | string | Output | Hidden | Per E1–E9 |
 
 ### 6.3.4 Business flow
@@ -863,7 +863,7 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `call_id` | uuid | Yes | The `offhook` context |
-| `action` | enum{end\ | hold\ | unhold\ | dtmf\ | mute} | Yes | In CALL-03 only `end` is carried out over WebSocket |
+| `action` | enum{end\| hold\| unhold\| dtmf\| mute} | Yes | In CALL-03 only `end` is carried out over WebSocket |
 
 - **Response (`ack.data`):** `{}` when `ok = true`. Errors: `FEATURE_DISABLED`, `BAD_REQUEST`,
   `CALL_HFP_REQUIRED` (`hold`, `unhold`, `dtmf`, `mute`), `CALL_NOT_FOUND`, `PERMISSION_MISSING`,
@@ -877,7 +877,7 @@ flowchart TB
 
 ```json
 {"op":"action","data":{"call_id":"0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90","action":"hold"}}
-{"re":"0192f3f2-3c4d-7e5f-8a6b-7c8d9e0f1a2b","ok":false,"error":{"code":"CALL_HFP_REQUIRED","message":"Giữ máy chỉ làm được qua Bluetooth HFP","details":{"action":"hold"}}}
+{"re":"0192f3f2-3c4d-7e5f-8a6b-7c8d9e0f1a2b","ok":false,"error":{"code":"CALL_HFP_REQUIRED","message":"Hold requires Bluetooth HFP","details":{"action":"hold"}}}
 ```
 
 - **Business logic:**
@@ -995,9 +995,9 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Call list | array<object> | Output | Empty | Mac: the "Calls" item in the sidebar of the Messages window; iOS: the "Calls" tab. Each row holds fields 2–6, sorted by `ts` in descending order, loading more on scroll |
+| 1 | Call list | array\<object> | Output | Empty | Mac: the "Calls" item in the sidebar of the Messages window; iOS: the "Calls" tab. Each row holds fields 2–6, sorted by `ts` in descending order, loading more on scroll |
 | 2 | Name or number | string | Output | `display_name` / `number` | `number = null` → "No Caller ID" |
-| 3 | Call type | enum{incoming\ | outgoing\ | missed\ | rejected\ | blocked\ | voicemail} | Output | `type` | Icon per type; `missed` in the warning color, bold while `seen = 0` |
+| 3 | Call type | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Output | `type` | Icon per type; `missed` in the warning color, bold while `seen = 0` |
 | 4 | Time | timestamp | Output | `ts` | The time ("2:05 PM") if today, the date if older |
 | 5 | Duration | int32 (seconds) | Output | `duration_s` | "2 minutes, 5 seconds"; hidden when 0 |
 | 6 | SIM label | string | Output | Hidden | `label` of the SIM with the matching `sub_id` in `features.sms.sims`; only when there is > 1 SIM |
@@ -1073,12 +1073,12 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `entry_id` | int64 | Yes | `CallLog.Calls._ID` (0.2) |
-| `number` | e164 \ | null | Yes | Column `NUMBER`, normalized as in CALL-01; empty, or `NUMBER_PRESENTATION` other than `PRESENTATION_ALLOWED` → `null` |
-| `display_name` | string \ | null | Yes | Name from `PhoneLookup` (with `READ_CONTACTS`); otherwise → column `CACHED_NAME`; empty → `null` |
-| `type` | enum{incoming\ | outgoing\ | missed\ | rejected\ | blocked\ | voicemail} | Yes | Column `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; any other value → the entry is skipped |
+| `number` | e164 \| null | Yes | Column `NUMBER`, normalized as in CALL-01; empty, or `NUMBER_PRESENTATION` other than `PRESENTATION_ALLOWED` → `null` |
+| `display_name` | string \| null | Yes | Name from `PhoneLookup` (with `READ_CONTACTS`); otherwise → column `CACHED_NAME`; empty → `null` |
+| `type` | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Yes | Column `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; any other value → the entry is skipped |
 | `ts` | timestamp | Yes | Column `DATE` (when the call started) |
 | `duration_s` | int32 | Yes | Column `DURATION` (seconds) |
-| `sub_id` | int32 \ | null | Yes | From `PHONE_ACCOUNT_COMPONENT_NAME` and `PHONE_ACCOUNT_ID` via `TelephonyManager.getSubscriptionId(PhoneAccountHandle)` (API 30+); API 29, or no mapping → `null` |
+| `sub_id` | int32 \| null | Yes | From `PHONE_ACCOUNT_COMPONENT_NAME` and `PHONE_ACCOUNT_ID` via `TelephonyManager.getSubscriptionId(PhoneAccountHandle)` (API 30+); API 29, or no mapping → `null` |
 
 #### API 1 — `WS call_event/log_sync`
 
@@ -1096,7 +1096,7 @@ flowchart TB
 
 | Field | Type | Description |
 |--------|------|-------|
-| `entries` | array<entry> | In ascending `_ID` order |
+| `entries` | array\<entry> | In ascending `_ID` order |
 | `cursor` | string | The cursor after this page; the client stores it in the same transaction as the page |
 | `has_more` | bool | More entries follow this page |
 | `reset` | bool | `true` when Android ignored the cursor it received and returns the first page as in a first sync (E5) |
@@ -1158,7 +1158,7 @@ Incremental sync:
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `entry` | entry | Yes | The new entry |
-| `call_id` | uuid \ | null | Yes | The call context (CALL-01) matched with the entry; `null` when there is no match |
+| `call_id` | uuid \| null | Yes | The call context (CALL-01) matched with the entry; `null` when there is no match |
 
 - **Response:** N/A (an entry missed because of a lost connection arrives with the next `log_sync`,
   since its `_ID` is greater than the stored cursor).
@@ -1222,7 +1222,7 @@ Incremental sync:
 |------------|---------|
 | `identifier` | `call-missed:<pair_id>:<entry_id>`; flow A: `call-missed:<pair_id>:<call_id>` (notifications created by a push: the identifier is set by the system) |
 | `title` | The name, the number in national format, or "No Caller ID" |
-| `body` | "Missed call · <time>", plus " · <SIM label>" when present |
+| `body` | "Missed call · \<time>", plus " · \<SIM label>" when present |
 | `threadIdentifier` | `calls:<pair_id>` (push: `calls`, set by the relay) |
 | `categoryIdentifier` | `HL_CALL_MISSED` when there is a number and `features.sms.can_send = true`; otherwise not set (E10) |
 | `userInfo` | `{pair_id, entry_id, call_id, number, sub_id}` — for "Message" and for marking `seen` |

@@ -74,14 +74,14 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Công tắc "Dùng điện thoại làm webcam" | bool | Input/Output | `feature.camera` (`false`) | Bật → chạy luồng cài đặt. Tắt → M-APP ngừng phục vụ nhu cầu camera/micro, không gỡ thành phần (gỡ ở trường 10) |
-| 2 | Trạng thái camera ảo | enum{not_installed\ | awaiting_approval\ | activating\ | active\ | needs_reboot\ | failed} | Output | `not_installed` | "Chưa cài", "Chờ bạn cho phép", "Đang kích hoạt…", "Đã sẵn sàng", "Cần khởi động lại Mac", "Lỗi" |
-| 3 | Trạng thái micro ảo | enum{not_installed\ | installing\ | installed\ | outdated\ | failed} | Output | Theo kết quả dò thiết bị (bước 8) | "Chưa cài", "Đang cài…", "Đã sẵn sàng", "Cần cập nhật", "Lỗi" |
-| 4 | Quyền camera của HandLive trên Mac | enum{not_determined\ | authorized\ | denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` hiển thị kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Camera |
+| 2 | Trạng thái camera ảo | enum{not_installed\| awaiting_approval\| activating\| active\| needs_reboot\| failed} | Output | `not_installed` | "Chưa cài", "Chờ bạn cho phép", "Đang kích hoạt…", "Đã sẵn sàng", "Cần khởi động lại Mac", "Lỗi" |
+| 3 | Trạng thái micro ảo | enum{not_installed\| installing\| installed\| outdated\| failed} | Output | Theo kết quả dò thiết bị (bước 8) | "Chưa cài", "Đang cài…", "Đã sẵn sàng", "Cần cập nhật", "Lỗi" |
+| 4 | Quyền camera của HandLive trên Mac | enum{not_determined\| authorized\| denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` hiển thị kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Camera |
 | 5 | Hướng dẫn cho phép extension | string | Output | Theo phiên bản macOS | macOS 15+: "Cài đặt chung › Mục đăng nhập và tiện ích mở rộng › Tiện ích mở rộng camera → bật HandLive". macOS 13–14: "Quyền riêng tư & Bảo mật → bấm Cho phép cạnh HandLive" |
 | 6 | Nút "Mở Cài đặt hệ thống" | action | Input | Hiện khi trường 2 = `awaiting_approval` | Mở System Settings tới trang tương ứng |
 | 7 | Nút "Cài driver micro" / "Cập nhật driver micro" | action | Input | Hiện khi trường 3 = `not_installed` hoặc `outdated` | Mở PKG (bước 9) |
 | 8 | Giải thích trước khi cài driver | string | Output | "HandLive cần cài driver micro ảo vào hệ thống. macOS sẽ hỏi mật khẩu quản trị và âm thanh trên Mac sẽ ngắt khoảng 1–2 giây." | Hiển thị trước khi mở Installer |
-| 9 | Sẵn sàng trên điện thoại | enum{ready\ | not_connected\ | feature_off\ | permission_missing} | Output | Theo capability gần nhất | Kèm danh sách quyền thiếu (`CAMERA`, `RECORD_AUDIO`) và việc cần làm trên điện thoại (SET-01, SET-02) |
+| 9 | Sẵn sàng trên điện thoại | enum{ready\| not_connected\| feature_off\| permission_missing} | Output | Theo capability gần nhất | Kèm danh sách quyền thiếu (`CAMERA`, `RECORD_AUDIO`) và việc cần làm trên điện thoại (SET-01, SET-02) |
 | 10 | Nút "Gỡ camera và micro ảo" | action | Input | Hiện khi trường 2 = `active` hoặc trường 3 = `installed` | Luồng thay thế A1–A4 |
 | 11 | Thông báo lỗi | string | Output | Rỗng | Theo E1–E9, kèm mã lỗi hệ thống nếu có |
 
@@ -377,12 +377,12 @@ UserDefaults.standard.set(false, forKey: "feature.camera")    # A4
 | Mục | Nội dung |
 |-----|----------|
 | Tên | CAM-02 — Bắt đầu và dừng phát camera/micro |
-| Mô tả | Mở và đóng phiên phát hình và tiếng từ điện thoại vào "HandLive Camera" và "HandLive Microphone" theo nhu cầu thực.<br>Ba nguồn kích hoạt: (a) ứng dụng họp bắt đầu đọc source stream của camera ảo → M-CAMX tăng bộ đếm consumer và phát Darwin notification `app.handlive.camera.demand`; (b) ứng dụng họp bắt đầu dùng micro ảo → `kAudioDevicePropertyDeviceIsRunningSomewhere` của thiết bị vào đổi sang 1; (c) người dùng bấm "Bắt đầu" trong cửa sổ xem trước của M-APP.<br>M-APP gửi `camera/start`; Android nâng foreground service lên type `connectedDevice\ | camera\ | microphone` (ngay nếu HandLive đang hiển thị, ngược lại sau khi người dùng chạm "Bật" trên thông báo), mở Camera2 → MediaCodec H.264 và AudioRecord → Opus, trả `camera/ready`; M-APP mở kênh riêng `/v1/stream/camera` (Wi-Fi, hoặc USB theo CAM-04), giải mã hình đẩy vào sink stream của M-CAMX và phát tiếng vào thiết bị ẩn của M-MIC. Hết mọi consumer 5 s → `camera/stop`.<br>Người dùng dừng được từ thông báo trên điện thoại. |
+| Mô tả | Mở và đóng phiên phát hình và tiếng từ điện thoại vào "HandLive Camera" và "HandLive Microphone" theo nhu cầu thực.<br>Ba nguồn kích hoạt: (a) ứng dụng họp bắt đầu đọc source stream của camera ảo → M-CAMX tăng bộ đếm consumer và phát Darwin notification `app.handlive.camera.demand`; (b) ứng dụng họp bắt đầu dùng micro ảo → `kAudioDevicePropertyDeviceIsRunningSomewhere` của thiết bị vào đổi sang 1; (c) người dùng bấm "Bắt đầu" trong cửa sổ xem trước của M-APP.<br>M-APP gửi `camera/start`; Android nâng foreground service lên type `connectedDevice\| camera\| microphone` (ngay nếu HandLive đang hiển thị, ngược lại sau khi người dùng chạm "Bật" trên thông báo), mở Camera2 → MediaCodec H.264 và AudioRecord → Opus, trả `camera/ready`; M-APP mở kênh riêng `/v1/stream/camera` (Wi-Fi, hoặc USB theo CAM-04), giải mã hình đẩy vào sink stream của M-CAMX và phát tiếng vào thiết bị ẩn của M-MIC. Hết mọi consumer 5 s → `camera/stop`.<br>Người dùng dừng được từ thông báo trên điện thoại. |
 | Tác nhân | Chính: Người dùng; Ứng dụng họp (consumer của thiết bị ảo). Hệ thống: M-APP, M-CAMX, M-MIC, A-SVC, A-CAM, A-UI, OS (CoreMediaIO, CoreAudio, VideoToolbox, Camera2, MediaCodec, AudioRecord). |
 | Điều kiện trước | 1.<br>CAM-01 hoàn tất (camera ảo; micro ảo nếu cần tiếng); `feature.camera = true` ở hai phía và camera hiệu lực theo capability (điện thoại có `CAMERA`, `RECORD_AUDIO`).<br>2.<br>Phiên `/v1/ctl` đang `Connected` qua LAN hoặc USB, không qua relay.<br>3.<br>Điện thoại không đang phát camera cho thiết bị khác.<br>4.<br>Android có quyền `POST_NOTIFICATIONS` để xác nhận khi ở nền (nếu không, người dùng phải mở HandLive trên điện thoại). |
-| Điều kiện sau | **Đang phát:** ứng dụng họp nhận hình và tiếng; A-SVC chạy FGS type `connectedDevice\ | camera\ | microphone`; điện thoại hiện chỉ báo quyền riêng tư của hệ thống và thông báo "Đang dùng camera cho <tên Mac>" có nút "Dừng"; có đúng một kết nối `/v1/stream/camera` đã xác thực cho `session_id`. **Sau khi dừng:** camera, bộ mã hóa, AudioRecord được giải phóng; FGS về type `connectedDevice`; kênh stream đóng mã 1000; M-CAMX phát khung chờ nếu còn consumer; micro ảo phát khoảng lặng. |
+| Điều kiện sau | **Đang phát:** ứng dụng họp nhận hình và tiếng; A-SVC chạy FGS type `connectedDevice\| camera\| microphone`; điện thoại hiện chỉ báo quyền riêng tư của hệ thống và thông báo "Đang dùng camera cho <tên Mac>" có nút "Dừng"; có đúng một kết nối `/v1/stream/camera` đã xác thực cho `session_id`. **Sau khi dừng:** camera, bộ mã hóa, AudioRecord được giải phóng; FGS về type `connectedDevice`; kênh stream đóng mã 1000; M-CAMX phát khung chờ nếu còn consumer; micro ảo phát khoảng lặng. |
 | Ngoại lệ | E1 — Phiên ctl đi qua relay hoặc chưa kết nối: M-APP không gửi `camera/start`, báo "Cần cùng mạng Wi-Fi hoặc cắm cáp USB"; Android nhận `camera/start` qua relay → `CAM_TRANSPORT_UNSUPPORTED`.<br>E2 — Camera không hiệu lực: `FEATURE_DISABLED` hoặc `PERMISSION_MISSING` (`details.permission` = `CAMERA`/`RECORD_AUDIO`).<br>E3 — Điện thoại đang phát cho thiết bị khác → `CAM_BUSY` (`details.holder_name`).<br>E4 — Người dùng chạm "Từ chối" → `camera/stop` reason `denied`, mã `CAM_DENIED_BY_USER`.<br>E5 — Không xác nhận trong 60 s (`CAM_CONFIRM_TIMEOUT`) → `camera/stop` reason `confirm_timeout`.<br>E6 — Camera phần cứng đang bị ứng dụng khác dùng → `CAM_BUSY`; không có camera yêu cầu → dùng camera còn lại, không có camera nào → `CAM_UNAVAILABLE`.<br>E7 — Không có bộ mã hóa H.264 dùng được ở mọi bậc → `CAM_ENCODER_UNSUPPORTED`.<br>E8 — Không lấy được hàng đợi sink (extension chưa kích hoạt, quyền camera của M-APP bị từ chối) → `MAC_EXTENSION_NOT_ACTIVE`, mở CAM-01, xem trước vẫn chạy; thiếu driver micro → `MAC_MIC_DRIVER_MISSING`, chỉ phát hình.<br>E9 — Kênh stream không mở được, `stream_hello` bị từ chối, hoặc im lặng quá 1 s (`CAM_STREAM_STALL`) → mở lại cùng `session_id` tối đa 3 lần (0,25 s, 0,5 s, 1 s); vẫn lỗi → dừng phiên reason `error`.<br>E10 — Mất cả phiên ctl lẫn kênh stream quá 5 s, hoặc điện thoại quá nóng (CAM-05) → phiên kết thúc, M-CAMX phát khung chờ. |
-| Yêu cầu đặc biệt | **Độ trễ** (720p30, từ ống kính tới ứng dụng họp): < 120 ms qua Wi-Fi, < 70 ms qua USB; tiếng không sớm hơn hình quá 45 ms và không muộn hơn quá 125 ms.<br>Từ lúc có nhu cầu tới khung hình đầu ≤ 2 s khi HandLive đang hiển thị trên điện thoại.<br>**Quyền riêng tư:** chỉ mở phần cứng của track đang cần; khi HandLive ở nền, mỗi phiên cần một lần chạm trên điện thoại; chỉ báo quyền riêng tư của hệ thống và thông báo thường trực trong suốt phiên.<br>**Nền tảng Android:** manifest khai báo `android:foregroundServiceType="connectedDevice\ | camera\ | microphone"` và quyền `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_MICROPHONE`, `CAMERA`, `RECORD_AUDIO`, `POST_NOTIFICATIONS`. Liên kết CompanionDeviceManager **không** miễn trừ hạn chế khởi động FGS camera/micro từ nền (đã kiểm chứng) nên thiết kế không dựa vào nó. **Bảo mật:** khung media mã hóa bằng khóa kênh stream (0.6.3 bước 7); bên nhận bỏ khung có `seq` không tăng; không ghi log nội dung media; sink stream chỉ nhận M-APP. **Tài nguyên:** mặc định 1280×720, 30 fps, 2,5 Mbps (`CAM_DEFAULT`); tiếng Opus 32 kbps. |
+| Yêu cầu đặc biệt | **Độ trễ** (720p30, từ ống kính tới ứng dụng họp): < 120 ms qua Wi-Fi, < 70 ms qua USB; tiếng không sớm hơn hình quá 45 ms và không muộn hơn quá 125 ms.<br>Từ lúc có nhu cầu tới khung hình đầu ≤ 2 s khi HandLive đang hiển thị trên điện thoại.<br>**Quyền riêng tư:** chỉ mở phần cứng của track đang cần; khi HandLive ở nền, mỗi phiên cần một lần chạm trên điện thoại; chỉ báo quyền riêng tư của hệ thống và thông báo thường trực trong suốt phiên.<br>**Nền tảng Android:** manifest khai báo `android:foregroundServiceType="connectedDevice\| camera\| microphone"` và quyền `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_MICROPHONE`, `CAMERA`, `RECORD_AUDIO`, `POST_NOTIFICATIONS`. Liên kết CompanionDeviceManager **không** miễn trừ hạn chế khởi động FGS camera/micro từ nền (đã kiểm chứng) nên thiết kế không dựa vào nó. **Bảo mật:** khung media mã hóa bằng khóa kênh stream (0.6.3 bước 7); bên nhận bỏ khung có `seq` không tăng; không ghi log nội dung media; sink stream chỉ nhận M-APP. **Tài nguyên:** mặc định 1280×720, 30 fps, 2,5 Mbps (`CAM_DEFAULT`); tiếng Opus 32 kbps. |
 
 ### 8.2.2 Màn hình
 
@@ -392,13 +392,13 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Trạng thái phát (menu bar M-APP) | enum{idle\ | requesting\ | waiting_phone\ | starting\ | live\ | stopping\ | error} | Output | `idle` | "Chưa phát", "Đang yêu cầu…", "Chạm Bật trên điện thoại", "Đang khởi động…", "Đang phát", "Đang dừng…", "Lỗi" |
-| 2 | Thiết bị ảo đang được dùng | array<enum{camera\ | microphone\ | preview}> | Output | Rỗng | Ví dụ "Có ứng dụng đang dùng HandLive Camera và HandLive Microphone" |
+| 1 | Trạng thái phát (menu bar M-APP) | enum{idle\| requesting\| waiting_phone\| starting\| live\| stopping\| error} | Output | `idle` | "Chưa phát", "Đang yêu cầu…", "Chạm Bật trên điện thoại", "Đang khởi động…", "Đang phát", "Đang dừng…", "Lỗi" |
+| 2 | Thiết bị ảo đang được dùng | array<enum{camera\| microphone\| preview}> | Output | Rỗng | Ví dụ "Có ứng dụng đang dùng HandLive Camera và HandLive Microphone" |
 | 3 | Cửa sổ xem trước | video | Output | Ẩn | Hình đã giải mã và mức âm lượng micro |
 | 4 | Nút "Bắt đầu" / "Dừng" trong xem trước | action | Input | "Bắt đầu" | Nguồn kích hoạt (c); "Dừng" chỉ bỏ nhu cầu của xem trước |
-| 5 | Kênh truyền | enum{wifi\ | usb} | Output | Theo phiên ctl | "Qua Wi-Fi", "Qua USB" |
+| 5 | Kênh truyền | enum{wifi\| usb} | Output | Theo phiên ctl | "Qua Wi-Fi", "Qua USB" |
 | 6 | Thông báo yêu cầu trên Android | string | Output | — | "<tên Mac> muốn dùng camera và micro" (hoặc "…micro" khi chỉ có track tiếng); tự hủy sau 60 s |
-| 7 | Lựa chọn trên thông báo yêu cầu hoặc hộp thoại A-UI | enum{Bật\ | Từ chối} | Input | — | Hộp thoại A-UI hiện khi người dùng mở HandLive lúc đang có yêu cầu chờ |
+| 7 | Lựa chọn trên thông báo yêu cầu hoặc hộp thoại A-UI | enum{Bật\| Từ chối} | Input | — | Hộp thoại A-UI hiện khi người dùng mở HandLive lúc đang có yêu cầu chờ |
 | 8 | Thông báo đang phát trên Android | string | Output | — | "Đang dùng camera cho <tên Mac>"; có nút "Dừng" (nút điều khiển khác ở CAM-03) |
 | 9 | Nút "Dừng" trên thông báo đang phát | action | Input | — | Luồng A1–A2 |
 | 10 | Khung chờ của camera ảo | image | Output | "Đang chờ điện thoại…" | M-CAMX phát khi quá 1 s không có khung từ sink |
@@ -446,7 +446,7 @@ flowchart TB
 | 3 | Hệ thống | M-APP | Kiểm `feature.camera = true`, camera hiệu lực theo capability, phiên ctl `Connected` với kênh `lan` hoặc `usb`. | Relay hoặc chưa kết nối → E1 (M-CAMX tiếp tục phát khung chờ). Không hiệu lực → E2. |
 | 4 | Hệ thống | M-APP → A-SVC | Sinh `session_id` (UUIDv7); gửi `camera/start` (API 4): camera = `cam.default_camera`; kích thước = định dạng theo `hlaf`, giới hạn bởi `cam.default_quality` và `features.camera.max_*`; 30 fps; bitrate theo bậc (CAM-05); audio 32 kbps. Trạng thái `requesting`. | Ack lỗi `CAM_TRANSPORT_UNSUPPORTED` (E1), `FEATURE_DISABLED`/`PERMISSION_MISSING` (E2), `CAM_BUSY` (E3). Không có ack trong 10 s → gửi lại 1 lần cùng `session_id`. |
 | 5 | Hệ thống | A-SVC | Kiểm phiên ctl không qua relay, tính năng hiệu lực, không có phiên camera khác; rồi kiểm A-UI đang hiển thị (`ProcessLifecycleOwner` ở trạng thái `STARTED`). |  |
-| 6 | Hệ thống | A-SVC | Gọi `ServiceCompat.startForeground` với type `CONNECTED_DEVICE \ | CAMERA \ | MICROPHONE` (API 5); ack `{status: "starting"}`. Khi đến từ bước 8 thì yêu cầu đã được ack ở bước 7, chuyển thẳng bước 9. | Hệ thống từ chối nâng type (`SecurityException`) → `camera/stop` reason `error`, mã `PERMISSION_MISSING`. |
+| 6 | Hệ thống | A-SVC | Gọi `ServiceCompat.startForeground` với type `CONNECTED_DEVICE \| CAMERA \| MICROPHONE` (API 5); ack `{status: "starting"}`. Khi đến từ bước 8 thì yêu cầu đã được ack ở bước 7, chuyển thẳng bước 9. | Hệ thống từ chối nâng type (`SecurityException`) → `camera/stop` reason `error`, mã `PERMISSION_MISSING`. |
 | 7 | Hệ thống | A-SVC, M-APP | Ack lỗi `CAM_USER_CONFIRM_REQUIRED` với `details = {status: "needs_user_confirm", confirm_timeout_ms: 60000}`; đăng thông báo ưu tiên cao (trường 6) với action "Bật", "Từ chối" (API 5). M-APP chuyển `waiting_phone`, hiển thị "Chạm Bật trên điện thoại". | Người dùng mở HandLive trong lúc chờ → hộp thoại A-UI (trường 7) thay thông báo. |
 | 8 | Người dùng | A-UI (thông báo) | "Bật" → PendingIntent khởi động trực tiếp A-SVC (tương tác với thông báo là ngoại lệ được tài liệu hóa cho FGS camera/micro khởi động từ nền, Android 14+) → bước 6. "Từ chối" → A-SVC gửi `camera/stop` reason `denied`, mã `CAM_DENIED_BY_USER`. | E4. Hết 60 s → A-SVC hủy thông báo, gửi `camera/stop` reason `confirm_timeout` (E5). |
 | 9 | Hệ thống | A-CAM, A-SVC → M-APP | Mở camera, cấu hình encoder và capture session, mở AudioRecord + Opus cho track được bật (API 6); gửi `camera/ready` (API 7) với cấu hình thực tế; đổi thông báo FGS sang trường 8. | Camera bận hoặc không có → E6; không có encoder → E7: `camera/stop` reason `error` kèm mã. |
@@ -567,11 +567,11 @@ flowchart TB
 | `session_id` | uuid | Có | UUIDv7 do M-APP sinh cho phiên camera |
 | `video` | object | Có |  |
 | `video.enabled` | bool | Có | Có consumer camera hoặc đang xem trước |
-| `video.camera` | enum{front\ | back} | Có | Theo `cam.default_camera` |
+| `video.camera` | enum{front\| back} | Có | Theo `cam.default_camera` |
 | `video.width`, `video.height` | int32 | Có | Một trong 640×480, 1280×720, 1920×1080; = định dạng `hlaf`, giới hạn bởi chất lượng người dùng chọn và `features.camera.max_width`/`max_height`. Là trần của phiên |
 | `video.fps` | int32 | Có | `30` (CAM-05 có thể hạ 24, 15) |
 | `video.bitrate_bps` | int32 | Có | Bitrate danh định của bậc (CAM-05): 1 000 000 / 2 500 000 / 4 500 000 |
-| `video.quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | Không (mặc định `auto`) | Chế độ chất lượng; chỉ `auto` mới thích ứng theo mạng (CAM-05) |
+| `video.quality` | enum{auto\| 480p\| 720p\| 1080p} | Không (mặc định `auto`) | Chế độ chất lượng; chỉ `auto` mới thích ứng theo mạng (CAM-05) |
 | `audio` | object | Có |  |
 | `audio.enabled` | bool | Có | Micro ảo đang được dùng hoặc đang xem trước, và driver M-MIC có mặt |
 | `audio.bitrate_bps` | int32 | Có | `32000` |
@@ -583,7 +583,7 @@ flowchart TB
 | `ok = true` | `data = {status: "starting"}` | Android đã nâng FGS, đang mở phần cứng; chờ `camera/ready` |
 | `ok = false`, `CAM_USER_CONFIRM_REQUIRED` | `details = {status: "needs_user_confirm", confirm_timeout_ms: 60000}` | Không phải lỗi cuối: M-APP giữ phiên, chờ `camera/ready` hoặc `camera/stop` |
 | `ok = false`, `CAM_TRANSPORT_UNSUPPORTED` |  | Phiên ctl đi qua relay (E1) |
-| `ok = false`, `FEATURE_DISABLED` / `PERMISSION_MISSING` | `details.permission` = `CAMERA` \ | `RECORD_AUDIO` | E2 |
+| `ok = false`, `FEATURE_DISABLED` / `PERMISSION_MISSING` | `details.permission` = `CAMERA` \| `RECORD_AUDIO` | E2 |
 | `ok = false`, `CAM_BUSY` | `details.holder_name` | Điện thoại đang phát cho thiết bị khác (E3) |
 | `ok = false`, `CAM_THERMAL_LIMIT` |  | Điện thoại đang quá nóng (mức ≥ `SEVERE` — CAM-05) |
 | `ok = false`, `BAD_REQUEST` |  | Kích thước ngoài tập cho phép hoặc cả hai track đều tắt |
@@ -593,7 +593,7 @@ flowchart TB
 ```json
 {"op":"start","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","video":{"enabled":true,"camera":"front","width":1280,"height":720,"fps":30,"bitrate_bps":2500000,"quality":"auto"},"audio":{"enabled":true,"bitrate_bps":32000}}}
 {"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":true,"data":{"status":"starting"}}
-{"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":false,"error":{"code":"CAM_USER_CONFIRM_REQUIRED","message":"Chạm Bật trên điện thoại","details":{"status":"needs_user_confirm","confirm_timeout_ms":60000}}}
+{"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":false,"error":{"code":"CAM_USER_CONFIRM_REQUIRED","message":"Waiting for confirmation on the phone","details":{"status":"needs_user_confirm","confirm_timeout_ms":60000}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -728,9 +728,9 @@ ServiceCompat.startForeground(
 | `session_id` | uuid | Có |  |
 | `stream_path` | string | Có | `/v1/stream/camera` |
 | `actual` | object | Có | Cấu hình thực tế; cùng cấu trúc dùng trong `camera/config` ack (CAM-03) và `camera/state` (API 14) |
-| `actual.quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | Có |  |
-| `actual.transport` | enum{lan\ | usb\ | none} | Có | Kênh của stream đang phát; `none` khi chưa có kênh stream |
-| `actual.video` | object | Có | `enabled` (bool), `camera` (enum{front\ | back}), `width`, `height`, `fps`, `bitrate_bps` (int32), `paused` (bool), `idr_interval_ms` (int32: 1000 \ | 2000), `rotation_deg` (int32: 0 \ | 90 \ | 180 \ | 270 — M-APP xoay khung theo giá trị này, xem Quy tắc hình ảnh đầu nhóm 8) |
+| `actual.quality` | enum{auto\| 480p\| 720p\| 1080p} | Có |  |
+| `actual.transport` | enum{lan\| usb\| none} | Có | Kênh của stream đang phát; `none` khi chưa có kênh stream |
+| `actual.video` | object | Có | `enabled` (bool), `camera` (enum{front\| back}), `width`, `height`, `fps`, `bitrate_bps` (int32), `paused` (bool), `idr_interval_ms` (int32: 1000 \| 2000), `rotation_deg` (int32: 0 \| 90 \| 180 \| 270 — M-APP xoay khung theo giá trị này, xem Quy tắc hình ảnh đầu nhóm 8) |
 | `actual.audio` | object | Có | `enabled` (bool), `sample_rate` (48000), `channels` (1), `frame_ms` (10), `bitrate_bps` (32000) |
 
 - **Response:** N/A. M-APP mở kênh stream (API 8) trong `CAM_STREAM_OPEN_TIMEOUT` (10 s).
@@ -761,11 +761,11 @@ ServiceCompat.startForeground(
 |--------|------|----------|-------|
 | `session_id` | uuid | Có | Phiên camera đã có `camera/ready` |
 | `nonce` | b64u (32 byte) | Có | `nonce_c` ngẫu nhiên, mới cho mỗi kết nối |
-| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`k_auth`, `"HLSTREAM1 | "` ‖ `session_id` ‖ `nonce_c`); `k_auth` là 32 byte đầu của `K_stream` (0.6.3 bước 7, kênh = `camera`) |
+| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`k_auth`, `"HLSTREAM1\|"` ‖ `session_id` ‖ `nonce_c`); `k_auth` là 32 byte đầu của `K_stream` (0.6.3 bước 7, kênh = `camera`) |
 
 - **Response (`data` của `stream_welcome`):** `session_id` (uuid); `nonce` (b64u 32 byte,
   `nonce_s`); `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖
-  `nonce_s`) — làm rõ chữ "tương tự" ở 0.6.3 bước 7: gắn cả hai nonce để welcome không phát lại
+  `nonce_s`) — như 0.6.3 bước 7: gắn cả hai nonce để welcome không phát lại
   được. Lỗi → đóng WebSocket: 4400 (`session_id` không tồn tại hoặc đã dừng), 4401 (`mac` sai), 4408
   (không có hello trong 5 s — `HANDSHAKE_TIMEOUT`).
 - **Ví dụ:**
@@ -944,16 +944,16 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `session_id` | uuid | Có |  |
-| `reason` | enum{no_consumer\ | user\ | denied\ | confirm_timeout\ | disconnected\ | thermal\ | error} | Có | `no_consumer`: M-APP hết nhu cầu, Mac sắp ngủ hoặc M-APP thoát; `user`: người dùng chạm "Dừng" trên điện thoại; `denied`: chạm "Từ chối"; `confirm_timeout`: quá 60 s chưa xác nhận; `disconnected`: mất cả ctl lẫn stream quá 5 s; `thermal`: nhiệt ≥ `CRITICAL` (CAM-05); `error`: lỗi khác |
+| `reason` | enum{no_consumer\| user\| denied\| confirm_timeout\| disconnected\| thermal\| error} | Có | `no_consumer`: M-APP hết nhu cầu, Mac sắp ngủ hoặc M-APP thoát; `user`: người dùng chạm "Dừng" trên điện thoại; `denied`: chạm "Từ chối"; `confirm_timeout`: quá 60 s chưa xác nhận; `disconnected`: mất cả ctl lẫn stream quá 5 s; `thermal`: nhiệt ≥ `CRITICAL` (CAM-05); `error`: lỗi khác |
 | `code` | string | Không | Mã lỗi 0.8.1: `CAM_DENIED_BY_USER` (với `denied`), `CAM_THERMAL_LIMIT` (với `thermal`), `CAM_BUSY`, `CAM_UNAVAILABLE`, `CAM_ENCODER_UNSUPPORTED`, `PERMISSION_MISSING`, `INTERNAL` (với `error`) |
-| `message` | string | Không | Mô tả ngắn cho người dùng |
+| `message` | string | Không | Chuỗi chẩn đoán tiếng Anh cho log; giao diện hiển thị câu theo mã lý do qua catalog (0.12.4) |
 
 - **Response (`ack.data`):** `{}`; luôn `ok = true`, kể cả khi `session_id` không còn (idempotent).
 - **Ví dụ:**
 
 ```json
 {"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"no_consumer"}}
-{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"Điện thoại quá nóng"}}
+{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"Device overheating"}}
 {"re":"0192f5b2-0a1b-7c2d-8e3f-4a5b6c7d8e9f","ok":true,"data":{}}
 ```
 
@@ -979,12 +979,12 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `session_id` | uuid | Có |  |
-| `state` | enum{live\ | reconfiguring\ | degraded} | Có | `live`: đang phát đúng mức mục tiêu; `reconfiguring`: đang đổi camera, kích thước hoặc kênh; `degraded`: đang chạy dưới mức mục tiêu do mạng, nhiệt hoặc pin |
+| `state` | enum{live\| reconfiguring\| degraded} | Có | `live`: đang phát đúng mức mục tiêu; `reconfiguring`: đang đổi camera, kích thước hoặc kênh; `degraded`: đang chạy dưới mức mục tiêu do mạng, nhiệt hoặc pin |
 | `actual` | object | Có | Như `camera/ready` (API 7) |
-| `thermal` | enum{none\ | light\ | moderate\ | severe\ | critical\ | emergency\ | shutdown} | Có | Từ `PowerManager.getCurrentThermalStatus()` |
+| `thermal` | enum{none\| light\| moderate\| severe\| critical\| emergency\| shutdown} | Có | Từ `PowerManager.getCurrentThermalStatus()` |
 | `battery_pct` | int32 | Có | 0–100 |
 | `charging` | bool | Có | Đang sạc (kể cả qua cáp USB nối Mac) |
-| `reason` | enum{start\ | user_config\ | network\ | thermal\ | battery\ | recovered\ | transport\ | consumer\ | periodic} | Có | Nguyên nhân của lần gửi này |
+| `reason` | enum{start\| user_config\| network\| thermal\| battery\| recovered\| transport\| consumer\| periodic} | Có | Nguyên nhân của lần gửi này |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -1024,9 +1024,9 @@ context.dataStore.data.first()[booleanPreferencesKey("feature.camera")] ?: false
 | Mô tả | Trong phiên đang phát (CAM-02), người dùng điều khiển luồng từ menu của biểu tượng thanh menu (menu con Camera) hoặc cửa sổ Xem trước camera của M-APP, hoặc từ nút trên thông báo đang phát của Android: đổi camera trước/sau, chọn chất lượng (`auto`, 480p, 720p, 1080p — không vượt định dạng ứng dụng họp đã chọn), bật/tắt micro, tạm dừng hình.<br>M-APP gửi `camera/config`; Android áp dụng, trả ack `{actual}` và phát `camera/state`.<br>Đổi camera mở lại capture session với camera mới, giữ nguyên encoder khi kích thước không đổi, ép IDR và đặt cờ discontinuity.<br>Tạm dừng hình và tắt micro giải phóng phần cứng thật; ứng dụng họp thấy khung "Đã tạm dừng hình" do M-APP tạo, micro ảo phát khoảng lặng.<br>Thao tác trên điện thoại được áp dụng tại chỗ rồi báo cho Mac qua `camera/state`.<br>Lựa chọn camera và chất lượng được lưu làm mặc định (`cam.default_camera`, `cam.default_quality`).<br>Không có tùy chọn lật gương. |
 | Tác nhân | Chính: Người dùng. Hệ thống: M-APP, M-CAMX, A-SVC, A-CAM, A-UI (thông báo), OS (Camera2, MediaCodec, AudioRecord). |
 | Điều kiện trước | 1.<br>Có phiên camera CAM-02 ở trạng thái `starting` hoặc `live`; khi chưa có phiên, lựa chọn camera và chất lượng chỉ được lưu làm mặc định.<br>2.<br>Phiên `/v1/ctl` đang `Connected` qua LAN hoặc USB.<br>3.<br>Đổi camera: `features.camera.cameras` có cả `front` và `back`.<br>4.<br>Bật micro: driver M-MIC có mặt. |
-| Điều kiện sau | Android chạy đúng cấu hình mới; `actual` trong ack và `camera/state` phản ánh cấu hình thực tế; M-APP hiển thị và lưu lựa chọn.<br>Sau khi đổi camera hoặc đổi kích thước, khung hình đầu là IDR có cờ discontinuity.<br>Tắt micro: `AudioRecord` đã giải phóng, chỉ báo micro của Android tắt.<br>Tạm dừng hình: camera đã đóng, chỉ báo camera tắt, ứng dụng họp nhận khung "Đã tạm dừng hình".<br>FGS giữ type `camera\ | microphone` suốt phiên. |
+| Điều kiện sau | Android chạy đúng cấu hình mới; `actual` trong ack và `camera/state` phản ánh cấu hình thực tế; M-APP hiển thị và lưu lựa chọn.<br>Sau khi đổi camera hoặc đổi kích thước, khung hình đầu là IDR có cờ discontinuity.<br>Tắt micro: `AudioRecord` đã giải phóng, chỉ báo micro của Android tắt.<br>Tạm dừng hình: camera đã đóng, chỉ báo camera tắt, ứng dụng họp nhận khung "Đã tạm dừng hình".<br>FGS giữ type `camera\| microphone` suốt phiên. |
 | Ngoại lệ | E1 — Điện thoại không có camera yêu cầu → ack lỗi `CAM_UNAVAILABLE`, giữ camera cũ.<br>E2 — Camera mới bận hoặc lỗi khi mở → mở lại camera cũ; không được → `camera/stop` reason `error`, mã `CAM_BUSY` (CAM-02 API 13).<br>E3 — Chất lượng chọn vượt khả năng máy (`features.camera.max_*`, encoder từ chối) → dùng bậc thấp hơn gần nhất; `actual` cho biết mức thực.<br>E4 — Chất lượng chọn cao hơn định dạng ứng dụng họp (`hlaf`) → giới hạn theo định dạng đó, hiển thị "Giới hạn theo ứng dụng họp: 720p".<br>E5 — Đang có giới hạn nhiệt hoặc pin (CAM-05) → ghi nhận mức chọn, áp dụng khi hết giới hạn.<br>E6 — Thiếu driver micro ảo → công tắc micro bị vô hiệu kèm `MAC_MIC_DRIVER_MISSING`.<br>E7 — Không có ack trong 10 s → gửi lại một lần; vẫn không có → `TIMEOUT`, giao diện trả về giá trị cũ.<br>E8 — `session_id` không khớp phiên của Android → `BAD_REQUEST`, M-APP làm mới trạng thái phiên. |
-| Yêu cầu đặc biệt | **Hiệu năng:** đổi camera làm hình gián đoạn ≤ 1 s (M-APP giữ khung cuối trong lúc chờ); bật/tắt micro ≤ 200 ms; tạm dừng hình đóng camera ≤ 500 ms.<br>**Quyền riêng tư:** tạm dừng hình và tắt micro đóng phần cứng thật, không chỉ bỏ dữ liệu, để chỉ báo quyền riêng tư của Android tắt theo.<br>Hình gửi đi không bao giờ bị lật; ứng dụng họp tự lật khung xem trước của chính nó nên không có tùy chọn lật gương.<br>**Nền tảng:** FGS giữ type `camera\ | microphone` từ CAM-02 suốt phiên nên mở lại camera hoặc micro khi HandLive ở nền, kể cả khi màn hình khóa, không cần xác nhận lại. **Nhất quán:** tối đa một `camera/config` đang chờ ack; thao tác dồn dập được gộp, chỉ gửi trạng thái mong muốn mới nhất.<br>Thay đổi từ điện thoại hiện trên M-APP ≤ 1 s.<br>**Khả dụng:** mọi điều khiển có nhãn VoiceOver; thông báo Android tối đa 3 nút. |
+| Yêu cầu đặc biệt | **Hiệu năng:** đổi camera làm hình gián đoạn ≤ 1 s (M-APP giữ khung cuối trong lúc chờ); bật/tắt micro ≤ 200 ms; tạm dừng hình đóng camera ≤ 500 ms.<br>**Quyền riêng tư:** tạm dừng hình và tắt micro đóng phần cứng thật, không chỉ bỏ dữ liệu, để chỉ báo quyền riêng tư của Android tắt theo.<br>Hình gửi đi không bao giờ bị lật; ứng dụng họp tự lật khung xem trước của chính nó nên không có tùy chọn lật gương.<br>**Nền tảng:** FGS giữ type `camera\| microphone` từ CAM-02 suốt phiên nên mở lại camera hoặc micro khi HandLive ở nền, kể cả khi màn hình khóa, không cần xác nhận lại. **Nhất quán:** tối đa một `camera/config` đang chờ ack; thao tác dồn dập được gộp, chỉ gửi trạng thái mong muốn mới nhất.<br>Thay đổi từ điện thoại hiện trên M-APP ≤ 1 s.<br>**Khả dụng:** mọi điều khiển có nhãn VoiceOver; thông báo Android tối đa 3 nút. |
 
 ### 8.3.2 Màn hình
 
@@ -1037,8 +1037,8 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Nút "Đổi camera" (menu bar, xem trước) | action | Input | Hiện khi điện thoại có hai camera | Đổi `front` ↔ `back` |
-| 2 | Camera đang dùng | enum{front\ | back} | Input/Output | `actual.video.camera`; chưa có phiên: `cam.default_camera` (`front`) | "Camera trước", "Camera sau"; lựa chọn được lưu làm mặc định |
-| 3 | Chất lượng | enum{auto\ | 480p\ | 720p\ | 1080p} | Input/Output | `cam.default_quality` (`auto`) | "Tự động", "480p", "720p", "1080p"; mục vượt định dạng ứng dụng họp hoặc khả năng máy bị làm mờ kèm lý do |
+| 2 | Camera đang dùng | enum{front\| back} | Input/Output | `actual.video.camera`; chưa có phiên: `cam.default_camera` (`front`) | "Camera trước", "Camera sau"; lựa chọn được lưu làm mặc định |
+| 3 | Chất lượng | enum{auto\| 480p\| 720p\| 1080p} | Input/Output | `cam.default_quality` (`auto`) | "Tự động", "480p", "720p", "1080p"; mục vượt định dạng ứng dụng họp hoặc khả năng máy bị làm mờ kèm lý do |
 | 4 | Chất lượng thực tế | string | Output | Theo `actual` | Ví dụ "1280×720 · 30 fps · 2,5 Mbps" |
 | 5 | Công tắc "Micro điện thoại" | bool | Input/Output | `true` khi có nhu cầu micro | Tắt → Android giải phóng `AudioRecord`, micro ảo phát khoảng lặng |
 | 6 | Công tắc "Tạm dừng hình" | bool | Input/Output | `false` | Bật → camera đóng, ứng dụng họp thấy trường 7 |
@@ -1122,8 +1122,8 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `session_id` | uuid | Có | Phiên camera hiện tại |
-| `camera` | enum{front\ | back} | Không | Đổi camera |
-| `quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | Không | Chế độ chất lượng; `auto` = thích ứng theo CAM-05 |
+| `camera` | enum{front\| back} | Không | Đổi camera |
+| `quality` | enum{auto\| 480p\| 720p\| 1080p} | Không | Chế độ chất lượng; `auto` = thích ứng theo CAM-05 |
 | `consumer_format` | object `{width, height}` (int32) | Không | Định dạng consumer hiện tại theo `hlaf` (640×480, 1280×720, 1920×1080): trần kích thước và tỉ lệ khung cho mọi chế độ chất lượng |
 | `mic_enabled` | bool | Không | Bật/tắt track tiếng |
 | `video_paused` | bool | Không | Tạm dừng track hình (đóng camera) |
@@ -1272,9 +1272,9 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Công tắc "Tự tăng tốc qua USB" | bool | Input/Output | `cam.usb_boost` (`true`) | Tắt → luồng về Wi-Fi, gỡ cổng chuyển tiếp, bỏ qua sự kiện USB (A1) |
-| 2 | Trạng thái USB | enum{not_connected\ | detecting\ | unauthorized\ | adb_unavailable\ | verifying\ | ready\ | active\ | error} | Output | `not_connected` | "Chưa cắm cáp", "Đang kiểm tra…", "Chạm Cho phép trên điện thoại", "Chưa bật gỡ lỗi USB", "Đang xác minh…", "Sẵn sàng qua USB", "Đang dùng USB", "Lỗi" |
-| 3 | Kênh truyền của luồng | enum{wifi\ | usb} | Output | Theo `actual.transport` | Trùng CAM-02 trường 5 |
-| 4 | Wizard bật gỡ lỗi USB | wizard (3 bước) | Output | Ẩn | Mở đầu: "Tăng tốc camera qua cáp USB cho <USB Product Name>?".<br>Bước 1: Cài đặt › Giới thiệu về điện thoại › chạm "Số bản dựng" 7 lần.<br>Bước 2: Cài đặt › Hệ thống › Tùy chọn cho nhà phát triển › bật "Gỡ lỗi USB".<br>Bước 3: mở khóa điện thoại, chạm "Cho phép" (nên chọn "Luôn cho phép từ máy tính này") |
+| 2 | Trạng thái USB | enum{not_connected\| detecting\| unauthorized\| adb_unavailable\| verifying\| ready\| active\| error} | Output | `not_connected` | "Chưa cắm cáp", "Đang kiểm tra…", "Chạm Cho phép trên điện thoại", "Chưa bật gỡ lỗi USB", "Đang xác minh…", "Sẵn sàng qua USB", "Đang dùng USB", "Lỗi" |
+| 3 | Kênh truyền của luồng | enum{wifi\| usb} | Output | Theo `actual.transport` | Trùng CAM-02 trường 5 |
+| 4 | Wizard bật gỡ lỗi USB | wizard (3 bước) | Output | Ẩn | Mở đầu: "Tăng tốc camera qua cáp USB cho \<USB Product Name>?".<br>Bước 1: Cài đặt › Giới thiệu về điện thoại › chạm "Số bản dựng" 7 lần.<br>Bước 2: Cài đặt › Hệ thống › Tùy chọn cho nhà phát triển › bật "Gỡ lỗi USB".<br>Bước 3: mở khóa điện thoại, chạm "Cho phép" (nên chọn "Luôn cho phép từ máy tính này") |
 | 5 | Nút "Kiểm tra lại" | action | Input | Trong wizard | Chạy lại bước 3 |
 | 6 | Nút "Không hỏi lại" | action | Input | Trong wizard | Ghi `cam.usb_wizard_dismissed = true`, đóng wizard |
 | 7 | Hướng dẫn cho phép gỡ lỗi | string | Output | "Mở khóa điện thoại và chạm Cho phép gỡ lỗi USB" | Hiện khi trường 2 = `unauthorized` |
@@ -1530,10 +1530,10 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Chỉ báo chất lượng (menu bar, xem trước) | enum{good\ | adapting\ | limited} | Output | `good` | Xanh lá "Tốt" (`state = live`); cam "Đang thích ứng với mạng" (`degraded`, `reason = network`); cam "Giới hạn do nhiệt/pin" (`degraded`, `reason` = `thermal` hoặc `battery`) — hai trạng thái cam khác nhau bằng chữ và biểu tượng, không dùng vàng |
+| 1 | Chỉ báo chất lượng (menu bar, xem trước) | enum{good\| adapting\| limited} | Output | `good` | Xanh lá "Tốt" (`state = live`); cam "Đang thích ứng với mạng" (`degraded`, `reason = network`); cam "Giới hạn do nhiệt/pin" (`degraded`, `reason` = `thermal` hoặc `battery`) — hai trạng thái cam khác nhau bằng chữ và biểu tượng, không dùng vàng |
 | 2 | Cấu hình thực tế | string | Output | Theo `actual` | Ví dụ "1280×720 · 24 fps · 1,9 Mbps" |
-| 3 | Lý do giới hạn | enum{none\ | network\ | thermal\ | battery\ | consumer\ | preset} | Output | `none` | "Mạng Wi-Fi chậm", "Điện thoại nóng", "Pin điện thoại yếu (18 %)", "Theo ứng dụng họp", "Theo lựa chọn của bạn" |
-| 4 | Nhiệt độ điện thoại | enum{none\ | light\ | moderate\ | severe\ | critical\ | emergency\ | shutdown} | Output | `camera/state.thermal` | Chỉ hiện khi ≥ `moderate` |
+| 3 | Lý do giới hạn | enum{none\| network\| thermal\| battery\| consumer\| preset} | Output | `none` | "Mạng Wi-Fi chậm", "Điện thoại nóng", "Pin điện thoại yếu (18 %)", "Theo ứng dụng họp", "Theo lựa chọn của bạn" |
+| 4 | Nhiệt độ điện thoại | enum{none\| light\| moderate\| severe\| critical\| emergency\| shutdown} | Output | `camera/state.thermal` | Chỉ hiện khi ≥ `moderate` |
 | 5 | Pin điện thoại | int32 (%) | Output | `camera/state.battery_pct` | Kèm biểu tượng sạc khi `charging = true` |
 | 6 | Thông báo pin yếu (Mac và Android) | string | Output | — | "Pin điện thoại dưới 20 % — HandLive giảm chất lượng xuống 720p. Cắm sạc hoặc cáp USB để giữ chất lượng." Một lần mỗi phiên |
 | 7 | Thông báo quá nóng (Mac và Android) | string | Output | — | "Điện thoại quá nóng — đã dừng camera. Hãy để máy nguội rồi thử lại." |
@@ -1617,7 +1617,7 @@ flowchart TB
 | `jitter_ms` | int32 | Có | Độ dao động nhịp đến, làm trơn theo RFC 3550 §6.4.1 |
 | `queue_delay_ms` | int32 | Có | Trễ hàng đợi ước lượng (logic 1) |
 | `decode_ms` | int32 | Có | Thời gian giải mã trung bình của VideoToolbox, làm tròn lên |
-| `transport` | enum{lan\ | usb} | Có | Kênh của kết nối stream đang nhận |
+| `transport` | enum{lan\| usb} | Có | Kênh của kết nối stream đang nhận |
 
 - **Response:** N/A.
 - **Ví dụ:**

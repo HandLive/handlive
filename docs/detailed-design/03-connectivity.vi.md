@@ -28,13 +28,13 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Biểu tượng trạng thái (menu bar Mac / tab iOS) | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | `connecting` | Ánh xạ từ máy trạng thái 0.11. Mac: biểu tượng template trên thanh menu (`MenuBarExtra`, `.menuBarExtraStyle(.menu)`) — bấm vào mở menu, không popover |
+| 1 | Biểu tượng trạng thái (menu bar Mac / tab iOS) | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | Ánh xạ từ máy trạng thái 0.11. Mac: biểu tượng template trên thanh menu (`MenuBarExtra`, `.menuBarExtraStyle(.menu)`) — bấm vào mở menu, không popover |
 | 2 | Dòng trạng thái | string | Output | "Đang kết nối…" | "Đã kết nối qua Wi-Fi với <tên điện thoại>" |
 | 3 | Tên điện thoại | string(64) | Output | `peer_name` |  |
 | 4 | Thông báo lỗi kết nối | string | Output | Rỗng | Theo E3–E8 |
 | 5 | Nút "Kết nối lại ngay" | action | Input | Ẩn khi đã kết nối | Bỏ qua thời gian chờ backoff, chạy lại từ bước 2 |
 | 6 | Thông báo foreground service (Android) | string | Output | "Đang chờ kết nối" | "Đã kết nối với <tên client>"; nhiều client: "Đã kết nối với 2 thiết bị" |
-| 7 | Tính năng hiệu lực | array<string> | Output | Rỗng | Hiển thị trong PAIR-02; cập nhật sau bước 9 |
+| 7 | Tính năng hiệu lực | array\<string> | Output | Rỗng | Hiển thị trong PAIR-02; cập nhật sau bước 9 |
 
 ### 3.1.4 Luồng nghiệp vụ
 
@@ -214,7 +214,7 @@ Payload sau khi giải base64:
   string; `min_protocol` — int32 (bắt buộc khi `UNSUPPORTED_VERSION`, không có ở mã khác; client
   dùng để hiển thị "Cập nhật HandLive trên điện thoại" hoặc "trên máy này").
 - **Response:** N/A.
-- **Ví dụ:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Thiết bị chưa được ghép nối"}}`
+- **Ví dụ:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Device is not paired"}}`
 - **Logic nghiệp vụ:** Client xử lý theo E3–E5; không tự động thử lại với `AUTH_FAILED` trước 5
   phút.
 
@@ -294,8 +294,8 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Trạng thái kết nối | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | Giá trị hiện tại | Như CONN-01 trường 1 |
-| 2 | Kênh | enum{lan\ | relay\ | usb} | Output | Kênh hiện tại | Đổi khi nâng cấp relay → LAN |
+| 1 | Trạng thái kết nối | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Giá trị hiện tại | Như CONN-01 trường 1 |
+| 2 | Kênh | enum{lan\| relay\| usb} | Output | Kênh hiện tại | Đổi khi nâng cấp relay → LAN |
 | 3 | Thời gian thử lại tiếp theo | int32 (giây) | Output | Rỗng | "Thử lại sau 8 s" khi ở `Backoff` |
 | 4 | Nút "Kết nối lại ngay" | action | Input | Hiện khi `disconnected` | Hủy chờ backoff, chạy CONN-01 |
 | 5 | Số tin chờ gửi | int32 | Output | Số dòng `sms_outbox` đang `pending` | "2 tin đang chờ điện thoại" |
@@ -445,8 +445,8 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Trạng thái kết nối | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | `connecting` | `peer_offline` hiển thị "Điện thoại ngoại tuyến" |
-| 2 | Kênh | enum{lan\ | relay\ | usb} | Output | `relay` khi thành công | "Qua Internet" |
+| 1 | Trạng thái kết nối | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | `peer_offline` hiển thị "Điện thoại ngoại tuyến" |
+| 2 | Kênh | enum{lan\| relay\| usb} | Output | `relay` khi thành công | "Qua Internet" |
 | 3 | Cho phép kết nối qua Internet | bool | Input/Output | `relay.enabled` = `true` | Quản lý ở SET-02, hiển thị ở đây để giải thích khi đang tắt |
 | 4 | Thông báo lỗi relay | string | Output | Rỗng | Theo E3, E6, E7 |
 
@@ -510,7 +510,7 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `device_id` | uuid | Có | Phải bằng UUIDv8(SHA-256(`ik_sig_pub`)) |
-| `platform` | enum{android\ | macos\ | ios\ | ipados} | Có |  |
+| `platform` | enum{android\| macos\| ios\| ipados} | Có |  |
 | `app_version` | string(32) | Có |  |
 | `ik_sig_pub` | b64u (32 byte) | Có |  |
 | `ts` | timestamp | Có | Lệch giờ relay ≤ 5 phút |
@@ -710,7 +710,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Quyền thông báo (iOS) | enum{allowed\ | denied\ | not_determined} | Input/Output | `not_determined` | Hệ thống hỏi ở SET-03; hiển thị hướng dẫn nếu `denied` |
+| 1 | Quyền thông báo (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | Hệ thống hỏi ở SET-03; hiển thị hướng dẫn nếu `denied` |
 | 2 | Tiêu đề thông báo | string | Output | "HandLive" | I-NSE thay bằng tên người gửi hoặc "Cuộc gọi đến" |
 | 3 | Nội dung thông báo | string | Output | "Có thông báo mới từ điện thoại" | I-NSE thay bằng nội dung đã giải mã (tôn trọng `sms.preview`) |
 | 4 | Nhóm thông báo | string | Output | — | `thread-id` = hội thoại SMS hoặc "calls" |
@@ -778,7 +778,7 @@ flowchart TB
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `provider` | enum{fcm\ | apns\ | apns_sandbox} | Có | `apns_sandbox` cho bản build phát triển |
+| `provider` | enum{fcm\| apns\| apns_sandbox} | Có | `apns_sandbox` cho bản build phát triển |
 | `token` | string(4096) | Có | FCM registration token hoặc APNs device token (hex) |
 | `topic` | string(255) | Với APNs | Bundle id của I-APP |
 
@@ -798,8 +798,8 @@ flowchart TB
 |--------|------|----------|-------|
 | `pair_id` | uuid | Có |  |
 | `to` | uuid | Có | `device_id` đích |
-| `kind` | enum{wake\ | alert} | Có | `wake` chỉ tới Android; `alert` chỉ tới iOS/iPadOS |
-| `reason` | enum{user_open\ | sms_send\ | call_action\ | sms_new\ | call_incoming\ | call_missed} | Có |  |
+| `kind` | enum{wake\| alert} | Có | `wake` chỉ tới Android; `alert` chỉ tới iOS/iPadOS |
+| `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Có |  |
 | `env_b64` | b64 | Với `alert` | Envelope đã mã hóa bằng `K_push`, ≤ 3 000 byte |
 | `collapse_key` | string(64) | Không |  |
 | `ttl_s` | int32 | Không | Mặc định 60 (wake, call_incoming), 86 400 (sms_new, call_missed) |

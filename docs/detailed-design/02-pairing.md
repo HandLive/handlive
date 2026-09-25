@@ -31,10 +31,10 @@ N/A — no approved wireframe yet.
 | 2 | Remaining validity | int32 (seconds) | Output | 120 | Countdown under the QR code; at 0 a new QR code is generated |
 | 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation |
 | 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ML Kit |
-| 5 | Pairing confirmation | enum{Pair\ | Cancel} | Input | — | Android asks "Pair With <client device name>?"; "Pair" is the default button, "Cancel" is on the left |
+| 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair With \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
 | 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned |
 | 7 | PIN attempts left | int32 | Output | 3 | Shown on Android after a wrong entry |
-| 8 | Pairing status | enum{waiting_scan\ | connecting\ | verifying\ | done\ | failed} | Output | `waiting_scan` | Shown on both devices |
+| 8 | Pairing status | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Shown on both devices |
 | 9 | Phone name | string(64) | Output | `Settings.Global.DEVICE_NAME` | Shown on Mac/iOS when pairing completes |
 | 10 | Error message | string | Output | Empty | Text per E1–E9 |
 
@@ -76,14 +76,14 @@ flowchart TB
 | 2 | System | M-APP / I-APP | Loads or creates `ik_dh`, `ik_sig`; generates a 32-byte `pairing_secret` (`SecRandomCopyBytes`).<br>If the relay is enabled: generate a 16-byte `rv_id`, authenticate with the relay (0.6.4), send `rv_join`.<br>Builds the QR URI and draws the QR code (`CIFilter.qrCodeGenerator`).<br>Starts browsing mDNS for `_handlive._tcp`.<br>Sets a 120 s timer: discard the old secret, go back to step 2. | Relay error → the QR code has no `rv`; pairing on the LAN only. |
 | 3 | User | A-UI | Opens "Pair a Device" and scans the QR code. | No camera permission → E9, switch to the PIN flow (A1). |
 | 4 | System | A-UI | Checks the scheme `handlive`, the host `pair`, `v = 1`, that `pk` and `ps` decode to exactly 32 bytes, `d` ≤ 64 characters and `rv` (if present) is exactly 16 bytes. Checks that active pairs < 8. | Malformed → E1. 8 pairs already → E6. |
-| 5 | User | A-UI | Chooses "Pair" or "Cancel" in the "Pair With <d>?" dialog. | "Cancel" → E5. |
+| 5 | User | A-UI | Chooses "Pair" or "Cancel" in the "Pair With \<d>?" dialog. | "Cancel" → E5. |
 | 6 | System | A-SVC | Opens a 120 s pairing window: accepts connections on `/v1/pair`; re-registers the mDNS service with TXT `pr` = the first 8 hex digits of SHA-256(`pk`). If `rv` is present: connect to the relay and send `rv_join`. |  |
 | 7 | System | M-APP / I-APP | Waits up to 20 s: an instance with a matching `pr` is found → go over the LAN; `rv_joined` arrives with `peer_present = true` → go through the relay. The LAN wins if both are available. | No path at all → E3. |
 | 8 | System | M-APP / I-APP | LAN: open `wss://<ip>:<port>/v1/pair` and accept the self-signed certificate, but record the SHA-256 of the certificate seen. Relay: wrap the `pair` envelopes in `rv_msg`. |  |
 | 9 | System | M-APP ↔ A-SVC | The client sends `pair/hello`. Android checks that `ik_dh_pub` equals the `pk` from the QR code, generates `nonce_s`, computes `K_pa` and returns a `pair/offer` with a `mac`. | `ik_dh_pub` differs from `pk` → `pair/error AUTH_FAILED` (E4). |
 | 10 | System | M-APP / I-APP | Checks the offer's `mac`; checks that the Android `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); on the LAN checks that `tls_sha256` = the certificate of the current connection. | Mismatch → send `pair/error AUTH_FAILED`, close, show "Pairing isn't secure — try again" (E4). |
 | 11 | System | M-APP ↔ A-SVC, R-API | The client computes `PRK`, generates `pair_id`, `created_at` and the attestation, signs `sig_c` and sends `pair/confirm`.<br>Android checks `mac`, `prk_check`, `device_id` and `sig_c`; signs `sig_s`; stores `paired_device`; returns `pair/done`.<br>The client checks `sig_s`, `prk_check`; stores `paired_device`, puts `PRK` in the Keychain and pins the certificate.<br>Both sides discard the secret; Android closes `/v1/pair`, drops TXT `pr` and adds the new pair's hint to TXT `h`.<br>If the relay is enabled, each side calls `POST /v1/pairs` (idempotent). | Relay error → E8, retry in the background when a network is available. |
-| 12 | User | A-UI, M-APP / I-APP | Sees "Paired with <name>" on both devices; the client moves on to CONN-01. |  |
+| 12 | User | A-UI, M-APP / I-APP | Sees "Paired with \<name>" on both devices; the client moves on to CONN-01. |  |
 | A1 | User | M-APP / I-APP | PIN flow: chooses "Can't Scan? Use a PIN". | LAN only. |
 | A2 | System | M-APP / I-APP | Generates a 6-digit PIN (CSPRNG, uniformly distributed) and shows it for 120 s; browses mDNS for an instance with `pm = 1`. |  |
 | A3 | User | A-UI | Chooses "Enter PIN", types the 6 digits and confirms the pairing. |  |
@@ -150,11 +150,11 @@ Authentication strings shared by the APIs below:
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `mode` | enum{qr\ | pin} | Yes |  |
+| `mode` | enum{qr\| pin} | Yes |  |
 | `device_id` | uuid | Yes | The client's `device_id` |
 | `nonce` | b64u (32 bytes) | Yes | Random `nonce_c` |
 | `name` | string(64) | Yes | Client name |
-| `platform` | enum{macos\ | ios\ | ipados} | Yes |  |
+| `platform` | enum{macos\| ios\| ipados} | Yes |  |
 | `model` | string(64) | No | For example `Mac15,3`, `iPhone16,1` |
 | `ik_sig_pub` | b64u (32 bytes) | Yes | The client's Ed25519 signing key |
 | `ik_dh_pub` | b64u (32 bytes) | Yes | Must equal `pk` when `mode = qr` |
@@ -275,13 +275,13 @@ Authentication strings shared by the APIs below:
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `code` | enum{QR_INVALID\ | PAIRING_CLOSED\ | PIN_INVALID\ | AUTH_FAILED\ | INTERNAL} | Yes | Error code (0.8.1) |
+| `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Yes | Error code (0.8.1) |
 | `message` | string | Yes | Short description that contains no sensitive data |
 | `attempts_left` | int32 | Only with `PIN_INVALID` | Number of attempts left |
 
 - **Response:** N/A.
 - **Example:**
-  `{"op":"error","data":{"code":"PIN_INVALID","message":"Mã PIN không đúng","attempts_left":2}}`
+  `{"op":"error","data":{"code":"PIN_INVALID","message":"PIN does not match","attempts_left":2}}`
 - **Business logic:** With `AUTH_FAILED`, never reveal which check failed; the local log contains
   only the error code.
 
@@ -441,7 +441,7 @@ SMEMBERS rv:<rv_id>         # find the other member to forward rv_msg to
 | Actors | Primary: User. System: A-UI, A-SVC, M-APP / I-APP, R-API. |
 | Preconditions | The app has completed initial setup (SET-01 or SET-03). |
 | Postconditions | The list shown matches the local data and the current connection status; pairs revoked remotely (if detected) are cleaned up per PAIR-03. No other data changes. |
-| Exceptions | E1 — No pairs yet: show the empty state and the "Add Device" button.<br>E2 — The relay is unreachable: show local data only, without a blocking error.<br>E3 — The relay reports a pair as revoked: clean up that pair (PAIR-03, flow B) and show "<name> was unpaired from another device".<br>E4 — Database read error: show an error and allow a retry. |
+| Exceptions | E1 — No pairs yet: show the empty state and the "Add Device" button.<br>E2 — The relay is unreachable: show local data only, without a blocking error.<br>E3 — The relay reports a pair as revoked: clean up that pair (PAIR-03, flow B) and show "\<name> was unpaired from another device".<br>E4 — Database read error: show an error and allow a retry. |
 | Special requirements | The status updates within ≤ 1 s after the connection changes (by observing the state stream, not by polling).<br>Keys, `pair_id` and full fingerprints are never shown; the "Security Code" is only the first 8 hex characters of SHA-256(`attestation`), so that the user can compare it between the two devices if they want to.<br>Readable with VoiceOver/TalkBack. |
 
 ### 2.2.2 Screens
@@ -453,14 +453,14 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Device name | string(64) | Output | `peer_name` | The peer's name at pairing time |
-| 2 | Device type | enum{android\ | macos\ | ios\ | ipados} | Output | `peer_platform` or `android` | With an icon |
+| 2 | Device type | enum{android\| macos\| ios\| ipados} | Output | `peer_platform` or `android` | With an icon |
 | 3 | Model | string(64) | Output | `peer_model` |  |
-| 4 | Connection status | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | Per 0.11 | "Connected via Wi-Fi" (or "over the internet", "via USB"), "Connecting…", "Phone offline", "Disconnected" |
-| 5 | Connection channel | enum{lan\ | relay\ | usb} | Output | Empty when not connected | "LAN", "Internet", "USB" |
+| 4 | Connection status | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Per 0.11 | "Connected via Wi-Fi" (or "over the internet", "via USB"), "Connecting…", "Phone offline", "Disconnected" |
+| 5 | Connection channel | enum{lan\| relay\| usb} | Output | Empty when not connected | "LAN", "Internet", "USB" |
 | 6 | Last connected | timestamp | Output | `last_seen_at` | Shown as relative time ("2 minutes ago") |
 | 7 | Peer app version | string | Output | From `capability.app_version` | Warning if the protocol version differs |
-| 8 | Active features | array<enum{clipboard\ | sms\ | call\ | call_audio\ | camera}> | Output | Intersection of the two capabilities | Each item carries a reason when it is inactive ("Off on Mac", "Missing SMS permission on the phone") |
-| 9 | Permissions missing on the phone | array<string> | Output | `permissions_missing` | Mac/iOS only; select to see instructions |
+| 8 | Active features | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Intersection of the two capabilities | Each item carries a reason when it is inactive ("Off on Mac", "Missing SMS permission on the phone") |
+| 9 | Permissions missing on the phone | array\<string> | Output | `permissions_missing` | Mac/iOS only; select to see instructions |
 | 10 | Security Code | string(8) | Output | First 8 hex characters of SHA-256(`attestation`) | Identical on both devices of the same pair |
 | 11 | "Add Device" button | action | Input | — | Opens PAIR-01; hidden on Mac/iOS when a pair already exists |
 | 12 | "Unpair" button | action | Input | — | Opens PAIR-03 |
@@ -497,7 +497,7 @@ flowchart TB
 | 3 | System | Same as above | No pair → show the empty state. | E1. |
 | 4 | System | A-SVC / M-APP / I-APP, R-API | If `relay.enabled` and the internet is available: call `GET /v1/pairs` (at most once every 60 s to avoid unnecessary calls). | Network error → E2, skip. |
 | 5 | System | Same as above | Compares each local pair with the relay's result: a pair with a non-null `revoked_at` → 5a; none → 5b. | Relay error → E2, go to 5b. |
-| 5a | System | Same as above | Cleans up the revoked pair per PAIR-03 flow B (delete the keys and synced data) and shows "<name> was unpaired from another device". | E3. |
+| 5a | System | Same as above | Cleans up the revoked pair per PAIR-03 flow B (delete the keys and synced data) and shows "\<name> was unpaired from another device". | E3. |
 | 5b | System | Same as above | Shows the list and subscribes to connection status and capability changes so it updates within ≤ 1 s. |  |
 | 6 | User | Same as above | Views a device's details; chooses "Add Device" (PAIR-01), "Unpair" (PAIR-03) or "Options" (SET-02). |  |
 
@@ -522,12 +522,12 @@ already received in CONN-01 and SET-02; no new call is made.
 
 | Field | Type | Description |
 |--------|------|-------|
-| `pairs` | array<object> | The pairs the calling device is a member of |
+| `pairs` | array\<object> | The pairs the calling device is a member of |
 | `pairs[].pair_id` | uuid |  |
 | `pairs[].peer_device_id` | uuid | The other device |
-| `pairs[].peer_platform` | enum{android\ | macos\ | ios\ | ipados} |  |
+| `pairs[].peer_platform` | enum{android\| macos\| ios\| ipados} |  |
 | `pairs[].created_at` | timestamp |  |
-| `pairs[].revoked_at` | timestamp \ | null | Non-null means revoked |
+| `pairs[].revoked_at` | timestamp \| null | Non-null means revoked |
 | `pairs[].peer_online` | bool | The peer is connected to the relay (per presence) |
 
 - **Example:**
@@ -605,10 +605,10 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Device to unpair | string(64) | Output | Name of the device selected in PAIR-02 |  |
-| 2 | Warning text | string | Output | "Unpairing deletes the security keys and the SMS messages and call history synced to <client device>. This can't be undone." |  |
-| 3 | Unpair confirmation | enum{Unpair\ | Cancel} | Input | — | Mac: an alert shown as a sheet, "Unpair" is the default button (not red, because the user chose it deliberately), "Cancel" on the left; iPhone/iPad and Android: an action sheet with a red "Unpair" at the top and "Cancel" at the bottom |
-| 4 | Result | enum{done\ | done_pending_remote} | Output | — | `done`: both sides have cleaned up; `done_pending_remote`: cleaned up locally, the other device will clean up by itself when it reconnects |
-| 5 | Message on the peer | string | Output | — | "<name> unpaired this device" |
+| 2 | Warning text | string | Output | "Unpairing deletes the security keys and the SMS messages and call history synced to \<client device>. This can't be undone." |  |
+| 3 | Unpair confirmation | enum{Unpair\| Cancel} | Input | — | Mac: an alert shown as a sheet, "Unpair" is the default button (not red, because the user chose it deliberately), "Cancel" on the left; iPhone/iPad and Android: an action sheet with a red "Unpair" at the top and "Cancel" at the bottom |
+| 4 | Result | enum{done\| done_pending_remote} | Output | — | `done`: both sides have cleaned up; `done_pending_remote`: cleaned up locally, the other device will clean up by itself when it reconnects |
+| 5 | Message on the peer | string | Output | — | "\<name> unpaired this device" |
 
 ### 2.3.4 Business flow
 
@@ -673,7 +673,7 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `pair_id` | uuid | Yes | Must match the pair of the current session |
-| `reason` | enum{user\ | reinstall\ | limit} | Yes | `user`: the user's own choice; `reinstall`: the app data was deleted; `limit`: replacing an old pair when pairing a new one |
+| `reason` | enum{user\| reinstall\| limit} | Yes | `user`: the user's own choice; `reinstall`: the app data was deleted; `limit`: replacing an old pair when pairing a new one |
 
 - **Response (`ack.data`):** `{}` when `ok = true`. Error: `BAD_REQUEST` if `pair_id` does not match
   the session.
@@ -709,7 +709,7 @@ flowchart TB
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `reason` | enum{user\ | reinstall\ | lost_device} | Yes | `lost_device` when the user chooses to unpair remotely while the peer is offline |
+| `reason` | enum{user\| reinstall\| lost_device} | Yes | `lost_device` when the user chooses to unpair remotely while the peer is offline |
 
 - **Response:**
 

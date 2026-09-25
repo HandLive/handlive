@@ -27,12 +27,12 @@ English | [Tiếng Việt](05-sms.vi.md)
 | Item | Content |
 |-----|----------|
 | Name | SMS-01 — Sync conversations and SMS history |
-| Description | Copies the conversation list and the SMS messages from the phone into the encrypted database on the Mac/iOS device, as the basis for offline viewing (SMS-03), notifications (SMS-02) and replies (SMS-04).<br>**First sync** (no cursor yet): the 200 most recent conversations, the 50 newest messages of each.<br>**Catch-up sync** (cursor present): every message newer than the cursor, plus summaries of the conversations touched.<br>Each `ack` carries at most 500 messages; the client loops on `page_token` until `has_more = false`, then saves the new cursor and reconciles the unread state.<br>Runs automatically after every connection; the user can request "Resync All". |
+| Description | Copies the conversation list and the SMS messages from the phone into the encrypted database on the Mac/iOS device, as the basis for offline viewing (SMS-03), notifications (SMS-02) and replies (SMS-04).<br>**First sync** (no cursor yet): the 200 most recent conversations, the 50 newest messages of each.<br>**Catch-up sync** (cursor present): every message newer than the cursor, plus summaries of the conversations touched.<br>Each `ack` carries at most 500 messages; the client loops on `page_token` until `has_more = false`, then saves the new cursor and reconciles the unread state.<br>Runs automatically after every connection; the user can request "Resync All SMS". |
 | Actors | Primary: System. Secondary: User (follows the progress, requests a resync). Components: M-APP or I-APP, A-SVC, A-SMS, OS (Telephony provider, Contacts provider), R-API (forwarding only, when traffic goes through the relay). |
 | Preconditions | 1. An active pair (PAIR-01).<br>2. The `/v1/ctl` session has completed its handshake and both sides have exchanged `capability/hello` (CONN-01 on the LAN or CONN-03 over the relay).<br>3. SMS is active for the pair.<br>4. The client has no other SMS sync running for this pair. |
 | Postconditions | **Success:** `sms_thread` and `sms_message` hold the data up to the phone's snapshot mark; `sync_cursor` (`stream = 'sms'`) holds the new cursor; `unread_count` and the `read` flags match the phone.<br>**Stopped midway:** the pages already written are kept (writing them again creates no duplicates) and the old cursor is unchanged; the next connection syncs again from the old cursor. |
-| Exceptions | E1 — SMS is off on one side: no sync; if Android still receives `sms/sync`, it returns `FEATURE_DISABLED`.<br>E2 — The phone lacks `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`); the client shows the SET-01 instructions.<br>E3 — `READ_CONTACTS` missing: the sync still runs, `display_name = null`, the client shows the number.<br>E4 — Connection lost or `TIMEOUT` midway: stop, keep the data already written, run again at the next connection.<br>E5 — Invalid cursor or `page_token` (`SMS_CURSOR_INVALID`): for `page_token` → start over from the stored cursor; for the cursor → automatic "Resync All" (A2).<br>E6 — Provider read error on Android (`INTERNAL`): retry once after 5 s, then wait for the next connection.<br>E7 — Database write error on the client (out of storage, SQLCipher cannot be opened): roll back the page's transaction, stop, show a non-blocking error. |
-| Special requirements | **Performance:** the first sync (up to 10,000 messages) finishes in ≤ 20 s on the LAN and ≤ 40 s over the relay; a catch-up sync of fewer than 500 messages finishes in ≤ 2 s.<br>The conversation list fills in page by page; database writes run on a background queue and never block the UI.<br>Android reads the provider on a background thread and keeps no provider cursor open between pages.<br>**Security:** the data lives only in the SQLCipher-encrypted `handlive.sqlite` (0.6.5); no logging of content, numbers or names.<br>**Compliance:** the SMS permissions (`READ_SMS`, `SEND_SMS`) need Google Play's Permissions Declaration Form under the "Cross-device synchronization or transfer of SMS or calls" exception (`docs/deployment-guide.md`); the design detects new messages with a `ContentObserver`, so `RECEIVE_SMS` is not needed; if the declaration is rejected, Plan B uses a Notification Listener only to receive new messages, and there is then no history sync.<br>**v1 limitation:** messages deleted on the phone are not deleted on the Mac/iOS device as well; the user runs "Resync All" to clean up. |
+| Exceptions | E1 — SMS is off on one side: no sync; if Android still receives `sms/sync`, it returns `FEATURE_DISABLED`.<br>E2 — The phone lacks `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`); the client shows the SET-01 instructions.<br>E3 — `READ_CONTACTS` missing: the sync still runs, `display_name = null`, the client shows the number.<br>E4 — Connection lost or `TIMEOUT` midway: stop, keep the data already written, run again at the next connection.<br>E5 — Invalid cursor or `page_token` (`SMS_CURSOR_INVALID`): for `page_token` → start over from the stored cursor; for the cursor → automatic "Resync All SMS" (A2).<br>E6 — Provider read error on Android (`INTERNAL`): retry once after 5 s, then wait for the next connection.<br>E7 — Database write error on the client (out of storage, SQLCipher cannot be opened): roll back the page's transaction, stop, show a non-blocking error. |
+| Special requirements | **Performance:** the first sync (up to 10,000 messages) finishes in ≤ 20 s on the LAN and ≤ 40 s over the relay; a catch-up sync of fewer than 500 messages finishes in ≤ 2 s.<br>The conversation list fills in page by page; database writes run on a background queue and never block the UI.<br>Android reads the provider on a background thread and keeps no provider cursor open between pages.<br>**Security:** the data lives only in the SQLCipher-encrypted `handlive.sqlite` (0.6.5); no logging of content, numbers or names.<br>**Compliance:** the SMS permissions (`READ_SMS`, `SEND_SMS`) need Google Play's Permissions Declaration Form under the "Cross-device synchronization or transfer of SMS or calls" exception (`docs/deployment-guide.md`); the design detects new messages with a `ContentObserver`, so `RECEIVE_SMS` is not needed; if the declaration is rejected, Plan B uses a Notification Listener only to receive new messages, and there is then no history sync.<br>**v1 limitation:** messages deleted on the phone are not deleted on the Mac/iOS device as well; the user runs "Resync All SMS" to clean up. |
 
 ### 5.1.2 Screens
 
@@ -42,12 +42,12 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Sync status | enum{idle\ | syncing\ | done\ | failed} | Output | `idle` | Status banner above the conversation list: "Syncing messages…", "Couldn't sync — will try again when connected". Hidden when `idle` or `done` |
+| 1 | Sync status | enum{idle\| syncing\| done\| failed} | Output | `idle` | Status banner above the conversation list: "Syncing messages…", "Couldn't sync — will try again when connected". Hidden when `idle` or `done` |
 | 2 | Messages downloaded | int32 | Output | 0 | Shown only during the first sync: "Downloaded 1,500 messages" |
-| 3 | Conversation list | array<object> | Output | Empty | The `sms_thread` rows, updated after each page; display rules in SMS-03 |
+| 3 | Conversation list | array\<object> | Output | Empty | The `sms_thread` rows, updated after each page; display rules in SMS-03 |
 | 4 | Last sync | timestamp | Output | `sync_cursor.updated_at` | Settings → Messages; shown as relative time ("5 minutes ago") |
-| 5 | "Resync All" button | action | Input | — | Settings → Messages; disabled when there is no session to the phone |
-| 6 | Resync confirmation | enum{Resync\ | Cancel} | Input | — | "Delete messages saved on <device> and download them again from the phone? Messages waiting to be sent are kept." |
+| 5 | "Resync All SMS" button | action | Input | — | Settings → Messages; disabled when there is no session to the phone |
+| 6 | Resync confirmation | enum{Resync\| Cancel} | Input | — | "Delete messages saved on \<device> and download them again from the phone? Messages waiting to be sent are kept." |
 | 7 | Error message, instructions | string | Output | Empty | Content per E1, E2, E6, E7; E2 adds a "View Instructions" button |
 | 8 | Contacts permission hint | string | Output | Hidden | "Allow HandLive to read contacts on the phone to show names" when `permissions_missing` contains `READ_CONTACTS` (E3) |
 
@@ -56,7 +56,7 @@ N/A — no approved wireframe yet.
 ```mermaid
 flowchart TB
   subgraph ND["User"]
-    UA1["(A1) Choose Resync All and confirm"]
+    UA1["(A1) Choose Resync All SMS and confirm"]
     U10["(10) See the updated conversation list"]
   end
   subgraph HT["System"]
@@ -95,7 +95,7 @@ flowchart TB
 | 8 | System | M-APP / I-APP | `has_more = true` → back to step 3 with the new `page_token`, sending the same `cursor` as before. |  |
 | 9 | System | M-APP / I-APP | Last page, in the same transaction as step 7: apply `unread` (absent conversations → `unread_count = 0` and their inbox messages read; present conversations → as in SMS-05 step 6); save `cursor` into `sync_cursor`; set the status to `done`. Remove the notifications of conversations already read on the phone (SMS-05). |  |
 | 10 | User | M-APP / I-APP | Sees the updated conversation list (SMS-03). |  |
-| A1 | User | M-APP / I-APP | Chooses "Resync All" and confirms (fields 5, 6). | Only while a session exists. |
+| A1 | User | M-APP / I-APP | Chooses "Resync All SMS" and confirms (fields 5, 6). | Only while a session exists. |
 | A2 | System | M-APP / I-APP | In one transaction: delete the pair's `sync_cursor` (`stream = 'sms'`), `sms_message`, `sms_thread` and the completed `sms_outbox` rows; keep the rows still waiting to be sent. Go to step 3 without a cursor. | Also runs automatically in E5 when the cursor is invalid. |
 
 ### 5.1.5 API/service specification
@@ -115,8 +115,8 @@ The `thread` object:
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `thread_id` | int64 | Yes | The Telephony provider's `thread_id` (0.2) |
-| `addresses` | array<e164> | Yes | From the conversation's `recipient_ids` via `canonical-addresses`, normalized to E.164 using the country of the default SIM; strings that cannot be normalized (short codes, sender names such as `VIETTEL`) are kept as they are |
-| `display_name` | string \ | null | Yes | Contact name from `PhoneLookup`; several addresses → the names joined with `", "`; `null` when `READ_CONTACTS` is missing or the number is not in the contacts |
+| `addresses` | array\<e164> | Yes | From the conversation's `recipient_ids` via `canonical-addresses`, normalized to E.164 using the country of the default SIM; strings that cannot be normalized (short codes, sender names such as `VIETTEL`) are kept as they are |
+| `display_name` | string \| null | Yes | Contact name from `PhoneLookup`; several addresses → the names joined with `", "`; `null` when `READ_CONTACTS` is missing or the number is not in the contacts |
 | `snippet` | string(160) | Yes | `body` of the newest SMS message in the conversation, cut to 160 characters |
 | `last_ts` | timestamp | Yes | `date` of the newest SMS message in the conversation |
 | `unread_count` | int32 | Yes | Number of inbox messages with `read = 0` (SMS only) |
@@ -129,11 +129,11 @@ The `message` object:
 | `thread_id` | int64 | Yes |  |
 | `address` | e164 | Yes | The `address` column, normalized like `thread.addresses` |
 | `body` | string | Yes | The `body` column; `null` in the provider → `""` |
-| `box` | enum{inbox\ | sent\ | outbox\ | failed\ | queued} | Yes | From the `type` column: 1 → `inbox`, 2 → `sent`, 4 → `outbox`, 5 → `failed`, 6 → `queued`; 3 (draft) is never sent |
+| `box` | enum{inbox\| sent\| outbox\| failed\| queued} | Yes | From the `type` column: 1 → `inbox`, 2 → `sent`, 4 → `outbox`, 5 → `failed`, 6 → `queued`; 3 (draft) is never sent |
 | `ts` | timestamp | Yes | The `date` column |
-| `ts_sent` | timestamp \ | null | No | The `date_sent` column; `0` → `null` |
+| `ts_sent` | timestamp \| null | No | The `date_sent` column; `0` → `null` |
 | `read` | bool | Yes | True when the provider column has `read = 1` |
-| `sub_id` | int32 \ | null | No | The `sub_id` column; `-1` → `null` |
+| `sub_id` | int32 \| null | No | The `sub_id` column; `-1` → `null` |
 | `local_id` | uuid | No | Present only in the `sms/new` sent to the client that created the message (SMS-04) |
 
 #### API 1 — `WS sms/sync`
@@ -154,12 +154,12 @@ The `message` object:
 
 | Field | Type | Description |
 |--------|------|-------|
-| `threads` | array<thread> | First sync: the conversations whose messages appear for the first time in the page. Catch-up sync: every conversation with messages in the page |
-| `messages` | array<message> | At most `SMS_PAGE_MAX` = 500 messages; the `ack` plaintext is ≤ 180 KiB |
+| `threads` | array\<thread> | First sync: the conversations whose messages appear for the first time in the page. Catch-up sync: every conversation with messages in the page |
+| `messages` | array\<message> | At most `SMS_PAGE_MAX` = 500 messages; the `ack` plaintext is ≤ 180 KiB |
 | `cursor` | string | The cursor after the whole sync completes (the same on every page); the client saves it only when `has_more = false` |
 | `page_token` | string | Present when `has_more = true` |
 | `has_more` | bool | Another page follows |
-| `unread` | array<object> | Last page only: every conversation with unread messages on the phone, each entry `{thread_id, unread_count, read_up_to_ts}` — same meaning as in `sms/read_changed` (SMS-05) |
+| `unread` | array\<object> | Last page only: every conversation with unread messages on the phone, each entry `{thread_id, unread_count, read_up_to_ts}` — same meaning as in `sms/read_changed` (SMS-05) |
 
 Errors (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING`, `BAD_REQUEST` (parameter out of
 range), `SMS_CURSOR_INVALID` (`details.reason` = `cursor` or `page_token`), `INTERNAL`.
@@ -634,14 +634,14 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Conversation list | array<object> | Output | Empty | Sorted by `last_ts`, newest first; loads 50 rows at a time |
+| 1 | Conversation list | array\<object> | Output | Empty | Sorted by `last_ts`, newest first; loads 50 rows at a time |
 | 2 | Conversation name | string | Output | `display_name`; `null` → number in national format | Group conversation: names or numbers joined with ", " |
 | 3 | Snippet | string(160) | Output | `snippet` | At most 2 lines |
 | 4 | Time of last message | timestamp | Output | `last_ts` | "2:05 PM", "Yesterday", "Sep 12" |
 | 5 | Unread indicator | bool | Output | `unread_count > 0` and `local_read_ts < last_ts` | Colored dot and bold text; no count in the row — the number of unread conversations is on the menu bar icon (Mac) and the Messages tab badge (iOS) |
 | 6 | Message bubble | string | Output | `body` | `inbox` messages on the left, sent messages on the right; links and phone numbers in the text are detected |
 | 7 | Message time | timestamp | Output | `ts` | Messages grouped by day |
-| 8 | Outgoing message status | enum{pending\ | sending\ | sent\ | delivered\ | failed} | Output | From `sms_outbox.state` or `box` | "Waiting for phone", "Sending…", "Sent", "Delivered", "Not sent" (SMS-04) |
+| 8 | Outgoing message status | enum{pending\| sending\| sent\| delivered\| failed} | Output | From `sms_outbox.state` or `box` | "Waiting for phone", "Sending…", "Sent", "Delivered", "Not sent" (SMS-04) |
 | 9 | SIM label | string | Output | Hidden | Shown when the phone has > 1 SIM, per `sub_id` |
 | 10 | "Loading older messages" indicator | bool | Output | `false` | At the top of the conversation while waiting for `sms/history` |
 | 11 | Conversation status banner | string | Output | Hidden | Per E2–E5; "Try Again" button for E4; "Beginning of conversation" when there are no more messages |
@@ -720,7 +720,7 @@ flowchart TB
 
 | Field | Type | Description |
 |--------|------|-------|
-| `messages` | array<message> (5.1.5) | Newest first by `date`; no `local_id` |
+| `messages` | array\<message> (5.1.5) | Newest first by `date`; no `local_id` |
 | `has_more` | bool | There are messages older than the last one of the page |
 
 Errors (`ack.error.code`): `SMS_THREAD_NOT_FOUND`, `FEATURE_DISABLED`, `PERMISSION_MISSING`,
@@ -731,7 +731,7 @@ Errors (`ack.error.code`): `SMS_THREAD_NOT_FOUND`, `FEATURE_DISABLED`, `PERMISSI
 ```json
 {"op":"history","data":{"thread_id":42,"before_ts":1727140000000,"limit":50}}
 {"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":true,"data":{"messages":[{"message_key":"sms:12611","thread_id":42,"address":"+84900000123","body":"Anh gửi em file báo cáo nhé","box":"inbox","ts":1727052000000,"ts_sent":1727051998000,"read":true,"sub_id":1}],"has_more":false}}
-{"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":false,"error":{"code":"SMS_THREAD_NOT_FOUND","message":"Hội thoại không còn trên điện thoại","details":{}}}
+{"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":false,"error":{"code":"SMS_THREAD_NOT_FOUND","message":"Conversation no longer exists on the phone","details":{}}}
 ```
 
 - **Business logic:**
@@ -838,7 +838,7 @@ N/A — no approved wireframe yet.
 | 4 | Sending SIM | int32 (`sub_id`) | Input/Output | `features.sms.default_sub_id` | Shown only when `features.sms.sims` has > 1 SIM; displayed by `label` |
 | 5 | "Send" button | action | Input | — | Disabled for E5 or when `can_send = false` |
 | 6 | Placeholder bubble | string | Output | — | The text just sent, shown right away; disappears when the real message arrives |
-| 7 | Send status | enum{pending\ | sending\ | sent\ | delivered\ | failed} | Output | `pending` | "Waiting for phone", "Sending…", "Sent", "Delivered", "Not sent" |
+| 7 | Send status | enum{pending\| sending\| sent\| delivered\| failed} | Output | `pending` | "Waiting for phone", "Sending…", "Sent", "Delivered", "Not sent" |
 | 8 | Failure reason | string | Output | Hidden | By error code: "No service", "The phone is in airplane mode", "Invalid number", "The SIM isn't active", "Sending limit reached. Try again later.", "Couldn't send", "Couldn't connect to the phone" |
 | 9 | "Try Again" button | action | Input | — | On a `failed` bubble; creates a new `local_id` |
 | 10 | Quick-reply field | string(1600) | Input | Empty | In the SMS-02 notification (action `HL_SMS_REPLY`) |
@@ -922,7 +922,7 @@ flowchart TB
 |--------|------|----------|-------|
 | `local_id` | uuid | Yes | Temporary ID generated by the client; Android's deduplication key |
 | `thread_id` | int64 | No | The conversation being written in; Android only records it and does not require it to still exist (the recipient is what counts) |
-| `addresses` | array<string> | Yes | Exactly 1 element in v1 |
+| `addresses` | array\<string> | Yes | Exactly 1 element in v1 |
 | `body` | string(1600) | Yes | Not empty |
 | `sub_id` | int32 | No | Sending SIM; absent → the phone's default SMS SIM |
 
@@ -949,7 +949,7 @@ Errors (`ack.error.code`), in the order they are checked:
 ```json
 {"op":"send","data":{"local_id":"0192f3e2-4b5c-7d6e-9f70-8a9b0c1d2e3f","thread_id":42,"addresses":["+84900000123"],"body":"Ok, 3h mình có mặt","sub_id":1}}
 {"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":true,"data":{"accepted":true,"parts":1}}
-{"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":false,"error":{"code":"SMS_SIM_UNAVAILABLE","message":"SIM đã chọn không hoạt động","details":{"sims":[1]}}}
+{"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":false,"error":{"code":"SMS_SIM_UNAVAILABLE","message":"Selected SIM is not active","details":{"sims":[1]}}}
 ```
 
 - **Business logic:**
@@ -987,8 +987,8 @@ Errors (`ack.error.code`), in the order they are checked:
 |--------|------|----------|-------|
 | `local_id` | uuid | Yes | That of the corresponding `sms/send` |
 | `message_key` | string | No | Present once the row in the provider has been matched |
-| `status` | enum{sending\ | sent\ | delivered\ | failed} | Yes |  |
-| `error_code` | enum{SMS_NO_SERVICE\ | SMS_RADIO_OFF\ | SMS_LIMIT_EXCEEDED\ | SMS_GENERIC_FAILURE} | When `failed` | Error code from 0.8.1 |
+| `status` | enum{sending\| sent\| delivered\| failed} | Yes |  |
+| `error_code` | enum{SMS_NO_SERVICE\| SMS_RADIO_OFF\| SMS_LIMIT_EXCEEDED\| SMS_GENERIC_FAILURE} | When `failed` | Error code from 0.8.1 |
 
 - **Response:** N/A.
 - **Example:**
@@ -1024,9 +1024,9 @@ Errors (`ack.error.code`), in the order they are checked:
 |---------|------|---------|
 | `destinationAddress` | String | The normalized recipient |
 | `scAddress` | String | `null` (use the SIM's default SMSC) |
-| `parts` | ArrayList<String> | Result of `divideMessage` |
-| `sentIntents` | ArrayList<PendingIntent> | One intent per part, extras `local_id`, `part_index`, `part_count` |
-| `deliveryIntents` | ArrayList<PendingIntent> | Same as above, for delivery reports |
+| `parts` | ArrayList\<String> | Result of `divideMessage` |
+| `sentIntents` | ArrayList\<PendingIntent> | One intent per part, extras `local_id`, `part_index`, `part_count` |
+| `deliveryIntents` | ArrayList\<PendingIntent> | Same as above, for delivery reports |
 
 - **Response:** the result of each part comes back to an internal receiver through `sentIntents`;
   mapping to HandLive codes:
@@ -1196,7 +1196,7 @@ N/A — no approved wireframe yet.
 | 2 | Unread message count | int32 | Output | `unread_count` | Shown next to the conversation when the indicator is on |
 | 3 | "Unread messages" divider | bool | Output | From `sms_message.read` | Placed before the first unread inbox message when the conversation opens |
 | 4 | Badge | int32 | Output | 0 | Number of conversations with the indicator on; menu bar icon (Mac), app icon (iOS) |
-| 5 | SMS notifications shown | array<string> (notification identifiers) | Output | — | Removed when the conversation has been read on the phone or opened on the device |
+| 5 | SMS notifications shown | array\<string> (notification identifiers) | Output | — | Removed when the conversation has been read on the phone or opened on the device |
 | 6 | Limitation note | string | Output | "Marking as read on this device doesn't change the status on the phone." | Settings → Messages |
 
 ### 5.5.4 Business flow

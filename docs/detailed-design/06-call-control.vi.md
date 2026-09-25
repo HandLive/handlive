@@ -54,13 +54,13 @@ N/A — chưa có wireframe được duyệt.
 | 5 | Người gọi chờ | string | Output | Ẩn | Chỉ khi `waiting = true`: `waiting_display_name` hoặc `waiting_number` ("Không rõ số" khi cả hai `null`); kèm "Xử lý trên điện thoại hoặc nối Bluetooth" khi `hfp_connected = false` |
 | 6 | Nút "Trả lời" | action | Input | Ẩn | Chỉ Mac, khi `controls.answer = true`; khi âm thanh cuộc gọi hiệu lực (AUDIO-01) tách thành "Nghe trên điện thoại" và "Nghe trên Mac" → CALL-02 |
 | 7 | Nút "Từ chối" | action | Input | Ẩn | Panel Mac, banner iOS, hành động của thông báo iOS; khi `controls.reject = true` → CALL-02 |
-| 8 | Nút "Từ chối kèm tin nhắn" | action | Input | Ẩn | Chỉ Mac; khi `controls.reject = true`, `number` khác `null`, SMS hiệu lực và `features.sms.can_send = true` → CALL-02 |
+| 8 | Nút "Từ chối kèm tin nhắn…" | action | Input | Ẩn | Chỉ Mac; khi `controls.reject = true`, `number` khác `null`, SMS hiệu lực và `features.sms.can_send = true` → CALL-02 |
 | 9 | Nút "Bỏ qua" | action | Input | — | Chỉ Mac: đóng panel và tắt chuông trên Mac; cuộc gọi vẫn đổ chuông trên điện thoại, vẫn nằm trong menu của biểu tượng menu bar |
 | 10 | Chuông trên Mac | âm thanh | Output | Tắt | Phát lặp khi panel hiện, `call.notify = true`, `call.ringtone = true` và Focus không bật; dừng khi `state` đổi, khi bấm trường 6, 7, 8, 9, hoặc sau 60 s |
 | 11 | Thông báo iOS | string | Output | Không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" | I-NSE thay tiêu đề bằng trường 2 (hoặc 3), nội dung "Cuộc gọi đến" kèm nhãn SIM; gắn nút "Từ chối" |
 | 12 | Gợi ý cấp quyền | string | Output | Ẩn | "Cho phép HandLive đọc nhật ký cuộc gọi trên điện thoại để hiện số gọi đến" khi `permissions_missing` có `READ_CALL_LOG` (E2) |
 | 13 | Tùy chọn "Thông báo cuộc gọi" | bool | Input/Output | `call.notify` = `true` | Cài đặt → Cuộc gọi (SET-02), Mac và iOS |
-| 14 | Tùy chọn "Đổ chuông trên Mac" | bool | Input/Output | `call.ringtone` = `true` | Cài đặt → Cuộc gọi, chỉ Mac; khóa mới, đề xuất bổ sung vào 0.9.5 |
+| 14 | Tùy chọn "Đổ chuông trên Mac" | bool | Input/Output | `call.ringtone` = `true` | Cài đặt → Cuộc gọi, chỉ Mac; khóa ở 0.9.5 |
 | 15 | Thông báo liên lạc trên Mac | string | Output | Tiêu đề: trường 2 (hoặc 3); nội dung "Cuộc gọi đến" kèm nhãn SIM | `INStartCallIntent` (API 7): mức passive khi panel đang hiện (chỉ vào Trung tâm thông báo, không banner, không âm), time-sensitive khi Tập trung bật; nút "Trả lời", "Từ chối"; gỡ khi `state` khác `ringing` |
 
 ### 6.1.4 Luồng nghiệp vụ
@@ -107,7 +107,7 @@ flowchart TB
 | 7 | Hệ thống | M-APP | Đọc trạng thái Tập trung (API 5). Không bật: hiện panel với trường 1–9, gửi thông báo liên lạc mức passive (trường 15, API 7), phát chuông (trường 10) nếu `call.ringtone = true`. Đang bật: không panel, không chuông, thông báo liên lạc mức time-sensitive. | E4. |
 | 8 | Hệ thống | I-APP | Ứng dụng ở foreground: banner trong ứng dụng với trường 1–5, 7 (API 6); không đổ chuông vì điện thoại đang đổ chuông. |  |
 | 9 | Hệ thống | I-NSE, OS | Nhận push (API 6). Máy đang mở khóa: giải mã, đặt tiêu đề và nội dung (trường 11), danh mục `HL_CALL_INCOMING` có nút "Từ chối", `userInfo`. Máy đang khóa hoặc giải mã lỗi: giữ nội dung chung. | E6, E7. |
-| 10 | Người dùng | M-APP / I-APP | Thấy người gọi; chọn "Trả lời", "Từ chối", "Từ chối kèm tin nhắn" (CALL-02), "Bỏ qua", hoặc không làm gì. |  |
+| 10 | Người dùng | M-APP / I-APP | Thấy người gọi; chọn "Trả lời", "Từ chối", "Từ chối kèm tin nhắn…" (CALL-02), "Bỏ qua", hoặc không làm gì. |  |
 | 11 | Hệ thống | A-CALL, A-SVC | Mọi thay đổi (có số hoặc tên, `OFFHOOK`, `IDLE`, `waiting`, `hfp_connected`, `audio_on`) → gửi `state` mới cùng `call_id` tới các phiên. `IDLE`: đặt `ended_at`, `end_reason`, chuyển ngữ cảnh vào danh sách "vừa kết thúc" (giữ 60 s). |  |
 | 12 | Hệ thống | M-APP / I-APP | `ringing` → cập nhật các trường; `offhook` → Mac chuyển panel sang chế độ đang gọi (CALL-03) và gỡ thông báo liên lạc, iOS đóng banner và gỡ thông báo cuộc gọi đến; `idle` → đóng panel, dừng chuông, gỡ thông báo cuộc gọi đến. | Cuộc gọi nhỡ: CALL-04. |
 
@@ -136,23 +136,23 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `call_id` | uuid | Có | UUIDv7 của ngữ cảnh; tạo khi `RINGING` từ `IDLE` (cuộc gọi đến) hoặc `OFFHOOK` từ `IDLE` (cuộc gọi đi bắt đầu trên điện thoại) |
-| `direction` | enum{incoming\ | outgoing\ | unknown} | Có | `unknown` khi ngữ cảnh dựng lúc máy đã `OFFHOOK` (E8) |
-| `state` | enum{ringing\ | offhook\ | idle} | Có | Trạng thái tổng hợp của máy |
+| `direction` | enum{incoming\| outgoing\| unknown} | Có | `unknown` khi ngữ cảnh dựng lúc máy đã `OFFHOOK` (E8) |
+| `state` | enum{ringing\| offhook\| idle} | Có | Trạng thái tổng hợp của máy |
 | `waiting` | bool | Có | `true` khi `RINGING` xuất hiện lúc đang `OFFHOOK` (cuộc gọi chờ) |
-| `number` | e164 \ | null | Có | Số của cuộc gọi chính; `null` khi thiếu `READ_CALL_LOG`, số ẩn, hoặc cuộc gọi đi |
-| `display_name` | string \ | null | Có | Tên từ `PhoneLookup`; `null` khi thiếu `READ_CONTACTS` hoặc số không có trong danh bạ |
-| `presentation` | enum{allowed\ | restricted\ | unknown} | Có | `allowed`: có số; `restricted`: có `READ_CALL_LOG` nhưng bản broadcast kèm số cho số rỗng (người gọi ẩn số); `unknown`: các trường hợp còn lại |
-| `sub_id` | int32 \ | null | Có | SIM của cuộc gọi (API 2, listener theo SIM); không xác định → `null` |
-| `sim_label` | string \ | null | Có | Tên SIM (`SubscriptionInfo.getDisplayName()`) của `sub_id`; chỉ khi máy có > 1 SIM hoạt động |
-| `waiting_number` | e164 \ | null | Có | Số của cuộc gọi chờ; `null` khi `waiting = false` hoặc không biết |
-| `waiting_display_name` | string \ | null | Có | Tên của cuộc gọi chờ |
+| `number` | e164 \| null | Có | Số của cuộc gọi chính; `null` khi thiếu `READ_CALL_LOG`, số ẩn, hoặc cuộc gọi đi |
+| `display_name` | string \| null | Có | Tên từ `PhoneLookup`; `null` khi thiếu `READ_CONTACTS` hoặc số không có trong danh bạ |
+| `presentation` | enum{allowed\| restricted\| unknown} | Có | `allowed`: có số; `restricted`: có `READ_CALL_LOG` nhưng bản broadcast kèm số cho số rỗng (người gọi ẩn số); `unknown`: các trường hợp còn lại |
+| `sub_id` | int32 \| null | Có | SIM của cuộc gọi (API 2, listener theo SIM); không xác định → `null` |
+| `sim_label` | string \| null | Có | Tên SIM (`SubscriptionInfo.getDisplayName()`) của `sub_id`; chỉ khi máy có > 1 SIM hoạt động |
+| `waiting_number` | e164 \| null | Có | Số của cuộc gọi chờ; `null` khi `waiting = false` hoặc không biết |
+| `waiting_display_name` | string \| null | Có | Tên của cuộc gọi chờ |
 | `started_at` | timestamp | Có | Lúc tạo ngữ cảnh (đồng hồ Android) |
-| `answered_at` | timestamp \ | null | Có | Lúc `RINGING` → `OFFHOOK` của cuộc gọi đến; cuộc gọi đi và `unknown` luôn `null` (không biết lúc bên kia nhấc máy) |
-| `ended_at` | timestamp \ | null | Có | Chỉ khi `state = idle` |
-| `end_reason` | enum{missed\ | rejected\ | ended\ | answered_elsewhere} \ | null | Có | Chỉ khi `state = idle`; quy tắc ở logic 5 |
+| `answered_at` | timestamp \| null | Có | Lúc `RINGING` → `OFFHOOK` của cuộc gọi đến; cuộc gọi đi và `unknown` luôn `null` (không biết lúc bên kia nhấc máy) |
+| `ended_at` | timestamp \| null | Có | Chỉ khi `state = idle` |
+| `end_reason` | enum{missed\| rejected\| ended\| answered_elsewhere} \| null | Có | Chỉ khi `state = idle`; quy tắc ở logic 5 |
 | `controls` | object | Có | Thao tác client được phép làm (bảng dưới) |
 | `hfp_connected` | bool | Có | Mac nhận tin đang nối hồ sơ HFP tới điện thoại (A-AUD, AUDIO-02); luôn `false` với iPhone/iPad |
-| `audio_on` | enum{phone\ | mac} | Có | `mac`: âm thanh cuộc gọi đang ở chính Mac nhận tin (SCO tới Mac đó, hoặc đường Opus/WS của phiên đó — nhóm 7); còn lại `phone` |
+| `audio_on` | enum{phone\| mac} | Có | `mac`: âm thanh cuộc gọi đang ở chính Mac nhận tin (SCO tới Mac đó, hoặc đường Opus/WS của phiên đó — nhóm 7); còn lại `phone` |
 
 Đối tượng `controls`:
 
@@ -161,9 +161,9 @@ flowchart TB
 | `answer` | bool | `true` khi `state = ringing`, `waiting = false`, có `ANSWER_PHONE_CALLS` và client nhận là Mac |
 | `reject` | bool | `true` khi `state = ringing`, `waiting = false`, có `ANSWER_PHONE_CALLS` |
 | `end` | bool | `true` khi `state = offhook`, `waiting = false`, có `ANSWER_PHONE_CALLS` |
-| `hold` | enum{hfp\ | unavailable} | `hfp` khi `state = offhook` và `hfp_connected = true` |
-| `dtmf` | enum{hfp\ | unavailable} | Như `hold` |
-| `mute` | enum{hfp\ | unavailable} | `hfp` khi `state = offhook`, `hfp_connected = true` và `audio_on = mac` |
+| `hold` | enum{hfp\| unavailable} | `hfp` khi `state = offhook` và `hfp_connected = true` |
+| `dtmf` | enum{hfp\| unavailable} | Như `hold` |
+| `mute` | enum{hfp\| unavailable} | `hfp` khi `state = offhook`, `hfp_connected = true` và `audio_on = mac` |
 
 - **Response:** N/A (không ack; client lỡ tin do mất kết nối nhận bản hiện tại khi phiên mới trao
   đổi capability — logic 3).
@@ -310,10 +310,10 @@ Content-Type: application/json
   `INFocusStatusCenter.default.focusStatus.isFocused`. Trợ năng:
   `NSAccessibility.post(element:notification:userInfo:)` với `.announcementRequested`.
 - **Request (dữ liệu hiển thị):** trường 1–10 lấy từ `state` mới nhất.
-- **Response:** thao tác của người dùng → CALL-02 ("Trả lời", "Từ chối", "Từ chối kèm tin nhắn")
+- **Response:** thao tác của người dùng → CALL-02 ("Trả lời", "Từ chối", "Từ chối kèm tin nhắn…")
   hoặc "Bỏ qua" (chỉ cục bộ).
 - **Ví dụ:** `state` `ringing` ở ví dụ API 1 → panel góc trên bên phải: "Cuộc gọi đến", "Nguyễn Văn
-  A", số ở định dạng quốc gia, "SIM 1", nút "Trả lời", "Từ chối", "Từ chối kèm tin nhắn", "Bỏ qua";
+  A", số ở định dạng quốc gia, "SIM 1", nút "Trả lời", "Từ chối", "Từ chối kèm tin nhắn…", "Bỏ qua";
   chuông phát nếu Focus không bật.
 - **Logic nghiệp vụ:**
   1. Một panel cho một cuộc gọi, đặt ở góc trên bên phải của màn hình đang có con trỏ chuột. Panel
@@ -469,14 +469,14 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Nút "Trả lời" | action | Input | — | Mac; khi âm thanh cuộc gọi chưa hiệu lực: nghe trên điện thoại (`audio = phone`) |
-| 2 | Nơi nghe | enum{phone\ | mac} | Input | `phone` | "Nghe trên điện thoại" / "Nghe trên Mac"; chỉ hiện khi âm thanh cuộc gọi hiệu lực (AUDIO-01) |
+| 2 | Nơi nghe | enum{phone\| mac} | Input | `phone` | "Nghe trên điện thoại" / "Nghe trên Mac"; chỉ hiện khi âm thanh cuộc gọi hiệu lực (AUDIO-01) |
 | 3 | Nút "Từ chối" | action | Input | — | Panel Mac, banner iOS |
 | 4 | Hành động "Từ chối" trên thông báo | action | Input | — | iOS (`HL_CALL_REJECT`); hệ thống yêu cầu mở khóa máy trước khi chạy |
-| 5 | Nút "Từ chối kèm tin nhắn" | action | Input | — | Mac; mở danh sách mẫu tin (trường 6, 7) |
+| 5 | Nút "Từ chối kèm tin nhắn…" | action | Input | — | Mac; mở danh sách mẫu tin (trường 6, 7) |
 | 6 | Mẫu tin trả lời nhanh | string(160) | Input | "Tôi sẽ gọi lại sau", "Tôi đang họp" | Chọn một mẫu trong `call.quick_replies` → từ chối và gửi ngay |
 | 7 | Tin tự soạn | string(160) | Input | Rỗng | Mục "Tin khác…": ô nhập một dòng, bấm "Gửi"; không gửi khi rỗng sau khi bỏ khoảng trắng |
-| 8 | Danh sách mẫu tin | array<string(160)> | Input/Output | `call.quick_replies` | Cài đặt → Cuộc gọi (Mac): thêm, sửa, xóa, sắp xếp; tối đa 6 mẫu; khóa mới, đề xuất bổ sung vào 0.9.5 |
-| 9 | Trạng thái đang xử lý | enum{idle\ | answering\ | rejecting} | Output | `idle` | "Đang trả lời…", "Đang từ chối…"; các nút bị khóa |
+| 8 | Danh sách mẫu tin | array<string(160)> | Input/Output | `call.quick_replies` | Cài đặt → Cuộc gọi (Mac): thêm, sửa, xóa, sắp xếp; tối đa 6 mẫu; khóa ở 0.9.5 |
+| 9 | Trạng thái đang xử lý | enum{idle\| answering\| rejecting} | Output | `idle` | "Đang trả lời…", "Đang từ chối…"; các nút bị khóa |
 | 10 | Thông báo lỗi | string | Output | Ẩn | Theo E1–E9: "Cuộc gọi đã kết thúc", "Cuộc gọi đã được nghe trên điện thoại", "Điện thoại chưa cho phép HandLive trả lời cuộc gọi", "Không gửi được lệnh tới điện thoại", "Không chuyển được âm thanh sang Mac" |
 | 11 | Thông báo iOS "Không gửi được lệnh từ chối" | string | Output | — | E8: "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại." |
 
@@ -516,7 +516,7 @@ flowchart TB
 
 | Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
 |------|----------|-----------|-------|--------------------|
-| 1 | Người dùng | M-APP / I-APP | Mac: bấm "Trả lời" (hoặc "Nghe trên điện thoại" / "Nghe trên Mac"), "Từ chối", hoặc "Từ chối kèm tin nhắn" rồi chọn mẫu tin hoặc nhập tin. iOS: bấm "Từ chối" trên banner. Client khóa nút, hiện trường 9. | Nút chỉ có khi `controls` cho phép. |
+| 1 | Người dùng | M-APP / I-APP | Mac: bấm "Trả lời" (hoặc "Nghe trên điện thoại" / "Nghe trên Mac"), "Từ chối", hoặc "Từ chối kèm tin nhắn…" rồi chọn mẫu tin hoặc nhập tin. iOS: bấm "Từ chối" trên banner. Client khóa nút, hiện trường 9. | Nút chỉ có khi `controls` cho phép. |
 | 2 | Hệ thống | M-APP | "Nghe trên Mac" và M-HFP đang có kết nối HFP (`hfp_connected = true`) → bước 3; mọi trường hợp khác → bước 4. |  |
 | 3 | Hệ thống | M-HFP | Gửi lệnh HFP `ATA` (API 4); điện thoại nghe máy và mở kết nối âm thanh SCO tới Mac. Không gửi `call_event/action`. | `ERROR` hoặc quá 2 s → E6, sang bước 4 với `audio = mac`. |
 | 4 | Hệ thống | M-APP / I-APP | Gửi `call_event/action` (API 1) `{call_id, action, audio}`; chờ `ack` tối đa `REQUEST_TIMEOUT`; mất phiên trong lúc chờ → gửi lại cùng `id` nếu phiên nối lại trước hạn. | Hết hạn → E5. |
@@ -556,8 +556,8 @@ CONN-04 API 2 — không phát sinh lời gọi mới.
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `call_id` | uuid | Có | Của ngữ cảnh client đang hiển thị |
-| `action` | enum{answer\ | reject\ | end\ | hold\ | unhold\ | dtmf\ | mute} | Có | Qua WebSocket chỉ thực hiện `answer`, `reject`, `end`; các giá trị còn lại luôn nhận `CALL_HFP_REQUIRED` (0.7.1) |
-| `audio` | enum{phone\ | mac} | Không | Chỉ với `answer`: nơi người dùng muốn nghe; vắng → `phone` |
+| `action` | enum{answer\| reject\| end\| hold\| unhold\| dtmf\| mute} | Có | Qua WebSocket chỉ thực hiện `answer`, `reject`, `end`; các giá trị còn lại luôn nhận `CALL_HFP_REQUIRED` (0.7.1) |
+| `audio` | enum{phone\| mac} | Không | Chỉ với `answer`: nơi người dùng muốn nghe; vắng → `phone` |
 
 - **Response (`ack.data`):** `{}` khi `ok = true` — Android đã gọi API Telecom; kết quả thật đi qua
   `state`.
@@ -582,7 +582,7 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 
 ```json
 {"op":"action","data":{"call_id":"0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90","action":"reject"}}
-{"re":"0192f3f1-2c3d-7e4f-9a5b-6c7d8e9f0a12","ok":false,"error":{"code":"CALL_ACTION_NOT_ALLOWED","message":"Cuộc gọi không còn đổ chuông","details":{"state":"offhook","reason":"state"}}}
+{"re":"0192f3f1-2c3d-7e4f-9a5b-6c7d8e9f0a12","ok":false,"error":{"code":"CALL_ACTION_NOT_ALLOWED","message":"Call is no longer ringing","details":{"state":"offhook","reason":"state"}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -656,7 +656,7 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
   4. Từ chối không đi bằng HFP: luôn dùng `call_event/action reject`, để Mac và iPhone/iPad dùng
      chung một đường và A-CALL đặt được `end_reason = rejected`.
 
-#### API 5 — `WS sms/send` cho "Từ chối kèm tin nhắn"
+#### API 5 — `WS sms/send` cho "Từ chối kèm tin nhắn…"
 
 - **URL:** như API 1
 - **Method:** `WS sms/send` (C→S), envelope mã hóa, có ack — đặc tả chính ở SMS-04 API 1.
@@ -763,15 +763,15 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Tên hoặc số | string | Output | `display_name` / `number` | Như CALL-01 trường 2–3; "Cuộc gọi đi" khi cuộc gọi đi chưa biết số (E8) |
 | 2 | Đồng hồ | string (mm:ss) | Output | "00:00" | Tính từ `answered_at`; `answered_at = null` → tính từ `started_at` |
-| 3 | Trạng thái | enum{active\ | held\ | waiting\ | ended} | Output | `active` | "Đang gọi", "Đang giữ máy" (chỉ khi nối HFP), "Có cuộc gọi chờ", "Đã kết thúc · mm:ss" |
-| 4 | Nơi phát âm thanh | enum{phone\ | mac} | Output | `audio_on` | "Âm thanh: Điện thoại" / "Âm thanh: Mac"; nút chuyển → AUDIO-03 |
+| 3 | Trạng thái | enum{active\| held\| waiting\| ended} | Output | `active` | "Đang gọi", "Đang giữ máy" (chỉ khi nối HFP), "Có cuộc gọi chờ", "Đã kết thúc · mm:ss" |
+| 4 | Nơi phát âm thanh | enum{phone\| mac} | Output | `audio_on` | "Âm thanh: Điện thoại" / "Âm thanh: Mac"; nút chuyển → AUDIO-03 |
 | 5 | Nút "Kết thúc" | action | Input | — | Hiện khi `waiting = false` và (`controls.end = true` hoặc M-HFP đang nối) |
 | 6 | Nút "Giữ máy" / "Tiếp tục" | action | Input | Ẩn | Chỉ khi `controls.hold = hfp` và `waiting = false` |
 | 7 | Bàn phím DTMF | string(1) | Input | Ẩn | Chỉ khi `controls.dtmf = hfp`; một trong `0`–`9`, `*`, `#`; nhận cả phím trên bàn phím Mac khi panel có focus |
 | 8 | Dãy số đã bấm | string | Output | Rỗng | Dưới bàn phím; xóa khi đóng bàn phím; không lưu, không log |
 | 9 | Nút "Tắt tiếng" | bool | Input/Output | `false` | Chỉ khi `controls.mute = hfp`; `true` = micro Mac đang tắt |
 | 10 | Người gọi chờ | string | Output | Ẩn | `waiting_display_name` / `waiting_number`, hoặc số từ `+CCWA` khi nối HFP |
-| 11 | Nút xử lý cuộc gọi chờ | enum{reject_waiting\ | end_and_accept\ | hold_and_accept} | Input | Ẩn | Chỉ khi `waiting = true` và M-HFP đang nối: "Từ chối cuộc gọi chờ" (`AT+CHLD=0`), "Kết thúc và nghe" (`AT+CHLD=1`), "Giữ và nghe" (`AT+CHLD=2`) |
+| 11 | Nút xử lý cuộc gọi chờ | enum{reject_waiting\| end_and_accept\| hold_and_accept} | Input | Ẩn | Chỉ khi `waiting = true` và M-HFP đang nối: "Từ chối cuộc gọi chờ" (`AT+CHLD=0`), "Kết thúc và nghe" (`AT+CHLD=1`), "Giữ và nghe" (`AT+CHLD=2`) |
 | 12 | Thông báo lỗi, hướng dẫn | string | Output | Ẩn | Theo E1–E9 |
 
 ### 6.3.4 Luồng nghiệp vụ
@@ -840,7 +840,7 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `call_id` | uuid | Có | Ngữ cảnh đang `offhook` |
-| `action` | enum{end\ | hold\ | unhold\ | dtmf\ | mute} | Có | Trong CALL-03 chỉ `end` được thực hiện qua WebSocket |
+| `action` | enum{end\| hold\| unhold\| dtmf\| mute} | Có | Trong CALL-03 chỉ `end` được thực hiện qua WebSocket |
 
 - **Response (`ack.data`):** `{}` khi `ok = true`. Lỗi: `FEATURE_DISABLED`, `BAD_REQUEST`,
   `CALL_HFP_REQUIRED` (`hold`, `unhold`, `dtmf`, `mute`), `CALL_NOT_FOUND`, `PERMISSION_MISSING`,
@@ -854,7 +854,7 @@ flowchart TB
 
 ```json
 {"op":"action","data":{"call_id":"0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90","action":"hold"}}
-{"re":"0192f3f2-3c4d-7e5f-8a6b-7c8d9e0f1a2b","ok":false,"error":{"code":"CALL_HFP_REQUIRED","message":"Giữ máy chỉ làm được qua Bluetooth HFP","details":{"action":"hold"}}}
+{"re":"0192f3f2-3c4d-7e5f-8a6b-7c8d9e0f1a2b","ok":false,"error":{"code":"CALL_HFP_REQUIRED","message":"Hold requires Bluetooth HFP","details":{"action":"hold"}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -971,9 +971,9 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Danh sách cuộc gọi | array<object> | Output | Rỗng | Mac: mục "Cuộc gọi" ở thanh bên cửa sổ Tin nhắn; iOS: tab "Cuộc gọi". Mỗi dòng gồm trường 2–6, sắp theo `ts` giảm dần, tải thêm khi cuộn |
+| 1 | Danh sách cuộc gọi | array\<object> | Output | Rỗng | Mac: mục "Cuộc gọi" ở thanh bên cửa sổ Tin nhắn; iOS: tab "Cuộc gọi". Mỗi dòng gồm trường 2–6, sắp theo `ts` giảm dần, tải thêm khi cuộn |
 | 2 | Tên hoặc số | string | Output | `display_name` / `number` | `number = null` → "Số ẩn" |
-| 3 | Loại cuộc gọi | enum{incoming\ | outgoing\ | missed\ | rejected\ | blocked\ | voicemail} | Output | `type` | Biểu tượng theo loại; `missed` màu cảnh báo, in đậm khi `seen = 0` |
+| 3 | Loại cuộc gọi | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Output | `type` | Biểu tượng theo loại; `missed` màu cảnh báo, in đậm khi `seen = 0` |
 | 4 | Thời điểm | timestamp | Output | `ts` | Giờ ("14:05") nếu trong ngày, ngày tháng nếu cũ hơn |
 | 5 | Thời lượng | int32 (giây) | Output | `duration_s` | "2 phút 5 giây"; ẩn khi bằng 0 |
 | 6 | Nhãn SIM | string | Output | Ẩn | `label` của SIM có `sub_id` tương ứng trong `features.sms.sims`; chỉ khi > 1 SIM |
@@ -1049,12 +1049,12 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `entry_id` | int64 | Có | `CallLog.Calls._ID` (0.2) |
-| `number` | e164 \ | null | Có | Cột `NUMBER`, chuẩn hóa như CALL-01; rỗng hoặc `NUMBER_PRESENTATION` khác `PRESENTATION_ALLOWED` → `null` |
-| `display_name` | string \ | null | Có | Tên từ `PhoneLookup` (có `READ_CONTACTS`); không có → cột `CACHED_NAME`; rỗng → `null` |
-| `type` | enum{incoming\ | outgoing\ | missed\ | rejected\ | blocked\ | voicemail} | Có | Cột `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; giá trị khác → bỏ mục |
+| `number` | e164 \| null | Có | Cột `NUMBER`, chuẩn hóa như CALL-01; rỗng hoặc `NUMBER_PRESENTATION` khác `PRESENTATION_ALLOWED` → `null` |
+| `display_name` | string \| null | Có | Tên từ `PhoneLookup` (có `READ_CONTACTS`); không có → cột `CACHED_NAME`; rỗng → `null` |
+| `type` | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Có | Cột `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; giá trị khác → bỏ mục |
 | `ts` | timestamp | Có | Cột `DATE` (lúc cuộc gọi bắt đầu) |
 | `duration_s` | int32 | Có | Cột `DURATION` (giây) |
-| `sub_id` | int32 \ | null | Có | Từ `PHONE_ACCOUNT_COMPONENT_NAME` và `PHONE_ACCOUNT_ID` qua `TelephonyManager.getSubscriptionId(PhoneAccountHandle)` (API 30+); API 29 hoặc không ánh xạ được → `null` |
+| `sub_id` | int32 \| null | Có | Từ `PHONE_ACCOUNT_COMPONENT_NAME` và `PHONE_ACCOUNT_ID` qua `TelephonyManager.getSubscriptionId(PhoneAccountHandle)` (API 30+); API 29 hoặc không ánh xạ được → `null` |
 
 #### API 1 — `WS call_event/log_sync`
 
@@ -1072,7 +1072,7 @@ flowchart TB
 
 | Trường | Kiểu | Mô tả |
 |--------|------|-------|
-| `entries` | array<entry> | Theo `_ID` tăng dần |
+| `entries` | array\<entry> | Theo `_ID` tăng dần |
 | `cursor` | string | Con trỏ sau trang này; client lưu trong cùng giao dịch với trang |
 | `has_more` | bool | Còn mục sau trang này |
 | `reset` | bool | `true` khi Android bỏ qua con trỏ gửi lên và trả trang đầu như đồng bộ lần đầu (E5) |
@@ -1132,7 +1132,7 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `entry` | entry | Có | Mục mới |
-| `call_id` | uuid \ | null | Có | Ngữ cảnh cuộc gọi (CALL-01) ghép được với mục; `null` khi không ghép được |
+| `call_id` | uuid \| null | Có | Ngữ cảnh cuộc gọi (CALL-01) ghép được với mục; `null` khi không ghép được |
 
 - **Response:** N/A (mục bị lỡ do mất kết nối đến ở `log_sync` kế tiếp vì `_ID` lớn hơn con trỏ đã
   lưu).

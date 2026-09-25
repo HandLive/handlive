@@ -70,7 +70,7 @@ hoặc iPhone/iPad.
 | `string(n)` | Tối đa n ký tự (code point) |  |
 | `int32`, `int64` | Số nguyên có dấu |  |
 | `bool` |  | `true` |
-| `enum{a\ | b}` | Một trong các giá trị liệt kê | `enum{front\ | back}` |
+| `enum{a\| b}` | Một trong các giá trị liệt kê | `enum{front\| back}` |
 | `uuid` | 36 ký tự thường, có gạch | `0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10` |
 | `timestamp` | int64 mili-giây Unix epoch UTC | `1727150000123` |
 | `b64` | Base64 chuẩn (RFC 4648 §4, có padding) |  |
@@ -196,7 +196,7 @@ Hai ngoại lệ:
 
 ```json
 {"re":"<id của yêu cầu>","ok":true,"data":{ }}
-{"re":"<id của yêu cầu>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"Không có sóng","details":{}}}
+{"re":"<id của yêu cầu>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"No cellular service","details":{}}}
 ```
 
 Quy tắc chung:
@@ -430,11 +430,11 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 |--------|------|-------|
 | `protocol` | int32 | Phiên bản giao thức; khác major → đóng 4426 |
 | `app_version`, `os_version`, `model` | string | Hiển thị ở PAIR-02 |
-| `platform` | enum{android\ | macos\ | ios\ | ipados} |  |
+| `platform` | enum{android\| macos\| ios\| ipados} |  |
 | `features.<tên>.enabled` | bool | Theo khóa cài đặt `feature.<tên>` (0.9.5) |
 | `features.clipboard.auto_send` | bool | Android: Accessibility đang bật; client: luôn `true` |
 | `features.sms.sims` | array | Chỉ Android; SIM đang hoạt động (cần `READ_PHONE_STATE`, thiếu → rỗng) |
-| `features.sms.default_sub_id` | int32 \ | null | Chỉ Android; SIM gửi SMS mặc định, null khi máy đặt "luôn hỏi" |
+| `features.sms.default_sub_id` | int32 \| null | Chỉ Android; SIM gửi SMS mặc định, null khi máy đặt "luôn hỏi" |
 | `features.sms.notify` | bool | Chỉ iOS/iPadOS; bằng `sms.notify` — Android chỉ push SMS mới khi `true` |
 | `features.call.can_answer`, `can_end` | bool | Android: có quyền `ANSWER_PHONE_CALLS` |
 | `features.call.caller_id` | bool | Android: có `READ_CALL_LOG` (số gọi đến) |
@@ -443,7 +443,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | `features.call_audio.hfp_connected` | bool | Android: Mac đang nối hồ sơ HFP tới điện thoại |
 | `features.call_audio.consented` | bool | Chỉ Mac: có `consent_record` hiệu lực (AUDIO-01). Android từ chối mọi yêu cầu âm thanh cuộc gọi bằng `CALL_CONSENT_REQUIRED` khi giá trị gần nhất là `false` |
 | `features.call_audio.opus_fallback` | object | Android: khả năng đường Opus/WS — `available`, `downlink` (thu được âm người gọi), `uplink` (chèn được giọng Mac), `reason` ∈ {`ok`, `disabled`, `android_10`, `shizuku_not_running`, `capture_silent`, `uplink_unsupported`} (`disabled` khi `call_audio.allow_opus_fallback = false`) |
-| `permissions_missing` | array<string> | Chỉ Android: quyền còn thiếu, dùng để client hiển thị hướng dẫn |
+| `permissions_missing` | array\<string> | Chỉ Android: quyền còn thiếu, dùng để client hiển thị hướng dẫn |
 
 ### 0.7.3 Tin điều khiển relay (WS text frame, không E2E)
 
@@ -722,12 +722,13 @@ CREATE INDEX idx_call_log_ts ON call_log_entry (pair_id, ts DESC);
 
 -- [Thiết kế] Chấp thuận công bố (chỉ Mac)
 CREATE TABLE consent_record (
+  id                INTEGER PRIMARY KEY,
   feature           TEXT    NOT NULL CHECK (feature IN ('call_audio')),
   text_version      TEXT    NOT NULL,
   accepted_at       INTEGER NOT NULL,
-  revoked_at        INTEGER,
-  PRIMARY KEY (feature, text_version)
+  revoked_at        INTEGER
 );
+CREATE UNIQUE INDEX consent_record_active ON consent_record (feature, text_version) WHERE revoked_at IS NULL;
 ```
 
 iOS dùng cùng lược đồ, trừ `consent_record`. File nằm trong App Group container để I-APP và I-NSE
@@ -785,7 +786,7 @@ Khóa Redis `[Thiết kế]`:
 | `presence:<device_id>` | string (instance id) | 60 s, gia hạn 20 s/lần | Thiết bị đang nối tới instance nào |
 | `dev:<device_id>` | pub/sub channel | — | Instance đang giữ kết nối subscribe; instance khác publish khung cần chuyển |
 | `rv:<rv_id>` | set (device_id) | 180 s | Điểm hẹn ghép nối |
-| `revoked_notice:<device_id>` | set (`<pair_id>\ | <by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
+| `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
 | `rl:<device_id>:<nhóm>:<phút>` | counter | 120 s | Rate limit |
 | `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2) |
 
@@ -806,7 +807,7 @@ SET-02 quản lý các khóa này.
 | Khóa | Kiểu | Mặc định | Nền tảng | Mô tả |
 |------|------|----------|----------|-------|
 | `setup.started_at`, `setup.completed_at` | timestamp | rỗng | Tất cả | Tiến độ thiết lập ban đầu (SET-01, SET-03) |
-| `perm.requested` | set<string> | rỗng | Android | Quyền đã từng xin, để phân biệt "chưa hỏi" và "bị từ chối vĩnh viễn" |
+| `perm.requested` | set\<string> | rỗng | Android | Quyền đã từng xin, để phân biệt "chưa hỏi" và "bị từ chối vĩnh viễn" |
 | `feature.clipboard` | bool | `true` | Tất cả | Đồng bộ bảng nhớ tạm |
 | `feature.sms` | bool | `true` | Tất cả | Cầu nối SMS |
 | `feature.call` | bool | `true` | Tất cả | Thông tin và điều khiển cuộc gọi |
@@ -825,9 +826,9 @@ SET-02 quản lý các khóa này.
 | `sms.preview` | bool | `true` | Mac, iOS | Hiện nội dung trong thông báo |
 | `call.notify` | bool | `true` | Mac, iOS | Thông báo cuộc gọi |
 | `call.ringtone` | bool | `true` | Mac | Phát chuông khi có cuộc gọi đến (tôn trọng chế độ Tập trung) |
-| `call.quick_replies` | array<string> | 2 mẫu mặc định | Mac | Tin trả lời nhanh khi từ chối, tối đa 6 mẫu × 160 ký tự |
-| `cam.default_camera` | enum{front\ | back} | `front` | Mac | Camera mặc định |
-| `cam.default_quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | `auto` | Mac | Chất lượng mặc định |
+| `call.quick_replies` | array\<string> | 2 mẫu mặc định | Mac | Tin trả lời nhanh khi từ chối, tối đa 6 mẫu × 160 ký tự |
+| `cam.default_camera` | enum{front\| back} | `front` | Mac | Camera mặc định |
+| `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Chất lượng mặc định |
 | `cam.usb_boost` | bool | `true` | Mac | Tự chuyển USB khi cắm cáp |
 | `cam.usb_wizard_dismissed` | bool | `false` | Mac | Người dùng chọn "Không hỏi lại" ở wizard bật gỡ lỗi USB (CAM-04) |
 | `mac.menu_bar_extra` | bool | `true` | Mac | Hiện biểu tượng HandLive trên thanh menu; tắt → app giữ biểu tượng Dock và thanh menu của app làm lối vào (SET-03 bước 6) |
@@ -969,8 +970,8 @@ thị. Schema: `shared/strings/ui-strings.schema.json`.
     {
       "key": "infoplist.microphone_usage",
       "plist_key": "NSMicrophoneUsageDescription",
-      "en": "HandLive uses the microphone to send your voice during calls taken on this Mac.",
-      "vi": "HandLive dùng micro để gửi giọng nói của bạn trong cuộc gọi nghe trên Mac này.",
+      "en": "HandLive uses the microphone so you can talk during calls transferred from your phone.",
+      "vi": "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại.",
       "comment": "Purpose string xin quyền micro (SET-03, AUDIO-01)",
       "platforms": ["macos"],
       "specs": ["SET-03", "AUDIO-01"]

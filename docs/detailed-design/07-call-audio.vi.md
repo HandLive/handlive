@@ -59,13 +59,13 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Công tắc "Nghe gọi trên Mac" | bool | Input/Output | `feature.call_audio` (`false`) | Bật → chạy luồng công bố và thiết lập; tắt → thu hồi (luồng B) |
 | 2 | Nội dung công bố | string | Output | Văn bản bản `call-audio-v1` | Nêu: chỉ giữa thiết bị của bạn; không ghi âm; bạn chịu trách nhiệm báo bên kia ở nơi luật đòi hai bên đồng ý (California, Florida, Illinois…); HFP chỉ có mã hóa liên kết Bluetooth (rủi ro KNOB/BIAS còn lại); Wi-Fi mã hóa đầu cuối |
-| 3 | Chấp thuận công bố | enum{Đồng ý\ | Hủy} | Input | — | "Đồng ý" mới bật tính năng |
+| 3 | Chấp thuận công bố | enum{Đồng ý\| Hủy} | Input | — | "Đồng ý" mới bật tính năng |
 | 4 | Phiên bản văn bản công bố | string | Output | `call-audio-v1` | Ghi vào `consent_record.text_version` |
-| 5 | Quyền Bluetooth của Mac | enum{not_determined\ | authorized\ | denied} | Output | Theo `CBManager.authorization` | `denied` kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Bluetooth |
+| 5 | Quyền Bluetooth của Mac | enum{not_determined\| authorized\| denied} | Output | Theo `CBManager.authorization` | `denied` kèm nút mở Cài đặt › Quyền riêng tư & Bảo mật › Bluetooth |
 | 6 | Danh sách điện thoại đã ghép (HFP AG) | array<object{name, bt_address}> | Output | Từ IOBluetooth (bước 7) | Chỉ liệt kê thiết bị đã ghép ở tầng hệ điều hành công bố hồ sơ HFP AG |
 | 7 | Điện thoại chọn cho HFP | string (bt_address) | Input/Output | `call_audio.phone_bt_address` (rỗng) | Người dùng chọn; lưu để Android nhận ra Mac và để M-HFP kết nối đúng máy |
 | 8 | Bật đường Opus/WS dự phòng | bool | Input/Output | `call_audio.allow_opus_fallback` (`true`) | Cho phép dùng Opus/WS khi HFP không dùng được (cần Shizuku) |
-| 9 | Trạng thái Shizuku trên điện thoại | enum{unknown\ | not_installed\ | not_running\ | no_permission\ | ready} | Output | `unknown` | Điện thoại báo qua A-UI và capability |
+| 9 | Trạng thái Shizuku trên điện thoại | enum{unknown\| not_installed\| not_running\| no_permission\| ready} | Output | `unknown` | Điện thoại báo qua A-UI và capability |
 | 10 | Khả năng đường Opus/WS | object{available, downlink, uplink, reason} | Output | Theo `features.call_audio.opus_fallback` | Điện thoại dò và báo về (bước 11) |
 | 11 | Thông báo lỗi hoặc hướng dẫn | string | Output | Rỗng | Nội dung theo E1–E7 |
 
@@ -144,7 +144,7 @@ flowchart TB
 | `feature` | string | Có | Luôn là `call_audio` |
 | `text_version` | string | Có | `call-audio-v1` |
 | `accepted_at` | timestamp | Có | Thời điểm người dùng bấm "Đồng ý" |
-| `revoked_at` | timestamp \ | null | Không | Đặt khi thu hồi (luồng B) |
+| `revoked_at` | timestamp \| null | Không | Đặt khi thu hồi (luồng B) |
 
 - **Response:** N/A (thao tác cục bộ).
 - **Ví dụ:** người dùng đồng ý lúc `1727150400000` → chèn
@@ -169,7 +169,7 @@ flowchart TB
 |--------|------|---------|-------|
 | `features.call_audio.enabled` | bool | Mac | Giá trị mới của `feature.call_audio` |
 | `features.call_audio.consented` | bool | Mac | Có `consent_record` hiệu lực; Android dựa vào đây để trả `CALL_CONSENT_REQUIRED` |
-| `features.call_audio.bt_address` | string \ | null | Mac | Địa chỉ Bluetooth của Mac để Android nhận ra Mac trong danh sách thiết bị HFP |
+| `features.call_audio.bt_address` | string \| null | Mac | Địa chỉ Bluetooth của Mac để Android nhận ra Mac trong danh sách thiết bị HFP |
 | `features.call_audio.hfp_connected` | bool | Android | Mac đang nối hồ sơ HFP tới điện thoại (AUDIO-02) |
 | `features.call_audio.opus_fallback` | object | Android | `{available, downlink, uplink, reason}` — kết quả dò ở bước 11 |
 
@@ -292,11 +292,9 @@ WHERE feature = 'call_audio'
   AND revoked_at IS NULL
 LIMIT 1;
 
--- [Thiết kế] Mac, bước 5: ghi chấp thuận (chèn mới hoặc bật lại sau thu hồi)
+-- [Thiết kế] Mac, bước 5: ghi chấp thuận — luôn chèn dòng mới; dòng đã thu hồi giữ làm bằng chứng
 INSERT INTO consent_record (feature, text_version, accepted_at, revoked_at)
-VALUES ('call_audio', 'call-audio-v1', :accepted_at, NULL)
-ON CONFLICT (feature, text_version)
-DO UPDATE SET accepted_at = excluded.accepted_at, revoked_at = NULL;
+VALUES ('call_audio', 'call-audio-v1', :accepted_at, NULL);
 
 -- [Thiết kế] Mac, bước B2: thu hồi chấp thuận
 UPDATE consent_record
@@ -339,9 +337,9 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Trạng thái nghe | enum{on_phone\ | connecting\ | on_mac\ | failed} | Output | `on_phone` | "Đang nghe trên điện thoại", "Đang chuyển…", "Đang nghe trên Mac", "Không nghe được trên Mac" |
+| 1 | Trạng thái nghe | enum{on_phone\| connecting\| on_mac\| failed} | Output | `on_phone` | "Đang nghe trên điện thoại", "Đang chuyển…", "Đang nghe trên Mac", "Không nghe được trên Mac" |
 | 2 | Trạng thái HFP | object{connected, audio_connected, mac_is_active_device} | Output | `{false,false,false}` | Từ `call_event/hfp_status` của Android |
-| 3 | Codec SCO | enum{cvsd_8k\ | msbc_16k\ | unknown} | Output | `unknown` | Do tầng Bluetooth đàm phán; hiển thị ở mục chẩn đoán |
+| 3 | Codec SCO | enum{cvsd_8k\| msbc_16k\| unknown} | Output | `unknown` | Do tầng Bluetooth đàm phán; hiển thị ở mục chẩn đoán |
 | 4 | Thiết bị HFP đang active | string | Output | Rỗng | Tên thiết bị đang giữ SCO (ví dụ "AirPods" khi bị chiếm — E3) |
 | 5 | Nút "Nghe trên Mac" / "Chuyển về điện thoại" | action | Input | — | Kích hoạt AUDIO-03 (mục này chỉ hiển thị kết quả) |
 | 6 | Chất lượng ước tính | object{mos, erl_db} | Output | Rỗng | Mục chẩn đoán của M-APP |
@@ -450,7 +448,7 @@ flowchart TB
 | `audio_connected` | bool | Có | Kênh SCO (âm thanh) đang mở tới thiết bị đó không |
 | `mac_is_active_device` | bool | Có | Thiết bị đang giữ SCO có đúng là Mac không (phân biệt với AirPods) |
 | `active_device_name` | string | Không | Tên thiết bị HFP đang active (để hiển thị khi bị chiếm — trường 4) |
-| `codec` | enum{cvsd\ | msbc\ | unknown} | Không | Codec SCO đàm phán được, nếu đọc được |
+| `codec` | enum{cvsd\| msbc\| unknown} | Không | Codec SCO đàm phán được, nếu đọc được |
 
 - **Response:** N/A (sự kiện một chiều).
 - **Ví dụ:**
@@ -519,9 +517,9 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Nút chuyển hướng | enum{Nghe trên Mac\ | Chuyển về điện thoại} | Input | "Nghe trên Mac" | Nhãn đổi theo tuyến hiện tại |
-| 2 | Tuyến âm thanh hiện tại | enum{phone\ | mac_hfp\ | mac_opus} | Output | `phone` | "Điện thoại", "Mac (Bluetooth)", "Mac (Wi-Fi)" |
-| 3 | Đường khả dụng | array<enum{hfp\ | opus}> | Output | Rỗng | Tính từ capability và trạng thái HFP |
+| 1 | Nút chuyển hướng | enum{Nghe trên Mac\| Chuyển về điện thoại} | Input | "Nghe trên Mac" | Nhãn đổi theo tuyến hiện tại |
+| 2 | Tuyến âm thanh hiện tại | enum{phone\| mac_hfp\| mac_opus} | Output | `phone` | "Điện thoại", "Mac (Bluetooth)", "Mac (Wi-Fi)" |
+| 3 | Đường khả dụng | array<enum{hfp\| opus}> | Output | Rỗng | Tính từ capability và trạng thái HFP |
 | 4 | Trạng thái HFP | object{connected, audio_connected, mac_is_active_device} | Output | `{false,false,false}` | Từ `call_event/hfp_status` (AUDIO-02 API 3) |
 | 5 | Thông báo tuyến trên điện thoại | string | Output | "Âm thanh đang ở điện thoại" | A-SVC cập nhật trong thông báo thường trực |
 | 6 | Thông báo lỗi | string | Output | Rỗng | Theo E1–E5 |
@@ -605,7 +603,7 @@ flowchart TB
 #### API 3 — `WS call_audio/close`
 
 - **URL:** như API 2
-- **Method:** `WS call_audio/close` (hai chiều), envelope mã hóa, có ack. Chi tiết ở AUDIO-04 API 2.
+- **Method:** `WS call_audio/close` (hai chiều), envelope mã hóa, có ack. Chi tiết ở AUDIO-04 API 5.
 - **Request (`data`):** `session_id`, `reason` — enum{user\|switch_to_hfp\|call_ended\|error}.
 - **Response (`ack.data`):** `{}`.
 - **Ví dụ:** chuyển về điện thoại khi đang dùng Opus/WS →
@@ -665,11 +663,11 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Chế độ âm thanh | enum{both\ | downlink} | Output | Theo khả năng máy | "Nghe và nói (thử nghiệm)" khi 13+ có injection; "Chỉ nghe" khi 11–12 hoặc injection không dùng được |
+| 1 | Chế độ âm thanh | enum{both\| downlink} | Output | Theo khả năng máy | "Nghe và nói (thử nghiệm)" khi 13+ có injection; "Chỉ nghe" khi 11–12 hoặc injection không dùng được |
 | 2 | `session_id` | uuid | Output | Sinh khi mở | Định danh phiên âm thanh Opus/WS |
 | 3 | Đường dẫn kênh stream | string | Output | `/v1/stream/call-audio` | Do Android trả trong ack |
 | 4 | Cấu hình codec | object{codec, sample_rate, channels, bitrate, frame_ms} | Output | `{opus,16000,1,32000,20}` | Đàm phán trong `call_audio/open` |
-| 5 | Trạng thái Shizuku | enum{ready\ | not_running\ | no_permission} | Output | Theo A-SHZ | `not_running`/`no_permission` → E1 |
+| 5 | Trạng thái Shizuku | enum{ready\| not_running\| no_permission} | Output | Theo A-SHZ | `not_running`/`no_permission` → E1 |
 | 6 | Độ trễ và jitter buffer | object{latency_ms, jitter_ms} | Output | Rỗng | Mục chẩn đoán của M-APP |
 | 7 | Chỉ báo "chỉ nghe" | bool | Output | Theo trường 1 | Bật → UI nhắc "Hãy nói vào điện thoại" |
 | 8 | Thông báo lỗi | string | Output | Rỗng | Theo E1–E6 |
@@ -741,7 +739,7 @@ flowchart TB
 | `channels` | int32 | Có | `1` |
 | `bitrate` | int32 | Có | `32000` |
 | `frame_ms` | int32 | Có | `20` |
-| `direction` | enum{both\ | downlink} | Có | `both` = muốn nghe và nói; `downlink` = chỉ nghe |
+| `direction` | enum{both\| downlink} | Có | `both` = muốn nghe và nói; `downlink` = chỉ nghe |
 
 - **Response (`ack.data`):**
 

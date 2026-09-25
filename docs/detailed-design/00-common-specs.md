@@ -70,7 +70,7 @@ App identifiers and key stores:
 | `string(n)` | At most n characters (code points) |  |
 | `int32`, `int64` | Signed integer |  |
 | `bool` |  | `true` |
-| `enum{a\ | b}` | One of the listed values | `enum{front\ | back}` |
+| `enum{a\| b}` | One of the listed values | `enum{front\| back}` |
 | `uuid` | 36 lowercase characters, with hyphens | `0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10` |
 | `timestamp` | int64 milliseconds since the Unix epoch, UTC | `1727150000123` |
 | `b64` | Standard Base64 (RFC 4648 §4, with padding) |  |
@@ -200,7 +200,7 @@ Two exceptions:
 
 ```json
 {"re":"<id of the request>","ok":true,"data":{ }}
-{"re":"<id of the request>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"Không có sóng","details":{}}}
+{"re":"<id of the request>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"No cellular service","details":{}}}
 ```
 
 General rules:
@@ -441,11 +441,11 @@ Examples in the function groups may quote only the relevant part.
 |--------|------|-------|
 | `protocol` | int32 | Protocol version; a different major → close 4426 |
 | `app_version`, `os_version`, `model` | string | Shown in PAIR-02 |
-| `platform` | enum{android\ | macos\ | ios\ | ipados} |  |
+| `platform` | enum{android\| macos\| ios\| ipados} |  |
 | `features.<name>.enabled` | bool | From the setting key `feature.<name>` (0.9.5) |
 | `features.clipboard.auto_send` | bool | Android: Accessibility is on; client: always `true` |
 | `features.sms.sims` | array | Android only; the active SIMs (requires `READ_PHONE_STATE`, missing → empty) |
-| `features.sms.default_sub_id` | int32 \ | null | Android only; the default SIM for sending SMS, null when the phone is set to "Ask every time" |
+| `features.sms.default_sub_id` | int32 \| null | Android only; the default SIM for sending SMS, null when the phone is set to "Ask every time" |
 | `features.sms.notify` | bool | iOS/iPadOS only; equals `sms.notify` — Android only pushes new SMS when `true` |
 | `features.call.can_answer`, `can_end` | bool | Android: has the `ANSWER_PHONE_CALLS` permission |
 | `features.call.caller_id` | bool | Android: has `READ_CALL_LOG` (incoming number) |
@@ -454,7 +454,7 @@ Examples in the function groups may quote only the relevant part.
 | `features.call_audio.hfp_connected` | bool | Android: the Mac is connected to the phone through the HFP profile |
 | `features.call_audio.consented` | bool | Mac only: there is a valid `consent_record` (AUDIO-01). Android rejects every call audio request with `CALL_CONSENT_REQUIRED` while the latest value is `false` |
 | `features.call_audio.opus_fallback` | object | Android: capabilities of the Opus/WS path — `available`, `downlink` (can capture the caller's audio), `uplink` (can inject the Mac's voice), `reason` ∈ {`ok`, `disabled`, `android_10`, `shizuku_not_running`, `capture_silent`, `uplink_unsupported`} (`disabled` when `call_audio.allow_opus_fallback = false`) |
-| `permissions_missing` | array<string> | Android only: the missing permissions, used by the client to show guidance |
+| `permissions_missing` | array\<string> | Android only: the missing permissions, used by the client to show guidance |
 
 ### 0.7.3 Relay control messages (WS text frame, not E2E)
 
@@ -495,7 +495,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `BAD_REQUEST` | General | Missing or invalid field | Fix the programming error; do not retry |
 | `UNSUPPORTED_TYPE` | General | `type`/`op` not supported | Hide the feature |
 | `UNSUPPORTED_VERSION` | General | Different protocol version | Prompt to update the app |
-| `FEATURE_DISABLED` | General | The feature is off on the receiving side | Show "This feature is off on <device>" |
+| `FEATURE_DISABLED` | General | The feature is off on the receiving side | Show "This feature is off on \<device>" |
 | `PERMISSION_MISSING` | General | Missing Android permission; `details.permission` | Guide the user to grant the permission (SET-01) |
 | `TIMEOUT` | General | No ack within the deadline | Retry according to each function's policy |
 | `RATE_LIMITED` | General | Quota exceeded | Wait `details.retry_after_ms` |
@@ -734,12 +734,13 @@ CREATE INDEX idx_call_log_ts ON call_log_entry (pair_id, ts DESC);
 
 -- [Design] Disclosure consent (Mac only)
 CREATE TABLE consent_record (
+  id                INTEGER PRIMARY KEY,
   feature           TEXT    NOT NULL CHECK (feature IN ('call_audio')),
   text_version      TEXT    NOT NULL,
   accepted_at       INTEGER NOT NULL,
-  revoked_at        INTEGER,
-  PRIMARY KEY (feature, text_version)
+  revoked_at        INTEGER
 );
+CREATE UNIQUE INDEX consent_record_active ON consent_record (feature, text_version) WHERE revoked_at IS NULL;
 ```
 
 iOS uses the same schema, except `consent_record`. The file lives in the App Group container so that
@@ -797,7 +798,7 @@ Redis keys `[Design]`:
 | `presence:<device_id>` | string (instance id) | 60 s, renewed every 20 s | Which instance the device is connected to |
 | `dev:<device_id>` | pub/sub channel | — | The instance holding the connection subscribes; other instances publish the frames to forward |
 | `rv:<rv_id>` | set (device_id) | 180 s | Pairing rendezvous |
-| `revoked_notice:<device_id>` | set (`<pair_id>\ | <by>`) | 30 days | Pairs revoked because the peer deleted all of its data (`DELETE /v1/devices/me?revoke_pairs=true`, the `pairs` row has already been deleted); `pair_revoked` is sent when the device connects to the relay, then the key is deleted |
+| `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 days | Pairs revoked because the peer deleted all of its data (`DELETE /v1/devices/me?revoke_pairs=true`, the `pairs` row has already been deleted); `pair_revoked` is sent when the device connects to the relay, then the key is deleted |
 | `rl:<device_id>:<group>:<minute>` | counter | 120 s | Rate limit |
 | `rl:ip:<ip>:reg:<hour>` | counter | 3,600 s | 10 new registrations/hour/IP (CONN-03 API 1); the IP is taken from `X-Forwarded-For` only when the request comes from a trusted reverse proxy (Phase 2) |
 
@@ -818,7 +819,7 @@ SET-02 function manages these keys.
 | Key | Type | Default | Platform | Description |
 |------|------|----------|----------|-------|
 | `setup.started_at`, `setup.completed_at` | timestamp | empty | All | Initial setup progress (SET-01, SET-03) |
-| `perm.requested` | set<string> | empty | Android | Permissions already requested, to tell "not asked yet" from "permanently denied" |
+| `perm.requested` | set\<string> | empty | Android | Permissions already requested, to tell "not asked yet" from "permanently denied" |
 | `feature.clipboard` | bool | `true` | All | Clipboard sync |
 | `feature.sms` | bool | `true` | All | SMS bridge |
 | `feature.call` | bool | `true` | All | Call information and control |
@@ -837,9 +838,9 @@ SET-02 function manages these keys.
 | `sms.preview` | bool | `true` | Mac, iOS | Show the content in notifications |
 | `call.notify` | bool | `true` | Mac, iOS | Call notifications |
 | `call.ringtone` | bool | `true` | Mac | Play a ringtone for incoming calls (respects Focus) |
-| `call.quick_replies` | array<string> | 2 default templates | Mac | Quick replies when declining, at most 6 templates × 160 characters |
-| `cam.default_camera` | enum{front\ | back} | `front` | Mac | Default camera |
-| `cam.default_quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | `auto` | Mac | Default quality |
+| `call.quick_replies` | array\<string> | 2 default templates | Mac | Quick replies when declining, at most 6 templates × 160 characters |
+| `cam.default_camera` | enum{front\| back} | `front` | Mac | Default camera |
+| `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Default quality |
 | `cam.usb_boost` | bool | `true` | Mac | Switch to USB automatically when a cable is plugged in |
 | `cam.usb_wizard_dismissed` | bool | `false` | Mac | The user chose "Don't Ask Again" in the USB debugging wizard (CAM-04) |
 | `mac.menu_bar_extra` | bool | `true` | Mac | Show the HandLive icon in the menu bar; off → the app keeps its Dock icon and its menu bar as the entry point (SET-03 step 6) |
@@ -981,8 +982,8 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
     {
       "key": "infoplist.microphone_usage",
       "plist_key": "NSMicrophoneUsageDescription",
-      "en": "HandLive uses the microphone to send your voice during calls taken on this Mac.",
-      "vi": "HandLive dùng micro để gửi giọng nói của bạn trong cuộc gọi nghe trên Mac này.",
+      "en": "HandLive uses the microphone so you can talk during calls transferred from your phone.",
+      "vi": "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại.",
       "comment": "Purpose string of the microphone permission request (SET-03, AUDIO-01)",
       "platforms": ["macos"],
       "specs": ["SET-03", "AUDIO-01"]

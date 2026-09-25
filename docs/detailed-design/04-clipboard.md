@@ -97,16 +97,16 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Option "Auto-Send on Copy" | bool | Input/Output | `clip.auto_send` = `true` | Android, Settings → Clipboard (SET-02). Turning it on the first time goes through the disclosure (fields 2, 3), then the service is turned on in Settings › Accessibility |
 | 2 | Accessibility disclosure text | string | Output | Fixed text per version | "HandLive uses an Accessibility service only to notice when you tap Copy, then reads what you just copied and sends it (end-to-end encrypted) to your paired Mac, iPhone, and iPad.<br>The service receives tap events and short on-screen messages to find the Copy action; unrelated events are dropped immediately and never stored or sent.<br>Each time HandLive reads the clipboard, Android may show “HandLive pasted from your clipboard”.<br>You can turn this off at any time and send manually with the Send Clipboard button." |
-| 3 | Disclosure choice | enum{Agree\ | Send Manually} | Input | — | "Agree" → save `clip.a11y_consent_at`, open the Accessibility settings; "Send Manually" → `clip.auto_send = false` |
+| 3 | Disclosure choice | enum{Agree\| Send Manually} | Input | — | "Agree" → save `clip.a11y_consent_at`, open the Accessibility settings; "Send Manually" → `clip.auto_send = false` |
 | 4 | "Send Clipboard" button on the persistent notification | action | Input | Shown when ≥ 1 client has active clipboard | Opens `ClipboardReadActivity` with `source = manual` |
-| 5 | "Send Clipboard" Quick Settings tile | action | Input | Added by the user to the Quick Settings panel | Subtitle: "To <client name>", "To 2 devices" or "Not connected" |
+| 5 | "Send Clipboard" Quick Settings tile | action | Input | Added by the user to the Quick Settings panel | Subtitle: "To \<client name>", "To 2 devices" or "Not connected" |
 | 6 | Share target "Send to Devices (HandLive)" | action | Input | — | In other apps' share sheet, only for `text/plain` |
 | 7 | System toast when reading the clipboard | string | Output | — | Android 12+: "HandLive pasted from your clipboard" (exact wording follows the system language); shown by the system, the app cannot turn it off |
 | 8 | Sensitive content blocked notification | string | Output | — | "Sensitive Content Blocked — HandLive doesn't send content that looks like a password or card number." (QC3). Android: notification on the `clipboard` channel ("Clipboard", `IMPORTANCE_DEFAULT`); Mac: system notification with a button |
 | 9 | "Send Anyway" button | action | Input | — | On the field 8 notification; sends with `sensitive = true`; expires after 120 s |
 | 10 | Content too large message | string | Output | — | "Content is too large to send (up to 1 MB of text)" — toast (manual path), no system notification |
-| 11 | Manual send result | string | Output | — | Toast "Sent to <name>", "Not connected — will send if reconnected within 2 minutes" or "The clipboard is empty or doesn't contain text" |
-| 12 | Conflict notification | string | Output | — | "Clipboard Not Updated on <device name>: That device just copied something new." Android: same `clipboard` channel |
+| 11 | Manual send result | string | Output | — | Toast "Sent to \<name>", "Not connected — will send if reconnected within 2 minutes" or "The clipboard is empty or doesn't contain text" |
+| 12 | Conflict notification | string | Output | — | "Clipboard Not Updated on \<device name>: That device just copied something new." Android: same `clipboard` channel |
 | 13 | "Send Again" button | action | Input | — | On the field 12 notification; resends the same content as a new clip; expires after 120 s |
 | 14 | Auto-send status shown on Mac/iOS | string | Output | From the phone's `features.clipboard.auto_send` | `false` → "Auto-send is off on the phone — use the Send Clipboard button on the phone" |
 | 15 | Clipboard content on Mac/iOS | string | Output | The content just received | Can be pasted right away; auto-cleared per CLIP-05 |
@@ -162,10 +162,10 @@ flowchart TB
 | 8 | System | A-CLIP | Size check per QC5: > 1 MiB → E5; plaintext > `CLIP_INLINE_MAX` → send in chunks (CLIP-03 API 3–5); otherwise send inline. | E5. |
 | 9 | System | A-SVC | Generate `clip_id` (UUIDv7); store it as the latest clip (QC7); send `clipboard/push` (API 5) to each connected client with active clipboard, one envelope per session. | No client → E6, go to step 11. |
 | 10 | System | M-APP / I-APP | De-duplicate by `clip_id`; check for conflicts (QC8); the Mac writes `NSPasteboard` (API 7), iOS writes `UIPasteboard` (CLIP-04 API 1); record the QC4 trace; schedule CLIP-05; return the `ack`. | Conflict → E7 (API 6). Write error → `INTERNAL` (E8). |
-| 11 | System | A-SVC, A-UI | Handle the `ack`: `applied` → done (the manual path shows "Sent to <name>"); `clipboard/conflict` received → show fields 12, 13; 10 s elapsed → E8; `FEATURE_DISABLED` → E10. |  |
+| 11 | System | A-SVC, A-UI | Handle the `ack`: `applied` → done (the manual path shows "Sent to \<name>"); `clipboard/conflict` received → show fields 12, 13; 10 s elapsed → E8; `FEATURE_DISABLED` → E10. |  |
 | 12 | User | M-APP / I-APP (any app) | Paste the content (⌘V on the Mac, the Paste menu on iPhone/iPad). | Auto-cleared after `clip.auto_clear_s` (CLIP-05). |
 | A1 | User | A-UI | Turn on "Auto-Send on Copy" for the first time (SET-01 or SET-02). |  |
-| A2 | System | A-UI | Show the disclosure (field 2) full screen and continue only when the user chooses "Agree" (field 3): save `clip.a11y_consent_at`, open `Settings.ACTION_ACCESSIBILITY_SETTINGS` with instructions to select HandLive. | Choosing "No" → `clip.auto_send = false` (E1). |
+| A2 | System | A-UI | Show the disclosure (field 2) full screen and continue only when the user chooses "Agree" (field 3): save `clip.a11y_consent_at`, open `Settings.ACTION_ACCESSIBILITY_SETTINGS` with instructions to select HandLive. | Choosing "Send Manually" → `clip.auto_send = false` (E1). |
 | A3 | System | A-CLIP, A-SVC | The system binds the service (`onServiceConnected`) → `features.clipboard.auto_send = true`, send `capability/update`; the service is turned off (`onUnbind`) → `false`, send `capability/update`. Clients update field 14. |  |
 
 ### 4.1.5 API/service specification
@@ -197,7 +197,7 @@ follows the 0.7.2 structure, as in SET-02.
 
 | Attribute | Value | Notes |
 |------------|---------|---------|
-| `accessibilityEventTypes` | `typeViewClicked\ | typeWindowStateChanged\ | typeNotificationStateChanged\ | typeAnnouncement` | Only the types needed to recognize the copy action |
+| `accessibilityEventTypes` | `typeViewClicked\| typeWindowStateChanged\| typeNotificationStateChanged\| typeAnnouncement` | Only the types needed to recognize the copy action |
 | `accessibilityFeedbackType` | `feedbackGeneric` |  |
 | `notificationTimeout` | `100` | ms |
 | `canRetrieveWindowContent` | `false` | Does not read the window content tree; uses only the package name, the class name and the text attached to the event |
@@ -244,7 +244,7 @@ follows the 0.7.2 structure, as in SET-02.
 
 | Item | Value |
 |-----|---------|
-| Intent extra `source` | enum{auto\ | manual} — `auto` from API 1, `manual` from API 3 |
+| Intent extra `source` | enum{auto\| manual} — `auto` from API 1, `manual` from API 3 |
 | `android:theme` | Transparent theme: `windowIsTranslucent = true`, transparent background, no title, no animation |
 | `android:excludeFromRecents`, `android:noHistory` | `true`, `true` |
 | `android:taskAffinity` | `""` — a task of its own, does not bring A-UI forward |
@@ -372,14 +372,14 @@ override fun onClick() {
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `clip_id` | uuid | Yes | UUIDv7 generated by the origin device; unchanged when Android forwards it and when it is resent after `CLIP_CHECKSUM_MISMATCH` |
-| `kind` | enum{text\ | image} | Yes |  |
-| `mime` | enum{text/plain\ | image/png\ | image/jpeg} | Yes | `text/plain` is always UTF-8 |
+| `kind` | enum{text\| image} | Yes |  |
+| `mime` | enum{text/plain\| image/png\| image/jpeg} | Yes | `text/plain` is always UTF-8 |
 | `text` | string | When `kind = text` and sent inline | The whole text; envelope plaintext ≤ `CLIP_INLINE_MAX` |
 | `transfer` | object | When `kind = image` or the text goes in chunks | `{transfer_id, size, sha256, chunk_size, chunk_count}` — specified in CLIP-03 API 3 |
 | `width`, `height` | int32 | Images only | Size in pixels |
 | `sensitive` | bool | Yes | `true` only when the user chose "Send Anyway" (QC3) |
 | `origin_ts` | timestamp | Yes | When the content was read on the origin device (origin device clock); used only for QC8 (b) |
-| `source` | enum{auto\ | manual\ | share\ | mac\ | ios} | Yes | How the clip was created: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
+| `source` | enum{auto\| manual\| share\| mac\| ios} | Yes | How the clip was created: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
 | `origin_device_id` | uuid | Yes | `device_id` of the origin device; Android uses it to forward the clip and to route `clipboard/conflict` |
 
 Exactly one of the two fields `text`, `transfer` is present.
@@ -400,7 +400,7 @@ Exactly one of the two fields `text`, `transfer` is present.
 {"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Order number: HL-240917-0042","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"applied"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"ignored","reason":"conflict"}}
-{"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Vượt giới hạn văn bản","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
+{"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Text exceeds the size limit","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
 ```
 
 - **Business logic — sender:**
@@ -504,7 +504,7 @@ prefs[booleanPreferencesKey("clip.auto_send")] ?: true           # steps 3, A1
 prefs[longPreferencesKey("clip.a11y_consent_at")]                # step 3: null → not agreed yet (E1)
 prefs[booleanPreferencesKey("clip.block_sensitive")] ?: true     # step 6
 dataStore.edit { it[longPreferencesKey("clip.a11y_consent_at")] = now }   # A2: Agree chosen
-dataStore.edit { it[booleanPreferencesKey("clip.auto_send")] = false }    # A2: No chosen; field 1 turned off
+dataStore.edit { it[booleanPreferencesKey("clip.auto_send")] = false }    # A2: Send Manually chosen; field 1 turned off
 
 # [Design] M-APP UserDefaults (0.9.5 defaults registered with register(defaults:) at launch)
 UserDefaults.standard.bool(forKey: "feature.clipboard")           # step 10
@@ -536,7 +536,7 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Content copied on the Mac | string | Input | — | The user copies (⌘C) in any app |
-| 2 | Paste permission state (macOS 15.4+) | enum{default\ | ask\ | alwaysAllow\ | alwaysDeny} | Output | `NSPasteboard.general.accessBehavior` | Settings → Clipboard of M-APP; `ask`, `alwaysDeny` come with a warning |
+| 2 | Paste permission state (macOS 15.4+) | enum{default\| ask\| alwaysAllow\| alwaysDeny} | Output | `NSPasteboard.general.accessBehavior` | Settings → Clipboard of M-APP; `ask`, `alwaysDeny` come with a warning |
 | 3 | Paste permission guidance | string | Output | — | "To send the clipboard automatically, open System Settings › Privacy & Security › Paste from Other Apps and choose Always Allow for HandLive." with a button that opens System Settings |
 | 4 | Menu item "Send Clipboard to Phone" | action | Input | — | Menu bar; reads the clipboard immediately, without waiting for the next poll |
 | 5 | Sensitive content blocked notification | string | Output | — | Same as CLIP-01 field 8, as a Mac system notification |
@@ -969,7 +969,7 @@ else { log(code: "CLIP_UNSUPPORTED_MIME") }                              // E3
 
 ```json
 {"op":"push","data":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","kind":"image","mime":"image/png","transfer":{"transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60","size":5242880,"sha256":"n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgg","chunk_size":65536,"chunk_count":80},"width":2880,"height":1800,"sensitive":false,"origin_ts":1727150200456,"source":"mac","origin_device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}}
-{"re":"0192f3f1-2c3f-7b00-8c11-d22e33f44a55","ok":false,"error":{"code":"CLIP_CHECKSUM_MISMATCH","message":"SHA-256 không khớp","details":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","status":"rejected","transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60"}}}
+{"re":"0192f3f1-2c3f-7b00-8c11-d22e33f44a55","ok":false,"error":{"code":"CLIP_CHECKSUM_MISMATCH","message":"SHA-256 mismatch","details":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","status":"rejected","transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60"}}}
 ```
 
 - **Business logic:**
@@ -1029,7 +1029,7 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `transfer_id` | uuid | Yes | The transfer being cancelled |
-| `reason` | enum{superseded\ | user\ | timeout} | Yes | `superseded`: the sender has a newer clip; `user`: the user chose "Cancel" on either side; `timeout`: the receiver got no chunk for 30 s |
+| `reason` | enum{superseded\| user\| timeout} | Yes | `superseded`: the sender has a newer clip; `user`: the user chose "Cancel" on either side; `timeout`: the receiver got no chunk for 30 s |
 
 - **Response:** N/A.
 - **Example:**
@@ -1137,7 +1137,7 @@ UserDefaults.standard.integer(forKey: "clip.auto_clear_s")      # step 11 (Mac r
 | Description | iPhone/iPad take part in clipboard sync through the Android phone (no direct connection to the Mac).<br>**Receive:** only while I-APP is in the foreground and has a session; I-APP writes with `UIPasteboard.general.setItems(_:options:)` with `.localOnly = true` (so that Universal Clipboard does not spread the clip to other Apple devices and loop it back) and `.expirationDate` = now + `clip.auto_clear_s` when > 0.<br>While I-APP is in the background, its session is closed (CONN-02 E3) and the clipboard does not use push, so nothing is delivered; when it returns to the foreground, Android replays the latest clip if it is still within `CLIP_STALE_AFTER` (QC7).<br>**Send:** since iOS 16 the system asks the user every time an app reads `UIPasteboard` on its own, so I-APP never reads it by itself and uses the system Paste button instead (`UIPasteControl`, SwiftUI `PasteButton`) on the "Send Clipboard to Phone" card; while the app is active, I-APP compares `UIPasteboard.changeCount` (which triggers no prompt) to show a suggestion banner.<br>Supports text (URLs included) and images; images and large text go in chunks (CLIP-03). |
 | Actors | Primary: User. System: I-APP, OS (`UIPasteboard`, `UIPasteControl`), A-SVC, A-CLIP, M-APP (receives the forwarded copy). |
 | Preconditions | 1. I-APP is paired (PAIR-01), in the foreground and has a `/v1/ctl` session (CONN-01/CONN-03) with active clipboard (QC1). 2. iOS/iPadOS 16+. |
-| Postconditions | **Receive:** `UIPasteboard.general` holds the clip, on this device only, expiring per CLIP-05; I-APP remembers `changeCount` after writing (QC4) and saves it in `clip.seen_change_count`.<br>**Send:** the Android clipboard holds the content, and it has been forwarded to the Mac if the Mac is connected; I-APP shows "Sent to <phone name>" and hides the banner. |
+| Postconditions | **Receive:** `UIPasteboard.general` holds the clip, on this device only, expiring per CLIP-05; I-APP remembers `changeCount` after writing (QC4) and saves it in `clip.seen_change_count`.<br>**Send:** the Android clipboard holds the content, and it has been forwarded to the Mac if the Mac is connected; I-APP shows "Sent to \<phone name>" and hides the banner. |
 | Exceptions | E1 — I-APP is in the background or suspended: nothing is received; if it returns to the foreground while the latest clip is still within 120 s, it receives the clip (QC7), otherwise not.<br>E2 — When I-APP becomes active, `changeCount` differs from the seen value and is not a HandLive write (there is locally copied content that has not been sent): a `push` arriving in the first 5 s after the session is established is not written (the local content is kept, `ack` `ignored`/`conflict`, no `clipboard/conflict` is sent); the suggestion banner appears so the user can send it.<br>E3 — The pasted content is not text, a URL or a supported image: `CLIP_UNSUPPORTED_MIME`, shows "Only text or images can be sent".<br>E4 — Over 1 MiB of text or 10 MiB of image: `CLIP_TOO_LARGE`, message shown.<br>E5 — No session: the Paste button is disabled, the card shows "Not connected to the phone".<br>E6 — Conflict on Android (QC8): `clipboard/conflict` received → notification with "Send Again".<br>E7 — `clip.send_images = false`: the Paste button accepts only text and URLs; incoming images are blocked on the sending side through `mimes` (QC1).<br>E8 — Errors while transferring an image or large text: per CLIP-03 E4–E9.<br>E9 — No `ack` within 10 s: shows "Couldn't send. Try again."; I-APP does not replay automatically. |
 | Special requirements | **iOS 16+ privacy:** I-APP never calls the `UIPasteboard` APIs that read content (`string`, `image`, `url`, `items`…), so it never triggers the "Allow Paste" dialog; it uses only `changeCount`, `hasStrings`, `hasImages`, `hasURLs` (which do not read content) and the system Paste button (a user action).<br>Writing the clipboard needs no permission. `.localOnly` blocks Universal Clipboard.<br>No clipboard access in the background; I-NSE does not handle the clipboard.<br>**Performance:** once a session exists, as in QC9; reconnecting when the app opens follows the CONN-01 target of < 3 s.<br>**iPadOS:** works the same in Split View and Stage Manager while the scene is in the foreground. |
 
@@ -1149,11 +1149,11 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | "Send Clipboard to Phone" card | view | Output | Shown on the main screen when `feature.clipboard = true` | Title "Send to <phone name>" with the system Paste button (field 2) |
+| 1 | "Send Clipboard to Phone" card | view | Output | Shown on the main screen when `feature.clipboard = true` | Title "Send to \<phone name>" with the system Paste button (field 2) |
 | 2 | System Paste button | action (`UIPasteControl` / `PasteButton`) | Input | Enabled by the system when the clipboard has an accepted type | Label and icon set by the system ("Paste"); a tap sends right away |
 | 3 | Suggestion banner | string | Output | Hidden | "The iPhone clipboard has new content — paste to send it to Lan's Pixel" (or "…has a new image…" when `hasImages`); with a close button |
-| 4 | Card connection state | enum{connected\ | disconnected} | Output | Per session | `disconnected` → "Not connected to the phone", Paste button disabled |
-| 5 | Send result | string | Output | — | "Sent to <phone name>" or "Couldn't send. Try again." |
+| 4 | Card connection state | enum{connected\| disconnected} | Output | Per session | `disconnected` → "Not connected to the phone", Paste button disabled |
+| 5 | Send result | string | Output | — | "Sent to \<phone name>" or "Couldn't send. Try again." |
 | 6 | Image send/receive progress | int32 (%) | Output | 0 | Images > 1 MiB, with a "Cancel" button (CLIP-03 fields 2–4) |
 | 7 | Content error message | string | Output | — | "Only text or images can be sent" (E3), "Content is too large to send (up to 1 MB of text, 10 MB for images)" (E4) |
 | 8 | Conflict notification | string | Output | — | Same as CLIP-01 field 12, with the phone's name |
@@ -1388,7 +1388,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Option "Auto-Clear Received Clipboard" | enum{0\ | 60\ | 300} (seconds) | Input/Output | `clip.auto_clear_s` = `60` | Settings → Clipboard (SET-02) on each device; shown as "Off", "After 1 Minute", "After 5 Minutes" |
+| 1 | Option "Auto-Clear Received Clipboard" | enum{0\| 60\| 300} (seconds) | Input/Output | `clip.auto_clear_s` = `60` | Settings → Clipboard (SET-02) on each device; shown as "Off", "After 1 Minute", "After 5 Minutes" |
 | 2 | Option footnote | string | Output | — | "Clears only content received from other devices, and only if you haven't copied anything new." |
 | 3 | Clipboard content at the deadline | string or image | Output | The content HandLive wrote | Empty after clearing; unchanged if it has changed |
 

@@ -33,19 +33,19 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive nối điện thoại này với Mac, iPhone, iPad của bạn. Dữ liệu được mã hóa đầu-cuối và chỉ đi giữa các thiết bị bạn đã ghép; máy chủ không đọc được nội dung. Không cần tài khoản." Kèm liên kết chính sách quyền riêng tư |
 | 2 | Nút "Bắt đầu" | action | Input | — | Sang bước 3 |
-| 3 | Quyền thông báo | enum{granted\ | denied\ | not_required} | Input/Output | `not_required` (API 29–32) hoặc theo `checkSelfPermission` | Android 13+ hỏi ở bước 3; `denied` hiện dải cảnh báo và nút "Mở cài đặt thông báo" (E1) |
-| 4 | Trạng thái dịch vụ kết nối | enum{running\ | stopped\ | failed} | Output | `stopped` | `running` sau bước 5; `failed` theo E2 |
+| 3 | Quyền thông báo | enum{granted\| denied\| not_required} | Input/Output | `not_required` (API 29–32) hoặc theo `checkSelfPermission` | Android 13+ hỏi ở bước 3; `denied` hiện dải cảnh báo và nút "Mở cài đặt thông báo" (E1) |
+| 4 | Trạng thái dịch vụ kết nối | enum{running\| stopped\| failed} | Output | `stopped` | `running` sau bước 5; `failed` theo E2 |
 | 5 | Thông báo thường trực của A-SVC | string | Output | "Đang chờ kết nối" | Kênh `hl_service`, `IMPORTANCE_LOW`; nội dung cập nhật theo CONN-01 trường 6; có nút "Gửi bảng nhớ tạm" (CLIP-01 trường 4) |
-| 6 | Chạy nền không bị giới hạn | enum{exempt\ | not_exempt} | Input/Output | Theo `PowerManager.isIgnoringBatteryOptimizations` | Nút "Tiếp tục" mở hộp thoại hệ thống (API 4); `not_exempt` giữ cảnh báo ở Cài đặt › Quyền và chạy nền (E3) |
-| 7 | Tạm dừng hoạt động nếu không dùng | enum{enabled\ | disabled\ | not_available} | Input/Output | Theo `PackageManagerCompat.getUnusedAppRestrictionsStatus` | Android 11+: gợi ý tắt để hệ thống không tự thu hồi quyền khi người dùng lâu không mở HandLive trên điện thoại (API 4) |
+| 6 | Chạy nền không bị giới hạn | enum{exempt\| not_exempt} | Input/Output | Theo `PowerManager.isIgnoringBatteryOptimizations` | Nút "Tiếp tục" mở hộp thoại hệ thống (API 4); `not_exempt` giữ cảnh báo ở Cài đặt › Quyền và chạy nền (E3) |
+| 7 | Tạm dừng hoạt động nếu không dùng | enum{enabled\| disabled\| not_available} | Input/Output | Theo `PackageManagerCompat.getUnusedAppRestrictionsStatus` | Android 11+: gợi ý tắt để hệ thống không tự thu hồi quyền khi người dùng lâu không mở HandLive trên điện thoại (API 4) |
 | 8 | Hướng dẫn tự khởi chạy theo hãng | string | Output | Theo `Build.MANUFACTURER` | Các bước riêng cho Xiaomi/Redmi/POCO, OPPO/realme/OnePlus, Samsung (API 5); ẩn với hãng khác |
 | 9 | Nút "Mở cài đặt của hãng", "Đã xong", "Bỏ qua" | action | Input | — | "Mở cài đặt của hãng" mở màn hình của hãng (API 5); "Đã xong" và "Bỏ qua" sang bước 7 |
-| 10 | Danh sách tính năng | array<object> | Output | Theo khóa `feature.*` (0.9.5) và quyền hiện có | Mỗi thẻ: tên tính năng, trạng thái `ready` \ | `needs_permission` \ | `permanently_denied` \ | `off` \ | `unsupported`, quyền còn thiếu. Hiện sau PAIR-01 lần đầu và ở Cài đặt › Quyền và chạy nền |
+| 10 | Danh sách tính năng | array\<object> | Output | Theo khóa `feature.*` (0.9.5) và quyền hiện có | Mỗi thẻ: tên tính năng, trạng thái `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, quyền còn thiếu. Hiện sau PAIR-01 lần đầu và ở Cài đặt › Quyền và chạy nền |
 | 11 | Nút "Cấp quyền" trên thẻ tính năng | action | Input | Hiện khi thẻ ở `needs_permission` | Chạy phần B cho đúng tính năng đó |
 | 12 | Giải thích trước khi xin quyền | string | Output | Theo tính năng (API 2) | Ví dụ SMS: "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM." |
 | 13 | Công bố Hỗ trợ tiếp cận | string | Output | Văn bản CLIP-01 trường 2 | Hiện toàn màn hình, lựa chọn "Gửi thủ công" / "Đồng ý" theo CLIP-01 trường 3 |
 | 14 | Hướng dẫn "Chế độ cài đặt bị hạn chế" | string | Output | Ẩn | Hiện khi Android 13+ và nguồn cài không phải Google Play (API 6, E7) |
-| 15 | Trạng thái tự gửi clipboard | enum{on\ | off\ | needs_accessibility} | Output | `needs_accessibility` | `on` khi `clip.auto_send = true`, đã có `clip.a11y_consent_at` và dịch vụ Hỗ trợ tiếp cận đang chạy; `off` khi `clip.auto_send = false` |
+| 15 | Trạng thái tự gửi clipboard | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` khi `clip.auto_send = true`, đã có `clip.a11y_consent_at` và dịch vụ Hỗ trợ tiếp cận đang chạy; `off` khi `clip.auto_send = false` |
 | 16 | Nút "Mở cài đặt" | action | Input | Hiện khi có quyền bị từ chối vĩnh viễn | Mở trang Thông tin ứng dụng của HandLive (E5) |
 | 17 | Thông báo gợi ý cấp quyền | string | Output | — | A-SVC đăng khi trả `PERMISSION_MISSING` cho client: "MacBook của Lan cần quyền đọc SMS trên điện thoại — chạm để cho phép"; tối đa 1 lần mỗi tính năng mỗi 24 h; kênh `permission` ("Quyền", `IMPORTANCE_LOW`) |
 | 18 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E10 |
@@ -348,10 +348,10 @@ prefs[booleanPreferencesKey("feature.sms")] ?: true                             
 | Mục | Nội dung |
 |-----|----------|
 | Tên | SET-02 — Bật/tắt tính năng và tùy chọn đồng bộ |
-| Mô tả | Màn hình Cài đặt trên mỗi thiết bị quản lý các khóa ở 0.9.5.<br>Cài đặt thuộc về thiết bị (toàn cục), áp dụng cho mọi cặp của thiết bị đó và không đồng bộ sang thiết bị khác; đối phương chỉ biết qua capability.<br>Đổi khóa `feature.*` hoặc khóa ảnh hưởng capability → gửi `capability/update` (cùng cấu trúc `capability/hello`) tới mọi đối phương đang kết nối; hai bên tính lại tính năng hiệu lực; tắt một tính năng dừng các tác vụ đang chạy của nó (ví dụ phiên camera).<br>Bật tính năng có điều kiện đi qua luồng riêng: `feature.call_audio` qua AUDIO-01, `feature.camera` trên Mac qua CAM-01, quyền Android qua SET-01 phần B, `clip.auto_send` qua công bố Hỗ trợ tiếp cận (CLIP-01 A1–A3).<br>Kèm ba hành động: "Đồng bộ lại toàn bộ SMS" (SMS-01 A1–A2); "Xóa thiết bị khỏi máy chủ" (`DELETE /v1/devices/me` — relay xóa thiết bị cùng mọi cặp của nó và báo `pair_revoked` cho đối phương); "Xóa toàn bộ dữ liệu HandLive" (hủy mọi cặp, xóa khỏi máy chủ, xóa khóa, cơ sở dữ liệu và cài đặt). |
+| Mô tả | Màn hình Cài đặt trên mỗi thiết bị quản lý các khóa ở 0.9.5.<br>Cài đặt thuộc về thiết bị (toàn cục), áp dụng cho mọi cặp của thiết bị đó và không đồng bộ sang thiết bị khác; đối phương chỉ biết qua capability.<br>Đổi khóa `feature.*` hoặc khóa ảnh hưởng capability → gửi `capability/update` (cùng cấu trúc `capability/hello`) tới mọi đối phương đang kết nối; hai bên tính lại tính năng hiệu lực; tắt một tính năng dừng các tác vụ đang chạy của nó (ví dụ phiên camera).<br>Bật tính năng có điều kiện đi qua luồng riêng: `feature.call_audio` qua AUDIO-01, `feature.camera` trên Mac qua CAM-01, quyền Android qua SET-01 phần B, `clip.auto_send` qua công bố Hỗ trợ tiếp cận (CLIP-01 A1–A3).<br>Kèm ba hành động: "Đồng bộ lại toàn bộ SMS" (SMS-01 A1–A2); "Xóa thiết bị khỏi máy chủ" (`DELETE /v1/devices/me?revoke_pairs=false` — relay xóa đăng ký của thiết bị và các cặp của nó trên relay, không báo `pair_revoked`; mọi cặp cục bộ giữ nguyên, vẫn dùng được trong LAN hoặc qua USB — C16); "Xóa toàn bộ dữ liệu HandLive" (`revoke_pairs=true`: hủy mọi cặp và báo `pair_revoked` cho đối phương, xóa khỏi máy chủ, xóa khóa, cơ sở dữ liệu và cài đặt). |
 | Tác nhân | Chính: Người dùng. Hệ thống: A-UI, A-SVC, A-CLIP, M-APP, I-APP, R-API, R-DB, R-KV. |
 | Điều kiện trước | Thiết bị đã hoàn tất SET-01 (Android) hoặc SET-03 (Mac/iOS). Hành động với relay cần Internet. "Đồng bộ lại toàn bộ SMS" cần phiên tới điện thoại. |
-| Điều kiện sau | **Đổi tùy chọn:** giá trị mới nằm trong DataStore/`UserDefaults`; nếu khóa ảnh hưởng capability thì mọi đối phương đang kết nối đã nhận `capability/update`, tính năng hiệu lực ở hai bên khớp cấu hình mới và tác vụ của tính năng mất hiệu lực đã dừng.<br>**Xóa thiết bị khỏi máy chủ:** relay không còn dòng `devices`, `pairs` của thiết bị; đối phương đã hoặc sẽ nhận `pair_revoked`; thiết bị không còn cặp nào và `relay.enabled = false`; khóa định danh và các cài đặt khác giữ nguyên.<br>**Xóa toàn bộ:** như trên, thêm khóa định danh, `PRK`, cơ sở dữ liệu, cài đặt và thông báo đã hiển thị bị xóa; ứng dụng quay về SET-01/SET-03. |
+| Điều kiện sau | **Đổi tùy chọn:** giá trị mới nằm trong DataStore/`UserDefaults`; nếu khóa ảnh hưởng capability thì mọi đối phương đang kết nối đã nhận `capability/update`, tính năng hiệu lực ở hai bên khớp cấu hình mới và tác vụ của tính năng mất hiệu lực đã dừng.<br>**Xóa thiết bị khỏi máy chủ:** relay không còn dòng `devices`, `pairs` của thiết bị; đối phương không nhận `pair_revoked`, chỉ thấy cặp biến mất khỏi relay và tiếp tục dùng LAN (C16); mọi cặp cục bộ, khóa định danh và các cài đặt khác giữ nguyên; `relay.enabled = false`.<br>**Xóa toàn bộ:** relay không còn dòng `devices`, `pairs` của thiết bị; đối phương đã hoặc sẽ nhận `pair_revoked`; thiết bị không còn cặp nào; khóa định danh, `PRK`, cơ sở dữ liệu, cài đặt và thông báo đã hiển thị bị xóa; ứng dụng quay về SET-01/SET-03. |
 | Ngoại lệ | E1 — Luồng kích hoạt không hoàn tất (từ chối công bố AUDIO-01, lỗi CAM-01): khóa giữ `false`.<br>E2 — Android: bật tính năng nhưng quyền bị từ chối: khóa lưu `true`, tính năng không hiệu lực, quyền vào `permissions_missing` (SET-01 E4, E5).<br>E3 — Không có phiên tới đối phương: chỉ lưu cục bộ; `capability/hello` của phiên kế tiếp mang giá trị mới.<br>E4 — Ghi DataStore/`UserDefaults` lỗi: giữ giá trị cũ, báo lỗi.<br>E5 — "Xóa thiết bị khỏi máy chủ" khi không có mạng hoặc relay lỗi (5xx, hết thời gian): không thay đổi gì, báo "Không kết nối được máy chủ, hãy thử lại sau".<br>E6 — Relay trả 401 `TOKEN_EXPIRED`: lấy JWT mới (0.6.4) rồi thử lại một lần; `POST /v1/auth/challenge` trả 404 `DEVICE_NOT_FOUND` → thiết bị đã bị xóa trước đó, coi như thành công.<br>E7 — "Xóa toàn bộ dữ liệu" khi relay không truy cập được: hỏi "Không kết nối được máy chủ.<br>Vẫn xóa trên thiết bị này?"; đồng ý → xóa cục bộ, bản ghi trên relay tự xóa sau 180 ngày không hoạt động (0.9.4).<br>E8 — Người dùng hủy ở hộp thoại xác nhận: không thay đổi.<br>E9 — Tắt tính năng khi tác vụ của nó đang chạy (đang phát camera, âm thanh cuộc gọi đang ở Mac): hỏi xác nhận, rồi dừng êm theo chức năng tương ứng (CAM-02, AUDIO-03). |
 | Yêu cầu đặc biệt | **Hiệu năng:** trong LAN, đối phương áp dụng thay đổi ≤ 1 s sau khi người dùng gạt công tắc; ghi khóa không chặn giao diện.<br>**Bảo mật:** capability chỉ đi trong envelope mã hóa, relay chỉ thấy `type = capability`; `DELETE /v1/devices/me` chỉ xóa chính thiết bị gọi (theo `sub` của JWT); hành động phá hủy có nút màu cảnh báo, nêu rõ hậu quả, không hoàn tác; khóa bị xóa khỏi Keystore/Keychain trước khi báo xong.<br>**Quyền riêng tư:** "Xóa thiết bị khỏi máy chủ" xóa mọi dữ liệu relay giữ về thiết bị (khóa công khai, push token, cặp); thống kê `usage_daily` chỉ theo `device_hash` có muối theo tháng, tự hết sau 30 ngày.<br>**Khả dụng:** mỗi công tắc có mô tả một dòng và lý do khi không hiệu lực; đọc được bằng TalkBack/VoiceOver.<br>**Độc lập tính năng:** đổi một tính năng không làm gián đoạn tính năng khác. |
 
@@ -371,7 +371,7 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 | 3 | Thời điểm đồng ý công bố (`clip.a11y_consent_at`) | timestamp | Output | Rỗng | Android. "Đã đồng ý lúc 14:05, 24/09/2026"; chỉ luồng công bố ghi khóa này |
 | 4 | Đồng bộ ảnh (`clip.send_images`) | bool | Input/Output | `true` | Tất cả. **Capability** `features.clipboard.mimes`: `false` → bỏ `image/png`, `image/jpeg`, chỉ còn `text/plain` (CLIP QC1) |
 | 5 | Chặn nội dung nhạy cảm (`clip.block_sensitive`) | bool | Input/Output | `true` | Tất cả, có tác dụng ở bên gửi Android và Mac. **Cục bộ** (CLIP QC3) |
-| 6 | Tự xóa bảng nhớ tạm đã nhận (`clip.auto_clear_s`) | int32 (enum{0\ | 60\ | 300}, giây) | Input/Output | `60` | Tất cả. **Cục bộ** ở bên nhận (CLIP-05); `0` = tắt |
+| 6 | Tự xóa bảng nhớ tạm đã nhận (`clip.auto_clear_s`) | int32 (enum{0\| 60\| 300}, giây) | Input/Output | `60` | Tất cả. **Cục bộ** ở bên nhận (CLIP-05); `0` = tắt |
 | 7 | Tin nhắn SMS (`feature.sms`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.sms.enabled`. Android bật khi thiếu quyền → SET-01 phần B; tắt → gỡ `ContentObserver`, `sms/*` bị trả `FEATURE_DISABLED`. Mac/iOS tắt → ẩn mục Tin nhắn, dừng SMS-01; dữ liệu đã đồng bộ giữ tới khi hủy ghép nối hoặc xóa toàn bộ |
 | 8 | Thông báo SMS mới (`sms.notify`) | bool | Input/Output | `true` | Mac, iOS. iOS: **Capability** `features.sms.notify` (Android chỉ push SMS mới khi `true`). Mac: **Cục bộ** |
 | 9 | Hiện nội dung trong thông báo (`sms.preview`) | bool | Input/Output | `true` | Mac, iOS. **Cục bộ**; I-NSE đọc từ `UserDefaults` của App Group |
@@ -382,22 +382,22 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 | 14 | Dự phòng qua Wi-Fi, cần Shizuku (`call_audio.allow_opus_fallback`) | bool | Input/Output | `true` | Android, Mac. Android `false` → không bind Shizuku UserService; **Capability** `features.call_audio.opus_fallback` với `available = false`, `reason = "disabled"`. Mac `false` → không mở `call_audio/open`; **Cục bộ** |
 | 15 | Điện thoại dùng cho HFP (`call_audio.phone_bt_address`) | string | Input/Output | Rỗng | Mac. Chọn ở AUDIO-01 bước 7; **Cục bộ** |
 | 16 | Dùng điện thoại làm webcam (`feature.camera`) | bool | Input/Output | `false` | Android, Mac.<br>**Capability** `features.camera.enabled`. Mac bật → CAM-01 (lưu `true` khi camera ảo `active`). Android bật → SET-01 phần B (`CAMERA`, `RECORD_AUDIO`). Tắt → dừng phiên đang phát (`camera/stop`, CAM-02, E9) |
-| 17 | Camera mặc định (`cam.default_camera`) | enum{front\ | back} | Input/Output | `front` | Mac. **Cục bộ** (CAM-02) |
-| 18 | Chất lượng mặc định (`cam.default_quality`) | enum{auto\ | 480p\ | 720p\ | 1080p} | Input/Output | `auto` | Mac. **Cục bộ** (CAM-02, CAM-05) |
+| 17 | Camera mặc định (`cam.default_camera`) | enum{front\| back} | Input/Output | `front` | Mac. **Cục bộ** (CAM-02) |
+| 18 | Chất lượng mặc định (`cam.default_quality`) | enum{auto\| 480p\| 720p\| 1080p} | Input/Output | `auto` | Mac. **Cục bộ** (CAM-02, CAM-05) |
 | 19 | Tự chuyển USB khi cắm cáp (`cam.usb_boost`) | bool | Input/Output | `true` | Mac. **Cục bộ** (CAM-04) |
 | 20 | Không hỏi lại wizard USB (`cam.usb_wizard_dismissed`) | bool | Input/Output | `false` | Mac. **Cục bộ** (CAM-04); đặt lại `false` để wizard hiện lại |
 | 21 | Kết nối qua Internet (`relay.enabled`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.relay.enabled`. Tắt → sau `capability/update`, đóng phiên đi qua relay (`session/bye`, `reason = shutdown`) và kết nối `/v1/relay`; không gửi push. Bật → đăng ký relay (CONN-03 API 1) và các cặp còn `relay_registered = 0` (PAIR-01 API 8) |
 | 22 | Mở khi đăng nhập | bool | Input/Output | `SMAppService.mainApp.status == .enabled` | Mac. Không phải khóa cài đặt; đọc/ghi qua `SMAppService` (SET-03 API 3) |
 | 23 | Mục "Quyền và chạy nền" | action | Input | — | Android. Mở danh sách tính năng và quyền (SET-01 trường 10) cùng trạng thái chạy nền (SET-01 trường 6–9) |
-| 24 | Tính năng hiệu lực theo thiết bị đã ghép | array<object> | Output | Từ capability đã lưu (`features_json`) | Mỗi cặp: tính năng hiệu lực và lý do nếu không ("Tắt trên <thiết bị>", "Thiếu quyền trên điện thoại", "Kết nối qua Internet đang tắt trên điện thoại") |
+| 24 | Tính năng hiệu lực theo thiết bị đã ghép | array\<object> | Output | Từ capability đã lưu (`features_json`) | Mỗi cặp: tính năng hiệu lực và lý do nếu không ("Tắt trên <thiết bị>", "Thiếu quyền trên điện thoại", "Kết nối qua Internet đang tắt trên điện thoại") |
 | 25 | Nút "Đồng bộ lại toàn bộ SMS" | action | Input | Vô hiệu khi không có phiên | Mac, iOS. Chạy SMS-01 A1–A2 (bước B1) |
 | 26 | Nút "Xóa thiết bị khỏi máy chủ" | action | Input | — | Tất cả. Luồng A1–A4, A6: gỡ đăng ký khỏi relay; giữ khóa định danh, cài đặt và mọi cặp ghép nối (vẫn dùng được trong LAN hoặc qua USB) |
 | 27 | Nút "Xóa toàn bộ dữ liệu HandLive" | action | Input | — | Tất cả. Luồng A1–A6 |
-| 28 | Xác nhận hành động phá hủy | enum{Xóa\ | Hủy} | Input | — | Nút "Xóa" màu cảnh báo |
+| 28 | Xác nhận hành động phá hủy | enum{Xóa\| Hủy} | Input | — | Nút "Xóa" màu cảnh báo |
 | 29 | Nội dung cảnh báo | string | Output | Theo hành động | Xóa khỏi máy chủ: "Xóa đăng ký của thiết bị này khỏi máy chủ HandLive.<br>Các thiết bị đã ghép vẫn dùng được khi ở cùng mạng Wi-Fi; kết nối qua Internet sẽ tắt cho tới khi bạn bật lại." Xóa toàn bộ: "Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này.<br>Không thể hoàn tác." |
 | 30 | Thông báo kết quả, lỗi | string | Output | Rỗng | "Đã xóa khỏi máy chủ" hoặc nội dung theo E1–E9 |
 | 31 | Hiện HandLive trên thanh menu (`mac.menu_bar_extra`) | bool | Input/Output | `true` | Mac.<br>**Cục bộ**. `true` → biểu tượng trên thanh menu (`MenuBarExtra`, `isInserted`), app ở chế độ `.accessory` khi không mở cửa sổ chính; `false` → gỡ biểu tượng, app chuyển `.regular` (biểu tượng Dock, thanh menu của app, Dock menu) làm lối vào chính.<br>Hỏi lúc thiết lập (SET-03 trường 16, bước 6) |
-| 32 | Ngôn ngữ | enum{Theo hệ thống\ | English\ | Tiếng Việt} | Input/Output | Theo hệ thống | Android.<br>**Cục bộ**, không phải khóa cài đặt (C20, 0.12.3). Android 13+: mở trang ngôn ngữ ứng dụng của hệ thống (`Settings.ACTION_APP_LOCALE_SETTINGS`); Android 10–12: chọn trong app, áp dụng bằng `AppCompatDelegate.setApplicationLocales` (tự lưu). Tên ngôn ngữ viết bằng chính ngôn ngữ đó. Mac, iPhone, iPad dùng cài đặt ngôn ngữ theo ứng dụng của hệ thống |
+| 32 | Ngôn ngữ | enum{Theo hệ thống\| English\| Tiếng Việt} | Input/Output | Theo hệ thống | Android.<br>**Cục bộ**, không phải khóa cài đặt (C20, 0.12.3). Android 13+: mở trang ngôn ngữ ứng dụng của hệ thống (`Settings.ACTION_APP_LOCALE_SETTINGS`); Android 10–12: chọn trong app, áp dụng bằng `AppCompatDelegate.setApplicationLocales` (tự lưu). Tên ngôn ngữ viết bằng chính ngôn ngữ đó. Mac, iPhone, iPad dùng cài đặt ngôn ngữ theo ứng dụng của hệ thống |
 
 ### 1.2.4 Luồng nghiệp vụ
 
@@ -588,8 +588,7 @@ Với `revoke_pairs=true`, relay báo cho điện thoại đang online:
 
 #### API 3 — Xác thực relay
 
-Đặc tả ở 0.6.4 và CONN-03 API 2–3 (`POST /v1/auth/challenge`, `POST /v1/auth/token`). Token còn hạn
-> 60 s thì dùng lại. `POST /v1/auth/challenge` trả 404 `DEVICE_NOT_FOUND` → thiết bị đã bị xóa trước
+Đặc tả ở 0.6.4 và CONN-03 API 2–3 (`POST /v1/auth/challenge`, `POST /v1/auth/token`). Token còn hạn > 60 s thì dùng lại. `POST /v1/auth/challenge` trả 404 `DEVICE_NOT_FOUND` → thiết bị đã bị xóa trước
 đó, coi A2 là thành công (E6).
 
 #### API 4 — `WS pair/revoke`
@@ -731,13 +730,13 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive đưa bảng nhớ tạm, tin nhắn SMS và cuộc gọi từ điện thoại Android lên máy này. Dữ liệu được mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn; máy chủ không đọc được nội dung. Không cần tài khoản." |
 | 2 | Nút "Bắt đầu" | action | Input | — | Sang bước 4 |
 | 3 | Mở HandLive khi đăng nhập | bool | Input/Output | `true` | Mac. Hộp chọn trên màn hình chào mừng; `true` → `SMAppService.mainApp.register()` ở bước 6 |
-| 4 | Vị trí ứng dụng | enum{applications\ | other\ | translocated} | Output | Theo `Bundle.main.bundleURL` | Mac. `other`, `translocated` hiện trường 5 |
-| 5 | Đề nghị chuyển vào thư mục Ứng dụng | enum{Chuyển\ | Để sau} | Input | — | Mac. "Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?" |
-| 6 | Trạng thái mục đăng nhập | enum{enabled\ | requires_approval\ | not_registered\ | not_found} | Output | `SMAppService.mainApp.status` | Mac. `requires_approval` hiện trường 12, 13 (E5) |
-| 7 | Quyền thông báo | enum{allowed\ | denied\ | not_determined} | Input/Output | `not_determined` | Theo `authorizationStatus`; `denied` hiện hướng dẫn (E3); trên iOS là CONN-04 trường 1 |
-| 8 | Mức nhạy cảm thời gian | enum{enabled\ | disabled\ | not_supported} | Output | Theo `timeSensitiveSetting` | `disabled` hiện cảnh báo "Thông báo cuộc gọi có thể bị chế độ Tập trung chặn" |
-| 9 | Quyền mạng cục bộ | enum{allowed\ | denied\ | unknown\ | not_required} | Output | `unknown`; `not_required` trên macOS 13–14 | Suy ra từ trạng thái `NWBrowser` (API 5); `denied` hiện hướng dẫn (E4) |
-| 10 | Quyền dán từ ứng dụng khác | enum{default\ | ask\ | always_allow\ | always_deny\ | not_applicable} | Output | `not_applicable` trước macOS 15.4 | Mac. `ask`, `always_deny` hiện hướng dẫn (E6) |
+| 4 | Vị trí ứng dụng | enum{applications\| other\| translocated} | Output | Theo `Bundle.main.bundleURL` | Mac. `other`, `translocated` hiện trường 5 |
+| 5 | Đề nghị chuyển vào thư mục Ứng dụng | enum{Chuyển\| Để sau} | Input | — | Mac. "Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?" |
+| 6 | Trạng thái mục đăng nhập | enum{enabled\| requires_approval\| not_registered\| not_found} | Output | `SMAppService.mainApp.status` | Mac. `requires_approval` hiện trường 12, 13 (E5) |
+| 7 | Quyền thông báo | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | Theo `authorizationStatus`; `denied` hiện hướng dẫn (E3); trên iOS là CONN-04 trường 1 |
+| 8 | Mức nhạy cảm thời gian | enum{enabled\| disabled\| not_supported} | Output | Theo `timeSensitiveSetting` | `disabled` hiện cảnh báo "Thông báo cuộc gọi có thể bị chế độ Tập trung chặn" |
+| 9 | Quyền mạng cục bộ | enum{allowed\| denied\| unknown\| not_required} | Output | `unknown`; `not_required` trên macOS 13–14 | Suy ra từ trạng thái `NWBrowser` (API 5); `denied` hiện hướng dẫn (E4) |
+| 10 | Quyền dán từ ứng dụng khác | enum{default\| ask\| always_allow\| always_deny\| not_applicable} | Output | `not_applicable` trước macOS 15.4 | Mac. `ask`, `always_deny` hiện hướng dẫn (E6) |
 | 11 | Giới hạn trên iPhone/iPad | string | Output | Nội dung cố định | iOS/iPadOS. "Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo." |
 | 12 | Hướng dẫn mở Cài đặt hệ thống | string | Output | Ẩn | Nội dung theo E3–E6, nêu đúng đường dẫn cài đặt của phiên bản hệ điều hành |
 | 13 | Nút "Mở Cài đặt" | action | Input | Hiện cùng trường 12 | Mở trang cài đặt tương ứng (API 3–6) |
@@ -934,9 +933,7 @@ flowchart TB
 - **Method:** `NSPasteboard.general.accessBehavior` (trong `if #available(macOS 15.4, *)`).
 - **Request:** không có.
 - **Response:** `NSPasteboard.AccessBehavior` ∈ {`.default`, `.ask`, `.alwaysAllow`, `.alwaysDeny`}.
-- **Ví dụ:** `.ask` → trường 10 = `ask`, trường 12: "Để HandLive gửi bảng nhớ tạm của Mac sang điện
-  thoại mà không hỏi mỗi lần, mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác
-  và chọn Cho phép cho HandLive."
+- **Ví dụ:** `.ask` → trường 10 = `ask`, trường 12: "Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive."
 - **Logic nghiệp vụ (C10):**
   1. Apple không có API xin "Luôn cho phép": chỉ hướng dẫn và mở
      `x-apple.systempreferences:com.apple.preference.security`.

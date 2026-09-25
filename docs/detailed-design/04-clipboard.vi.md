@@ -92,7 +92,7 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Tùy chọn "Tự gửi khi sao chép" | bool | Input/Output | `clip.auto_send` = `true` | Android, Cài đặt → Bảng nhớ tạm (SET-02). Bật lần đầu phải qua công bố (trường 2, 3) rồi bật dịch vụ trong Cài đặt › Hỗ trợ tiếp cận |
 | 2 | Nội dung công bố Accessibility | string | Output | Văn bản cố định theo phiên bản | "HandLive dùng dịch vụ Hỗ trợ tiếp cận chỉ để nhận biết khi bạn bấm Sao chép, rồi đọc nội dung vừa sao chép và gửi (mã hóa đầu-cuối) tới Mac, iPhone, iPad đã ghép nối.<br>Dịch vụ nhận các sự kiện bấm và thông báo ngắn trên màn hình để tìm thao tác Sao chép; sự kiện không liên quan bị bỏ ngay, không lưu, không gửi đi.<br>Mỗi lần đọc, Android có thể hiện 'HandLive đã dán từ bộ nhớ đệm'.<br>Bạn có thể tắt bất cứ lúc nào và gửi thủ công bằng nút Gửi bảng nhớ tạm." |
-| 3 | Lựa chọn công bố | enum{Đồng ý\ | Gửi thủ công} | Input | — | "Đồng ý" → lưu `clip.a11y_consent_at`, mở Cài đặt Hỗ trợ tiếp cận; "Gửi thủ công" → `clip.auto_send = false` |
+| 3 | Lựa chọn công bố | enum{Đồng ý\| Gửi thủ công} | Input | — | "Đồng ý" → lưu `clip.a11y_consent_at`, mở Cài đặt Hỗ trợ tiếp cận; "Gửi thủ công" → `clip.auto_send = false` |
 | 4 | Nút "Gửi bảng nhớ tạm" trên thông báo thường trực | action | Input | Hiện khi có ≥ 1 client có clipboard hiệu lực | Mở `ClipboardReadActivity` với `source = manual` |
 | 5 | Ô Cài đặt nhanh "Gửi bảng nhớ tạm" | action | Input | Người dùng tự thêm vào bảng Cài đặt nhanh | Dòng phụ: "Tới <tên client>", "Tới 2 thiết bị" hoặc "Chưa kết nối" |
 | 6 | Mục chia sẻ "Gửi tới thiết bị (HandLive)" | action | Input | — | Trong bảng Chia sẻ của ứng dụng khác, chỉ với `text/plain` |
@@ -160,7 +160,7 @@ flowchart TB
 | 11 | Hệ thống | A-SVC, A-UI | Xử lý `ack`: `applied` → xong (đường thủ công hiện "Đã gửi tới <tên>"); nhận `clipboard/conflict` → hiện trường 12, 13; hết 10 s → E8; `FEATURE_DISABLED` → E10. |  |
 | 12 | Người dùng | M-APP / I-APP (ứng dụng bất kỳ) | Dán nội dung (⌘V trên Mac, menu Dán trên iPhone/iPad). | Tự xóa sau `clip.auto_clear_s` (CLIP-05). |
 | A1 | Người dùng | A-UI | Bật "Tự gửi khi sao chép" lần đầu (SET-01 hoặc SET-02). |  |
-| A2 | Hệ thống | A-UI | Hiện công bố (trường 2) toàn màn hình, chỉ tiếp tục khi người dùng chọn "Đồng ý" (trường 3): lưu `clip.a11y_consent_at`, mở `Settings.ACTION_ACCESSIBILITY_SETTINGS` kèm hướng dẫn chọn HandLive. | Chọn "Không" → `clip.auto_send = false` (E1). |
+| A2 | Hệ thống | A-UI | Hiện công bố (trường 2) toàn màn hình, chỉ tiếp tục khi người dùng chọn "Đồng ý" (trường 3): lưu `clip.a11y_consent_at`, mở `Settings.ACTION_ACCESSIBILITY_SETTINGS` kèm hướng dẫn chọn HandLive. | Chọn "Gửi thủ công" → `clip.auto_send = false` (E1). |
 | A3 | Hệ thống | A-CLIP, A-SVC | Hệ thống gắn dịch vụ (`onServiceConnected`) → `features.clipboard.auto_send = true`, gửi `capability/update`; dịch vụ bị tắt (`onUnbind`) → `false`, gửi `capability/update`. Client cập nhật trường 14. |  |
 
 ### 4.1.5 Đặc tả API/service
@@ -192,7 +192,7 @@ cấu trúc 0.7.2, như SET-02.
 
 | Thuộc tính | Giá trị | Ghi chú |
 |------------|---------|---------|
-| `accessibilityEventTypes` | `typeViewClicked\ | typeWindowStateChanged\ | typeNotificationStateChanged\ | typeAnnouncement` | Chỉ các loại cần để nhận ra thao tác sao chép |
+| `accessibilityEventTypes` | `typeViewClicked\| typeWindowStateChanged\| typeNotificationStateChanged\| typeAnnouncement` | Chỉ các loại cần để nhận ra thao tác sao chép |
 | `accessibilityFeedbackType` | `feedbackGeneric` |  |
 | `notificationTimeout` | `100` | ms |
 | `canRetrieveWindowContent` | `false` | Không đọc cây nội dung cửa sổ; chỉ dùng tên gói, tên lớp và văn bản đi kèm sự kiện |
@@ -239,7 +239,7 @@ cấu trúc 0.7.2, như SET-02.
 
 | Mục | Giá trị |
 |-----|---------|
-| Intent extra `source` | enum{auto\ | manual} — `auto` từ API 1, `manual` từ API 3 |
+| Intent extra `source` | enum{auto\| manual} — `auto` từ API 1, `manual` từ API 3 |
 | `android:theme` | Theme trong suốt: `windowIsTranslucent = true`, nền trong suốt, không tiêu đề, không hoạt ảnh |
 | `android:excludeFromRecents`, `android:noHistory` | `true`, `true` |
 | `android:taskAffinity` | `""` — task riêng, không kéo A-UI lên |
@@ -364,14 +364,14 @@ override fun onClick() {
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `clip_id` | uuid | Có | UUIDv7 do thiết bị gốc sinh; giữ nguyên khi Android chuyển tiếp và khi gửi lại sau `CLIP_CHECKSUM_MISMATCH` |
-| `kind` | enum{text\ | image} | Có |  |
-| `mime` | enum{text/plain\ | image/png\ | image/jpeg} | Có | `text/plain` luôn là UTF-8 |
+| `kind` | enum{text\| image} | Có |  |
+| `mime` | enum{text/plain\| image/png\| image/jpeg} | Có | `text/plain` luôn là UTF-8 |
 | `text` | string | Khi `kind = text` và gửi thẳng | Toàn bộ văn bản; plaintext envelope ≤ `CLIP_INLINE_MAX` |
 | `transfer` | object | Khi `kind = image` hoặc văn bản đi theo chunk | `{transfer_id, size, sha256, chunk_size, chunk_count}` — đặc tả ở CLIP-03 API 3 |
 | `width`, `height` | int32 | Chỉ ảnh | Kích thước điểm ảnh |
 | `sensitive` | bool | Có | `true` chỉ khi người dùng chọn "Vẫn gửi" (QC3) |
 | `origin_ts` | timestamp | Có | Thời điểm nội dung được đọc trên thiết bị gốc (đồng hồ thiết bị gốc); chỉ dùng cho QC8 (b) |
-| `source` | enum{auto\ | manual\ | share\ | mac\ | ios} | Có | Đường tạo clip: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
+| `source` | enum{auto\| manual\| share\| mac\| ios} | Có | Đường tạo clip: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
 | `origin_device_id` | uuid | Có | `device_id` của thiết bị gốc; Android dùng để chuyển tiếp và định tuyến `clipboard/conflict` |
 
 Đúng một trong hai trường `text`, `transfer` có mặt.
@@ -392,7 +392,7 @@ override fun onClick() {
 {"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Mã đơn hàng: HL-240917-0042","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"applied"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"ignored","reason":"conflict"}}
-{"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Vượt giới hạn văn bản","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
+{"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Text exceeds the size limit","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
 ```
 
 - **Logic nghiệp vụ — bên gửi:**
@@ -493,7 +493,7 @@ prefs[booleanPreferencesKey("clip.auto_send")] ?: true           # bước 3, A1
 prefs[longPreferencesKey("clip.a11y_consent_at")]                # bước 3: null → chưa đồng ý (E1)
 prefs[booleanPreferencesKey("clip.block_sensitive")] ?: true     # bước 6
 dataStore.edit { it[longPreferencesKey("clip.a11y_consent_at")] = now }   # A2: chọn Đồng ý
-dataStore.edit { it[booleanPreferencesKey("clip.auto_send")] = false }    # A2: chọn Không; tắt trường 1
+dataStore.edit { it[booleanPreferencesKey("clip.auto_send")] = false }    # A2: chọn Gửi thủ công; tắt trường 1
 
 # [Thiết kế] UserDefaults của M-APP (mặc định 0.9.5 đăng ký bằng register(defaults:) lúc khởi động)
 UserDefaults.standard.bool(forKey: "feature.clipboard")           # bước 10
@@ -525,7 +525,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Nội dung sao chép trên Mac | string | Input | — | Người dùng sao chép (⌘C) trong ứng dụng bất kỳ |
-| 2 | Trạng thái quyền dán (macOS 15.4+) | enum{default\ | ask\ | alwaysAllow\ | alwaysDeny} | Output | `NSPasteboard.general.accessBehavior` | Cài đặt → Bảng nhớ tạm của M-APP; `ask`, `alwaysDeny` kèm cảnh báo |
+| 2 | Trạng thái quyền dán (macOS 15.4+) | enum{default\| ask\| alwaysAllow\| alwaysDeny} | Output | `NSPasteboard.general.accessBehavior` | Cài đặt → Bảng nhớ tạm của M-APP; `ask`, `alwaysDeny` kèm cảnh báo |
 | 3 | Hướng dẫn cấp quyền dán | string | Output | — | "Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive." kèm nút mở Cài đặt hệ thống |
 | 4 | Mục menu "Gửi bảng nhớ tạm sang điện thoại" | action | Input | — | Menu bar; đọc clipboard ngay, không chờ lượt hỏi vòng |
 | 5 | Thông báo chặn nội dung nhạy cảm | string | Output | — | Như CLIP-01 trường 8, dạng thông báo hệ thống của Mac |
@@ -953,7 +953,7 @@ else { log(code: "CLIP_UNSUPPORTED_MIME") }                              // E3
 
 ```json
 {"op":"push","data":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","kind":"image","mime":"image/png","transfer":{"transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60","size":5242880,"sha256":"n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgg","chunk_size":65536,"chunk_count":80},"width":2880,"height":1800,"sensitive":false,"origin_ts":1727150200456,"source":"mac","origin_device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}}
-{"re":"0192f3f1-2c3f-7b00-8c11-d22e33f44a55","ok":false,"error":{"code":"CLIP_CHECKSUM_MISMATCH","message":"SHA-256 không khớp","details":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","status":"rejected","transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60"}}}
+{"re":"0192f3f1-2c3f-7b00-8c11-d22e33f44a55","ok":false,"error":{"code":"CLIP_CHECKSUM_MISMATCH","message":"SHA-256 mismatch","details":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","status":"rejected","transfer_id":"0192f3f1-2c3e-7a10-9b20-c30d40e50f60"}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -1012,7 +1012,7 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `transfer_id` | uuid | Có | Lần truyền bị hủy |
-| `reason` | enum{superseded\ | user\ | timeout} | Có | `superseded`: bên gửi có clip mới hơn; `user`: người dùng bấm "Hủy" ở một trong hai bên; `timeout`: bên nhận 30 s không nhận được khối |
+| `reason` | enum{superseded\| user\| timeout} | Có | `superseded`: bên gửi có clip mới hơn; `user`: người dùng bấm "Hủy" ở một trong hai bên; `timeout`: bên nhận 30 s không nhận được khối |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -1133,7 +1133,7 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Thẻ "Gửi bảng nhớ tạm sang điện thoại" | view | Output | Hiện trên màn hình chính khi `feature.clipboard = true` | Tiêu đề "Gửi sang <tên điện thoại>" kèm nút Dán hệ thống (trường 2) |
 | 2 | Nút Dán của hệ thống | action (`UIPasteControl` / `PasteButton`) | Input | Hệ thống tự bật khi clipboard có kiểu được nhận | Nhãn và biểu tượng do hệ thống đặt ("Dán"); chạm là gửi ngay |
 | 3 | Banner gợi ý | string | Output | Ẩn | "Bảng nhớ tạm trên iPhone có nội dung mới — dán để gửi sang Pixel của Lan" (hoặc "…có ảnh mới…" khi `hasImages`); có nút đóng |
-| 4 | Trạng thái kết nối của thẻ | enum{connected\ | disconnected} | Output | Theo phiên | `disconnected` → "Chưa kết nối với điện thoại", nút Dán vô hiệu |
+| 4 | Trạng thái kết nối của thẻ | enum{connected\| disconnected} | Output | Theo phiên | `disconnected` → "Chưa kết nối với điện thoại", nút Dán vô hiệu |
 | 5 | Kết quả gửi | string | Output | — | "Đã gửi tới <tên điện thoại>" hoặc "Gửi không thành công, thử lại" |
 | 6 | Tiến trình gửi/nhận ảnh | int32 (%) | Output | 0 | Ảnh > 1 MiB, kèm nút "Hủy" (CLIP-03 trường 2–4) |
 | 7 | Thông báo lỗi nội dung | string | Output | — | "Chỉ gửi được văn bản hoặc ảnh" (E3), "Nội dung quá lớn để gửi (tối đa 1 MB văn bản, 10 MB ảnh)" (E4) |
@@ -1364,7 +1364,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Tùy chọn "Tự xóa bảng nhớ tạm đã nhận" | enum{0\ | 60\ | 300} (giây) | Input/Output | `clip.auto_clear_s` = `60` | Cài đặt → Bảng nhớ tạm (SET-02) trên từng thiết bị; hiển thị "Tắt", "Sau 1 phút", "Sau 5 phút" |
+| 1 | Tùy chọn "Tự xóa bảng nhớ tạm đã nhận" | enum{0\| 60\| 300} (giây) | Input/Output | `clip.auto_clear_s` = `60` | Cài đặt → Bảng nhớ tạm (SET-02) trên từng thiết bị; hiển thị "Tắt", "Sau 1 phút", "Sau 5 phút" |
 | 2 | Chú thích của tùy chọn | string | Output | — | "Chỉ xóa nội dung nhận từ thiết bị khác, và chỉ khi bạn chưa sao chép gì mới." |
 | 3 | Nội dung clipboard khi đến hạn | string hoặc image | Output | Nội dung HandLive đã ghi | Trống sau khi xóa; giữ nguyên nếu đã đổi |
 

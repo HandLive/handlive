@@ -31,10 +31,10 @@ N/A — chưa có wireframe được duyệt.
 | 2 | Thời gian hiệu lực còn lại | int32 (giây) | Output | 120 | Đếm ngược dưới QR; về 0 thì sinh QR mới |
 | 3 | Tên thiết bị client | string(64) | Output | Tên máy (`Host.current().localizedName` / `UIDevice.current.name`) | Nằm trong QR (`d`), hiển thị trên Android khi xác nhận |
 | 4 | Khung quét QR | camera preview | Input | Camera sau | Android quét bằng CameraX + ML Kit |
-| 5 | Xác nhận ghép nối | enum{Ghép nối\ | Hủy} | Input | — | Android hỏi "Ghép nối với <tên thiết bị client>?"; "Ghép nối" là nút mặc định, "Hủy" bên trái |
+| 5 | Xác nhận ghép nối | enum{Ghép nối\| Hủy} | Input | — | Android hỏi "Ghép nối với <tên thiết bị client>?"; "Ghép nối" là nút mặc định, "Hủy" bên trái |
 | 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR |
 | 7 | Số lần nhập PIN còn lại | int32 | Output | 3 | Hiển thị trên Android sau lần nhập sai |
-| 8 | Trạng thái ghép nối | enum{waiting_scan\ | connecting\ | verifying\ | done\ | failed} | Output | `waiting_scan` | Hiển thị trên cả hai thiết bị |
+| 8 | Trạng thái ghép nối | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Hiển thị trên cả hai thiết bị |
 | 9 | Tên điện thoại | string(64) | Output | `Settings.Global.DEVICE_NAME` | Hiển thị trên Mac/iOS khi ghép xong |
 | 10 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E9 |
 
@@ -76,7 +76,7 @@ flowchart TB
 | 2 | Hệ thống | M-APP / I-APP | Nạp hoặc tạo `ik_dh`, `ik_sig`; sinh `pairing_secret` 32 byte (`SecRandomCopyBytes`).<br>Nếu relay bật: sinh `rv_id` 16 byte, xác thực relay (0.6.4), gửi `rv_join`.<br>Dựng URI QR, vẽ QR (`CIFilter.qrCodeGenerator`).<br>Bắt đầu duyệt mDNS `_handlive._tcp`.<br>Hẹn 120 s: hủy secret cũ, quay lại bước 2. | Relay lỗi → QR không có `rv`, chỉ ghép trong LAN. |
 | 3 | Người dùng | A-UI | Mở "Ghép nối thiết bị" và quét QR. | Không có quyền camera → E9, chuyển luồng PIN (A1). |
 | 4 | Hệ thống | A-UI | Kiểm scheme `handlive`, host `pair`, `v = 1`, `pk` và `ps` giải mã đủ 32 byte, `d` ≤ 64 ký tự, `rv` (nếu có) đủ 16 byte. Đếm cặp hiệu lực < 8. | Sai định dạng → E1. Đủ 8 cặp → E6. |
-| 5 | Người dùng | A-UI | Chọn "Ghép nối" hoặc "Hủy" ở hộp thoại "Ghép nối với <d>?". | "Hủy" → E5. |
+| 5 | Người dùng | A-UI | Chọn "Ghép nối" hoặc "Hủy" ở hộp thoại "Ghép nối với \<d>?". | "Hủy" → E5. |
 | 6 | Hệ thống | A-SVC | Mở cửa sổ ghép nối 120 s: nhận kết nối `/v1/pair`; đăng ký lại dịch vụ mDNS với TXT `pr` = 8 hex đầu SHA-256(`pk`). Nếu có `rv`: kết nối relay, gửi `rv_join`. |  |
 | 7 | Hệ thống | M-APP / I-APP | Chờ tối đa 20 s: thấy instance có `pr` khớp → đi LAN; nhận `rv_joined` với `peer_present = true` → đi relay. LAN được ưu tiên nếu cả hai cùng có. | Không có đường nào → E3. |
 | 8 | Hệ thống | M-APP / I-APP | LAN: mở `wss://<ip>:<port>/v1/pair`, chấp nhận chứng chỉ tự ký nhưng ghi lại SHA-256 chứng chỉ thấy được. Relay: gói envelope `pair` trong `rv_msg`. |  |
@@ -147,11 +147,11 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `mode` | enum{qr\ | pin} | Có |  |
+| `mode` | enum{qr\| pin} | Có |  |
 | `device_id` | uuid | Có | `device_id` của client |
 | `nonce` | b64u (32 byte) | Có | `nonce_c` ngẫu nhiên |
 | `name` | string(64) | Có | Tên client |
-| `platform` | enum{macos\ | ios\ | ipados} | Có |  |
+| `platform` | enum{macos\| ios\| ipados} | Có |  |
 | `model` | string(64) | Không | Ví dụ `Mac15,3`, `iPhone16,1` |
 | `ik_sig_pub` | b64u (32 byte) | Có | Khóa ký Ed25519 của client |
 | `ik_dh_pub` | b64u (32 byte) | Có | Phải trùng `pk` khi `mode = qr` |
@@ -266,13 +266,13 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `code` | enum{QR_INVALID\ | PAIRING_CLOSED\ | PIN_INVALID\ | AUTH_FAILED\ | INTERNAL} | Có | Mã lỗi (0.8.1) |
+| `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Có | Mã lỗi (0.8.1) |
 | `message` | string | Có | Mô tả ngắn, không chứa dữ liệu nhạy cảm |
 | `attempts_left` | int32 | Chỉ với `PIN_INVALID` | Số lần nhập còn lại |
 
 - **Response:** N/A.
 - **Ví dụ:**
-  `{"op":"error","data":{"code":"PIN_INVALID","message":"Mã PIN không đúng","attempts_left":2}}`
+  `{"op":"error","data":{"code":"PIN_INVALID","message":"PIN does not match","attempts_left":2}}`
 - **Logic nghiệp vụ:** Không tiết lộ chi tiết bước kiểm nào sai với `AUTH_FAILED`; ghi log cục bộ
   chỉ gồm mã lỗi.
 
@@ -443,14 +443,14 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Tên thiết bị | string(64) | Output | `peer_name` | Tên đối phương lúc ghép nối |
-| 2 | Loại thiết bị | enum{android\ | macos\ | ios\ | ipados} | Output | `peer_platform` hoặc `android` | Kèm biểu tượng |
+| 2 | Loại thiết bị | enum{android\| macos\| ios\| ipados} | Output | `peer_platform` hoặc `android` | Kèm biểu tượng |
 | 3 | Model | string(64) | Output | `peer_model` |  |
-| 4 | Trạng thái kết nối | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | Theo 0.11 | "Đã kết nối qua Wi-Fi" (hoặc "qua Internet", "qua USB"), "Đang kết nối…", "Điện thoại ngoại tuyến", "Mất kết nối" |
-| 5 | Kênh kết nối | enum{lan\ | relay\ | usb} | Output | Rỗng khi chưa kết nối | "LAN", "Qua Internet", "USB" |
+| 4 | Trạng thái kết nối | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Theo 0.11 | "Đã kết nối qua Wi-Fi" (hoặc "qua Internet", "qua USB"), "Đang kết nối…", "Điện thoại ngoại tuyến", "Mất kết nối" |
+| 5 | Kênh kết nối | enum{lan\| relay\| usb} | Output | Rỗng khi chưa kết nối | "LAN", "Qua Internet", "USB" |
 | 6 | Lần kết nối cuối | timestamp | Output | `last_seen_at` | Hiển thị tương đối ("2 phút trước") |
 | 7 | Phiên bản ứng dụng đối phương | string | Output | Từ `capability.app_version` | Cảnh báo nếu khác phiên bản giao thức |
-| 8 | Tính năng hiệu lực | array<enum{clipboard\ | sms\ | call\ | call_audio\ | camera}> | Output | Giao của hai capability | Mỗi mục kèm lý do nếu không hiệu lực ("Tắt trên Mac", "Thiếu quyền SMS trên điện thoại") |
-| 9 | Quyền còn thiếu trên điện thoại | array<string> | Output | `permissions_missing` | Chỉ trên Mac/iOS; nhấn để xem hướng dẫn |
+| 8 | Tính năng hiệu lực | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Giao của hai capability | Mỗi mục kèm lý do nếu không hiệu lực ("Tắt trên Mac", "Thiếu quyền SMS trên điện thoại") |
+| 9 | Quyền còn thiếu trên điện thoại | array\<string> | Output | `permissions_missing` | Chỉ trên Mac/iOS; nhấn để xem hướng dẫn |
 | 10 | Mã an toàn | string(8) | Output | 8 hex đầu SHA-256(`attestation`) | Giống nhau trên hai thiết bị của cùng cặp |
 | 11 | Nút "Thêm thiết bị" | action | Input | — | Mở PAIR-01; ẩn trên Mac/iOS khi đã có cặp |
 | 12 | Nút "Hủy ghép nối" | action | Input | — | Mở PAIR-03 |
@@ -512,12 +512,12 @@ CONN-01 và SET-02, không phát sinh lời gọi mới.
 
 | Trường | Kiểu | Mô tả |
 |--------|------|-------|
-| `pairs` | array<object> | Các cặp có thiết bị gọi là thành viên |
+| `pairs` | array\<object> | Các cặp có thiết bị gọi là thành viên |
 | `pairs[].pair_id` | uuid |  |
 | `pairs[].peer_device_id` | uuid | Thiết bị còn lại |
-| `pairs[].peer_platform` | enum{android\ | macos\ | ios\ | ipados} |  |
+| `pairs[].peer_platform` | enum{android\| macos\| ios\| ipados} |  |
 | `pairs[].created_at` | timestamp |  |
-| `pairs[].revoked_at` | timestamp \ | null | Khác null nghĩa là đã thu hồi |
+| `pairs[].revoked_at` | timestamp \| null | Khác null nghĩa là đã thu hồi |
 | `pairs[].peer_online` | bool | Đối phương đang nối relay (theo presence) |
 
 - **Ví dụ:**
@@ -595,8 +595,8 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Thiết bị cần hủy | string(64) | Output | Tên thiết bị đang chọn ở PAIR-02 |  |
 | 2 | Nội dung cảnh báo | string | Output | "Hủy ghép nối sẽ xóa khóa bảo mật và dữ liệu SMS, nhật ký cuộc gọi đã đồng bộ trên <thiết bị client>. Không thể hoàn tác." |  |
-| 3 | Xác nhận hủy | enum{Hủy ghép nối\ | Hủy} | Input | — | Mac: alert dạng sheet, "Hủy ghép nối" là nút mặc định (không tô đỏ vì người dùng chủ động chọn), "Hủy" bên trái; iPhone/iPad và Android: hộp chọn hành động, "Hủy ghép nối" màu đỏ ở trên, "Hủy" ở dưới |
-| 4 | Kết quả | enum{done\ | done_pending_remote} | Output | — | `done`: cả hai bên đã dọn; `done_pending_remote`: đã dọn cục bộ, thiết bị kia sẽ tự dọn khi kết nối lại |
+| 3 | Xác nhận hủy | enum{Hủy ghép nối\| Hủy} | Input | — | Mac: alert dạng sheet, "Hủy ghép nối" là nút mặc định (không tô đỏ vì người dùng chủ động chọn), "Hủy" bên trái; iPhone/iPad và Android: hộp chọn hành động, "Hủy ghép nối" màu đỏ ở trên, "Hủy" ở dưới |
+| 4 | Kết quả | enum{done\| done_pending_remote} | Output | — | `done`: cả hai bên đã dọn; `done_pending_remote`: đã dọn cục bộ, thiết bị kia sẽ tự dọn khi kết nối lại |
 | 5 | Thông báo trên đối phương | string | Output | — | "<tên> đã hủy ghép nối với thiết bị này" |
 
 ### 2.3.4 Luồng nghiệp vụ
@@ -662,7 +662,7 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `pair_id` | uuid | Có | Phải trùng cặp của phiên hiện tại |
-| `reason` | enum{user\ | reinstall\ | limit} | Có | `user`: người dùng chủ động; `reinstall`: xóa dữ liệu ứng dụng; `limit`: thay cặp cũ khi ghép mới |
+| `reason` | enum{user\| reinstall\| limit} | Có | `user`: người dùng chủ động; `reinstall`: xóa dữ liệu ứng dụng; `limit`: thay cặp cũ khi ghép mới |
 
 - **Response (`ack.data`):** `{}` khi `ok = true`. Lỗi: `BAD_REQUEST` nếu `pair_id` không khớp
   phiên.
@@ -696,7 +696,7 @@ flowchart TB
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `reason` | enum{user\ | reinstall\ | lost_device} | Có | `lost_device` khi người dùng chọn hủy từ xa lúc đối phương offline |
+| `reason` | enum{user\| reinstall\| lost_device} | Có | `lost_device` khi người dùng chọn hủy từ xa lúc đối phương offline |
 
 - **Response:**
 

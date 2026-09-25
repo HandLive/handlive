@@ -27,12 +27,12 @@
 | Mục | Nội dung |
 |-----|----------|
 | Tên | SMS-01 — Đồng bộ hội thoại và lịch sử SMS |
-| Mô tả | Sao chép danh sách hội thoại và tin SMS từ điện thoại sang cơ sở dữ liệu mã hóa trên Mac/iOS, làm nền cho xem ngoại tuyến (SMS-03), thông báo (SMS-02) và trả lời (SMS-04).<br>**Lần đầu** (chưa có con trỏ): 200 hội thoại gần nhất, mỗi hội thoại 50 tin mới nhất.<br>**Đồng bộ bù** (có con trỏ): mọi tin mới hơn con trỏ, kèm tóm tắt các hội thoại bị chạm.<br>Mỗi `ack` chứa tối đa 500 tin; client lặp theo `page_token` tới khi `has_more = false`, rồi lưu con trỏ mới và hòa giải trạng thái chưa đọc.<br>Tự chạy sau mỗi lần kết nối; người dùng có thể yêu cầu "Đồng bộ lại toàn bộ". |
+| Mô tả | Sao chép danh sách hội thoại và tin SMS từ điện thoại sang cơ sở dữ liệu mã hóa trên Mac/iOS, làm nền cho xem ngoại tuyến (SMS-03), thông báo (SMS-02) và trả lời (SMS-04).<br>**Lần đầu** (chưa có con trỏ): 200 hội thoại gần nhất, mỗi hội thoại 50 tin mới nhất.<br>**Đồng bộ bù** (có con trỏ): mọi tin mới hơn con trỏ, kèm tóm tắt các hội thoại bị chạm.<br>Mỗi `ack` chứa tối đa 500 tin; client lặp theo `page_token` tới khi `has_more = false`, rồi lưu con trỏ mới và hòa giải trạng thái chưa đọc.<br>Tự chạy sau mỗi lần kết nối; người dùng có thể yêu cầu "Đồng bộ lại toàn bộ SMS". |
 | Tác nhân | Chính: Hệ thống. Phụ: Người dùng (theo dõi tiến độ, yêu cầu đồng bộ lại). Thành phần: M-APP hoặc I-APP, A-SVC, A-SMS, OS (Telephony provider, Contacts provider), R-API (chỉ chuyển tiếp khi đi qua relay). |
 | Điều kiện trước | 1. Cặp hiệu lực (PAIR-01).<br>2. Phiên `/v1/ctl` đã bắt tay và hai bên đã trao đổi `capability/hello` (CONN-01 trong LAN hoặc CONN-03 qua relay).<br>3. SMS hiệu lực với cặp.<br>4. Client không có lần đồng bộ SMS nào khác đang chạy cho cặp này. |
 | Điều kiện sau | **Thành công:** `sms_thread`, `sms_message` chứa dữ liệu tới mốc chụp của điện thoại; `sync_cursor` (`stream = 'sms'`) giữ con trỏ mới; `unread_count` và cờ `read` khớp điện thoại.<br>**Dừng giữa chừng:** các trang đã ghi được giữ nguyên (ghi lặp không sinh trùng), con trỏ cũ không đổi; lần kết nối sau đồng bộ lại từ con trỏ cũ. |
-| Ngoại lệ | E1 — SMS tắt ở một phía: không đồng bộ; nếu Android vẫn nhận `sms/sync` thì trả `FEATURE_DISABLED`.<br>E2 — Điện thoại thiếu `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`), client hiển thị hướng dẫn SET-01.<br>E3 — Thiếu `READ_CONTACTS`: vẫn đồng bộ, `display_name = null`, client hiển thị số.<br>E4 — Mất kết nối hoặc `TIMEOUT` giữa chừng: dừng, giữ dữ liệu đã ghi, chạy lại ở lần kết nối sau.<br>E5 — Con trỏ hoặc `page_token` không hợp lệ (`SMS_CURSOR_INVALID`): với `page_token` → bắt đầu lại từ con trỏ đang lưu; với con trỏ → tự "Đồng bộ lại toàn bộ" (A2).<br>E6 — Lỗi đọc provider trên Android (`INTERNAL`): thử lại 1 lần sau 5 s, sau đó chờ lần kết nối sau.<br>E7 — Lỗi ghi cơ sở dữ liệu trên client (hết dung lượng, không mở được SQLCipher): hủy giao dịch của trang, dừng, báo lỗi không chặn. |
-| Yêu cầu đặc biệt | **Hiệu năng:** lần đầu (tối đa 10 000 tin) xong ≤ 20 s trong LAN, ≤ 40 s qua relay; đồng bộ bù dưới 500 tin xong ≤ 2 s.<br>Danh sách hội thoại hiện dần sau từng trang; ghi cơ sở dữ liệu trên hàng đợi nền, giao diện không bị chặn.<br>Android đọc provider trên luồng nền, không giữ con trỏ provider giữa các trang.<br>**Bảo mật:** dữ liệu chỉ nằm trong `handlive.sqlite` mã hóa SQLCipher (0.6.5); không log nội dung, số, tên.<br>**Tuân thủ:** quyền SMS (`READ_SMS`, `SEND_SMS`) cần Permissions Declaration Form của Google Play theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls" (`docs/deployment-guide.md`); thiết kế phát hiện tin mới bằng `ContentObserver` nên không cần `RECEIVE_SMS`; nếu bị từ chối, Plan B dùng Notification Listener chỉ để nhận tin mới, khi đó không có đồng bộ lịch sử.<br>**Giới hạn v1:** tin bị xóa trên điện thoại không được xóa theo trên Mac/iOS; người dùng dùng "Đồng bộ lại toàn bộ" để làm sạch. |
+| Ngoại lệ | E1 — SMS tắt ở một phía: không đồng bộ; nếu Android vẫn nhận `sms/sync` thì trả `FEATURE_DISABLED`.<br>E2 — Điện thoại thiếu `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`), client hiển thị hướng dẫn SET-01.<br>E3 — Thiếu `READ_CONTACTS`: vẫn đồng bộ, `display_name = null`, client hiển thị số.<br>E4 — Mất kết nối hoặc `TIMEOUT` giữa chừng: dừng, giữ dữ liệu đã ghi, chạy lại ở lần kết nối sau.<br>E5 — Con trỏ hoặc `page_token` không hợp lệ (`SMS_CURSOR_INVALID`): với `page_token` → bắt đầu lại từ con trỏ đang lưu; với con trỏ → tự "Đồng bộ lại toàn bộ SMS" (A2).<br>E6 — Lỗi đọc provider trên Android (`INTERNAL`): thử lại 1 lần sau 5 s, sau đó chờ lần kết nối sau.<br>E7 — Lỗi ghi cơ sở dữ liệu trên client (hết dung lượng, không mở được SQLCipher): hủy giao dịch của trang, dừng, báo lỗi không chặn. |
+| Yêu cầu đặc biệt | **Hiệu năng:** lần đầu (tối đa 10 000 tin) xong ≤ 20 s trong LAN, ≤ 40 s qua relay; đồng bộ bù dưới 500 tin xong ≤ 2 s.<br>Danh sách hội thoại hiện dần sau từng trang; ghi cơ sở dữ liệu trên hàng đợi nền, giao diện không bị chặn.<br>Android đọc provider trên luồng nền, không giữ con trỏ provider giữa các trang.<br>**Bảo mật:** dữ liệu chỉ nằm trong `handlive.sqlite` mã hóa SQLCipher (0.6.5); không log nội dung, số, tên.<br>**Tuân thủ:** quyền SMS (`READ_SMS`, `SEND_SMS`) cần Permissions Declaration Form của Google Play theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls" (`docs/deployment-guide.md`); thiết kế phát hiện tin mới bằng `ContentObserver` nên không cần `RECEIVE_SMS`; nếu bị từ chối, Plan B dùng Notification Listener chỉ để nhận tin mới, khi đó không có đồng bộ lịch sử.<br>**Giới hạn v1:** tin bị xóa trên điện thoại không được xóa theo trên Mac/iOS; người dùng dùng "Đồng bộ lại toàn bộ SMS" để làm sạch. |
 
 ### 5.1.2 Màn hình
 
@@ -42,12 +42,12 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Trạng thái đồng bộ | enum{idle\ | syncing\ | done\ | failed} | Output | `idle` | Dải trạng thái trên đầu danh sách hội thoại: "Đang đồng bộ tin nhắn…", "Đồng bộ lỗi — sẽ thử lại khi kết nối". Ẩn khi `idle` hoặc `done` |
+| 1 | Trạng thái đồng bộ | enum{idle\| syncing\| done\| failed} | Output | `idle` | Dải trạng thái trên đầu danh sách hội thoại: "Đang đồng bộ tin nhắn…", "Đồng bộ lỗi — sẽ thử lại khi kết nối". Ẩn khi `idle` hoặc `done` |
 | 2 | Số tin đã tải | int32 | Output | 0 | Chỉ hiện trong lần đồng bộ đầu: "Đã tải 1.500 tin" |
-| 3 | Danh sách hội thoại | array<object> | Output | Rỗng | Các dòng `sms_thread`, cập nhật sau từng trang; cách hiển thị ở SMS-03 |
+| 3 | Danh sách hội thoại | array\<object> | Output | Rỗng | Các dòng `sms_thread`, cập nhật sau từng trang; cách hiển thị ở SMS-03 |
 | 4 | Lần đồng bộ cuối | timestamp | Output | `sync_cursor.updated_at` | Cài đặt → Tin nhắn; hiển thị tương đối ("5 phút trước") |
-| 5 | Nút "Đồng bộ lại toàn bộ" | action | Input | — | Cài đặt → Tin nhắn; vô hiệu khi không có phiên tới điện thoại |
-| 6 | Xác nhận đồng bộ lại | enum{Đồng bộ lại\ | Hủy} | Input | — | "Xóa tin nhắn đã lưu trên <thiết bị> và tải lại từ điện thoại? Tin đang chờ gửi được giữ lại." |
+| 5 | Nút "Đồng bộ lại toàn bộ SMS" | action | Input | — | Cài đặt → Tin nhắn; vô hiệu khi không có phiên tới điện thoại |
+| 6 | Xác nhận đồng bộ lại | enum{Đồng bộ lại\| Hủy} | Input | — | "Xóa tin nhắn đã lưu trên <thiết bị> và tải lại từ điện thoại? Tin đang chờ gửi được giữ lại." |
 | 7 | Thông báo lỗi, hướng dẫn | string | Output | Rỗng | Nội dung theo E1, E2, E6, E7; với E2 kèm nút "Xem hướng dẫn" |
 | 8 | Gợi ý cấp quyền danh bạ | string | Output | Ẩn | "Cho phép HandLive đọc danh bạ trên điện thoại để hiện tên" khi `permissions_missing` có `READ_CONTACTS` (E3) |
 
@@ -56,7 +56,7 @@ N/A — chưa có wireframe được duyệt.
 ```mermaid
 flowchart TB
   subgraph ND["Người dùng"]
-    UA1["(A1) Chọn Đồng bộ lại toàn bộ và xác nhận"]
+    UA1["(A1) Chọn Đồng bộ lại toàn bộ SMS và xác nhận"]
     U10["(10) Thấy danh sách hội thoại cập nhật"]
   end
   subgraph HT["Hệ thống"]
@@ -95,7 +95,7 @@ flowchart TB
 | 8 | Hệ thống | M-APP / I-APP | `has_more = true` → quay lại bước 3 với `page_token` mới, giữ nguyên `cursor` gửi đi. |  |
 | 9 | Hệ thống | M-APP / I-APP | Trang cuối, cùng giao dịch ở bước 7: áp dụng `unread` (hội thoại vắng mặt → `unread_count = 0` và tin inbox đã đọc; hội thoại có mặt → như SMS-05 bước 6); lưu `cursor` vào `sync_cursor`; đặt trạng thái `done`. Gỡ thông báo của hội thoại đã đọc trên điện thoại (SMS-05). |  |
 | 10 | Người dùng | M-APP / I-APP | Thấy danh sách hội thoại đã cập nhật (SMS-03). |  |
-| A1 | Người dùng | M-APP / I-APP | Chọn "Đồng bộ lại toàn bộ" và xác nhận (trường 5, 6). | Chỉ khi đang có phiên. |
+| A1 | Người dùng | M-APP / I-APP | Chọn "Đồng bộ lại toàn bộ SMS" và xác nhận (trường 5, 6). | Chỉ khi đang có phiên. |
 | A2 | Hệ thống | M-APP / I-APP | Trong một giao dịch: xóa `sync_cursor` (`stream = 'sms'`), `sms_message`, `sms_thread` của cặp và các dòng `sms_outbox` đã hoàn tất; giữ dòng đang chờ gửi. Chuyển sang bước 3 không có con trỏ. | Cũng chạy tự động ở E5 khi con trỏ không hợp lệ. |
 
 ### 5.1.5 Đặc tả API/service
@@ -115,8 +115,8 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `thread_id` | int64 | Có | `thread_id` của Telephony provider (0.2) |
-| `addresses` | array<e164> | Có | Từ `recipient_ids` của hội thoại qua `canonical-addresses`, chuẩn hóa E.164 theo quốc gia của SIM mặc định; chuỗi không chuẩn hóa được (tổng đài ngắn, tên người gửi như `VIETTEL`) giữ nguyên |
-| `display_name` | string \ | null | Có | Tên liên hệ từ `PhoneLookup`; nhiều địa chỉ → các tên nối bằng `", "`; `null` khi thiếu `READ_CONTACTS` hoặc số không có trong danh bạ |
+| `addresses` | array\<e164> | Có | Từ `recipient_ids` của hội thoại qua `canonical-addresses`, chuẩn hóa E.164 theo quốc gia của SIM mặc định; chuỗi không chuẩn hóa được (tổng đài ngắn, tên người gửi như `VIETTEL`) giữ nguyên |
+| `display_name` | string \| null | Có | Tên liên hệ từ `PhoneLookup`; nhiều địa chỉ → các tên nối bằng `", "`; `null` khi thiếu `READ_CONTACTS` hoặc số không có trong danh bạ |
 | `snippet` | string(160) | Có | `body` của tin SMS mới nhất trong hội thoại, cắt 160 ký tự |
 | `last_ts` | timestamp | Có | `date` của tin SMS mới nhất trong hội thoại |
 | `unread_count` | int32 | Có | Số tin inbox có `read = 0` (chỉ tính SMS) |
@@ -129,11 +129,11 @@ flowchart TB
 | `thread_id` | int64 | Có |  |
 | `address` | e164 | Có | Cột `address`, chuẩn hóa như `thread.addresses` |
 | `body` | string | Có | Cột `body`; `null` trong provider → `""` |
-| `box` | enum{inbox\ | sent\ | outbox\ | failed\ | queued} | Có | Theo cột `type`: 1 → `inbox`, 2 → `sent`, 4 → `outbox`, 5 → `failed`, 6 → `queued`; 3 (nháp) không bao giờ được gửi |
+| `box` | enum{inbox\| sent\| outbox\| failed\| queued} | Có | Theo cột `type`: 1 → `inbox`, 2 → `sent`, 4 → `outbox`, 5 → `failed`, 6 → `queued`; 3 (nháp) không bao giờ được gửi |
 | `ts` | timestamp | Có | Cột `date` |
-| `ts_sent` | timestamp \ | null | Không | Cột `date_sent`; `0` → `null` |
+| `ts_sent` | timestamp \| null | Không | Cột `date_sent`; `0` → `null` |
 | `read` | bool | Có | Cột `read = 1` |
-| `sub_id` | int32 \ | null | Không | Cột `sub_id`; `-1` → `null` |
+| `sub_id` | int32 \| null | Không | Cột `sub_id`; `-1` → `null` |
 | `local_id` | uuid | Không | Chỉ có trong `sms/new` gửi cho client đã tạo tin (SMS-04) |
 
 #### API 1 — `WS sms/sync`
@@ -154,12 +154,12 @@ flowchart TB
 
 | Trường | Kiểu | Mô tả |
 |--------|------|-------|
-| `threads` | array<thread> | Lần đầu: hội thoại có tin xuất hiện lần đầu trong trang. Đồng bộ bù: mọi hội thoại có tin trong trang |
-| `messages` | array<message> | Tối đa `SMS_PAGE_MAX` = 500 tin; plaintext của `ack` ≤ 180 KiB |
+| `threads` | array\<thread> | Lần đầu: hội thoại có tin xuất hiện lần đầu trong trang. Đồng bộ bù: mọi hội thoại có tin trong trang |
+| `messages` | array\<message> | Tối đa `SMS_PAGE_MAX` = 500 tin; plaintext của `ack` ≤ 180 KiB |
 | `cursor` | string | Con trỏ sau khi hoàn tất cả lần đồng bộ (giống nhau ở mọi trang); client chỉ lưu khi `has_more = false` |
 | `page_token` | string | Có khi `has_more = true` |
 | `has_more` | bool | Còn trang tiếp theo |
-| `unread` | array<object> | Chỉ ở trang cuối: mọi hội thoại có tin chưa đọc trên điện thoại, mỗi mục `{thread_id, unread_count, read_up_to_ts}` — ý nghĩa như `sms/read_changed` (SMS-05) |
+| `unread` | array\<object> | Chỉ ở trang cuối: mọi hội thoại có tin chưa đọc trên điện thoại, mỗi mục `{thread_id, unread_count, read_up_to_ts}` — ý nghĩa như `sms/read_changed` (SMS-05) |
 
 Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING`, `BAD_REQUEST` (tham số ngoài giới
 hạn), `SMS_CURSOR_INVALID` (`details.reason` = `cursor` hoặc `page_token`), `INTERNAL`.
@@ -622,14 +622,14 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Danh sách hội thoại | array<object> | Output | Rỗng | Sắp theo `last_ts` giảm dần; tải 50 dòng mỗi lần |
+| 1 | Danh sách hội thoại | array\<object> | Output | Rỗng | Sắp theo `last_ts` giảm dần; tải 50 dòng mỗi lần |
 | 2 | Tên hội thoại | string | Output | `display_name`; `null` → số định dạng quốc gia | Hội thoại nhiều người: tên hoặc số nối bằng ", " |
 | 3 | Đoạn trích | string(160) | Output | `snippet` | Tối đa 2 dòng |
 | 4 | Thời điểm tin cuối | timestamp | Output | `last_ts` | "14:05", "Hôm qua", "12/09" |
 | 5 | Chỉ báo chưa đọc | bool | Output | `unread_count > 0` và `local_read_ts < last_ts` | Chấm màu và chữ đậm; không hiện số trong dòng — số hội thoại chưa đọc ở biểu tượng thanh menu (Mac) và huy hiệu tab Tin nhắn (iOS) |
 | 6 | Bong bóng tin | string | Output | `body` | Tin `inbox` bên trái, tin gửi đi bên phải; nhận diện liên kết và số điện thoại trong nội dung |
 | 7 | Thời điểm tin | timestamp | Output | `ts` | Tin nhóm theo ngày |
-| 8 | Trạng thái tin gửi đi | enum{pending\ | sending\ | sent\ | delivered\ | failed} | Output | Theo `sms_outbox.state` hoặc `box` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" (SMS-04) |
+| 8 | Trạng thái tin gửi đi | enum{pending\| sending\| sent\| delivered\| failed} | Output | Theo `sms_outbox.state` hoặc `box` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" (SMS-04) |
 | 9 | Nhãn SIM | string | Output | Ẩn | Hiện khi điện thoại có > 1 SIM, theo `sub_id` |
 | 10 | Chỉ báo "Đang tải tin cũ hơn" | bool | Output | `false` | Ở đầu hội thoại khi đang chờ `sms/history` |
 | 11 | Dải trạng thái hội thoại | string | Output | Ẩn | Theo E2–E5; nút "Thử lại" với E4; "Đầu hội thoại" khi đã hết tin |
@@ -708,7 +708,7 @@ flowchart TB
 
 | Trường | Kiểu | Mô tả |
 |--------|------|-------|
-| `messages` | array<message> (5.1.5) | Theo `date` giảm dần; không có `local_id` |
+| `messages` | array\<message> (5.1.5) | Theo `date` giảm dần; không có `local_id` |
 | `has_more` | bool | Còn tin cũ hơn tin cuối cùng của trang |
 
 Lỗi (`ack.error.code`): `SMS_THREAD_NOT_FOUND`, `FEATURE_DISABLED`, `PERMISSION_MISSING`,
@@ -719,7 +719,7 @@ Lỗi (`ack.error.code`): `SMS_THREAD_NOT_FOUND`, `FEATURE_DISABLED`, `PERMISSIO
 ```json
 {"op":"history","data":{"thread_id":42,"before_ts":1727140000000,"limit":50}}
 {"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":true,"data":{"messages":[{"message_key":"sms:12611","thread_id":42,"address":"+84900000123","body":"Anh gửi em file báo cáo nhé","box":"inbox","ts":1727052000000,"ts_sent":1727051998000,"read":true,"sub_id":1}],"has_more":false}}
-{"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":false,"error":{"code":"SMS_THREAD_NOT_FOUND","message":"Hội thoại không còn trên điện thoại","details":{}}}
+{"re":"0192f3e1-2b3c-7d4e-9f50-6a7b8c9d0e12","ok":false,"error":{"code":"SMS_THREAD_NOT_FOUND","message":"Conversation no longer exists on the phone","details":{}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -824,7 +824,7 @@ N/A — chưa có wireframe được duyệt.
 | 4 | SIM gửi | int32 (`sub_id`) | Input/Output | `features.sms.default_sub_id` | Chỉ hiện khi `features.sms.sims` có > 1 SIM; hiển thị theo `label` |
 | 5 | Nút "Gửi" | action | Input | — | Vô hiệu khi E5 hoặc `can_send = false` |
 | 6 | Bong bóng tạm | string | Output | — | Nội dung vừa gửi, hiện ngay; biến mất khi tin thật đến |
-| 7 | Trạng thái gửi | enum{pending\ | sending\ | sent\ | delivered\ | failed} | Output | `pending` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" |
+| 7 | Trạng thái gửi | enum{pending\| sending\| sent\| delivered\| failed} | Output | `pending` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" |
 | 8 | Lý do lỗi | string | Output | Ẩn | Theo mã lỗi: "Không có sóng", "Điện thoại đang ở chế độ máy bay", "Số không hợp lệ", "SIM không hoạt động", "Đã vượt giới hạn gửi, thử lại sau", "Gửi không thành công", "Không kết nối được điện thoại" |
 | 9 | Nút "Thử lại" | action | Input | — | Trên bong bóng `failed`; tạo `local_id` mới |
 | 10 | Ô trả lời nhanh | string(1600) | Input | Rỗng | Trong thông báo của SMS-02 (hành động `HL_SMS_REPLY`) |
@@ -908,7 +908,7 @@ flowchart TB
 |--------|------|----------|-------|
 | `local_id` | uuid | Có | Mã tạm do client sinh; khóa chống trùng phía Android |
 | `thread_id` | int64 | Không | Hội thoại đang soạn; Android chỉ ghi nhận, không bắt buộc còn tồn tại (người nhận là căn cứ) |
-| `addresses` | array<string> | Có | Đúng 1 phần tử ở v1 |
+| `addresses` | array\<string> | Có | Đúng 1 phần tử ở v1 |
 | `body` | string(1600) | Có | Không rỗng |
 | `sub_id` | int32 | Không | SIM gửi; vắng → SIM SMS mặc định của điện thoại |
 
@@ -935,7 +935,7 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 ```json
 {"op":"send","data":{"local_id":"0192f3e2-4b5c-7d6e-9f70-8a9b0c1d2e3f","thread_id":42,"addresses":["+84900000123"],"body":"Ok, 3h mình có mặt","sub_id":1}}
 {"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":true,"data":{"accepted":true,"parts":1}}
-{"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":false,"error":{"code":"SMS_SIM_UNAVAILABLE","message":"SIM đã chọn không hoạt động","details":{"sims":[1]}}}
+{"re":"0192f3e2-5c6d-7e7f-8a9b-0c1d2e3f4a5b","ok":false,"error":{"code":"SMS_SIM_UNAVAILABLE","message":"Selected SIM is not active","details":{"sims":[1]}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -970,8 +970,8 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 |--------|------|----------|-------|
 | `local_id` | uuid | Có | Của `sms/send` tương ứng |
 | `message_key` | string | Không | Có khi đã khớp được dòng trong provider |
-| `status` | enum{sending\ | sent\ | delivered\ | failed} | Có |  |
-| `error_code` | enum{SMS_NO_SERVICE\ | SMS_RADIO_OFF\ | SMS_LIMIT_EXCEEDED\ | SMS_GENERIC_FAILURE} | Khi `failed` | Mã lỗi 0.8.1 |
+| `status` | enum{sending\| sent\| delivered\| failed} | Có |  |
+| `error_code` | enum{SMS_NO_SERVICE\| SMS_RADIO_OFF\| SMS_LIMIT_EXCEEDED\| SMS_GENERIC_FAILURE} | Khi `failed` | Mã lỗi 0.8.1 |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -1006,9 +1006,9 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 |---------|------|---------|
 | `destinationAddress` | String | Người nhận đã chuẩn hóa |
 | `scAddress` | String | `null` (dùng SMSC mặc định của SIM) |
-| `parts` | ArrayList<String> | Kết quả `divideMessage` |
-| `sentIntents` | ArrayList<PendingIntent> | Mỗi phần một intent, extra `local_id`, `part_index`, `part_count` |
-| `deliveryIntents` | ArrayList<PendingIntent> | Như trên, cho báo phát |
+| `parts` | ArrayList\<String> | Kết quả `divideMessage` |
+| `sentIntents` | ArrayList\<PendingIntent> | Mỗi phần một intent, extra `local_id`, `part_index`, `part_count` |
+| `deliveryIntents` | ArrayList\<PendingIntent> | Như trên, cho báo phát |
 
 - **Response:** kết quả mỗi phần về receiver nội bộ qua `sentIntents`; ánh xạ sang mã HandLive:
 
@@ -1169,7 +1169,7 @@ N/A — chưa có wireframe được duyệt.
 | 2 | Số tin chưa đọc | int32 | Output | `unread_count` | Hiện cạnh hội thoại khi chỉ báo bật |
 | 3 | Vạch "Tin chưa đọc" | bool | Output | Theo `sms_message.read` | Đặt trước tin inbox chưa đọc đầu tiên khi mở hội thoại |
 | 4 | Huy hiệu | int32 | Output | 0 | Số hội thoại có chỉ báo bật; biểu tượng menu bar (Mac), biểu tượng ứng dụng (iOS) |
-| 5 | Thông báo SMS đã hiển thị | array<string> (định danh thông báo) | Output | — | Bị gỡ khi hội thoại đã đọc trên điện thoại hoặc được mở trên thiết bị |
+| 5 | Thông báo SMS đã hiển thị | array\<string> (định danh thông báo) | Output | — | Bị gỡ khi hội thoại đã đọc trên điện thoại hoặc được mở trên thiết bị |
 | 6 | Ghi chú giới hạn | string | Output | "Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại." | Cài đặt → Tin nhắn |
 
 ### 5.5.4 Luồng nghiệp vụ

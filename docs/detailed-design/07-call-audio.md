@@ -60,13 +60,13 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Take Calls on Mac" switch | bool | Input/Output | `feature.call_audio` (`false`) | On → runs the disclosure and setup flow; off → withdraws consent (flow B) |
 | 2 | Disclosure content | string | Output | Text of version `call-audio-v1` | States: only between your devices; nothing is recorded; you are responsible for informing the other party where the law requires the consent of both parties (California, Florida, Illinois…); HFP has only Bluetooth link encryption (residual KNOB/BIAS risk); Wi-Fi is end-to-end encrypted |
-| 3 | Disclosure consent | enum{Agree\ | Cancel} | Input | — | Only "Agree" turns the feature on |
+| 3 | Disclosure consent | enum{Agree\| Cancel} | Input | — | Only "Agree" turns the feature on |
 | 4 | Disclosure text version | string | Output | `call-audio-v1` | Written to `consent_record.text_version` |
-| 5 | Mac Bluetooth permission | enum{not_determined\ | authorized\ | denied} | Output | From `CBManager.authorization` | `denied` comes with a button that opens System Settings › Privacy & Security › Bluetooth |
+| 5 | Mac Bluetooth permission | enum{not_determined\| authorized\| denied} | Output | From `CBManager.authorization` | `denied` comes with a button that opens System Settings › Privacy & Security › Bluetooth |
 | 6 | Paired phones (HFP AG) | array<object{name, bt_address}> | Output | From IOBluetooth (step 7) | Lists only devices paired at the operating-system level that advertise the HFP AG profile |
 | 7 | Phone chosen for HFP | string (bt_address) | Input/Output | `call_audio.phone_bt_address` (empty) | Chosen by the user; stored so that Android recognizes the Mac and M-HFP connects to the right device |
 | 8 | Enable the Opus/WS fallback path | bool | Input/Output | `call_audio.allow_opus_fallback` (`true`) | Allows Opus/WS when HFP cannot be used (needs Shizuku) |
-| 9 | Shizuku status on the phone | enum{unknown\ | not_installed\ | not_running\ | no_permission\ | ready} | Output | `unknown` | Reported by the phone through A-UI and capability |
+| 9 | Shizuku status on the phone | enum{unknown\| not_installed\| not_running\| no_permission\| ready} | Output | `unknown` | Reported by the phone through A-UI and capability |
 | 10 | Opus/WS path capability | object{available, downlink, uplink, reason} | Output | From `features.call_audio.opus_fallback` | Probed and reported by the phone (step 11) |
 | 11 | Error message or instructions | string | Output | Empty | Content per E1–E7 |
 
@@ -145,7 +145,7 @@ flowchart TB
 | `feature` | string | Yes | Always `call_audio` |
 | `text_version` | string | Yes | `call-audio-v1` |
 | `accepted_at` | timestamp | Yes | When the user clicked "Agree" |
-| `revoked_at` | timestamp \ | null | No | Set on withdrawal (flow B) |
+| `revoked_at` | timestamp \| null | No | Set on withdrawal (flow B) |
 
 - **Response:** N/A (local operation).
 - **Example:** the user agrees at `1727150400000` → insert
@@ -170,7 +170,7 @@ flowchart TB
 |--------|------|---------|-------|
 | `features.call_audio.enabled` | bool | Mac | New value of `feature.call_audio` |
 | `features.call_audio.consented` | bool | Mac | A valid `consent_record` exists; Android relies on it to return `CALL_CONSENT_REQUIRED` |
-| `features.call_audio.bt_address` | string \ | null | Mac | The Mac's Bluetooth address, so that Android recognizes the Mac in its list of HFP devices |
+| `features.call_audio.bt_address` | string \| null | Mac | The Mac's Bluetooth address, so that Android recognizes the Mac in its list of HFP devices |
 | `features.call_audio.hfp_connected` | bool | Android | The Mac has the HFP profile connected to the phone (AUDIO-02) |
 | `features.call_audio.opus_fallback` | object | Android | `{available, downlink, uplink, reason}` — result of the probe in step 11 |
 
@@ -298,11 +298,9 @@ WHERE feature = 'call_audio'
   AND revoked_at IS NULL
 LIMIT 1;
 
--- [Design] Mac, step 5: record consent (new insert, or turning it on again after withdrawal)
+-- [Design] Mac, step 5: record consent — always insert a new row; withdrawn rows stay as proof
 INSERT INTO consent_record (feature, text_version, accepted_at, revoked_at)
-VALUES ('call_audio', 'call-audio-v1', :accepted_at, NULL)
-ON CONFLICT (feature, text_version)
-DO UPDATE SET accepted_at = excluded.accepted_at, revoked_at = NULL;
+VALUES ('call_audio', 'call-audio-v1', :accepted_at, NULL);
 
 -- [Design] Mac, step B2: withdraw consent
 UPDATE consent_record
@@ -345,9 +343,9 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Listening status | enum{on_phone\ | connecting\ | on_mac\ | failed} | Output | `on_phone` | "Listening on phone", "Switching…", "Listening on Mac", "Can't listen on Mac" |
+| 1 | Listening status | enum{on_phone\| connecting\| on_mac\| failed} | Output | `on_phone` | "Listening on phone", "Switching…", "Listening on Mac", "Can't listen on Mac" |
 | 2 | HFP status | object{connected, audio_connected, mac_is_active_device} | Output | `{false,false,false}` | From Android's `call_event/hfp_status` |
-| 3 | SCO codec | enum{cvsd_8k\ | msbc_16k\ | unknown} | Output | `unknown` | Negotiated by the Bluetooth layer; shown in the diagnostics section |
+| 3 | SCO codec | enum{cvsd_8k\| msbc_16k\| unknown} | Output | `unknown` | Negotiated by the Bluetooth layer; shown in the diagnostics section |
 | 4 | Active HFP device | string | Output | Empty | Name of the device holding SCO (for example "AirPods" when it has taken over — E3) |
 | 5 | "Listen on Mac" / "Switch to Phone" button | action | Input | — | Triggers AUDIO-03 (this item only shows the result) |
 | 6 | Estimated quality | object{mos, erl_db} | Output | Empty | M-APP diagnostics section |
@@ -462,7 +460,7 @@ flowchart TB
 | `audio_connected` | bool | Yes | Whether the SCO (audio) channel to that device is open |
 | `mac_is_active_device` | bool | Yes | Whether the device holding SCO really is the Mac (as opposed to AirPods) |
 | `active_device_name` | string | No | Name of the active HFP device (shown when it has taken over — field 4) |
-| `codec` | enum{cvsd\ | msbc\ | unknown} | No | Negotiated SCO codec, if it can be read |
+| `codec` | enum{cvsd\| msbc\| unknown} | No | Negotiated SCO codec, if it can be read |
 
 - **Response:** N/A (one-way event).
 - **Example:**
@@ -520,7 +518,7 @@ N/A — this function does not read or write the database; it only reads the set
 | Description | During an ongoing call, the user moves the audio back and forth between the Mac and the phone with the M-APP call panel ("Listen on Mac" / "Switch to Phone").<br>On the HFP path: M-HFP (the Hands-Free side) requests that the audio be transferred to the computer or handed back to the phone — connecting/disconnecting SCO is controlled by the HF side, and **Android needs to do nothing**.<br>On the Opus/WS path: M-APP sends `call_audio/open` to start and `call_audio/close` to stop (AUDIO-04).<br>If the user moves out of Bluetooth range while listening over HFP, the audio **returns to the phone on its own** (default behavior of the Bluetooth stack) and M-APP shows this.<br>The phone always shows the current audio route in the A-SVC persistent notification. |
 | Actors | Primary: User. System: M-HFP, M-APP, A-AUD, A-SVC, A-UI (route notification), OS (IOBluetooth, `BluetoothHeadset`). |
 | Preconditions | 1. A call is in progress.<br>2. AUDIO-01 is complete; at least one path is available: HFP (Bluetooth permission + `phone_bt_address` + spike D1 passed) or Opus/WS (`opus_fallback.available = true`). |
-| Postconditions | **To the Mac:** the current route is `mac_hfp` or `mac_opus`; the audio plays on the Mac; the notification on the phone reads "Audio is on <Mac name>".<br>**Back to the phone:** SCO is closed (HFP) or `call_audio/close` has been sent (Opus); the audio returns to the phone's speaker or earpiece; the notification reads "Audio is on this phone".<br>No persistent data changes. |
+| Postconditions | **To the Mac:** the current route is `mac_hfp` or `mac_opus`; the audio plays on the Mac; the notification on the phone reads "Audio is on \<Mac name>".<br>**Back to the phone:** SCO is closed (HFP) or `call_audio/close` has been sent (Opus); the audio returns to the phone's speaker or earpiece; the notification reads "Audio is on this phone".<br>No persistent data changes. |
 | Exceptions | E1 — Switching to HFP fails (another HFP device holds SCO, or SCO cannot be opened — depends on spike D1): automatically try the Opus/WS path if it is available; otherwise `CALL_ROUTE_FAILED`, keep the audio on the phone.<br>E2 — Switching to Opus/WS fails (Shizuku not running → `SHIZUKU_NOT_RUNNING`; or the device cannot capture → `CALL_AUDIO_CAPTURE_UNSUPPORTED`): keep the current route, inform the user.<br>E3 — Out of Bluetooth range while listening over HFP: the audio returns to the phone on its own; M-APP updates and may offer to switch to Opus/WS.<br>E4 — No path is available: the "Listen on Mac" button is disabled, with guidance back to AUDIO-01.<br>E5 — No call in progress: the routing panel is hidden or disabled. |
 | Special requirements | **Responsiveness:** a routing action gets visible feedback in ≤ 1 s; the route switch completes (audio audible on the new route) in ≤ 3 s.<br>**Consistency:** when both paths are available, HFP is preferred (lower latency) unless HFP has been taken over.<br>**Honesty:** the UI shows the path in use (HFP or Opus/WS) and the reason when switching is not possible.<br>**Privacy:** the notification on the phone always shows where the audio is playing. |
 
@@ -532,9 +530,9 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Routing button | enum{Listen on Mac\ | Switch to Phone} | Input | "Listen on Mac" | The label changes with the current route |
-| 2 | Current audio route | enum{phone\ | mac_hfp\ | mac_opus} | Output | `phone` | "Phone", "Mac (Bluetooth)", "Mac (Wi-Fi)" |
-| 3 | Available paths | array<enum{hfp\ | opus}> | Output | Empty | Computed from the capability and the HFP status |
+| 1 | Routing button | enum{Listen on Mac\| Switch to Phone} | Input | "Listen on Mac" | The label changes with the current route |
+| 2 | Current audio route | enum{phone\| mac_hfp\| mac_opus} | Output | `phone` | "Phone", "Mac (Bluetooth)", "Mac (Wi-Fi)" |
+| 3 | Available paths | array<enum{hfp\| opus}> | Output | Empty | Computed from the capability and the HFP status |
 | 4 | HFP status | object{connected, audio_connected, mac_is_active_device} | Output | `{false,false,false}` | From `call_event/hfp_status` (AUDIO-02 API 3) |
 | 5 | Route notification on the phone | string | Output | "Audio is on this phone" | Updated by A-SVC in the persistent notification |
 | 6 | Error message | string | Output | Empty | Per E1–E5 |
@@ -620,8 +618,7 @@ flowchart TB
 #### API 3 — `WS call_audio/close`
 
 - **URL:** as in API 2
-- **Method:** `WS call_audio/close` (both directions), encrypted envelope, ack. Details in AUDIO-04
-  API 2.
+- **Method:** `WS call_audio/close` (both directions), encrypted envelope, ack. Details in AUDIO-04 API 5.
 - **Request (`data`):** `session_id`, `reason` — enum{user\|switch_to_hfp\|call_ended\|error}.
 - **Response (`ack.data`):** `{}`.
 - **Example:** switching back to the phone while on Opus/WS →
@@ -681,11 +678,11 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Audio mode | enum{both\ | downlink} | Output | From the device's capability | "Listen and talk (experimental)" when 13+ has injection; "Listen only" on 11–12 or when injection is unusable |
+| 1 | Audio mode | enum{both\| downlink} | Output | From the device's capability | "Listen and talk (experimental)" when 13+ has injection; "Listen only" on 11–12 or when injection is unusable |
 | 2 | `session_id` | uuid | Output | Generated on open | Identifier of the Opus/WS audio session |
 | 3 | Stream channel path | string | Output | `/v1/stream/call-audio` | Returned by Android in the ack |
 | 4 | Codec configuration | object{codec, sample_rate, channels, bitrate, frame_ms} | Output | `{opus,16000,1,32000,20}` | Negotiated in `call_audio/open` |
-| 5 | Shizuku status | enum{ready\ | not_running\ | no_permission} | Output | From A-SHZ | `not_running`/`no_permission` → E1 |
+| 5 | Shizuku status | enum{ready\| not_running\| no_permission} | Output | From A-SHZ | `not_running`/`no_permission` → E1 |
 | 6 | Latency and jitter buffer | object{latency_ms, jitter_ms} | Output | Empty | M-APP diagnostics section |
 | 7 | "Listen only" indicator | bool | Output | From field 1 | On → the UI reminds the user "Speak into your phone" |
 | 8 | Error message | string | Output | Empty | Per E1–E6 |
@@ -757,7 +754,7 @@ flowchart TB
 | `channels` | int32 | Yes | `1` |
 | `bitrate` | int32 | Yes | `32000` |
 | `frame_ms` | int32 | Yes | `20` |
-| `direction` | enum{both\ | downlink} | Yes | `both` = wants to listen and talk; `downlink` = listen only |
+| `direction` | enum{both\| downlink} | Yes | `both` = wants to listen and talk; `downlink` = listen only |
 
 - **Response (`ack.data`):**
 

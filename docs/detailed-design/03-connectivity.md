@@ -16,7 +16,7 @@ English | [Tiếng Việt](03-connectivity.vi.md)
 | Description | The client (Mac/iOS) finds the paired phone on the LAN by itself, opens the `/v1/ctl` channel over TLS with a pinned certificate, performs the session handshake per 0.6.3, exchanges capabilities to determine the effective features, then starts the dependent syncs (SMS-01, CALL-04, sending the latest clipboard).<br>Runs automatically when the app launches, when a new network becomes available, when the Mac wakes up, when iOS returns to the foreground, right after PAIR-01 and every time CONN-02 retries the connection. |
 | Actors | Primary: System (M-APP / I-APP, A-SVC). The user acts indirectly (opening the app, turning on Wi-Fi, opening the lid) or clicks "Reconnect Now". |
 | Preconditions | 1. There is a valid pair (PAIR-01).<br>2. A-SVC is running as a foreground service.<br>3. Both devices are on the same LAN and the network allows mDNS multicast.<br>4. The client has been granted the local network permission (iOS 14+, macOS 15+) per SET-03. |
-| Postconditions | **Success:** state `Connected` (LAN); session keys ready; the peer's capability stored in `features_json`; `last_seen_at`, `last_host`, `last_port` updated; the effective features turned on; the Android foreground service notification reads "Connected to <name>".<br>**Failure:** move to CONN-03 after `LAN_DISCOVERY_GRACE` (if the relay is on) or to `Backoff` (CONN-02). |
+| Postconditions | **Success:** state `Connected` (LAN); session keys ready; the peer's capability stored in `features_json`; `last_seen_at`, `last_host`, `last_port` updated; the effective features turned on; the Android foreground service notification reads "Connected to \<name>".<br>**Failure:** move to CONN-03 after `LAN_DISCOVERY_GRACE` (if the relay is on) or to `Backoff` (CONN-02). |
 | Exceptions | E1 — No instance with a matching hint within 10 s → CONN-03 (relay on) or keep browsing.<br>E2 — `TLS_PIN_MISMATCH`: drop this instance (it may be another device or an impostor) and try the next instance; if every instance of the pair fails the pin (the phone has regenerated its TLS key, 0.6.1) → stop trying and show "Needs to be paired again" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → report "Couldn't verify the phone", long 5-minute backoff, no continuous retries.<br>E4 — `PAIR_UNKNOWN` or `PAIR_REVOKED` (4403) → clean up the pair per PAIR-03 flow B, ask to pair again.<br>E5 — 4426 `UNSUPPORTED_VERSION` → prompt to update the app on the older device.<br>E6 — Handshake longer than 5 s (4408) → CONN-02 backoff.<br>E7 — The network isolates clients (guest Wi-Fi, mDNS blocked) → same as E1.<br>E8 — Local network permission denied → report it and open the SET-03 guidance. |
 | Special requirements | **Performance:** reconnect < 3 s when `last_host` is known (a project success metric); handshake ≤ 300 ms on the LAN.<br>**Security:** TLS 1.3 only; pin the certificate's SHA-256, no hostname check; the mDNS TXT contains no static identifier (0.4.1).<br>**Platform:** iOS/macOS declare `NSLocalNetworkUsageDescription` and `NSBonjourServices = ["_handlive._tcp"]`; Android runs A-SVC with type `connectedDevice` (permissions `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) with an ongoing notification.<br>**Feature independence:** capabilities decide each feature; a feature that lacks a permission does not block the other features. |
 
@@ -28,13 +28,13 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Status icon (Mac menu bar / iOS tab) | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | `connecting` | Mapped from the state machine in 0.11. Mac: template icon in the menu bar (`MenuBarExtra`, `.menuBarExtraStyle(.menu)`) — clicking it opens a menu, not a popover |
-| 2 | Status line | string | Output | "Connecting…" | "Connected via Wi-Fi to <phone name>" |
+| 1 | Status icon (Mac menu bar / iOS tab) | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | Mapped from the state machine in 0.11. Mac: template icon in the menu bar (`MenuBarExtra`, `.menuBarExtraStyle(.menu)`) — clicking it opens a menu, not a popover |
+| 2 | Status line | string | Output | "Connecting…" | "Connected via Wi-Fi to \<phone name>" |
 | 3 | Phone name | string(64) | Output | `peer_name` |  |
 | 4 | Connection error message | string | Output | Empty | Per E3–E8 |
 | 5 | "Reconnect Now" button | action | Input | Hidden while connected | Skips the backoff wait and runs again from step 2 |
-| 6 | Foreground service notification (Android) | string | Output | "Waiting for a connection" | "Connected to <client name>"; several clients: "Connected to 2 devices" |
-| 7 | Effective features | array<string> | Output | Empty | Shown in PAIR-02; updated after step 9 |
+| 6 | Foreground service notification (Android) | string | Output | "Waiting for a connection" | "Connected to \<client name>"; several clients: "Connected to 2 devices" |
+| 7 | Effective features | array\<string> | Output | Empty | Shown in PAIR-02; updated after step 9 |
 
 ### 3.1.4 Business flow
 
@@ -217,7 +217,7 @@ Payload after base64 decoding:
   string; `min_protocol` — int32 (required with `UNSUPPORTED_VERSION`, absent with the other codes;
   the client uses it to show "Update HandLive on the phone" or "Update HandLive on this device").
 - **Response:** N/A.
-- **Example:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Thiết bị chưa được ghép nối"}}`
+- **Example:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Device is not paired"}}`
 - **Business logic:** The client handles it per E3–E5; no automatic retry within 5 minutes of an
   `AUTH_FAILED`.
 
@@ -298,8 +298,8 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Connection status | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | Current value | As in CONN-01 field 1 |
-| 2 | Channel | enum{lan\ | relay\ | usb} | Output | Current channel | Changes on the relay → LAN upgrade |
+| 1 | Connection status | enum{connected\| connecting\| peer_offline\| disconnected} | Output | Current value | As in CONN-01 field 1 |
+| 2 | Channel | enum{lan\| relay\| usb} | Output | Current channel | Changes on the relay → LAN upgrade |
 | 3 | Time until the next retry | int32 (seconds) | Output | Empty | "Retrying in 8 s" while in `Backoff` |
 | 4 | "Reconnect Now" button | action | Input | Shown when `disconnected` | Cancels the backoff wait, runs CONN-01 |
 | 5 | Messages waiting to be sent | int32 | Output | Number of `sms_outbox` rows in `pending` | "2 messages waiting for the phone" |
@@ -451,8 +451,8 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Connection status | enum{connected\ | connecting\ | peer_offline\ | disconnected} | Output | `connecting` | `peer_offline` shows "Phone offline" |
-| 2 | Channel | enum{lan\ | relay\ | usb} | Output | `relay` on success | "Internet" |
+| 1 | Connection status | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | `peer_offline` shows "Phone offline" |
+| 2 | Channel | enum{lan\| relay\| usb} | Output | `relay` on success | "Internet" |
 | 3 | Allow internet connection | bool | Input/Output | `relay.enabled` = `true` | Managed in SET-02, shown here to explain the situation when it is off |
 | 4 | Relay error message | string | Output | Empty | Per E3, E6, E7 |
 
@@ -516,7 +516,7 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `device_id` | uuid | Yes | Must equal UUIDv8(SHA-256(`ik_sig_pub`)) |
-| `platform` | enum{android\ | macos\ | ios\ | ipados} | Yes |  |
+| `platform` | enum{android\| macos\| ios\| ipados} | Yes |  |
 | `app_version` | string(32) | Yes |  |
 | `ik_sig_pub` | b64u (32 bytes) | Yes |  |
 | `ts` | timestamp | Yes | Skew from the relay clock ≤ 5 minutes |
@@ -720,7 +720,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Notification permission (iOS) | enum{allowed\ | denied\ | not_determined} | Input/Output | `not_determined` | The system asks during SET-03; guidance is shown if `denied` |
+| 1 | Notification permission (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | The system asks during SET-03; guidance is shown if `denied` |
 | 2 | Notification title | string | Output | "HandLive" | I-NSE replaces it with the sender's name or "Incoming Call" |
 | 3 | Notification content | string | Output | "New notification from your phone" | I-NSE replaces it with the decrypted content (respects `sms.preview`) |
 | 4 | Notification group | string | Output | — | `thread-id` = SMS conversation or "calls" |
@@ -788,7 +788,7 @@ flowchart TB
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `provider` | enum{fcm\ | apns\ | apns_sandbox} | Yes | `apns_sandbox` for development builds |
+| `provider` | enum{fcm\| apns\| apns_sandbox} | Yes | `apns_sandbox` for development builds |
 | `token` | string(4096) | Yes | FCM registration token or APNs device token (hex) |
 | `topic` | string(255) | With APNs | Bundle id of I-APP |
 
@@ -808,8 +808,8 @@ flowchart TB
 |--------|------|----------|-------|
 | `pair_id` | uuid | Yes |  |
 | `to` | uuid | Yes | Target `device_id` |
-| `kind` | enum{wake\ | alert} | Yes | `wake` only to Android; `alert` only to iOS/iPadOS |
-| `reason` | enum{user_open\ | sms_send\ | call_action\ | sms_new\ | call_incoming\ | call_missed} | Yes |  |
+| `kind` | enum{wake\| alert} | Yes | `wake` only to Android; `alert` only to iOS/iPadOS |
+| `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Yes |  |
 | `env_b64` | b64 | With `alert` | Envelope encrypted with `K_push`, ≤ 3,000 bytes |
 | `collapse_key` | string(64) | No |  |
 | `ttl_s` | int32 | No | Default 60 (wake, call_incoming), 86,400 (sms_new, call_missed) |

@@ -76,14 +76,14 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Use Phone as Webcam" toggle | bool | Input/Output | `feature.camera` (`false`) | On → run the installation flow. Off → M-APP stops serving camera/microphone demand, without removing components (removal is field 10) |
-| 2 | Virtual camera status | enum{not_installed\ | awaiting_approval\ | activating\ | active\ | needs_reboot\ | failed} | Output | `not_installed` | "Not installed", "Waiting for your approval", "Activating…", "Ready", "Mac restart required", "Error" |
-| 3 | Virtual microphone status | enum{not_installed\ | installing\ | installed\ | outdated\ | failed} | Output | From the device detection result (step 8) | "Not installed", "Installing…", "Ready", "Update required", "Error" |
-| 4 | HandLive's camera permission on the Mac | enum{not_determined\ | authorized\ | denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` is shown with a button that opens System Settings › Privacy & Security › Camera |
+| 2 | Virtual camera status | enum{not_installed\| awaiting_approval\| activating\| active\| needs_reboot\| failed} | Output | `not_installed` | "Not installed", "Waiting for your approval", "Activating…", "Ready", "Mac restart required", "Error" |
+| 3 | Virtual microphone status | enum{not_installed\| installing\| installed\| outdated\| failed} | Output | From the device detection result (step 8) | "Not installed", "Installing…", "Ready", "Update required", "Error" |
+| 4 | HandLive's camera permission on the Mac | enum{not_determined\| authorized\| denied} | Output | `AVCaptureDevice.authorizationStatus(for: .video)` | `denied` is shown with a button that opens System Settings › Privacy & Security › Camera |
 | 5 | Instructions for allowing the extension | string | Output | By macOS version | macOS 15+: "General › Login Items & Extensions › Camera Extensions → turn on HandLive". macOS 13–14: "Privacy & Security → click Allow next to HandLive" |
 | 6 | "Open System Settings" button | action | Input | Shown when field 2 = `awaiting_approval` | Opens System Settings at the matching page |
 | 7 | "Install Microphone Driver" / "Update Microphone Driver" button | action | Input | Shown when field 3 = `not_installed` or `outdated` | Opens the PKG (step 9) |
 | 8 | Explanation before installing the driver | string | Output | "HandLive needs to install a virtual microphone driver on the system. macOS will ask for an administrator password, and sound on the Mac will cut out for about 1–2 seconds." | Shown before Installer opens |
-| 9 | Readiness on the phone | enum{ready\ | not_connected\ | feature_off\ | permission_missing} | Output | From the latest capability | With the list of missing permissions (`CAMERA`, `RECORD_AUDIO`) and what to do on the phone (SET-01, SET-02) |
+| 9 | Readiness on the phone | enum{ready\| not_connected\| feature_off\| permission_missing} | Output | From the latest capability | With the list of missing permissions (`CAMERA`, `RECORD_AUDIO`) and what to do on the phone (SET-01, SET-02) |
 | 10 | "Remove Virtual Camera and Microphone" button | action | Input | Shown when field 2 = `active` or field 3 = `installed` | Alternative flow A1–A4 |
 | 11 | Error message | string | Output | Empty | Per E1–E9, with the system error code if there is one |
 
@@ -385,12 +385,12 @@ UserDefaults.standard.set(false, forKey: "feature.camera")    # A4
 | Item | Content |
 |-----|----------|
 | Name | CAM-02 — Start and stop camera/microphone streaming |
-| Description | Opens and closes the session that streams video and audio from the phone into "HandLive Camera" and "HandLive Microphone" according to actual demand.<br>Three triggers: (a) a meeting app starts reading the virtual camera's source stream → M-CAMX increments the consumer counter and posts the Darwin notification `app.handlive.camera.demand`; (b) a meeting app starts using the virtual microphone → `kAudioDevicePropertyDeviceIsRunningSomewhere` of the input device changes to 1; (c) the user clicks "Start" in M-APP's preview window.<br>M-APP sends `camera/start`; Android raises the foreground service to type `connectedDevice\ | camera\ | microphone` (immediately if HandLive is visible, otherwise after the user taps "Turn On" on the notification), opens Camera2 → MediaCodec H.264 and AudioRecord → Opus, and returns `camera/ready`; M-APP opens the dedicated channel `/v1/stream/camera` (Wi-Fi, or USB per CAM-04), decodes the video and pushes it into M-CAMX's sink stream, and plays the audio into M-MIC's hidden device. No consumers for 5 s → `camera/stop`.<br>The user can stop it from the notification on the phone. |
+| Description | Opens and closes the session that streams video and audio from the phone into "HandLive Camera" and "HandLive Microphone" according to actual demand.<br>Three triggers: (a) a meeting app starts reading the virtual camera's source stream → M-CAMX increments the consumer counter and posts the Darwin notification `app.handlive.camera.demand`; (b) a meeting app starts using the virtual microphone → `kAudioDevicePropertyDeviceIsRunningSomewhere` of the input device changes to 1; (c) the user clicks "Start" in M-APP's preview window.<br>M-APP sends `camera/start`; Android raises the foreground service to type `connectedDevice\| camera\| microphone` (immediately if HandLive is visible, otherwise after the user taps "Turn On" on the notification), opens Camera2 → MediaCodec H.264 and AudioRecord → Opus, and returns `camera/ready`; M-APP opens the dedicated channel `/v1/stream/camera` (Wi-Fi, or USB per CAM-04), decodes the video and pushes it into M-CAMX's sink stream, and plays the audio into M-MIC's hidden device. No consumers for 5 s → `camera/stop`.<br>The user can stop it from the notification on the phone. |
 | Actors | Primary: User; Meeting app (consumer of the virtual devices). System: M-APP, M-CAMX, M-MIC, A-SVC, A-CAM, A-UI, OS (CoreMediaIO, CoreAudio, VideoToolbox, Camera2, MediaCodec, AudioRecord). |
 | Preconditions | 1.<br>CAM-01 is complete (virtual camera; virtual microphone if audio is needed); `feature.camera = true` on both sides and the camera is in effect per capability (the phone has `CAMERA`, `RECORD_AUDIO`).<br>2.<br>The `/v1/ctl` session is `Connected` over LAN or USB, not via the relay.<br>3.<br>The phone is not streaming its camera to another device.<br>4.<br>Android has the `POST_NOTIFICATIONS` permission for confirming while in the background (otherwise the user has to open HandLive on the phone). |
-| Postconditions | **Streaming:** the meeting app receives video and audio; A-SVC runs an FGS of type `connectedDevice\ | camera\ | microphone`; the phone shows the system privacy indicator and the notification "Using the camera for \<Mac name>" with a "Stop" button; there is exactly one authenticated `/v1/stream/camera` connection for the `session_id`. **After stopping:** the camera, the encoder and AudioRecord are released; the FGS goes back to type `connectedDevice`; the stream channel is closed with code 1000; M-CAMX shows the placeholder frame if consumers remain; the virtual microphone plays silence. |
+| Postconditions | **Streaming:** the meeting app receives video and audio; A-SVC runs an FGS of type `connectedDevice\| camera\| microphone`; the phone shows the system privacy indicator and the notification "Using the camera for \<Mac name>" with a "Stop" button; there is exactly one authenticated `/v1/stream/camera` connection for the `session_id`. **After stopping:** the camera, the encoder and AudioRecord are released; the FGS goes back to type `connectedDevice`; the stream channel is closed with code 1000; M-CAMX shows the placeholder frame if consumers remain; the virtual microphone plays silence. |
 | Exceptions | E1 — The ctl session goes through the relay or is not connected: M-APP does not send `camera/start` and reports "Requires the same Wi-Fi network or a USB cable"; Android receiving `camera/start` through the relay → `CAM_TRANSPORT_UNSUPPORTED`.<br>E2 — The camera is not in effect: `FEATURE_DISABLED` or `PERMISSION_MISSING` (`details.permission` = `CAMERA`/`RECORD_AUDIO`).<br>E3 — The phone is streaming to another device → `CAM_BUSY` (`details.holder_name`).<br>E4 — The user taps "Decline" → `camera/stop` reason `denied`, code `CAM_DENIED_BY_USER`.<br>E5 — No confirmation within 60 s (`CAM_CONFIRM_TIMEOUT`) → `camera/stop` reason `confirm_timeout`.<br>E6 — The hardware camera is being used by another app → `CAM_BUSY`; the requested camera does not exist → use the other camera; no camera at all → `CAM_UNAVAILABLE`.<br>E7 — No usable H.264 encoder at any tier → `CAM_ENCODER_UNSUPPORTED`.<br>E8 — The sink queue cannot be obtained (extension not activated, M-APP's camera permission denied) → `MAC_EXTENSION_NOT_ACTIVE`, open CAM-01, the preview keeps running; microphone driver missing → `MAC_MIC_DRIVER_MISSING`, video only.<br>E9 — The stream channel cannot be opened, `stream_hello` is rejected, or it stays silent for more than 1 s (`CAM_STREAM_STALL`) → reopen with the same `session_id` up to 3 times (0.25 s, 0.5 s, 1 s); still failing → stop the session with reason `error`.<br>E10 — Both the ctl session and the stream channel are lost for more than 5 s, or the phone overheats (CAM-05) → the session ends, M-CAMX shows the placeholder frame. |
-| Special requirements | **Latency** (720p30, from the lens to the meeting app): < 120 ms over Wi-Fi, < 70 ms over USB; audio no more than 45 ms ahead of video and no more than 125 ms behind it.<br>From demand to the first frame ≤ 2 s when HandLive is visible on the phone.<br>**Privacy:** only open the hardware of the track that is needed; when HandLive is in the background, every session needs one tap on the phone; the system privacy indicator and an ongoing notification stay for the whole session.<br>**Android platform:** the manifest declares `android:foregroundServiceType="connectedDevice\ | camera\ | microphone"` and the permissions `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_MICROPHONE`, `CAMERA`, `RECORD_AUDIO`, `POST_NOTIFICATIONS`. A CompanionDeviceManager association does **not** exempt camera/microphone FGS starts from the background restriction (verified), so the design does not rely on it. **Security:** media frames are encrypted with the stream channel key (0.6.3 step 7); the receiver drops frames whose `seq` does not increase; media content is never logged; the sink stream accepts only M-APP. **Resources:** default 1280×720, 30 fps, 2.5 Mbps (`CAM_DEFAULT`); Opus audio at 32 kbps. |
+| Special requirements | **Latency** (720p30, from the lens to the meeting app): < 120 ms over Wi-Fi, < 70 ms over USB; audio no more than 45 ms ahead of video and no more than 125 ms behind it.<br>From demand to the first frame ≤ 2 s when HandLive is visible on the phone.<br>**Privacy:** only open the hardware of the track that is needed; when HandLive is in the background, every session needs one tap on the phone; the system privacy indicator and an ongoing notification stay for the whole session.<br>**Android platform:** the manifest declares `android:foregroundServiceType="connectedDevice\| camera\| microphone"` and the permissions `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_MICROPHONE`, `CAMERA`, `RECORD_AUDIO`, `POST_NOTIFICATIONS`. A CompanionDeviceManager association does **not** exempt camera/microphone FGS starts from the background restriction (verified), so the design does not rely on it. **Security:** media frames are encrypted with the stream channel key (0.6.3 step 7); the receiver drops frames whose `seq` does not increase; media content is never logged; the sink stream accepts only M-APP. **Resources:** default 1280×720, 30 fps, 2.5 Mbps (`CAM_DEFAULT`); Opus audio at 32 kbps. |
 
 ### 8.2.2 Screens
 
@@ -400,13 +400,13 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Streaming status (M-APP menu bar) | enum{idle\ | requesting\ | waiting_phone\ | starting\ | live\ | stopping\ | error} | Output | `idle` | "Not streaming", "Requesting…", "On the phone, tap Turn On", "Starting…", "Streaming", "Stopping…", "Error" |
-| 2 | Virtual devices in use | array<enum{camera\ | microphone\ | preview}> | Output | Empty | For example "An app is using HandLive Camera and HandLive Microphone" |
+| 1 | Streaming status (M-APP menu bar) | enum{idle\| requesting\| waiting_phone\| starting\| live\| stopping\| error} | Output | `idle` | "Not streaming", "Requesting…", "On the phone, tap Turn On", "Starting…", "Streaming", "Stopping…", "Error" |
+| 2 | Virtual devices in use | array<enum{camera\| microphone\| preview}> | Output | Empty | For example "An app is using HandLive Camera and HandLive Microphone" |
 | 3 | Preview window | video | Output | Hidden | Decoded video and the microphone level |
 | 4 | "Start" / "Stop" button in the preview | action | Input | "Start" | Trigger (c); "Stop" only removes the preview's demand |
-| 5 | Transport | enum{wifi\ | usb} | Output | From the ctl session | "Via Wi-Fi", "Via USB" |
+| 5 | Transport | enum{wifi\| usb} | Output | From the ctl session | "Via Wi-Fi", "Via USB" |
 | 6 | Request notification on Android | string | Output | — | "\<Mac name> wants to use the camera and microphone" (or "…the microphone" when there is only an audio track); dismissed automatically after 60 s |
-| 7 | Choice on the request notification or the A-UI dialog | enum{Turn On\ | Decline} | Input | — | The A-UI dialog appears when the user opens HandLive while a request is pending |
+| 7 | Choice on the request notification or the A-UI dialog | enum{Turn On\| Decline} | Input | — | The A-UI dialog appears when the user opens HandLive while a request is pending |
 | 8 | Streaming notification on Android | string | Output | — | "Using the camera for \<Mac name>"; has a "Stop" button (the other controls are in CAM-03) |
 | 9 | "Stop" button on the streaming notification | action | Input | — | Flow A1–A2 |
 | 10 | Virtual camera placeholder frame | image | Output | "Waiting for the phone…" | M-CAMX shows it when no frame has come from the sink for more than 1 s |
@@ -454,7 +454,7 @@ flowchart TB
 | 3 | System | M-APP | Checks `feature.camera = true`, the camera in effect per capability, and the ctl session `Connected` on channel `lan` or `usb`. | Relay or not connected → E1 (M-CAMX keeps showing the placeholder frame). Not in effect → E2. |
 | 4 | System | M-APP → A-SVC | Generates `session_id` (UUIDv7); sends `camera/start` (API 4): camera = `cam.default_camera`; size = the format per `hlaf`, capped by `cam.default_quality` and `features.camera.max_*`; 30 fps; bitrate per tier (CAM-05); audio 32 kbps. Status `requesting`. | Error ack `CAM_TRANSPORT_UNSUPPORTED` (E1), `FEATURE_DISABLED`/`PERMISSION_MISSING` (E2), `CAM_BUSY` (E3). No ack within 10 s → send again once with the same `session_id`. |
 | 5 | System | A-SVC | Checks that the ctl session is not via the relay, that the feature is in effect and that no other camera session exists; then checks whether A-UI is visible (`ProcessLifecycleOwner` in state `STARTED`). |  |
-| 6 | System | A-SVC | Calls `ServiceCompat.startForeground` with type `CONNECTED_DEVICE \ | CAMERA \ | MICROPHONE` (API 5); ack `{status: "starting"}`. When coming from step 8, the request was already acked in step 7, so go straight to step 9. | The system refuses to raise the type (`SecurityException`) → `camera/stop` reason `error`, code `PERMISSION_MISSING`. |
+| 6 | System | A-SVC | Calls `ServiceCompat.startForeground` with type `CONNECTED_DEVICE \| CAMERA \| MICROPHONE` (API 5); ack `{status: "starting"}`. When coming from step 8, the request was already acked in step 7, so go straight to step 9. | The system refuses to raise the type (`SecurityException`) → `camera/stop` reason `error`, code `PERMISSION_MISSING`. |
 | 7 | System | A-SVC, M-APP | Error ack `CAM_USER_CONFIRM_REQUIRED` with `details = {status: "needs_user_confirm", confirm_timeout_ms: 60000}`; posts a high-priority notification (field 6) with the actions "Turn On" and "Decline" (API 5). M-APP switches to `waiting_phone` and shows "On the phone, tap Turn On". | The user opens HandLive while waiting → the A-UI dialog (field 7) replaces the notification. |
 | 8 | User | A-UI (notification) | "Turn On" → the PendingIntent starts A-SVC directly (interacting with a notification is a documented exemption for camera/microphone FGS started from the background, Android 14+) → step 6. "Decline" → A-SVC sends `camera/stop` reason `denied`, code `CAM_DENIED_BY_USER`. | E4. After 60 s → A-SVC cancels the notification and sends `camera/stop` reason `confirm_timeout` (E5). |
 | 9 | System | A-CAM, A-SVC → M-APP | Opens the camera, configures the encoder and the capture session, opens AudioRecord + Opus for the enabled tracks (API 6); sends `camera/ready` (API 7) with the actual configuration; switches the FGS notification to field 8. | Camera busy or missing → E6; no encoder → E7: `camera/stop` reason `error` with the code. |
@@ -578,11 +578,11 @@ flowchart TB
 | `session_id` | uuid | Yes | UUIDv7 generated by M-APP for the camera session |
 | `video` | object | Yes |  |
 | `video.enabled` | bool | Yes | There is a camera consumer or the preview is open |
-| `video.camera` | enum{front\ | back} | Yes | From `cam.default_camera` |
+| `video.camera` | enum{front\| back} | Yes | From `cam.default_camera` |
 | `video.width`, `video.height` | int32 | Yes | One of 640×480, 1280×720, 1920×1080; = the `hlaf` format, capped by the quality the user chose and by `features.camera.max_width`/`max_height`. This is the session's cap |
 | `video.fps` | int32 | Yes | `30` (CAM-05 may lower it to 24, 15) |
 | `video.bitrate_bps` | int32 | Yes | Nominal bitrate of the tier (CAM-05): 1,000,000 / 2,500,000 / 4,500,000 |
-| `video.quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | No (default `auto`) | Quality mode; only `auto` adapts to the network (CAM-05) |
+| `video.quality` | enum{auto\| 480p\| 720p\| 1080p} | No (default `auto`) | Quality mode; only `auto` adapts to the network (CAM-05) |
 | `audio` | object | Yes |  |
 | `audio.enabled` | bool | Yes | The virtual microphone is in use or the preview is open, and the M-MIC driver is present |
 | `audio.bitrate_bps` | int32 | Yes | `32000` |
@@ -594,7 +594,7 @@ flowchart TB
 | `ok = true` | `data = {status: "starting"}` | Android has raised the FGS and is opening the hardware; wait for `camera/ready` |
 | `ok = false`, `CAM_USER_CONFIRM_REQUIRED` | `details = {status: "needs_user_confirm", confirm_timeout_ms: 60000}` | Not a final error: M-APP keeps the session and waits for `camera/ready` or `camera/stop` |
 | `ok = false`, `CAM_TRANSPORT_UNSUPPORTED` |  | The ctl session goes through the relay (E1) |
-| `ok = false`, `FEATURE_DISABLED` / `PERMISSION_MISSING` | `details.permission` = `CAMERA` \ | `RECORD_AUDIO` | E2 |
+| `ok = false`, `FEATURE_DISABLED` / `PERMISSION_MISSING` | `details.permission` = `CAMERA` \| `RECORD_AUDIO` | E2 |
 | `ok = false`, `CAM_BUSY` | `details.holder_name` | The phone is streaming to another device (E3) |
 | `ok = false`, `CAM_THERMAL_LIMIT` |  | The phone is overheating (level ≥ `SEVERE` — CAM-05) |
 | `ok = false`, `BAD_REQUEST` |  | Size outside the allowed set, or both tracks are off |
@@ -604,7 +604,7 @@ flowchart TB
 ```json
 {"op":"start","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","video":{"enabled":true,"camera":"front","width":1280,"height":720,"fps":30,"bitrate_bps":2500000,"quality":"auto"},"audio":{"enabled":true,"bitrate_bps":32000}}}
 {"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":true,"data":{"status":"starting"}}
-{"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":false,"error":{"code":"CAM_USER_CONFIRM_REQUIRED","message":"Chạm Bật trên điện thoại","details":{"status":"needs_user_confirm","confirm_timeout_ms":60000}}}
+{"re":"0192f5a0-3c4e-7a11-8b22-3c4d5e6f7a8b","ok":false,"error":{"code":"CAM_USER_CONFIRM_REQUIRED","message":"Waiting for confirmation on the phone","details":{"status":"needs_user_confirm","confirm_timeout_ms":60000}}}
 ```
 
 - **Business logic:**
@@ -743,9 +743,9 @@ ServiceCompat.startForeground(
 | `session_id` | uuid | Yes |  |
 | `stream_path` | string | Yes | `/v1/stream/camera` |
 | `actual` | object | Yes | Actual configuration; the same structure is used in the `camera/config` ack (CAM-03) and in `camera/state` (API 14) |
-| `actual.quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | Yes |  |
-| `actual.transport` | enum{lan\ | usb\ | none} | Yes | Channel of the stream being sent; `none` while there is no stream channel yet |
-| `actual.video` | object | Yes | `enabled` (bool), `camera` (enum{front\ | back}), `width`, `height`, `fps`, `bitrate_bps` (int32), `paused` (bool), `idr_interval_ms` (int32: 1000 \ | 2000), `rotation_deg` (int32: 0 \ | 90 \ | 180 \ | 270 — M-APP rotates frames by this value, see the image rules at the start of group 8) |
+| `actual.quality` | enum{auto\| 480p\| 720p\| 1080p} | Yes |  |
+| `actual.transport` | enum{lan\| usb\| none} | Yes | Channel of the stream being sent; `none` while there is no stream channel yet |
+| `actual.video` | object | Yes | `enabled` (bool), `camera` (enum{front\| back}), `width`, `height`, `fps`, `bitrate_bps` (int32), `paused` (bool), `idr_interval_ms` (int32: 1000 \| 2000), `rotation_deg` (int32: 0 \| 90 \| 180 \| 270 — M-APP rotates frames by this value, see the image rules at the start of group 8) |
 | `actual.audio` | object | Yes | `enabled` (bool), `sample_rate` (48000), `channels` (1), `frame_ms` (10), `bitrate_bps` (32000) |
 
 - **Response:** N/A. M-APP opens the stream channel (API 8) within `CAM_STREAM_OPEN_TIMEOUT` (10 s).
@@ -779,11 +779,11 @@ ServiceCompat.startForeground(
 |--------|------|----------|-------|
 | `session_id` | uuid | Yes | A camera session that already has `camera/ready` |
 | `nonce` | b64u (32 bytes) | Yes | Random `nonce_c`, fresh for every connection |
-| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`k_auth`, `"HLSTREAM1 | "` ‖ `session_id` ‖ `nonce_c`); `k_auth` is the first 32 bytes of `K_stream` (0.6.3 step 7, channel = `camera`) |
+| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`k_auth`, `"HLSTREAM1\|"` ‖ `session_id` ‖ `nonce_c`); `k_auth` is the first 32 bytes of `K_stream` (0.6.3 step 7, channel = `camera`) |
 
 - **Response (`data` of `stream_welcome`):** `session_id` (uuid); `nonce` (b64u 32 bytes,
   `nonce_s`); `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖
-  `nonce_s`) — this clarifies the word "similarly" in 0.6.3 step 7: both nonces are bound so that the
+  `nonce_s`) — as in 0.6.3 step 7: both nonces are bound so that the
   welcome cannot be replayed. Errors → close the WebSocket: 4400 (`session_id` does not exist or has
   stopped), 4401 (wrong `mac`), 4408 (no hello within 5 s — `HANDSHAKE_TIMEOUT`).
 - **Example:**
@@ -970,9 +970,9 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `session_id` | uuid | Yes |  |
-| `reason` | enum{no_consumer\ | user\ | denied\ | confirm_timeout\ | disconnected\ | thermal\ | error} | Yes | `no_consumer`: M-APP has no demand left, the Mac is about to sleep or M-APP is quitting; `user`: the user tapped "Stop" on the phone; `denied`: tapped "Decline"; `confirm_timeout`: not confirmed within 60 s; `disconnected`: both ctl and stream lost for more than 5 s; `thermal`: temperature ≥ `CRITICAL` (CAM-05); `error`: any other error |
+| `reason` | enum{no_consumer\| user\| denied\| confirm_timeout\| disconnected\| thermal\| error} | Yes | `no_consumer`: M-APP has no demand left, the Mac is about to sleep or M-APP is quitting; `user`: the user tapped "Stop" on the phone; `denied`: tapped "Decline"; `confirm_timeout`: not confirmed within 60 s; `disconnected`: both ctl and stream lost for more than 5 s; `thermal`: temperature ≥ `CRITICAL` (CAM-05); `error`: any other error |
 | `code` | string | No | Error code from 0.8.1: `CAM_DENIED_BY_USER` (with `denied`), `CAM_THERMAL_LIMIT` (with `thermal`), `CAM_BUSY`, `CAM_UNAVAILABLE`, `CAM_ENCODER_UNSUPPORTED`, `PERMISSION_MISSING`, `INTERNAL` (with `error`) |
-| `message` | string | No | Short description for the user |
+| `message` | string | No | English diagnostic string for logs; the UI shows the text for the reason code from the catalog (0.12.4) |
 
 - **Response (`ack.data`):** `{}`; always `ok = true`, even when the `session_id` no longer exists
   (idempotent).
@@ -980,7 +980,7 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 
 ```json
 {"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"no_consumer"}}
-{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"The phone is too hot"}}
+{"op":"stop","data":{"session_id":"0192f5a0-3c4d-7e8f-9a0b-1c2d3e4f5a6b","reason":"thermal","code":"CAM_THERMAL_LIMIT","message":"Device overheating"}}
 {"re":"0192f5b2-0a1b-7c2d-8e3f-4a5b6c7d8e9f","ok":true,"data":{}}
 ```
 
@@ -1010,12 +1010,12 @@ if CMSimpleQueueGetCount(sinkQueue) < CMSimpleQueueGetCapacity(sinkQueue) {
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `session_id` | uuid | Yes |  |
-| `state` | enum{live\ | reconfiguring\ | degraded} | Yes | `live`: streaming at the target level; `reconfiguring`: changing the camera, the size or the channel; `degraded`: running below the target level because of the network, temperature or battery |
+| `state` | enum{live\| reconfiguring\| degraded} | Yes | `live`: streaming at the target level; `reconfiguring`: changing the camera, the size or the channel; `degraded`: running below the target level because of the network, temperature or battery |
 | `actual` | object | Yes | As in `camera/ready` (API 7) |
-| `thermal` | enum{none\ | light\ | moderate\ | severe\ | critical\ | emergency\ | shutdown} | Yes | From `PowerManager.getCurrentThermalStatus()` |
+| `thermal` | enum{none\| light\| moderate\| severe\| critical\| emergency\| shutdown} | Yes | From `PowerManager.getCurrentThermalStatus()` |
 | `battery_pct` | int32 | Yes | 0–100 |
 | `charging` | bool | Yes | Charging (including over the USB cable to the Mac) |
-| `reason` | enum{start\ | user_config\ | network\ | thermal\ | battery\ | recovered\ | transport\ | consumer\ | periodic} | Yes | What triggered this message |
+| `reason` | enum{start\| user_config\| network\| thermal\| battery\| recovered\| transport\| consumer\| periodic} | Yes | What triggered this message |
 
 - **Response:** N/A.
 - **Example:**
@@ -1055,9 +1055,9 @@ context.dataStore.data.first()[booleanPreferencesKey("feature.camera")] ?: false
 | Description | During a running session (CAM-02), the user controls the stream from the menu of the menu bar icon (Camera submenu) or M-APP's Camera Preview window, or from the buttons on Android's streaming notification: switch between the front and back cameras, choose the quality (`auto`, 480p, 720p, 1080p — never above the format the meeting app chose), turn the microphone on/off, pause video.<br>M-APP sends `camera/config`; Android applies it, returns an ack `{actual}` and sends `camera/state`.<br>Switching cameras reopens the capture session with the new camera, keeps the encoder when the size does not change, forces an IDR and sets the discontinuity flag.<br>Pausing video and turning off the microphone release the real hardware; the meeting app sees a "Video paused" frame made by M-APP, and the virtual microphone plays silence.<br>Actions on the phone are applied locally and then reported to the Mac through `camera/state`.<br>The camera and quality choices are saved as defaults (`cam.default_camera`, `cam.default_quality`).<br>There is no mirroring option. |
 | Actors | Primary: User. System: M-APP, M-CAMX, A-SVC, A-CAM, A-UI (notification), OS (Camera2, MediaCodec, AudioRecord). |
 | Preconditions | 1.<br>A CAM-02 camera session exists in state `starting` or `live`; without a session, the camera and quality choices are only saved as defaults.<br>2.<br>The `/v1/ctl` session is `Connected` over LAN or USB.<br>3.<br>Switching cameras: `features.camera.cameras` has both `front` and `back`.<br>4.<br>Turning the microphone on: the M-MIC driver is present. |
-| Postconditions | Android runs the new configuration; `actual` in the ack and in `camera/state` reflects the actual configuration; M-APP displays and saves the choice.<br>After a camera change or a size change, the first video frame is an IDR with the discontinuity flag.<br>Microphone off: `AudioRecord` has been released and Android's microphone indicator is off.<br>Video paused: the camera is closed, the camera indicator is off, and the meeting app receives the "Video paused" frame.<br>The FGS keeps type `camera\ | microphone` for the whole session. |
+| Postconditions | Android runs the new configuration; `actual` in the ack and in `camera/state` reflects the actual configuration; M-APP displays and saves the choice.<br>After a camera change or a size change, the first video frame is an IDR with the discontinuity flag.<br>Microphone off: `AudioRecord` has been released and Android's microphone indicator is off.<br>Video paused: the camera is closed, the camera indicator is off, and the meeting app receives the "Video paused" frame.<br>The FGS keeps type `camera\| microphone` for the whole session. |
 | Exceptions | E1 — The phone does not have the requested camera → error ack `CAM_UNAVAILABLE`, keep the old camera.<br>E2 — The new camera is busy or fails to open → reopen the old camera; if that fails → `camera/stop` reason `error`, code `CAM_BUSY` (CAM-02 API 13).<br>E3 — The chosen quality exceeds the device's capability (`features.camera.max_*`, the encoder refuses) → use the nearest lower tier; `actual` shows the real level.<br>E4 — The chosen quality is higher than the meeting app's format (`hlaf`) → capped at that format, with "Limited by the meeting app: 720p" shown.<br>E5 — A thermal or battery limit is in force (CAM-05) → record the chosen level and apply it when the limit ends.<br>E6 — The virtual microphone driver is missing → the microphone toggle is disabled, with `MAC_MIC_DRIVER_MISSING`.<br>E7 — No ack within 10 s → send again once; still none → `TIMEOUT`, and the UI reverts to the old value.<br>E8 — `session_id` does not match Android's session → `BAD_REQUEST`, M-APP refreshes the session state. |
-| Special requirements | **Performance:** switching cameras interrupts video for ≤ 1 s (M-APP keeps the last frame while waiting); turning the microphone on/off ≤ 200 ms; pausing video closes the camera within ≤ 500 ms.<br>**Privacy:** pausing video and turning off the microphone close the real hardware instead of just dropping data, so that Android's privacy indicators turn off as well.<br>Outgoing video is never mirrored; meeting apps mirror their own self-view, so there is no mirroring option.<br>**Platform:** the FGS keeps type `camera\ | microphone` from CAM-02 for the whole session, so reopening the camera or the microphone while HandLive is in the background, even with the screen locked, needs no new confirmation. **Consistency:** at most one `camera/config` awaiting an ack; rapid actions are coalesced and only the latest desired state is sent.<br>Changes made on the phone show up in M-APP within ≤ 1 s.<br>**Usability:** every control has a VoiceOver label; the Android notification has at most 3 buttons. |
+| Special requirements | **Performance:** switching cameras interrupts video for ≤ 1 s (M-APP keeps the last frame while waiting); turning the microphone on/off ≤ 200 ms; pausing video closes the camera within ≤ 500 ms.<br>**Privacy:** pausing video and turning off the microphone close the real hardware instead of just dropping data, so that Android's privacy indicators turn off as well.<br>Outgoing video is never mirrored; meeting apps mirror their own self-view, so there is no mirroring option.<br>**Platform:** the FGS keeps type `camera\| microphone` from CAM-02 for the whole session, so reopening the camera or the microphone while HandLive is in the background, even with the screen locked, needs no new confirmation. **Consistency:** at most one `camera/config` awaiting an ack; rapid actions are coalesced and only the latest desired state is sent.<br>Changes made on the phone show up in M-APP within ≤ 1 s.<br>**Usability:** every control has a VoiceOver label; the Android notification has at most 3 buttons. |
 
 ### 8.3.2 Screens
 
@@ -1068,8 +1068,8 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Switch Camera" button (menu bar, preview) | action | Input | Shown when the phone has two cameras | Switches `front` ↔ `back` |
-| 2 | Camera in use | enum{front\ | back} | Input/Output | `actual.video.camera`; no session yet: `cam.default_camera` (`front`) | "Front Camera", "Back Camera"; the choice is saved as the default |
-| 3 | Quality | enum{auto\ | 480p\ | 720p\ | 1080p} | Input/Output | `cam.default_quality` (`auto`) | "Automatic", "480p", "720p", "1080p"; items above the meeting app's format or the device's capability are dimmed, with the reason |
+| 2 | Camera in use | enum{front\| back} | Input/Output | `actual.video.camera`; no session yet: `cam.default_camera` (`front`) | "Front Camera", "Back Camera"; the choice is saved as the default |
+| 3 | Quality | enum{auto\| 480p\| 720p\| 1080p} | Input/Output | `cam.default_quality` (`auto`) | "Automatic", "480p", "720p", "1080p"; items above the meeting app's format or the device's capability are dimmed, with the reason |
 | 4 | Actual quality | string | Output | From `actual` | For example "1280×720 · 30 fps · 2.5 Mbps" |
 | 5 | "Phone Microphone" toggle | bool | Input/Output | `true` when there is microphone demand | Off → Android releases `AudioRecord`, the virtual microphone plays silence |
 | 6 | "Pause Video" toggle | bool | Input/Output | `false` | On → the camera closes, the meeting app sees field 7 |
@@ -1153,8 +1153,8 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `session_id` | uuid | Yes | Current camera session |
-| `camera` | enum{front\ | back} | No | Switch camera |
-| `quality` | enum{auto\ | 480p\ | 720p\ | 1080p} | No | Quality mode; `auto` = adaptive per CAM-05 |
+| `camera` | enum{front\| back} | No | Switch camera |
+| `quality` | enum{auto\| 480p\| 720p\| 1080p} | No | Quality mode; `auto` = adaptive per CAM-05 |
 | `consumer_format` | object `{width, height}` (int32) | No | Current consumer format per `hlaf` (640×480, 1280×720, 1920×1080): the size cap and the aspect ratio for every quality mode |
 | `mic_enabled` | bool | No | Turn the audio track on/off |
 | `video_paused` | bool | No | Pause the video track (close the camera) |
@@ -1312,8 +1312,8 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Automatic USB Boost" toggle | bool | Input/Output | `cam.usb_boost` (`true`) | Off → the stream goes back to Wi-Fi, the forwarded port is removed, USB events are ignored (A1) |
-| 2 | USB status | enum{not_connected\ | detecting\ | unauthorized\ | adb_unavailable\ | verifying\ | ready\ | active\ | error} | Output | `not_connected` | "Not plugged in", "Checking…", "On the phone, tap Allow", "USB debugging not turned on", "Verifying…", "Ready over USB", "Using USB", "Error" |
-| 3 | Stream transport | enum{wifi\ | usb} | Output | From `actual.transport` | Same as CAM-02 field 5 |
+| 2 | USB status | enum{not_connected\| detecting\| unauthorized\| adb_unavailable\| verifying\| ready\| active\| error} | Output | `not_connected` | "Not plugged in", "Checking…", "On the phone, tap Allow", "USB debugging not turned on", "Verifying…", "Ready over USB", "Using USB", "Error" |
+| 3 | Stream transport | enum{wifi\| usb} | Output | From `actual.transport` | Same as CAM-02 field 5 |
 | 4 | USB debugging wizard | wizard (3 steps) | Output | Hidden | Intro: "Speed up the camera over a USB cable for \<USB Product Name>?".<br>Step 1: Settings › About phone › tap "Build number" 7 times.<br>Step 2: Settings › System › Developer options › turn on "USB debugging".<br>Step 3: unlock the phone, tap "Allow" (preferably check "Always allow from this computer") |
 | 5 | "Check Again" button | action | Input | In the wizard | Runs step 3 again |
 | 6 | "Don't Ask Again" button | action | Input | In the wizard | Writes `cam.usb_wizard_dismissed = true`, closes the wizard |
@@ -1579,10 +1579,10 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Quality indicator (menu bar, preview) | enum{good\ | adapting\ | limited} | Output | `good` | Green "Good" (`state = live`); orange "Adapting to the network" (`degraded`, `reason = network`); orange "Limited by heat or battery" (`degraded`, `reason` = `thermal` or `battery`) — the two orange states differ by text and icon; yellow is not used |
+| 1 | Quality indicator (menu bar, preview) | enum{good\| adapting\| limited} | Output | `good` | Green "Good" (`state = live`); orange "Adapting to the network" (`degraded`, `reason = network`); orange "Limited by heat or battery" (`degraded`, `reason` = `thermal` or `battery`) — the two orange states differ by text and icon; yellow is not used |
 | 2 | Actual configuration | string | Output | From `actual` | For example "1280×720 · 24 fps · 1.9 Mbps" |
-| 3 | Limit reason | enum{none\ | network\ | thermal\ | battery\ | consumer\ | preset} | Output | `none` | "Slow Wi-Fi network", "Phone is hot", "Low phone battery (18%)", "Set by the meeting app", "Set by you" |
-| 4 | Phone temperature | enum{none\ | light\ | moderate\ | severe\ | critical\ | emergency\ | shutdown} | Output | `camera/state.thermal` | Shown only when ≥ `moderate` |
+| 3 | Limit reason | enum{none\| network\| thermal\| battery\| consumer\| preset} | Output | `none` | "Slow Wi-Fi network", "Phone is hot", "Low phone battery (18%)", "Set by the meeting app", "Set by you" |
+| 4 | Phone temperature | enum{none\| light\| moderate\| severe\| critical\| emergency\| shutdown} | Output | `camera/state.thermal` | Shown only when ≥ `moderate` |
 | 5 | Phone battery | int32 (%) | Output | `camera/state.battery_pct` | With a charging icon when `charging = true` |
 | 6 | Low-battery notification (Mac and Android) | string | Output | — | "Phone battery is below 20% — HandLive is lowering the quality to 720p. Plug in a charger or a USB cable to keep the quality." Once per session |
 | 7 | Overheating notification (Mac and Android) | string | Output | — | "The phone is too hot — the camera has stopped. Let the phone cool down, then try again." |
@@ -1666,7 +1666,7 @@ flowchart TB
 | `jitter_ms` | int32 | Yes | Jitter of the arrival timing, smoothed per RFC 3550 §6.4.1 |
 | `queue_delay_ms` | int32 | Yes | Estimated queuing delay (logic 1) |
 | `decode_ms` | int32 | Yes | Average VideoToolbox decode time, rounded up |
-| `transport` | enum{lan\ | usb} | Yes | Channel of the stream connection being received |
+| `transport` | enum{lan\| usb} | Yes | Channel of the stream connection being received |
 
 - **Response:** N/A.
 - **Example:**
