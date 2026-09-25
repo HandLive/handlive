@@ -1,12 +1,14 @@
-# Bản sao design system trong repo
+English | [Tiếng Việt](README-repo.vi.md)
 
-Thư mục này là bản sao nguồn của artifact "HandLive Design System"
-(https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT, phiên bản 6): `README.md` (nguyên tắc, thương
-hiệu), `1-foundations/`, `2-patterns/`, `3-platforms/`, `components/<Tên>/README.md` +
-`preview.html`, `components/bundle.css` (chỉ cho preview web), `tokens.json`. Token cũng nằm ở
-`shared/design-tokens/tokens.json` để sinh mã (Compose `HandLiveTheme`, Asset Catalog Color Sets,
-CSS).
+# The design system's copy in this repo
 
-Sửa ở đây trước, rồi xuất bản lại artifact; hai bản phải giống nhau. Preview HTML dùng Material
-Symbols thay SF Symbols chỉ để xem trên web; app Apple dùng SF Symbols theo bảng ở
-`1-foundations/06-bieu-tuong.md`.
+This folder is the source copy of the "HandLive Design System" artifact
+(https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT, version 6): `README.md` (principles, brand),
+`1-foundations/`, `2-patterns/`, `3-platforms/`, `components/<Tên>/README.md` + `preview.html` (one
+folder per component name), `components/bundle.css` (web previews only), `tokens.json`. The tokens
+also live in `shared/design-tokens/tokens.json` for code generation (Compose `HandLiveTheme`, Asset
+Catalog Color Sets, CSS).
+
+Edit here first, then republish the artifact; the two copies must match. The HTML previews use
+Material Symbols in place of SF Symbols only so they can be viewed on the web; the Apple apps use SF
+Symbols according to the table in `1-foundations/06-bieu-tuong.md`.

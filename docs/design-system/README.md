@@ -1,85 +1,89 @@
-HandLive nối điện thoại Android với Mac, iPhone và iPad: bảng nhớ tạm, tin nhắn, cuộc gọi và camera
-đi qua một liên kết mã hóa đầu-cuối. Design system này dựng theo
-**Human Interface Guidelines (HIG) của Apple** cho cả ba nền tảng. Trên Mac, iPhone và iPad,
-HandLive dùng control, font San Francisco, SF Symbols và vật liệu Liquid Glass của hệ thống. Trên
-Android, app dựng lại cùng ngôn ngữ đó bằng Jetpack Compose — như cách Apple làm Apple Music cho
-Android — và để nguyên những phần do Android quản lý: thông báo, hộp thoại xin quyền, ô Cài đặt
-nhanh, cử chỉ quay lại.
+English | [Tiếng Việt](README.vi.md)
 
-Tài liệu bám HIG bản 24/9/2026 (Liquid Glass, macOS 27, iOS và iPadOS 27). App hỗ trợ từ macOS 13 và
-iOS 16: control hệ thống tự hiển thị đúng từng phiên bản; thành phần tự dựng có cách hiển thị riêng
-cho bản trước 26 (xem mục Vật liệu).
+HandLive connects an Android phone to a Mac, iPhone, and iPad: the clipboard, messages, calls, and
+camera travel over an end-to-end encrypted link. This design system follows **Apple's Human Interface
+Guidelines (HIG)** on all three platforms. On Mac, iPhone, and iPad, HandLive uses the system's
+controls, the San Francisco font, SF Symbols, and the Liquid Glass material. On Android, the app
+rebuilds the same design language in Jetpack Compose — the way Apple built Apple Music for Android —
+and leaves the parts Android owns as they are: notifications, permission dialogs, Quick Settings
+tiles, the back gesture.
 
-## Cách đọc
+These documents follow the HIG as of September 24, 2026 (Liquid Glass, macOS 27, iOS and iPadOS 27).
+The app supports macOS 13 and iOS 16 and later: system controls render correctly on each version on
+their own; custom components have their own rendering for versions before 26 (see Materials).
 
-Các mục xếp theo cấu trúc của HIG:
+## How to read this
 
-1. **Nền tảng thiết kế** — màu sắc, Chế độ Tối, kiểu chữ, bố cục, vật liệu, biểu tượng, chuyển động,
-   khả năng tiếp cận, viết nội dung, quyền riêng tư, thương hiệu.
-2. **Mẫu tương tác** — thiết lập ban đầu, xin quyền, thông báo, cài đặt, phản hồi và tải.
-3. **Từng nền tảng** — macOS, iOS và iPadOS, Android.
-4. **Thành phần** — mỗi thành phần có preview cho từng nền tảng, tên API cần dùng và chỗ lấy câu chữ
-   trong tài liệu thiết kế chi tiết.
+The sections follow the structure of the HIG:
 
-Mỗi mục ghi trang HIG gốc để đối chiếu. Chỗ nào HandLive làm khác HIG thì mục đó nói rõ lý do.
+1. **Foundations** — color, Dark Mode, typography, layout, materials, icons, motion, accessibility,
+   writing, privacy, branding.
+2. **Patterns** — onboarding, requesting permission, notifications, settings, feedback and loading.
+3. **Platforms** — macOS, iOS and iPadOS, Android.
+4. **Components** — each component has a preview for every platform, the API names to use, and where
+   its copy lives in the detailed design.
 
-## Tám nguyên tắc
+Each section cites the original HIG page for reference. Wherever HandLive departs from the HIG, the
+section says why.
 
-Theo trang Design principles của HIG, áp vào HandLive:
+## Eight principles
 
-| Nguyên tắc | Với HandLive |
+From the HIG's Design principles page, applied to HandLive:
+
+| Principle | For HandLive |
 |-----------|--------------|
-| Mục đích | Mỗi màn hình phục vụ một việc: xem liên kết, gửi bảng nhớ tạm, đọc tin, nghe máy. |
-| Quyền chủ động | Người dùng quyết định hiện hay ẩn biểu tượng trên thanh menu, bật từng tính năng, bỏ qua phần giới thiệu. |
-| Trách nhiệm | Nói rõ dữ liệu đi đâu trước khi xin quyền; mã hóa đầu-cuối không tắt được. |
-| Quen thuộc | Dùng control và thuật ngữ của hệ thống; cuộc gọi đến trên Mac trông như cuộc gọi Continuity. |
-| Linh hoạt | Chạy đúng ở bốn giao diện Sáng, Tối và hai bản tương phản cao, cỡ chữ lớn, VoiceOver, TalkBack, bàn phím. |
-| Giản dị | Ít chữ, một nút chính mỗi màn; tùy chọn nâng cao nằm sau một nút mở rộng. |
-| Tỉ mỉ | Góc bo đồng tâm, chữ tiếng Việt không bị cắt dấu, số đếm giờ không nhảy. |
-| Niềm vui | Dành cho khoảnh khắc đúng chỗ: ghép nối xong, lần đầu chép từ điện thoại sang Mac. |
+| Purpose | Each screen serves one task: check the link, send the clipboard, read a message, take a call. |
+| Agency | People decide whether to show or hide the menu bar icon, which features to turn on, and whether to skip the introduction. |
+| Responsibility | Say where data goes before asking for permission; end-to-end encryption can't be turned off. |
+| Familiarity | Use the system's controls and terminology; an incoming call on the Mac looks like a Continuity call. |
+| Flexibility | Works correctly in the four appearances — Light, Dark, and their two Increased Contrast variants — with large text sizes, VoiceOver, TalkBack, and the keyboard. |
+| Simplicity | Few words, one primary button per screen; advanced options sit behind a disclosure button. |
+| Craft | Concentric corners, Vietnamese text whose diacritics are never clipped, timers whose digits don't jump. |
+| Delight | Saved for the right moments: pairing completes, the first copy from phone to Mac. |
 
-## Thương hiệu: lửa hiệu trên đỉnh núi
+## Brand: a signal fire on the mountaintop
 
-Bảng màu chọn theo phong thủy mệnh **Sơn Đầu Hỏa** — lửa trên đỉnh núi. Người xưa đốt lửa trên đỉnh
-núi để truyền tin từ trạm này sang trạm khác; HandLive làm việc tương tự giữa điện thoại và máy
-tính.
+The palette is the **Sơn Đầu Hỏa** feng-shui palette. Sơn Đầu Hỏa — "fire on the mountaintop" — is
+one of the Fire destiny elements in Vietnamese feng shui. In the past, people lit fires on mountaintops
+to pass messages from one station to the next; HandLive does the same between a phone and a computer.
 
-| Vai trò | Màu | Ngũ hành |
+| Role | Color | Five Elements |
 |---------|-----|----------|
-| Nhận diện | Đỏ son `brand-fire`, đỏ than `brand-ember`, cam lửa `brand-flame` | Hỏa — màu bản mệnh |
-| Thao tác (AccentColor) | Xanh lá `accent`, `accent-fill` | Mộc sinh Hỏa — màu tương sinh |
-| Nền thương hiệu | Hồng đào `brand-glow` | Hỏa |
-| Trung tính | Xám hệ thống của Apple | Kim — Hỏa khắc Kim, dùng được |
-| Không dùng | Đen, xanh dương, xanh nước biển: systemBlue, Cyan, Teal, Mint, Indigo | Thủy khắc Hỏa |
+| Identity | Vermilion `brand-fire`, ember red `brand-ember`, flame orange `brand-flame` | Fire — the destiny element's own color |
+| Actions (AccentColor) | Green `accent`, `accent-fill` | "Wood feeds Fire" — a supporting color |
+| Brand background | Peach `brand-glow` | Fire |
+| Neutral | Apple's system grays | Metal — Fire overcomes Metal, so it may be used |
+| Not used | Black, blue, and sea blues: systemBlue, Cyan, Teal, Mint, Indigo | Water overcomes Fire |
 
-- Đỏ son chỉ có ở biểu tượng app, chữ HandLive, màn chào và minh họa; không ở nút hay trạng thái, để
-  không lẫn với màu hủy và xóa của hệ thống.
-- Xanh lá là AccentColor: nút chính, liên kết, dấu chưa đọc, bong bóng tin mình gửi. Theo HIG, tô
-  màu control tiết chế — mỗi màn một, tối đa hai nút tô màu.
-- Liên kết và vùng chọn dùng xanh lá thay cho xanh dương mặc định của Apple. Trên Mac, khi người
-  dùng chọn màu nhấn khác Multicolor, control theo màu người dùng chọn.
-- Nền tối của hệ thống (đen trên iPhone, xám trên Mac) thuộc về Apple; HandLive không thêm mảng đen
-  hay xanh dương nào của riêng mình.
-- Chưa có logo. Cho tới khi có, dùng chữ HandLive kiểu `wordmark`. Không dùng SF Symbol hay font San
-  Francisco trong logo và biểu tượng app — giấy phép của Apple không cho phép.
+- Vermilion appears only in the app icon, the HandLive wordmark, the welcome screen, and
+  illustrations — never on buttons or status, so it can't be mistaken for the system's cancel and
+  delete colors.
+- Green is the AccentColor: primary buttons, links, unread indicators, the bubbles of messages you
+  send. Following the HIG, tint controls sparingly — one tinted button per screen, two at most.
+- Links and selections use green instead of Apple's default blue. On the Mac, when someone chooses an
+  accent color other than Multicolor, controls follow their choice.
+- The system's dark backgrounds (black on iPhone, gray on Mac) belong to Apple; HandLive adds no black
+  or blue areas of its own.
+- There's no logo yet. Until there is, use the word HandLive in the `wordmark` style. Don't use SF
+  Symbols or the San Francisco font in the logo or the app icon — Apple's license doesn't allow it.
 
-## Tóm tắt nhanh
+## Quick summary
 
-| Việc | Cách làm |
+| Topic | How |
 |------|----------|
-| Chữ | San Francisco qua text style của hệ thống (Dynamic Type trên iOS). Android dùng Inter cùng thang cỡ. Be Vietnam Pro chỉ cho tiêu đề thương hiệu. |
-| Màu | Màu ngữ nghĩa của Apple (`label`, `systemBackground`…) gọi qua API. Token trong trang này là giá trị tham chiếu cho Android và preview. |
-| Biểu tượng | SF Symbols trên Apple; Material Symbols Rounded trên Android (bảng đối chiếu ở mục Biểu tượng). |
-| Vật liệu | Liquid Glass cho lớp điều khiển: menu, panel cuộc gọi, thanh tab, nút nổi. Không cho lớp nội dung. |
-| Vùng chạm | iOS ≥ 44 pt, macOS ≥ 28 pt (tối thiểu 20 pt), Android ≥ 48 dp. |
-| Tương phản | Chữ đến 17 pt đạt 4.5:1, chữ lớn hoặc đậm đạt 3:1. Mọi cặp token đã được kiểm ở bốn giao diện. |
+| Text | San Francisco through the system text styles (Dynamic Type on iOS). Android uses Inter with the same size scale. Be Vietnam Pro only for brand titles. |
+| Color | Apple's semantic colors (`label`, `systemBackground`…) called through the API. The tokens on these pages are reference values for Android and previews. |
+| Icons | SF Symbols on Apple platforms; Material Symbols Rounded on Android (mapping table in Icons). |
+| Materials | Liquid Glass for the control layer: menus, the call panel, tab bars, floating buttons. Not for the content layer. |
+| Hit targets | iOS ≥ 44 pt, macOS ≥ 28 pt (20 pt minimum), Android ≥ 48 dp. |
+| Contrast | Text up to 17 pt reaches 4.5:1; large or bold text reaches 3:1. Every token pair has been checked in all four appearances. |
 
-## Tài nguyên của Apple
+## Apple resources
 
 - Human Interface Guidelines: developer.apple.com/design/human-interface-guidelines
-- Apple Design Resources: UI Kit macOS 27 và iOS/iPadOS 27 (Figma, Sketch), template biểu tượng app,
+- Apple Design Resources: the macOS 27 and iOS/iPadOS 27 UI Kits (Figma, Sketch), app icon templates,
   Icon Composer.
-- Ứng dụng SF Symbols; font SF Pro và SF Mono.
+- The SF Symbols app; the SF Pro and SF Mono fonts.
 
-Giấy phép: UI Kit, font San Francisco và SF Symbols chỉ dùng cho giao diện chạy trên nền tảng Apple.
-Không dùng chúng để dựng mock-up hay app Android, và không dùng trong logo.
+License: the UI Kits, the San Francisco fonts, and SF Symbols may only be used for interfaces that run
+on Apple platforms. Don't use them to build mock-ups or Android apps, and don't use them in a logo.
