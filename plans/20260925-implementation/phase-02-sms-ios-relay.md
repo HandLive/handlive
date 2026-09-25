@@ -10,7 +10,7 @@ LAN; wake the iPhone with push; an iOS app with clipboard, messages and settings
 - Leaf functions: `05-sms.md` SMS-01…05; `03-connectivity.md` CONN-03, CONN-04; `04-clipboard.md`
   CLIP-04; `02-pairing.md` PAIR-01 via the relay (`rv`), PAIR-03 flow B; `01-setup-settings.md` SET-02
   (fields 7–9, 21, 24–30), SET-03 (iOS).
-- Common specs: 0.9.4 relay schema (PostgreSQL), 0.9.5 Redis (`presence`, `dev:<device_id>`,
+- Common specs: 0.9.4 relay schema (PostgreSQL), 0.9.4 Redis (`presence`, `dev:<device_id>`,
   `revoked_notice`), relay REST, `DELETE /v1/devices/me?revoke_pairs=` (C16).
 - Design system: `3-platforms/02-ios-ipados.md`; components `ThreadRow`, `MessageBubble`,
   `PasteCard`, `Notification`, `GroupedList`; `2-patterns/03-thong-bao.md`.

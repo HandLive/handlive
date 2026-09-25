@@ -40,7 +40,7 @@ apple/                        HandLive.xcworkspace; XcodeGen project.yml (do not
   iOS/HandLive/, iOS/NotificationService/   (Phase 2)
 relay/                        Cargo workspace: crates/relay-server (actix-web 4, actix-ws, sqlx, redis), migrations/
 shared/
-  test-vectors/               *.json (section Step 3)
+  test-vectors/               *.json (card S0.1)
   schemas/                    JSON Schema for the envelope, ack, each op (generated from 00-common-specs, checked by tests)
   design-tokens/tokens.json   already exists
 tools/docs/                   already exists; tools/bench/ (Phase 1)

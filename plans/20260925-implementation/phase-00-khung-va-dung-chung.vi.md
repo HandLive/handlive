@@ -39,7 +39,7 @@ apple/                        HandLive.xcworkspace; XcodeGen project.yml (không
   iOS/HandLive/, iOS/NotificationService/   (Phase 2)
 relay/                        Cargo workspace: crates/relay-server (actix-web 4, actix-ws, sqlx, redis), migrations/
 shared/
-  test-vectors/               *.json (mục Bước 3)
+  test-vectors/               *.json (thẻ S0.1)
   schemas/                    JSON Schema cho envelope, ack, từng op (sinh từ 00-common-specs, kiểm bằng test)
   design-tokens/tokens.json   đã có
 tools/docs/                   đã có; tools/bench/ (Phase 1)
