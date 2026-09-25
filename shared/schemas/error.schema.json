@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/error.schema.json",
+  "title": "HandLive — đối tượng lỗi trong ack",
+  "description": "00-common-specs 0.5.1 (ack lỗi) và 0.8.1 (mã lỗi ứng dụng). Mã lỗi relay HTTP (0.8.2) không thuộc schema này.",
+  "type": "object",
+  "required": ["code", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "code": { "$ref": "#/$defs/code" },
+    "message": {
+      "description": "Mô tả cho người/nhật ký; không chứa nội dung người dùng.",
+      "type": "string"
+    },
+    "details": {
+      "description": "Chi tiết theo mã, ví dụ permission, retry_after_ms, reason, action.",
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "code": {
+      "description": "Mã lỗi ứng dụng, đúng bảng 0.8.1.",
+      "enum": [
+        "BAD_REQUEST",
+        "UNSUPPORTED_TYPE",
+        "UNSUPPORTED_VERSION",
+        "FEATURE_DISABLED",
+        "PERMISSION_MISSING",
+        "TIMEOUT",
+        "RATE_LIMITED",
+        "PAYLOAD_TOO_LARGE",
+        "NOT_CONNECTED",
+        "INTERNAL",
+        "QR_INVALID",
+        "PAIRING_CLOSED",
+        "PIN_INVALID",
+        "AUTH_FAILED",
+        "PAIR_UNKNOWN",
+        "PAIR_REVOKED",
+        "DECRYPT_FAILED",
+        "TLS_PIN_MISMATCH",
+        "CLIP_TOO_LARGE",
+        "CLIP_SENSITIVE_BLOCKED",
+        "CLIP_CHECKSUM_MISMATCH",
+        "CLIP_UNSUPPORTED_MIME",
+        "SMS_INVALID_ADDRESS",
+        "SMS_NO_SERVICE",
+        "SMS_RADIO_OFF",
+        "SMS_GENERIC_FAILURE",
+        "SMS_LIMIT_EXCEEDED",
+        "SMS_SIM_UNAVAILABLE",
+        "SMS_THREAD_NOT_FOUND",
+        "SMS_CURSOR_INVALID",
+        "CALL_NOT_FOUND",
+        "CALL_ACTION_NOT_ALLOWED",
+        "CALL_ROUTE_FAILED",
+        "CALL_BT_NOT_CONNECTED",
+        "CALL_CONSENT_REQUIRED",
+        "CALL_HFP_REQUIRED",
+        "SHIZUKU_NOT_RUNNING",
+        "CALL_AUDIO_CAPTURE_UNSUPPORTED",
+        "CAM_BUSY",
+        "CAM_UNAVAILABLE",
+        "CAM_USER_CONFIRM_REQUIRED",
+        "CAM_DENIED_BY_USER",
+        "CAM_ENCODER_UNSUPPORTED",
+        "CAM_THERMAL_LIMIT",
+        "CAM_TRANSPORT_UNSUPPORTED",
+        "USB_ADB_UNAUTHORIZED",
+        "USB_ADB_UNAVAILABLE",
+        "MAC_EXTENSION_NOT_ACTIVE",
+        "MAC_MIC_DRIVER_MISSING"
+      ]
+    }
+  }
+}

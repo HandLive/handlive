@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/session-bye.schema.json",
+  "title": "HandLive — session/bye (hai chiều, không ack)",
+  "description": "00-common-specs 0.7.1; đặc tả ở PAIR-03 API 2 và CONN-02 API 4. Envelope mã hóa; bên gửi đóng WebSocket mã 1000.",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": { "const": "bye" },
+    "data": {
+      "type": "object",
+      "required": ["reason"],
+      "additionalProperties": false,
+      "properties": {
+        "reason": { "enum": ["revoked", "shutdown", "replaced", "update"] }
+      }
+    }
+  }
+}

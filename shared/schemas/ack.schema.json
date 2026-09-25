@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/ack.schema.json",
+  "title": "HandLive — plaintext của ack",
+  "description": "00-common-specs 0.5.1: phản hồi có type = ack. Thành công {re, ok: true, data}; lỗi {re, ok: false, error}. Schema của từng op siết thêm data qua #/$defs/success.",
+  "type": "object",
+  "required": ["ok"],
+  "properties": {
+    "ok": { "type": "boolean" }
+  },
+  "if": {
+    "properties": { "ok": { "const": true } }
+  },
+  "then": { "$ref": "#/$defs/success" },
+  "else": { "$ref": "#/$defs/failure" },
+  "$defs": {
+    "re": {
+      "description": "id (UUIDv7) của envelope yêu cầu.",
+      "$ref": "common.schema.json#/$defs/uuid-v7"
+    },
+    "success": {
+      "type": "object",
+      "required": ["re", "ok", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "re": { "$ref": "#/$defs/re" },
+        "ok": { "const": true },
+        "data": { "type": "object" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "required": ["re", "ok", "error"],
+      "additionalProperties": false,
+      "properties": {
+        "re": { "$ref": "#/$defs/re" },
+        "ok": { "const": false },
+        "error": { "$ref": "error.schema.json" }
+      }
+    }
+  }
+}

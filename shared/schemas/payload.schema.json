@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/payload.schema.json",
+  "title": "HandLive — plaintext của payload",
+  "description": "00-common-specs 0.5.1: {op, data} cho mọi type trừ ack. Schema riêng từng op (session-*.schema.json, capability-*.schema.json) siết thêm op và data.",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": {
+      "description": "Thao tác trong nhóm (0.7.1), chữ thường và gạch dưới.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "data": {
+      "description": "Nội dung theo thao tác.",
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/capability-update.schema.json",
+  "title": "HandLive — capability/update (hai chiều, không ack)",
+  "description": "00-common-specs 0.7.2: luôn mang ảnh chụp đầy đủ, cùng cấu trúc data của capability/hello; bên nhận thay toàn bộ bản đã lưu.",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": { "const": "update" },
+    "data": { "$ref": "capability-hello.schema.json#/$defs/capability-data" }
+  }
+}

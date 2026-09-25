@@ -151,7 +151,7 @@ flowchart TB
 ```
 
 ```json
-{"op":"update","data":{"protocol":1,"app_version":"1.0.0 (100)","platform":"android","os_version":"15","model":"Pixel 8","features":{"call_audio":{"enabled":true,"bt_address":null,"hfp_connected":false,"opus_fallback":{"available":true,"downlink":true,"uplink":false,"reason":"ok"}}}}
+{"op":"update","data":{"protocol":1,"app_version":"1.0.0 (100)","platform":"android","os_version":"15","model":"Pixel 8","features":{"call_audio":{"enabled":true,"bt_address":null,"hfp_connected":false,"opus_fallback":{"available":true,"downlink":true,"uplink":false,"reason":"ok"}}}}}
 ```
 
 - **Logic nghiệp vụ:**
@@ -651,7 +651,7 @@ Lỗi: `SHIZUKU_NOT_RUNNING` (E1), `CALL_AUDIO_CAPTURE_UNSUPPORTED` (E2, E3), `C
 
 ```json
 {"op":"open","data":{"call_id":"0192f5a1-2b3c-7d4e-8f90-1a2b3c4d5e6f","codec":"opus","sample_rate":16000,"channels":1,"bitrate":32000,"frame_ms":20,"direction":"both"}}
-{"re":"0192f5a1-9c8b-7a6d-5e4f-3d2c1b0a9f8e","ok":true,"data":{"session_id":"0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10","stream_path":"/v1/stream/call-audio","downlink":true,"uplink":false}}
+{"re":"0192f5a1-9c8b-7a6d-8e4f-3d2c1b0a9f8e","ok":true,"data":{"session_id":"0192f5a2-7c1e-7a55-9d0b-3f4c2a1b9e10","stream_path":"/v1/stream/call-audio","downlink":true,"uplink":false}}
 ```
 
 - **Logic nghiệp vụ:**

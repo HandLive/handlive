@@ -230,7 +230,7 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 
 C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1).
 
-1. C → S, `type` = `session`, op `hello`, data `{pair_id, device_id, eph, nonce, mac}`:
+1. C → S, `type` = `session`, op `hello`, data `{protocol, pair_id, device_id, eph, nonce, mac}` (`protocol` = 1; khác major → đóng 4426, xem CONN-01; `protocol` không nằm trong `T1`):
    - `eph` = b64u khóa công khai X25519 tạm; `nonce` = b64u 32 byte ngẫu nhiên.
    - `K_auth` = HKDF(`PRK`, info = `"handlive/v1/session-auth"`); `T1` = `"HL1|hello|"` ‖ `pair_id` ‖ `device_id`C ‖ `eph`C ‖ `nonce`C; `mac` = b64u HMAC-SHA256(`K_auth`, `T1`).
 2. S kiểm: cặp tồn tại, chưa thu hồi, `device_id` đúng đối phương, `mac` đúng (so sánh hằng thời gian). Sai → op `error` rồi đóng 4401 hoặc 4403.
@@ -238,7 +238,7 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 3. C kiểm `mac`. Hai bên tính `secret` = HKDF-SHA256(ikm = X25519(eph) ‖ `PRK`, salt = SHA-256(`T2`), info = `"handlive/v1/session"`, L = 64); `k_c2s` = 32 byte đầu, `k_s2c` = 32 byte sau.
 4. Mọi envelope sau đó mã hóa bằng khóa theo chiều gửi. Envelope đầu tiên mỗi chiều là `capability` op `hello`.
 5. Bắt tay quá 5 s (`HANDSHAKE_TIMEOUT`) → đóng 4408.
-6. **Rekey**: sau 24 h hoặc 10 000 envelope một chiều, bên phát hiện trước gửi `session` op `rekey` `{eph, nonce}` (có ack chứa `{eph, nonce}` của bên kia); khóa mới = HKDF(ikm = X25519(eph mới) ‖ `secret` cũ, salt = SHA-256(hai nonce), info = `"handlive/v1/rekey"`, L = 64). Bên nhận `ack` chuyển khóa ngay; bên gửi `ack` chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
+6. **Rekey**: sau 24 h hoặc 10 000 envelope một chiều, bên phát hiện trước gửi `session` op `rekey` `{epoch, eph, nonce}` (`epoch` = thế hệ khóa hiện tại + 1; có ack chứa `{epoch, eph, nonce}` của bên kia, xem CONN-02); khóa mới = HKDF(ikm = X25519(eph mới) ‖ `secret` cũ, salt = SHA-256(hai nonce), info = `"handlive/v1/rekey"`, L = 64). Bên nhận `ack` chuyển khóa ngay; bên gửi `ack` chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
 7. **Khóa kênh stream** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info = `"handlive/v1/stream/" ‖ <kênh> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth`(32) ‖ `k_c2s`(32) ‖ `k_s2c`(32). Tin đầu tiên trên kênh stream là envelope `camera`/`call_audio` op `stream_hello` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖ `session_id` ‖ `nonce_c`); S trả `stream_welcome` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — gắn cả hai nonce nên không phát lại được. Sai `mac` → đóng 4401.
 
 ### 0.6.4 Xác thực thiết bị với relay

@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/capability-hello.schema.json",
+  "title": "HandLive — capability/hello (hai chiều, không ack)",
+  "description": "00-common-specs 0.7.2. Envelope mã hóa đầu tiên mỗi chiều sau bắt tay. Tính năng nền tảng không có thì vắng mặt trong features (coi như tắt); trường ghi 'Chỉ Android/Mac/iOS' là tùy chọn trong schema. #/$defs/capability-data dùng chung với capability/update.",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": { "const": "hello" },
+    "data": { "$ref": "#/$defs/capability-data" }
+  },
+  "$defs": {
+    "capability-data": {
+      "type": "object",
+      "required": ["protocol", "app_version", "platform", "os_version", "model", "features"],
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "description": "Phiên bản giao thức; khác major → đóng 4426.",
+          "$ref": "common.schema.json#/$defs/int32",
+          "minimum": 1
+        },
+        "app_version": { "type": "string" },
+        "platform": { "enum": ["android", "macos", "ios", "ipados"] },
+        "os_version": { "type": "string" },
+        "model": { "type": "string" },
+        "features": { "$ref": "#/$defs/features" },
+        "permissions_missing": {
+          "description": "Chỉ Android: quyền còn thiếu.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clipboard": { "$ref": "#/$defs/feature-clipboard" },
+        "sms": { "$ref": "#/$defs/feature-sms" },
+        "call": { "$ref": "#/$defs/feature-call" },
+        "call_audio": { "$ref": "#/$defs/feature-call-audio" },
+        "camera": { "$ref": "#/$defs/feature-camera" },
+        "relay": { "$ref": "#/$defs/feature-relay" }
+      }
+    },
+    "feature-clipboard": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "auto_send": {
+          "description": "Android: Accessibility đang bật; client: luôn true.",
+          "type": "boolean"
+        },
+        "max_text_bytes": { "$ref": "common.schema.json#/$defs/int64", "minimum": 0 },
+        "max_image_bytes": { "$ref": "common.schema.json#/$defs/int64", "minimum": 0 },
+        "mimes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z]+/[a-z0-9.+-]+$" }
+        }
+      }
+    },
+    "feature-sms": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "can_send": { "type": "boolean" },
+        "sims": {
+          "description": "Chỉ Android: SIM đang hoạt động; thiếu READ_PHONE_STATE → rỗng.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sub_id", "slot", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "sub_id": { "$ref": "common.schema.json#/$defs/int32" },
+              "slot": { "$ref": "common.schema.json#/$defs/int32", "minimum": 0 },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "default_sub_id": {
+          "description": "Chỉ Android; null khi máy đặt 'luôn hỏi'.",
+          "anyOf": [
+            { "$ref": "common.schema.json#/$defs/int32" },
+            { "type": "null" }
+          ]
+        },
+        "notify": {
+          "description": "Chỉ iOS/iPadOS; bằng khóa sms.notify.",
+          "type": "boolean"
+        }
+      }
+    },
+    "feature-call": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "can_answer": { "type": "boolean" },
+        "can_end": { "type": "boolean" },
+        "caller_id": { "type": "boolean" },
+        "notify": {
+          "description": "Chỉ iOS/iPadOS; bằng khóa call.notify.",
+          "type": "boolean"
+        }
+      }
+    },
+    "feature-call-audio": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "bt_address": {
+          "description": "Chỉ Mac: địa chỉ Bluetooth của Mac, dạng như ví dụ AUDIO-01 (\"A1:B2:C3:D4:E5:F6\"); Android gửi null.",
+          "anyOf": [
+            { "type": "string", "pattern": "^[0-9A-F]{2}(?::[0-9A-F]{2}){5}$" },
+            { "type": "null" }
+          ]
+        },
+        "hfp_connected": { "type": "boolean" },
+        "consented": {
+          "description": "Chỉ Mac: có consent_record hiệu lực (AUDIO-01).",
+          "type": "boolean"
+        },
+        "opus_fallback": {
+          "description": "Chỉ Android: khả năng đường Opus/WS.",
+          "type": "object",
+          "required": ["available", "downlink", "uplink", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "available": { "type": "boolean" },
+            "downlink": { "type": "boolean" },
+            "uplink": { "type": "boolean" },
+            "reason": {
+              "enum": ["ok", "disabled", "android_10", "shizuku_not_running", "capture_silent", "uplink_unsupported"]
+            }
+          }
+        }
+      }
+    },
+    "feature-camera": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "cameras": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["front", "back"] }
+        },
+        "max_width": { "$ref": "common.schema.json#/$defs/int32", "minimum": 1 },
+        "max_height": { "$ref": "common.schema.json#/$defs/int32", "minimum": 1 },
+        "max_fps": { "$ref": "common.schema.json#/$defs/int32", "minimum": 1 },
+        "codecs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["h264"] }
+        }
+      }
+    },
+    "feature-relay": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    }
+  }
+}

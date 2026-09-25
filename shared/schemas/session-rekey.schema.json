@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/session-rekey.schema.json",
+  "title": "HandLive — session/rekey (hai chiều, có ack)",
+  "description": "00-common-specs 0.6.3 bước 6; trường epoch theo CONN-02 API 3. Envelope mã hóa bằng khóa hiện tại. ack thành công mang {epoch, eph, nonce} của bên nhận: #/$defs/ack.",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": { "const": "rekey" },
+    "data": { "$ref": "#/$defs/rekey-data" }
+  },
+  "$defs": {
+    "rekey-data": {
+      "type": "object",
+      "required": ["epoch", "eph", "nonce"],
+      "additionalProperties": false,
+      "properties": {
+        "epoch": {
+          "description": "Thế hệ khóa mới (hiện tại + 1).",
+          "$ref": "common.schema.json#/$defs/int32",
+          "minimum": 1
+        },
+        "eph": {
+          "description": "Khóa công khai X25519 tạm mới.",
+          "$ref": "common.schema.json#/$defs/b64u-32"
+        },
+        "nonce": { "$ref": "common.schema.json#/$defs/b64u-32" }
+      }
+    },
+    "ack": {
+      "description": "ack thành công của session/rekey. ack lỗi dùng ack.schema.json#/$defs/failure.",
+      "allOf": [
+        { "$ref": "ack.schema.json#/$defs/success" },
+        { "properties": { "data": { "$ref": "#/$defs/rekey-data" } } }
+      ]
+    }
+  }
+}

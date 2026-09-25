@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/common.schema.json",
+  "title": "HandLive — kiểu dữ liệu chuẩn",
+  "description": "Kiểu dùng chung theo 00-common-specs 0.3 và định danh 0.2. Chỉ chứa $defs; tham chiếu bằng common.schema.json#/$defs/<tên>.",
+  "$defs": {
+    "uuid": {
+      "description": "uuid: 36 ký tự thường, có gạch (0.3).",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "uuid-v4": {
+      "description": "UUIDv4 ngẫu nhiên (pair_id, 0.2): nibble version = 4, variant = 10.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "uuid-v7": {
+      "description": "UUIDv7 (id envelope, clip_id, session_id…; 0.2): nibble version = 7, variant = 10.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "uuid-v8": {
+      "description": "UUIDv8 tự chứng thực (device_id, 0.2): nibble version = 8, variant = 10.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "int32": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "int64": {
+      "type": "integer",
+      "minimum": -9223372036854775808,
+      "maximum": 9223372036854775807
+    },
+    "timestamp": {
+      "description": "int64 mili-giây Unix epoch UTC, không âm (0.3).",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9223372036854775807
+    },
+    "b64": {
+      "description": "Base64 chuẩn RFC 4648 §4, có padding (0.3).",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+    },
+    "b64u": {
+      "description": "Base64url RFC 4648 §5, không padding (0.3).",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2,3})?$"
+    },
+    "b64u-32": {
+      "description": "b64u của đúng 32 byte: 43 ký tự, ký tự cuối chỉ mang 2 bit dữ liệu (dạng chuẩn tắc).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
+    }
+  }
+}

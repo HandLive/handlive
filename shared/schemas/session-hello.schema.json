@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/session-hello.schema.json",
+  "title": "HandLive — session/hello (C→S)",
+  "description": "00-common-specs 0.6.3 bước 1; trường protocol theo CONN-01 API 4. Payload chưa mã hóa (b64 của JSON này).",
+  "type": "object",
+  "required": ["op", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "op": { "const": "hello" },
+    "data": {
+      "type": "object",
+      "required": ["protocol", "pair_id", "device_id", "eph", "nonce", "mac"],
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "description": "Phiên bản giao thức; hiện là 1. Khác major → S trả session/error UNSUPPORTED_VERSION, đóng 4426.",
+          "$ref": "common.schema.json#/$defs/int32",
+          "minimum": 1
+        },
+        "pair_id": { "$ref": "common.schema.json#/$defs/uuid-v4" },
+        "device_id": {
+          "description": "device_id của client.",
+          "$ref": "common.schema.json#/$defs/uuid-v8"
+        },
+        "eph": {
+          "description": "Khóa công khai X25519 tạm.",
+          "$ref": "common.schema.json#/$defs/b64u-32"
+        },
+        "nonce": { "$ref": "common.schema.json#/$defs/b64u-32" },
+        "mac": {
+          "description": "HMAC-SHA256(K_auth, T1).",
+          "$ref": "common.schema.json#/$defs/b64u-32"
+        }
+      }
+    }
+  }
+}

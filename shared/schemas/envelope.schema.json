@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handlive.app/schemas/v1/envelope.schema.json",
+  "title": "HandLive — envelope JSON (WS text frame)",
+  "description": "00-common-specs 0.5.1. payload = nonce(24) ‖ ciphertext ‖ tag(16) của XChaCha20-Poly1305 (AAD = \"<v>|<type>|<id>|<ts>\"), trừ tin bắt tay mang b64 của JSON chưa mã hóa.",
+  "type": "object",
+  "required": ["v", "type", "id", "ts", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "v": {
+      "description": "Phiên bản envelope, hiện là 1.",
+      "const": 1
+    },
+    "type": { "$ref": "#/$defs/type" },
+    "id": {
+      "description": "UUIDv7 duy nhất; bên nhận dùng để chống xử lý trùng.",
+      "$ref": "common.schema.json#/$defs/uuid-v7"
+    },
+    "ts": {
+      "description": "Thời điểm tạo ở bên gửi.",
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "payload": {
+      "$ref": "common.schema.json#/$defs/b64",
+      "minLength": 4
+    }
+  },
+  "$defs": {
+    "type": {
+      "description": "Nhóm tin (0.7.1): tập đã chốt cộng session, camera.",
+      "enum": [
+        "clipboard",
+        "sms",
+        "call_event",
+        "call_audio",
+        "pair",
+        "ack",
+        "ping",
+        "capability",
+        "session",
+        "camera"
+      ]
+    }
+  }
+}
