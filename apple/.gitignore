@@ -1,2 +1,0 @@
-# Chỉ sinh ra khi chạy với HL_SWIFT_TESTING_PACKAGE=1 (kéo gói swift-testing); phụ thuộc môi trường, không commit.
-Packages/*/Package.resolved

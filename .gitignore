@@ -1,40 +1,20 @@
+# Các phần mã nguồn là kho git riêng (handlive-android, handlive-apple, handlive-relay, handlive-shared),
+# clone cạnh nhau bằng tools/clone-parts.sh; kho hub này chỉ giữ tài liệu, kế hoạch và công cụ tài liệu.
+/android/
+/apple/
+/relay/
+/shared/
+
 # macOS
 .DS_Store
-
-# Android / Gradle
-*.iml
-.gradle/
-local.properties
-android/build/
-android/**/build/
-android/.idea/
-*.keystore
-*.jks
-
-# Xcode / Swift
-xcuserdata/
-*.xcworkspace/xcuserdata/
-DerivedData/
-.build/
-*.xcodeproj/project.xcworkspace/xcuserdata/
-apple/*.xcodeproj
-
-# Rust
-relay/target/
-target/
-
-# Secrets / config
-.env
-.env.*
-*.p12
-*.mobileprovision
 
 # Editor
 .vscode/
 .idea/
 
-# Doc exports
-build/
+# Secrets / config
+.env
+.env.*
 
-# Rust
-relay/target/
+# Xuất tài liệu (tools/docs/build_design_html.py)
+/build/

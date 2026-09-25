@@ -1,2 +1,0 @@
-# Root .gitignore ignores .env.*; the example holds dev placeholders only.
-!.env.example
