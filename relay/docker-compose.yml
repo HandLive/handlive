@@ -1,0 +1,35 @@
+# Dev-only backing services for the relay (spec 0.9.4: PostgreSQL 16 + Redis 7).
+# Host ports are shifted (55432, 56379) to avoid clashing with a local
+# PostgreSQL/Redis on the default ports. Credentials are dev-only placeholders.
+name: handlive-relay-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: handlive
+      POSTGRES_PASSWORD: handlive-dev
+      POSTGRES_DB: handlive_relay
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U handlive -d handlive_relay"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:
