@@ -1,6 +1,7 @@
 # Viết nội dung
 
-Câu chữ của HandLive ngắn, rõ và bình tĩnh như một công cụ của hệ thống. Mục này quy định giọng văn,
+Câu chữ của HandLive ngắn, rõ và bình tĩnh như một công cụ của hệ thống. Giao diện có tiếng Anh
+(ngôn ngữ mặc định) và tiếng Việt (C20); các mục đầu nói về tiếng Việt, mục "Tiếng Anh" ở cuối. Mục này quy định giọng văn,
 cách viết hoa và bỏ dấu, cách viết từng thành phần, thuật ngữ, định dạng số và ngày, và những chỗ
 cần đồng bộ với tài liệu thiết kế chi tiết.
 
@@ -120,6 +121,46 @@ chiếu trên máy thật.
 | "Không, tôi sẽ gửi thủ công" | "Gửi thủ công" | CLIP-01 trường 3; nút bắt đầu bằng động từ |
 | "Thêm điện thoại" (nút Mac mở sheet mã QR) | "Thêm điện thoại…" | PAIR-01 |
 | "Đã tải 1 500 tin" | "Đã tải 1.500 tin" | SMS-01; dấu ngăn nghìn của tiếng Việt |
+
+## Tiếng Anh — ngôn ngữ mặc định
+
+HandLive viết tiếng Anh theo Apple Style Guide và bản tiếng Anh của HIG. Tiếng Anh là ngôn ngữ nguồn
+của catalog chuỗi (`shared/strings/ui-strings.json`, tài liệu chi tiết 0.12); mỗi chuỗi có bản tiếng
+Việt theo các mục trên (C20).
+
+- Viết hoa kiểu tiêu đề (title-style) cho nút, mục menu, tiêu đề cửa sổ và sheet, tab, nhãn dòng
+  cài đặt, tiêu đề alert: "Send Clipboard to Phone", "Unpair", "Add Phone…". Viết hoa mọi từ trừ mạo
+  từ (a, an, the), liên từ (and, but, or, nor) và giới từ từ ba chữ cái trở xuống (to, in, on, via,
+  for) khi không đứng đầu hay cuối.
+- Viết hoa kiểu câu (sentence-style) cho mô tả, chú thích, nội dung alert, nội dung thông báo, chuỗi
+  trạng thái, tooltip: "Connected via Wi-Fi", "Keep the phone and this Mac on the same Wi-Fi
+  network."
+- Giọng ngắn, chủ động, thì hiện tại; không "please", "sorry", "oops", dấu chấm than, emoji; chỉ dùng
+  "you" khi câu thiếu chủ ngữ gây hiểu lầm. "Tap" cho màn hình cảm ứng, "click" cho Mac.
+- Tên mục của hệ điều hành viết đúng bản tiếng Anh: "System Settings", "Privacy & Security",
+  "Focus", "Notification Center", "Accessibility" (cả Apple và Android), "Paste from Other Apps".
+- "internet" viết thường trong câu ("Connected over the internet"), viết hoa khi cả chuỗi viết hoa
+  kiểu tiêu đề.
+- Số, ngày, giờ theo locale tiếng Anh qua formatter của hệ thống ("2:05 PM" ở en-US, "Sep 24",
+  "1,500", "0.5", "5 MB"); không tự ghép chuỗi.
+- Lỗi: chuyện gì xảy ra rồi cách xử lý — "The PIN is incorrect. Check the code on your Mac and try
+  again."; không mã lỗi, không tiêu đề chung chung "Error".
+- Dấu "…" và các quy tắc về nút, alert, thông báo, trạng thái trống như bản tiếng Việt.
+
+| Tiếng Anh | Tiếng Việt | Ghi chú |
+|-----------|------------|---------|
+| Clipboard | Bảng nhớ tạm | |
+| Pair, Unpair | Ghép nối, Hủy ghép nối | |
+| Internet connection ("Connected over the internet") | Kết nối qua Internet | Không dùng "relay" ở cả hai ngôn ngữ |
+| Same Wi-Fi network (nhãn ngắn: LAN) | Cùng mạng Wi-Fi (nhãn ngắn: LAN) | |
+| Accessibility | Hỗ trợ tiếp cận (Android), Trợ năng (Apple) | |
+| USB debugging | Gỡ lỗi USB | |
+| Microphone | Micro | |
+| Missed Call | Cuộc gọi nhỡ | |
+| Security Code | Mã an toàn | |
+| Focus | Tập trung | |
+| Offline | Ngoại tuyến | |
+| Phone | Điện thoại | Điện thoại Android đã ghép |
 
 ## Nên và không nên
 
