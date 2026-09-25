@@ -342,6 +342,8 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 - E2E không tắt được. Không có đường gửi không mã hóa.
 - Không log nội dung (clipboard, SMS, số điện thoại, tên liên hệ) ở bất kỳ thành phần nào.
 - SQLite trên Mac/iOS mã hóa bằng SQLCipher (qua GRDB); khóa 32 byte trong Keychain.
+- Chữ ký Ed25519 kiểm chặt: đúng 64 byte và S < L (RFC 8032 §5.1.7); không dùng hàm kiểm dễ dãi (vector âm trong
+  `shared/test-vectors/ed25519.json`).
 - Relay chỉ lưu thống kê theo `device_hash` = SHA-256(`device_id` ‖ muối theo tháng), giữ 30 ngày.
 
 ## 0.7 Danh mục loại tin

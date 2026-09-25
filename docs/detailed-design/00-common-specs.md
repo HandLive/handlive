@@ -350,6 +350,8 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 - E2E cannot be turned off. There is no unencrypted sending path.
 - No component logs content (clipboard, SMS, phone numbers, contact names).
 - SQLite on Mac/iOS is encrypted with SQLCipher (through GRDB); 32-byte key in the Keychain.
+- Ed25519 signatures are verified strictly: exactly 64 bytes and S < L (RFC 8032 §5.1.7); never use a lax verifier
+  (negative vectors in `shared/test-vectors/ed25519.json`).
 - The relay only keeps statistics per `device_hash` = SHA-256(`device_id` ‖ monthly salt), for 30
   days.
 

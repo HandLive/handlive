@@ -97,7 +97,7 @@ N/A — chưa có wireframe được duyệt.
 | 5 | Ô Cài đặt nhanh "Gửi bảng nhớ tạm" | action | Input | Người dùng tự thêm vào bảng Cài đặt nhanh | Dòng phụ: "Tới <tên client>", "Tới 2 thiết bị" hoặc "Chưa kết nối" |
 | 6 | Mục chia sẻ "Gửi tới thiết bị (HandLive)" | action | Input | — | Trong bảng Chia sẻ của ứng dụng khác, chỉ với `text/plain` |
 | 7 | Toast hệ thống khi đọc clipboard | string | Output | — | Android 12+: "HandLive đã dán từ bộ nhớ đệm" (nguyên văn theo ngôn ngữ hệ thống); hệ thống hiển thị, ứng dụng không tắt được |
-| 8 | Thông báo chặn nội dung nhạy cảm | string | Output | — | "Đã chặn nội dung nhạy cảm — HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ." (QC3). Android: thông báo kênh `clipboard` ("Bảng nhớ tạm", `IMPORTANCE_DEFAULT`); Mac: thông báo hệ thống có nút |
+| 8 | Thông báo chặn nội dung nhạy cảm | string | Output | — | "Đã chặn nội dung nhạy cảm — HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ." (QC3). Android: thông báo kênh `clipboard` ("Bảng nhớ tạm", mô tả "Nội dung nhạy cảm bị chặn, xung đột bảng nhớ tạm và tiến trình gửi ảnh.", `IMPORTANCE_LOW` — không kêu, lỗi bảng nhớ tạm báo tại chỗ theo C19); Mac: thông báo hệ thống có nút |
 | 9 | Nút "Vẫn gửi" | action | Input | — | Trên thông báo trường 8; gửi với `sensitive = true`; hết hạn sau 120 s |
 | 10 | Báo nội dung quá lớn | string | Output | — | "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)" — toast (đường thủ công), không đẩy thông báo hệ thống |
 | 11 | Kết quả gửi thủ công | string | Output | — | Toast "Đã gửi tới <tên>", "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" hoặc "Bảng nhớ tạm trống hoặc không phải văn bản" |
@@ -792,7 +792,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Ảnh được sao chép | image (PNG, JPEG, TIFF, HEIC…) | Input | — | Người dùng sao chép ảnh trên Android hoặc Mac |
-| 2 | Tiến trình gửi/nhận | int32 (%) | Output | 0 | Chỉ khi ảnh > 1 MiB. Android: thông báo có thanh tiến trình; Mac: trong menu bar. Ví dụ "Đang gửi ảnh tới Pixel của Lan — 45 %" |
+| 2 | Tiến trình gửi/nhận | int32 (%) | Output | 0 | Chỉ khi ảnh > 1 MiB. Android: thông báo có thanh tiến trình; Mac: trong menu bar. Ví dụ "Đang gửi ảnh tới Pixel của Lan — 45 %"; bên nhận: "Đang nhận ảnh từ MacBook của Lan — 45 %" |
 | 3 | Kích thước ảnh | int64 (byte) | Output | `transfer.size` | Hiển thị dạng MB cạnh tiến trình |
 | 4 | Nút "Hủy" | action | Input | — | Trên tiến trình ở cả hai bên → `clipboard/cancel` `user` |
 | 5 | Thông báo ảnh quá lớn | string | Output | — | "Ảnh quá lớn (tối đa 10 MB)" |

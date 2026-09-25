@@ -102,7 +102,7 @@ N/A — no approved wireframe yet.
 | 5 | "Send Clipboard" Quick Settings tile | action | Input | Added by the user to the Quick Settings panel | Subtitle: "To \<client name>", "To 2 devices" or "Not connected" |
 | 6 | Share target "Send to Devices (HandLive)" | action | Input | — | In other apps' share sheet, only for `text/plain` |
 | 7 | System toast when reading the clipboard | string | Output | — | Android 12+: "HandLive pasted from your clipboard" (exact wording follows the system language); shown by the system, the app cannot turn it off |
-| 8 | Sensitive content blocked notification | string | Output | — | "Sensitive Content Blocked — HandLive doesn't send content that looks like a password or card number." (QC3). Android: notification on the `clipboard` channel ("Clipboard", `IMPORTANCE_DEFAULT`); Mac: system notification with a button |
+| 8 | Sensitive content blocked notification | string | Output | — | "Sensitive Content Blocked — HandLive doesn't send content that looks like a password or card number." (QC3). Android: notification on the `clipboard` channel ("Clipboard", description "Blocked sensitive content, clipboard conflicts, and image transfer progress.", `IMPORTANCE_LOW` — silent; clipboard errors are reported in place per C19); Mac: system notification with a button |
 | 9 | "Send Anyway" button | action | Input | — | On the field 8 notification; sends with `sensitive = true`; expires after 120 s |
 | 10 | Content too large message | string | Output | — | "Content is too large to send (up to 1 MB of text)" — toast (manual path), no system notification |
 | 11 | Manual send result | string | Output | — | Toast "Sent to \<name>", "Not connected — will send if reconnected within 2 minutes" or "The clipboard is empty or doesn't contain text" |
@@ -807,7 +807,7 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Copied image | image (PNG, JPEG, TIFF, HEIC…) | Input | — | The user copies an image on Android or the Mac |
-| 2 | Send/receive progress | int32 (%) | Output | 0 | Only when the image > 1 MiB. Android: notification with a progress bar; Mac: in the menu bar. Example "Sending image to Lan's Pixel — 45%" |
+| 2 | Send/receive progress | int32 (%) | Output | 0 | Only when the image > 1 MiB. Android: notification with a progress bar; Mac: in the menu bar. Example "Sending image to Lan's Pixel — 45%"; receiver: "Receiving image from Lan's MacBook — 45%" |
 | 3 | Image size | int64 (bytes) | Output | `transfer.size` | Shown in MB next to the progress |
 | 4 | "Cancel" button | action | Input | — | On the progress on both sides → `clipboard/cancel` `user` |
 | 5 | Image too large message | string | Output | — | "Image is too large (up to 10 MB)" |

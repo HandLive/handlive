@@ -212,7 +212,7 @@ Payload sau khi giải base64:
 - **Request (`data`):** `code` —
   enum{AUTH_FAILED\|PAIR_UNKNOWN\|PAIR_REVOKED\|UNSUPPORTED_VERSION\|RATE_LIMITED}; `message` —
   string; `min_protocol` — int32 (bắt buộc khi `UNSUPPORTED_VERSION`, không có ở mã khác; client
-  dùng để hiển thị "Cập nhật HandLive trên điện thoại" hoặc "trên máy này").
+  dùng để hiển thị "Cập nhật HandLive trên điện thoại" hoặc "Cập nhật HandLive trên máy này").
 - **Response:** N/A.
 - **Ví dụ:** `{"op":"error","data":{"code":"PAIR_UNKNOWN","message":"Device is not paired"}}`
 - **Logic nghiệp vụ:** Client xử lý theo E3–E5; không tự động thử lại với `AUTH_FAILED` trước 5
@@ -549,7 +549,7 @@ flowchart TB
 - **Response 200:** `challenge` — b64u (32 byte); `expires_at` — timestamp (+60 s). Lỗi: 404
   `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429 `RATE_LIMITED`.
 - **Ví dụ:** `{"device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}` →
-  `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQa","expires_at":1727151160000}`
+  `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQA","expires_at":1727151160000}`
 - **Logic nghiệp vụ:** Sinh 32 byte ngẫu nhiên, ghi `chal:<device_id>` (ghi đè challenge cũ), TTL 60
   s; tối đa 10 lần/phút mỗi thiết bị.
 

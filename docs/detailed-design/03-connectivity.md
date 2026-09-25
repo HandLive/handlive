@@ -556,7 +556,7 @@ flowchart TB
 - **Response 200:** `challenge` — b64u (32 bytes); `expires_at` — timestamp (+60 s). Errors: 404
   `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429 `RATE_LIMITED`.
 - **Example:** `{"device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}` →
-  `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQa","expires_at":1727151160000}`
+  `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQA","expires_at":1727151160000}`
 - **Business logic:** Generate 32 random bytes, write `chal:<device_id>` (overwriting any older
   challenge), TTL 60 s; at most 10 times/minute per device.
 
