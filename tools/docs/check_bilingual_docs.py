@@ -16,7 +16,7 @@ Checks for every pair:
   8. links: `X.vi.md` links to the Vietnamese twin of a page when it exists, `X.md` never links to a
      `.vi.md` page (except the switcher), relative targets and `#anchors` resolve.
 
-Usage: python3 tools/docs/check_bilingual_docs.py [--allow-missing] [path ...]
+Usage: python3 tools/docs/check_bilingual_docs.py [--allow-missing] [--root DIR] [path ...]
 """
 import argparse
 import re
@@ -118,7 +118,7 @@ def vi_share(doc):
 def normalize_code(lang, lines):
     text = "\n".join(lines)
     if lang in ("json", "jsonc"):
-        text = re.sub(r'"(?:[^"\\]|\\.)*"(?!\s*:)', '"S"', text)
+        text = re.sub(r'"(?:[^"\\]|\\.)*"(\s*:)?', lambda m: m.group(0) if m.group(1) else '"S"', text)
         text = re.sub(r"//[^\n]*", "", text)
         return re.sub(r"\s+", "", text)
     if lang == "sql":
@@ -236,8 +236,12 @@ def check_links(path, doc, docs_cache, allow_missing, problems, warnings):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--allow-missing", action="store_true", help="report a missing twin as a warning")
+    ap.add_argument("--root", help="repository root to check (default: the repository holding this script)")
     ap.add_argument("paths", nargs="*", help="limit the check to these files (either language)")
     args = ap.parse_args()
+    global ROOT
+    if args.root:
+        ROOT = Path(args.root).resolve()
 
     cache = {}
 
