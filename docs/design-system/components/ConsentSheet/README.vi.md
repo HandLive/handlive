@@ -9,7 +9,7 @@ pháp lý). Lựa chọn và phiên bản văn bản được ghi lại.
 | Chỗ dùng | Nền tảng | Ghi lại |
 |----------|---------|---------|
 | Nghe gọi trên Mac (AUDIO-01, văn bản `call-audio-v1`) | macOS — sheet gắn cửa sổ Cài đặt | `consent_record` |
-| Tự gửi khi sao chép bằng Hỗ trợ tiếp cận (CLIP-01) | Android — sheet từ dưới lên | `clip.a11y_consent_at` |
+| Tự gửi khi sao chép bằng Hỗ trợ tiếp cận (CLIP-01) | Android — toàn màn hình (công bố nổi bật theo chính sách Google Play; SET-01 trường 13) | `clip.a11y_consent_at` |
 
 ## Nội dung
 
@@ -28,7 +28,8 @@ pháp lý). Lựa chọn và phiên bản văn bản được ghi lại.
 
 - **macOS:** `.sheet` trên cửa sổ Cài đặt, rộng ~460 pt, cửa sổ cha mờ đi; Esc = Hủy, Return = Đồng
   ý.
-- **Android:** sheet có tay kéo, góc `radius-sheet`, nền `system-background`; vuốt xuống = Hủy. Bản
+- **Android:** toàn màn hình (công bố nổi bật theo chính sách Google Play; SET-01 trường 13), nền
+  `system-background`; nút Quay lại = Hủy. Bản
   cài ngoài Google Play trên Android 13+ thêm bước "Cho phép cài đặt bị hạn chế".
 - **iOS:** không có (iPhone không nghe gọi, không có Hỗ trợ tiếp cận kiểu Android).
 

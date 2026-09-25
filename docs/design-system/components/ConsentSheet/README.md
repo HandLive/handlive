@@ -9,7 +9,7 @@ allows this when legal consent is needed). The choice and the version of the tex
 | Where it's used | Platform | Recorded in |
 |----------|---------|---------|
 | Take Calls on Mac (AUDIO-01, text `call-audio-v1`) | macOS — a sheet attached to the Settings window | `consent_record` |
-| Auto-Send on Copy, through Accessibility (CLIP-01) | Android — a sheet that rises from the bottom | `clip.a11y_consent_at` |
+| Auto-Send on Copy, through Accessibility (CLIP-01) | Android — full screen (a prominent disclosure under Google Play policy; SET-01 field 13) | `clip.a11y_consent_at` |
 
 ## Content
 
@@ -30,8 +30,8 @@ allows this when legal consent is needed). The choice and the version of the tex
 
 - **macOS:** `.sheet` on the Settings window, ~460 pt wide, with the parent window dimmed; Esc =
   Cancel, Return = Agree.
-- **Android:** a sheet with a drag handle, `radius-sheet` corners, a `system-background` background;
-  swipe down = Cancel. Installs from outside Google Play on Android 13+ add an "Allow restricted
+- **Android:** full screen (a prominent disclosure under Google Play policy; SET-01 field 13) with a
+  `system-background` background; Back = Cancel. Installs from outside Google Play on Android 13+ add an "Allow restricted
   settings" step.
 - **iOS:** not available (the iPhone doesn't take call audio and has no Android-style Accessibility
   service).

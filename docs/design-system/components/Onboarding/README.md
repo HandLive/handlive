@@ -13,7 +13,7 @@ branding on the launch screen; this screen is the right place for it.
 | Background | `system-background` with a `brand-glow` halo at the top (the brand color lives in the content layer) |
 | Title | "Welcome to HandLive", `brand-large-title`; the word "HandLive" in `brand-fire` |
 | Three or four feature rows | An SF Symbol in `brand-fire` + a bold title + one sentence. Mac: clipboard, messages and calls, webcam, privacy. iPhone/iPad: clipboard, messages, call notifications, privacy. Android: the phone's role as the hub, privacy |
-| Link | "HandLive and Your Privacy" (opens a short explanation page) |
+| Link | "HandLive and Your Privacy" (opens `docs/privacy.md` or `docs/privacy.vi.md` in the display language) |
 | Button | "Get Started" — a prominent `Button`, at the bottom (iPhone, Android) or in the bottom-right corner (Mac); later steps use "Continue", and the last step "Done" |
 
 The flow after the welcome screen: `PermissionPrimer` for the permissions needed to run → (Mac) ask

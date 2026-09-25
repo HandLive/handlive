@@ -13,7 +13,7 @@ hiệu; màn này là chỗ đúng.
 | Nền | `system-background` với quầng `brand-glow` phía trên (màu thương hiệu nằm ở lớp nội dung) |
 | Tiêu đề | "Chào mừng đến với HandLive", `brand-large-title`; chữ "HandLive" màu `brand-fire` |
 | Ba–bốn dòng tính năng | SF Symbol màu `brand-fire` + tiêu đề đậm + một câu. Mac: bảng nhớ tạm, tin nhắn và cuộc gọi, webcam, riêng tư. iPhone/iPad: bảng nhớ tạm, tin nhắn, thông báo cuộc gọi, riêng tư. Android: vai trò trung tâm, riêng tư |
-| Liên kết | "HandLive và quyền riêng tư của bạn" (mở trang giải thích ngắn) |
+| Liên kết | "HandLive và quyền riêng tư của bạn" (mở `docs/privacy.vi.md` hoặc `docs/privacy.md` theo ngôn ngữ đang hiển thị) |
 | Nút | "Bắt đầu" — `Button` nổi bật, dưới cùng (iPhone, Android) hoặc góc phải dưới (Mac); các bước sau dùng "Tiếp tục", bước cuối "Xong" |
 
 Luồng sau màn chào: `PermissionPrimer` cho quyền cần để chạy → (Mac) hỏi "Hiện HandLive trên thanh

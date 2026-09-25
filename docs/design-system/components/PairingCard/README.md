@@ -24,8 +24,7 @@ haptic (iPhone).
 
 A full-screen camera view: a four-corner viewfinder in `on-video`, a dark layer outside the frame, the
 sentence "Point the camera at the QR code on your Mac or iPhone", a round glass close button (`xmark` ↔
-`close`) in the top-left corner, and a glass "Enter PIN" button at the bottom. Once the code is scanned:
-a `CONFIRM` haptic, then the device name and the **Security Code** are shown for comparison.
+`close`) in the top-left corner, and a glass "Enter PIN" button at the bottom. Once the code is scanned: a `CONFIRM` haptic and the device name; the **Security Code** appears when pairing finishes (on the result and in the device details) for comparison.
 
 ## Dos and don'ts
 

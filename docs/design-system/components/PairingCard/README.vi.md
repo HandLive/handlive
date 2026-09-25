@@ -23,7 +23,7 @@ Ghép xong: sheet tự đóng, `Feedback` "Đã ghép nối với Pixel 8 của 
 
 Màn camera toàn màn hình: khung ngắm bốn góc màu `on-video`, lớp tối ngoài khung, câu "Hướng camera
 vào mã QR trên Mac hoặc iPhone", nút kính tròn đóng (`xmark` ↔ `close`) ở góc trên trái, nút kính
-"Nhập mã PIN" ở dưới. Quét được: rung `CONFIRM`, hiện tên máy và **Mã an toàn** để đối chiếu.
+"Nhập mã PIN" ở dưới. Quét được: rung `CONFIRM`, hiện tên máy; **Mã an toàn** hiện khi ghép nối xong (ở kết quả và chi tiết thiết bị) để đối chiếu.
 
 ## Nên và không nên
 
