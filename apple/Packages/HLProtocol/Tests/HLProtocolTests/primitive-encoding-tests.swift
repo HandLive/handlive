@@ -74,7 +74,7 @@ struct PrimitiveEncodingTests {
             guard line.hasPrefix("| `") else { return nil }
             return line.dropFirst(3).split(separator: "`").first.map(String.init)
         }
-        let ours = ErrorCode.allCases.map(\.rawValue)
+        let ours = ErrorCode.allCases.filter { $0 != .unrecognized }.map(\.rawValue)
         #expect(ours == specCodes)
 
         let schema = try RepoFiles.json(at: RepoFiles.schemasDirectory.appendingPathComponent("error.schema.json"))

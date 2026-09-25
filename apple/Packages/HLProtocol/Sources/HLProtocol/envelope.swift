@@ -66,12 +66,11 @@ public struct Envelope: Codable, Equatable, Sendable {
 
     private static let fieldNames = ["v", "type", "id", "ts", "payload"]
 
-    /// Đủ năm trường, không có trường lạ.
+    /// Đủ năm trường; trường lạ bị bỏ qua (0.5.1 quy tắc 6).
     private static func checkKeys(_ object: [String: Any]) throws {
         for key in fieldNames where object[key] == nil {
             throw ProtocolError.missingField(key)
         }
-        guard Set(object.keys).isSubset(of: fieldNames) else { throw ProtocolError.invalidField("envelope") }
     }
 }
 

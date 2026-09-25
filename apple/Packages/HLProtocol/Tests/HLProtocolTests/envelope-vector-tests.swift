@@ -76,9 +76,7 @@ struct EnvelopeVectorTests {
             ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":true,\"payload\":\"\(payload)\"}", .invalidField("ts")),
             ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":-1,\"payload\":\"\(payload)\"}", .invalidField("ts")),
             ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":1,\"payload\":\"AAA\"}", .invalidBase64),
-            ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":1}", .missingField("payload")),
-            ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":1,\"payload\":\"\(payload)\",\"x\":1}",
-             .invalidField("envelope"))
+            ("{\"v\":1,\"type\":\"sms\",\"id\":\"\(id)\",\"ts\":1}", .missingField("payload"))
         ]
         for (wire, expected) in cases {
             #expect(throws: expected) { try Envelope.parse(Data(wire.utf8)) }

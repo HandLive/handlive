@@ -79,8 +79,9 @@ public struct CallFeature: Codable, Equatable, Sendable {
 }
 
 public struct OpusFallback: Codable, Equatable, Sendable {
-    public enum Reason: String, Codable, Sendable {
+    public enum Reason: String, Codable, Sendable, LenientStringEnum {
         case ok, disabled
+        case unrecognized = ""
         case android10 = "android_10"
         case shizukuNotRunning = "shizuku_not_running"
         case captureSilent = "capture_silent"
@@ -117,8 +118,8 @@ public struct CallAudioFeature: Codable, Equatable, Sendable {
 }
 
 public struct CameraFeature: Codable, Equatable, Sendable {
-    public enum Facing: String, Codable, Sendable { case front, back }
-    public enum Codec: String, Codable, Sendable { case h264 }
+    public enum Facing: String, Codable, Sendable, LenientStringEnum { case front, back, unrecognized = "" }
+    public enum Codec: String, Codable, Sendable, LenientStringEnum { case h264, unrecognized = "" }
 
     public var enabled: Bool
     public var cameras: [Facing]?

@@ -5,8 +5,9 @@ public enum CapabilityOp: String, Sendable {
 }
 
 public struct CapabilityData: Codable, Equatable, Sendable {
-    public enum Platform: String, Codable, Sendable {
+    public enum Platform: String, Codable, Sendable, LenientStringEnum {
         case android, macos, ios, ipados
+        case unrecognized = ""
     }
 
     public let protocolVersion: Int32

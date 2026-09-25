@@ -95,8 +95,9 @@ public struct SessionRekeyData: Codable, Equatable, Sendable {
 }
 
 public struct SessionByeData: Codable, Equatable, Sendable {
-    public enum Reason: String, Codable, Sendable {
+    public enum Reason: String, Codable, Sendable, LenientStringEnum {
         case revoked, shutdown, replaced, update
+        case unrecognized = ""
     }
 
     public let reason: Reason

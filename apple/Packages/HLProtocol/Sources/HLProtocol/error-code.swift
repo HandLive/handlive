@@ -1,5 +1,7 @@
 /// Mã lỗi ứng dụng trong `ack.error.code`, đúng bảng 0.8.1 (mã relay HTTP 0.8.2 không thuộc đây).
-public enum ErrorCode: String, Codable, CaseIterable, Sendable {
+public enum ErrorCode: String, Codable, CaseIterable, Sendable, LenientStringEnum {
+    /// Giá trị từ phiên bản mới hơn mà bên này chưa biết (0.5.1 quy tắc 6); không bao giờ gửi đi.
+    case unrecognized = ""
     case badRequest = "BAD_REQUEST"
     case unsupportedType = "UNSUPPORTED_TYPE"
     case unsupportedVersion = "UNSUPPORTED_VERSION"
