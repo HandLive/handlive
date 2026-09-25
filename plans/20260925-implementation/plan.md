@@ -82,7 +82,7 @@ repository) only when a mismatch is found, and run the validator.
 | Gate | When | Criteria to go ahead | If not met |
 |------|---------|------------------|---------------|
 | G0 | End of Phase 0 | Encryption and envelope test vectors green on Android and Apple; CI green on all three platforms | Phase 1 does not start |
-| G1 | End of Phase 1 | All measurable criteria met on ≥ 2 real Android phones (Pixel, Samsung) and 1 Mac | Fix before starting Phase 2 |
+| G1 | End of Phase 1 | All measurable criteria met (95th percentile, `shared/tools/bench/` scripts) on ≥ 2 real Android phones (Pixel, Samsung) and 1 Mac | Fix before starting Phase 2 |
 | G2 | Before the Phase 2 release | Play Console: Permissions Declaration Form for SMS and the call log submitted (`docs/deployment-guide.md`) | Activate Plan B (Notification Listener for incoming SMS; F-Droid/APK distribution) |
 | G4 (spike D1) | First week of Phase 4 | `IOBluetoothHandsFreeDevice` receives SCO audio in the HF role on macOS 13, 14, 15, 26 with Pixel and Samsung | Opus/WS becomes the primary path; HFP keeps only control; update AUDIO-02 and plan D1 |
 | G5 (spike D6) | First week of Phase 5 | CMIOExtension delivers frames to Zoom/Meet/FaceTime; the AudioServerPlugin loopback is audible in meeting apps | Stop Phase 5, write a report |

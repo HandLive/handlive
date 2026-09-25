@@ -22,7 +22,8 @@ diện tiếng Anh (mặc định) và tiếng Việt (C20).
 
 ## Yêu cầu và tiêu chí đo
 
-- Văn bản < 50 ms từ lúc sao chép tới lúc dán được ở máy kia (LAN); ảnh 5 MB < 2 s; kết nối lại < 3
+- Văn bản < 50 ms từ lúc sao chép tới lúc dán được ở máy kia (LAN; đo theo QC9, không tính thời gian phát hiện sao chép; mọi
+  mục tiêu tính ở phân vị 95); ảnh 5 MB < 2 s; kết nối lại < 3
   s sau khi Wi-Fi đổi.
 - Không đọc bảng nhớ tạm khi chưa có đồng ý (CLIP-01 trường 2, 3); nội dung nhạy cảm bị chặn (QC3);
   vòng lặp và xung đột theo QC4, QC8.
@@ -53,6 +54,9 @@ commit và đẩy lên nhánh `feat/phase-01-clipboard` của `handlive-shared` 
 đọc chúng.
 
 ## Kiểm thử
+
+- Bản debug của app ghi dòng log `HLBENCH/1` theo `shared/tools/bench/README.md` (A1.1, A1.3, M1.2, M1.4) để
+  T1.1 đo trễ và thời gian kết nối lại.
 
 - Đơn vị: chunking 64 KiB, SHA-256, chống trùng `clip_id` 256 mục/10 phút, Luhn, so `origin_ts`.
 - Tích hợp: Android emulator (API 34) + app Mac trên cùng máy qua loopback không đủ (mDNS) → dùng

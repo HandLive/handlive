@@ -77,7 +77,7 @@ nêu trong báo cáo để agent nền tảng khác chạy lại (CI nền tản
 | Cổng | Khi nào | Tiêu chí đi tiếp | Nếu không đạt |
 |------|---------|------------------|---------------|
 | G0 | Cuối Phase 0 | Test vector mã hóa và envelope xanh trên Android và Apple; CI ba nền tảng xanh | Không mở Phase 1 |
-| G1 | Cuối Phase 1 | Đủ tiêu chí đo trên ≥ 2 điện thoại Android thật (Pixel, Samsung) và 1 Mac | Sửa trước khi mở Phase 2 |
+| G1 | Cuối Phase 1 | Đủ tiêu chí đo (phân vị 95, script `shared/tools/bench/`) trên ≥ 2 điện thoại Android thật (Pixel, Samsung) và 1 Mac | Sửa trước khi mở Phase 2 |
 | G2 | Trước Phase 2 phát hành | Play Console: Permissions Declaration Form cho SMS và nhật ký cuộc gọi đã nộp (`docs/deployment-guide.md`) | Kích hoạt Plan B (Notification Listener cho SMS đến; phân phối F-Droid/APK) |
 | G4 (spike D1) | Tuần đầu Phase 4 | `IOBluetoothHandsFreeDevice` nhận được âm thanh SCO ở vai HF trên macOS 13, 14, 15, 26 với Pixel và Samsung | Opus/WS thành đường chính; HFP chỉ giữ điều khiển; cập nhật AUDIO-02, plan D1 |
 | G5 (spike D6) | Tuần đầu Phase 5 | CMIOExtension xuất khung vào Zoom/Meet/FaceTime; AudioServerPlugin loopback nghe được trong ứng dụng họp | Dừng Phase 5, ghi báo cáo |

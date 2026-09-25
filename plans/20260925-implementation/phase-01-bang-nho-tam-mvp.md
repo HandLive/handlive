@@ -22,7 +22,8 @@ one phone and one Mac, with an English (default) and Vietnamese UI (C20).
 
 ## Requirements and measurable criteria
 
-- Text < 50 ms from copying until it can be pasted on the other device (LAN); 5 MB image < 2 s;
+- Text < 50 ms from copying until it can be pasted on the other device (LAN; measured as in QC9, without copy
+  detection; every target is judged at the 95th percentile); 5 MB image < 2 s;
   reconnect < 3 s after a Wi-Fi change.
 - Never read the clipboard without consent (CLIP-01 fields 2, 3); sensitive content is blocked (QC3);
   loops and conflicts per QC4, QC8.
@@ -53,6 +54,9 @@ and push them early to the `feat/phase-01-clipboard` branch of `handlive-shared`
 Apple read them.
 
 ## Testing
+
+- Debug builds of the apps write `HLBENCH/1` log lines as `shared/tools/bench/README.md` defines (A1.1, A1.3,
+  M1.2, M1.4) so T1.1 can measure latency and reconnect time.
 
 - Unit: 64 KiB chunking, SHA-256, `clip_id` deduplication (256 entries/10 minutes), Luhn, `origin_ts`
   comparison.
