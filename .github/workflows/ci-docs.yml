@@ -1,0 +1,56 @@
+# CI của kho hub (tài liệu): khuôn tài liệu thiết kế chi tiết, và JSON Schema của kho handlive-shared
+# đối chiếu với ví dụ trong docs/detailed-design. Bố cục workspace như máy dev: hub ở gốc, shared/ là
+# kho handlive-shared cạnh docs/. Repo private trong group cần secret HANDLIVE_REPOS_TOKEN (đọc nội dung).
+name: ci-docs
+
+on:
+  push:
+    branches: [main, "feat/**"]
+    paths:
+      - "docs/detailed-design/**"
+      - "tools/docs/**"
+      - ".github/workflows/ci-docs.yml"
+  pull_request:
+    branches: [main, "feat/**"]
+    paths:
+      - "docs/detailed-design/**"
+      - "tools/docs/**"
+      - ".github/workflows/ci-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: tài liệu + schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Kho handlive-shared cạnh docs/
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/handlive-shared
+          path: shared
+          token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: shared/tools/schemas/requirements.txt
+
+      - name: Cài phụ thuộc (phiên bản ghim)
+        run: python -m pip install -r shared/tools/schemas/requirements.txt
+
+      - name: Khuôn tài liệu thiết kế chi tiết
+        run: python tools/docs/validate_design_docs.py
+
+      - name: JSON Schema + ví dụ tài liệu
+        run: python shared/tools/schemas/check_schemas.py
