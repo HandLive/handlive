@@ -118,7 +118,7 @@ Authentication strings shared by the APIs below:
 
 #### API 1 — QR URI `handlive://pair`
 
-- **URL:** `handlive://pair?v=1&pk=<b64u>&ps=<b64u>&d=<name, percent-encoded>[&rv=<b64u>]`
+- **URL:** `handlive://pair?v=1&pk=<b64u>&ps=<b64u>&d=<name, UTF-8 percent-encoded RFC 3986>[&rv=<b64u>]`
 - **Method:** Show the QR code (Mac/iOS) → scan it with ML Kit (Android).
 - **Request (parameters):**
 
@@ -221,7 +221,7 @@ Authentication strings shared by the APIs below:
 | `created_at` | timestamp | Yes | Time the pair was created (client clock) |
 | `sig` | b64u (64 bytes) | Yes | Ed25519(client `ik_sig`, `attestation`) — the `attestation` structure is in 0.6.2 |
 | `prk_check` | b64u (32 bytes) | Yes | HMAC-SHA256(`PRK`, `"HL1\|prk-check-c\|"` ‖ `pair_id`) |
-| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`K_pa`, `"HL1\|confirm\|"` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) |
+| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`K_pa`, `"HL1\|confirm\|"` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) — `pair_id` 16 bytes, `created_at` int64 BE, `sig` 64 raw bytes |
 
 - **Response:** `WS pair/done` (API 5) or `WS pair/error` (API 6).
 - **Example:**
@@ -250,7 +250,7 @@ Authentication strings shared by the APIs below:
 |--------|------|----------|-------|
 | `sig` | b64u (64 bytes) | Yes | Ed25519(Android `ik_sig`, `attestation`) |
 | `prk_check` | b64u (32 bytes) | Yes | HMAC-SHA256(`PRK`, `"HL1\|prk-check-s\|"` ‖ `pair_id`) |
-| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) |
+| `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) — `pair_id` 16 bytes, `sig` 64 raw bytes |
 
 - **Response:** N/A (end of the protocol; the client closes the connection with code 1000).
 - **Example:**

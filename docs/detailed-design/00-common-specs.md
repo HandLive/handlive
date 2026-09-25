@@ -105,12 +105,11 @@ specification).
 | Key | Value | Present when |
 |------|---------|-----------|
 | `v` | `1` (protocol version) | Always |
-| `h` | Up to 8 hints, comma-separated; one hint per pair = the first 8 hex characters of HMAC-SHA256(`K_disc`, `"HLDISC1"` ‖ int64 BE `floor(now_ms / 3 600 000)`); `K_disc` = HKDF(`PRK`, info = `"handlive/v1/discovery"`) | There is ≥ 1 pair |
-| `pr` | The first 8 hex characters of SHA-256(`pk` in the QR) | Only during the 120 seconds of QR pairing mode |
+| `h` | Up to 8 hints joined by commas without spaces; one hint per pair = the first 8 lowercase hex characters of HMAC-SHA256(`K_disc`, `"HLDISC1"` ‖ int64 BE `floor(now_ms / 3 600 000)`); `K_disc` = HKDF(`PRK`, info = `"handlive/v1/discovery"`) | There is ≥ 1 pair |
+| `pr` | The first 8 lowercase hex characters of SHA-256 over the 32 decoded bytes of `pk` in the QR | Only during the 120 seconds of QR pairing mode |
 | `pm` | `1` | Only during the 120 seconds of PIN pairing mode |
 
-The client compares the hints for the current hour **and** the previous hour (tolerating clock skew
-around the hour boundary). Hints change every hour, so strangers on the LAN cannot track the device
+The client compares the hints for the previous, the current **and** the next hour (tolerating clock skew of up to an hour either way around the hour boundary). Hints change every hour, so strangers on the LAN cannot track the device
 through TXT.
 
 - **WSS endpoints** on A-SVC:
@@ -277,8 +276,8 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
 - `PRK` = HKDF-SHA256(ikm = X25519(own `ik_dh`, peer `ik_dh`) ‖ `pairing_secret`, salt =
   SHA-256(smaller `device_id` ‖ larger `device_id`, as 16 bytes), info = `"handlive/v1/pair"`, L =
   32).
-- With a PIN (fallback): replace `pairing_secret` with `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖
-  `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32).
+- With a PIN (fallback): replace `pairing_secret` with `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖ `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32); the PIN is the UTF-8 bytes of exactly six digits (leading zeros kept), Argon2 version 0x13, no secret and no associated data.
+- Strings fed into a MAC, a signature or a hash (device names…) are their UTF-8 bytes as they are, without Unicode normalization (NFC/NFD).
 - Pairing attestation (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
   BE). Both sides sign it with Ed25519; the relay checks both signatures before allowing routing.

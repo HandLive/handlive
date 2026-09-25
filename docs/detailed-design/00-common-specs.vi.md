@@ -103,11 +103,11 @@ Trường nội bộ giữa các thành phần (không hiển thị) chỉ mô t
 | Khóa | Giá trị | Khi nào có |
 |------|---------|-----------|
 | `v` | `1` (phiên bản giao thức) | Luôn |
-| `h` | Tối đa 8 hint, phân tách bằng dấu phẩy; mỗi cặp ghép nối 1 hint = 8 ký tự hex đầu của HMAC-SHA256(`K_disc`, `"HLDISC1"` ‖ int64 BE `floor(now_ms / 3 600 000)`); `K_disc` = HKDF(`PRK`, info = `"handlive/v1/discovery"`) | Khi có ≥ 1 cặp |
-| `pr` | 8 ký tự hex đầu của SHA-256(`pk` trong QR) | Chỉ trong 120 giây của chế độ ghép nối QR |
+| `h` | Tối đa 8 hint, nối bằng dấu phẩy không có khoảng trắng; mỗi cặp ghép nối 1 hint = 8 ký tự hex đầu (chữ thường) của HMAC-SHA256(`K_disc`, `"HLDISC1"` ‖ int64 BE `floor(now_ms / 3 600 000)`); `K_disc` = HKDF(`PRK`, info = `"handlive/v1/discovery"`) | Khi có ≥ 1 cặp |
+| `pr` | 8 ký tự hex đầu (chữ thường) của SHA-256 trên 32 byte `pk` đã giải b64u trong QR | Chỉ trong 120 giây của chế độ ghép nối QR |
 | `pm` | `1` | Chỉ trong 120 giây của chế độ ghép nối PIN |
 
-Client so hint với giờ hiện tại **và** giờ trước (chịu lệch đồng hồ quanh mốc giờ). Hint đổi mỗi giờ
+Client so hint với giờ trước, giờ hiện tại **và** giờ sau (chịu lệch đồng hồ tới một giờ theo cả hai chiều quanh mốc giờ). Hint đổi mỗi giờ
 nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
 
 - **Endpoint WSS** trên A-SVC:
@@ -272,8 +272,8 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 - `PRK` = HKDF-SHA256(ikm = X25519(`ik_dh` mình, `ik_dh` đối phương) ‖ `pairing_secret`, salt =
   SHA-256(`device_id` nhỏ hơn ‖ `device_id` lớn hơn, dạng 16 byte), info = `"handlive/v1/pair"`, L =
   32).
-- Với PIN (dự phòng): thay `pairing_secret` bằng `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖
-  `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32).
+- Với PIN (dự phòng): thay `pairing_secret` bằng `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖ `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32); PIN là byte UTF-8 của đúng 6 chữ số (giữ số 0 đầu), Argon2 phiên bản 0x13, không có secret và dữ liệu phụ.
+- Chuỗi đưa vào MAC, chữ ký hoặc hash (tên thiết bị…) là byte UTF-8 nguyên văn, không chuẩn hóa Unicode (NFC/NFD).
 - Bản chứng thực ghép nối (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
   BE). Cả hai bên ký Ed25519; relay kiểm hai chữ ký trước khi cho phép định tuyến.

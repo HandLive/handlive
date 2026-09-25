@@ -69,7 +69,7 @@ flowchart TB
 |------|----------|-----------|-------|--------------------|
 | 1 | Người dùng | M-APP / I-APP | Mở ứng dụng, bật Wi-Fi, mở nắp Mac, đưa ứng dụng iOS lên foreground; hoặc bấm "Kết nối lại ngay". | Luồng cũng tự chạy sau PAIR-01 và từ CONN-02. |
 | 2 | Hệ thống | M-APP / I-APP | Đọc cặp hiệu lực và nạp `PRK` (bộ nhớ đệm hoặc Keychain). Song song: (a) thử ngay `last_host:last_port` (đường nhanh); (b) chạy `NWBrowser` cho `_handlive._tcp` với TXT. | Chưa có quyền mạng cục bộ → E8. |
-| 3 | Hệ thống | M-APP / I-APP | Tính hint cho giờ hiện tại và giờ trước (0.4.1); instance có TXT `h` chứa một trong hai hint là ứng viên. Đường nhanh (a) cũng là ứng viên. | Hết 10 s không có ứng viên → E1. |
+| 3 | Hệ thống | M-APP / I-APP | Tính hint cho giờ trước, giờ hiện tại và giờ sau (0.4.1); instance có TXT `h` chứa một trong ba hint là ứng viên. Đường nhanh (a) cũng là ứng viên. | Hết 10 s không có ứng viên → E1. |
 | 4 | Hệ thống | M-APP / I-APP → A-SVC | Mở `wss://<host>:<port>/v1/ctl`, TLS 1.3. A-SVC nhận kết nối, bắt đầu đếm `HANDSHAKE_TIMEOUT`. |  |
 | 5 | Hệ thống | M-APP / I-APP | So SHA-256 chứng chỉ máy chủ với `peer_tls_sha256`. | Khác → đóng, E2. |
 | 6 | Hệ thống | M-APP / I-APP | Sinh khóa tạm X25519 và `nonce`, gửi `session/hello`. |  |
@@ -127,7 +127,7 @@ flowchart TB
   `metadata` (`.bonjour(NWTXTRecord)`).
 - **Ví dụ:** kết quả `HL-4f9a2c` với TXT `["v": "1", "h": "1a2b3c4d,77e0aa19"]`.
 - **Logic nghiệp vụ:**
-  1. Chỉ xét kết quả có `v = 1` và `h` chứa hint của cặp (giờ hiện tại hoặc giờ trước).
+  1. Chỉ xét kết quả có `v = 1` và `h` chứa hint của cặp (giờ trước, giờ hiện tại hoặc giờ sau).
   2. Kết nối tới endpoint dịch vụ (Network framework tự phân giải); sau khi kết nối thành công, lấy
      địa chỉ IP thực từ `currentPath.remoteEndpoint` để lưu `last_host`.
   3. Browser tiếp tục chạy khi đã kết nối qua relay, để phát hiện LAN và nâng cấp (CONN-02).

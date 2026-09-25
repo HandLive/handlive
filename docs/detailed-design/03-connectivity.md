@@ -69,7 +69,7 @@ flowchart TB
 |------|----------|-----------|-------|--------------------|
 | 1 | User | M-APP / I-APP | Opens the app, turns on Wi-Fi, opens the Mac's lid, brings the iOS app to the foreground; or clicks "Reconnect Now". | The flow also runs by itself after PAIR-01 and from CONN-02. |
 | 2 | System | M-APP / I-APP | Reads the valid pair and loads `PRK` (memory cache or Keychain). In parallel: (a) immediately tries `last_host:last_port` (fast path); (b) runs `NWBrowser` for `_handlive._tcp` with TXT. | No local network permission yet → E8. |
-| 3 | System | M-APP / I-APP | Computes the hints for the current hour and the previous hour (0.4.1); an instance whose TXT `h` contains one of the two hints is a candidate. The fast path (a) is also a candidate. | 10 s without a candidate → E1. |
+| 3 | System | M-APP / I-APP | Computes the hints for the previous, the current and the next hour (0.4.1); an instance whose TXT `h` contains one of the three hints is a candidate. The fast path (a) is also a candidate. | 10 s without a candidate → E1. |
 | 4 | System | M-APP / I-APP → A-SVC | Opens `wss://<host>:<port>/v1/ctl`, TLS 1.3. A-SVC accepts the connection and starts counting `HANDSHAKE_TIMEOUT`. |  |
 | 5 | System | M-APP / I-APP | Compares the SHA-256 of the server certificate with `peer_tls_sha256`. | Different → close, E2. |
 | 6 | System | M-APP / I-APP | Generates an ephemeral X25519 key and a `nonce`, sends `session/hello`. |  |
@@ -127,8 +127,7 @@ flowchart TB
   `metadata` (`.bonjour(NWTXTRecord)`).
 - **Example:** result `HL-4f9a2c` with TXT `["v": "1", "h": "1a2b3c4d,77e0aa19"]`.
 - **Business logic:**
-  1. Only consider results with `v = 1` and an `h` that contains a hint of the pair (current or
-     previous hour).
+  1. Only consider results with `v = 1` and an `h` that contains a hint of the pair (previous, current or next hour).
   2. Connect to the service endpoint (the Network framework resolves it); once connected, take the
      actual IP address from `currentPath.remoteEndpoint` to store as `last_host`.
   3. The browser keeps running while connected through the relay, to detect the LAN and upgrade

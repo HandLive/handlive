@@ -117,7 +117,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 
 #### API 1 — URI QR `handlive://pair`
 
-- **URL:** `handlive://pair?v=1&pk=<b64u>&ps=<b64u>&d=<tên, percent-encoded>[&rv=<b64u>]`
+- **URL:** `handlive://pair?v=1&pk=<b64u>&ps=<b64u>&d=<tên, UTF-8 percent-encoded RFC 3986>[&rv=<b64u>]`
 - **Method:** Hiển thị QR (Mac/iOS) → quét bằng ML Kit (Android).
 - **Request (tham số):**
 
@@ -215,7 +215,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 | `created_at` | timestamp | Có | Thời điểm tạo cặp (đồng hồ client) |
 | `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig` client, `attestation`) — cấu trúc `attestation` ở 0.6.2 |
 | `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1\|prk-check-c\|"` ‖ `pair_id`) |
-| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|confirm\|"` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) |
+| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|confirm\|"` ‖ `T_offer` ‖ `pair_id` ‖ `created_at` ‖ `sig`) — `pair_id` 16 byte, `created_at` int64 BE, `sig` 64 byte thô |
 
 - **Response:** `WS pair/done` (API 5) hoặc `WS pair/error` (API 6).
 - **Ví dụ:**
@@ -243,7 +243,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |--------|------|----------|-------|
 | `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig` Android, `attestation`) |
 | `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1\|prk-check-s\|"` ‖ `pair_id`) |
-| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) |
+| `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) — `pair_id` 16 byte, `sig` 64 byte thô |
 
 - **Response:** N/A (kết thúc giao thức; client đóng kết nối với mã 1000).
 - **Ví dụ:**
