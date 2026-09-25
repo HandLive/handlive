@@ -1,6 +1,6 @@
 # HandLive — Code Standards
 
-> Chưa có code. Đây là quy ước sẽ áp dụng khi implement. Bổ sung/điều chỉnh khi codebase hình thành.
+> Quy ước cho mọi kho của workspace. Bổ sung khi có quy ước mới.
 
 ## Chung
 
@@ -32,6 +32,9 @@
 - Điều khiển cuộc gọi bằng API công khai (`TelecomManager`, `TelephonyCallback`), không dùng
   `InCallService` (plan §13 D9).
 - OEM fragmentation → strategy pattern (`BtAdapterStrategy`: Samsung/Pixel/Generic).
+- Thư viện đóng gói trong app phải là mã nguồn mở, không thành phần độc quyền (ML Kit, Play
+  Services); ngoại lệ duy nhất là FCM ở flavor riêng (Phase 2). Quét QR: CameraX + ZXing core
+  (Apache-2.0).
 
 ## macOS / iOS (Swift 6)
 
@@ -42,6 +45,28 @@
 - CMIOExtension / AudioServerPlugin ký Developer ID (bắt buộc; ad-hoc bị reject).
 - Key vào Keychain với `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; macOS dùng data-protection
   keychain (`kSecUseDataProtectionKeychain`) và entitlement `keychain-access-groups`.
+
+## Bản địa hóa (C20, `docs/detailed-design/00-common-specs.md` 0.12)
+
+- Tiếng Anh là ngôn ngữ mặc định, tiếng Việt là ngôn ngữ thứ hai. Mọi chuỗi hiển thị lấy từ catalog
+  `shared/strings/ui-strings.json` qua tài nguyên sinh ra: Android `R.string`/`R.plurals`
+  (`stringResource`, `pluralStringResource`), Apple accessor sinh từ String Catalog. Không viết
+  cứng câu chữ hiển thị trong mã.
+- Thêm hay sửa chuỗi: sửa tài liệu chi tiết (cả hai bản), rồi catalog trong `shared` (commit riêng),
+  rồi mã.
+- Log, mã lỗi, tên sự kiện, thông điệp commit, báo cáo công việc: tiếng Anh, không dịch.
+- Định dạng ngày, giờ, số, dung lượng bằng formatter theo locale; không ghép chuỗi.
+- Android: lint `HardcodedText`, `MissingTranslation` là lỗi; `locales_config.xml`,
+  `androidResources.localeFilters` = en, vi. Apple: `developmentLanguage: en`, `knownRegions` en,
+  vi; purpose string qua `InfoPlist.xcstrings`.
+
+## Tài liệu
+
+- Song ngữ: `X.md` tiếng Anh (bản chuẩn), `X.vi.md` tiếng Việt, cùng cấu trúc; sửa cả hai trong
+  cùng commit; dòng đầu là thanh chọn ngôn ngữ (`English | [Tiếng Việt](X.vi.md)` /
+  `[English](X.md) | Tiếng Việt`). Kiểm: `python3 tools/docs/check_bilingual_docs.py`.
+- Kế hoạch và báo cáo trước 2026-09-25 (`plans/20260924-*`, `reports/phase-00-*`) giữ tiếng Việt
+  làm lưu trữ; tên file giữ nguyên làm định danh.
 
 ## Rust (cloud relay)
 

@@ -58,7 +58,7 @@ lại bố cục workspace bằng `actions/checkout`: hub ở gốc (khi cần t
 và giữ đúng tên (`handlive`, `handlive-android`, `handlive-apple`, `handlive-relay`,
 `handlive-shared`). Kho private: tạo secret `HANDLIVE_REPOS_TOKEN` (fine-grained PAT hoặc token
 GitHub App, quyền Contents: read trên năm kho) ở cấp organization; kho public thì `github.token` đủ.
-Sửa `shared/` hay tài liệu không tự kích hoạt CI nền tảng — chạy tay bằng `workflow_dispatch`. Bật
+Sửa `shared/` hay tài liệu không tự kích hoạt CI nền tảng — chạy tay bằng `workflow_dispatch`. Mỗi workflow lấy nhánh trùng tên của `handlive-shared` và hub nếu có (ví dụ `feat/phase-01-clipboard` ở mọi kho), không có thì `main`. Bật
 branch protection bắt buộc check tương ứng trên `main` của từng kho.
 
 ## USB boost (tùy chọn)

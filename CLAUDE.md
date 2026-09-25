@@ -19,8 +19,12 @@ mirrored in `docs/design-system/`. Everything below describes the *decided* desi
 must implement, not existing code. When you start implementing, treat the "Definitive Architecture"
 plan as the source of truth and the three research plans as supporting detail.
 
-Planning docs are written in **Vietnamese** (with diacritics). Keep that convention for new plans,
-reports, and user-facing communication.
+The product is **multilingual**: English (`en`) is the default language and Vietnamese (`vi`) the
+second (detailed design C20, 0.12). **Documentation is bilingual**: `X.md` is the English,
+canonical version and `X.vi.md` the Vietnamese one, same folder and structure, both updated in the
+same commit (`tools/docs/check_bilingual_docs.py`). Agent reports under `plans/*/reports/` are
+English only; plans and reports dated before 2026-09-25 stay Vietnamese as an archive. Talk to the
+project owner in Vietnamese with diacritics.
 
 ## What HandLive is
 
@@ -95,6 +99,9 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 - **UI follows the HandLive Design System** (Apple Human Interface Guidelines on every platform,
   Android included; source mirrored in `docs/design-system/`, tokens in
   `shared/design-tokens/tokens.json`; decisions in `plans/20260924-apple-hig-design-system/`).
+  Every UI string has a stable key in `shared/strings/ui-strings.json` with English and Vietnamese
+  text, generated into Android resources and Apple String Catalogs — never hard-coded. English UI
+  text uses Apple's English style (title-style capitalization for buttons, menus, window titles);
   Vietnamese UI strings use Apple-style diacritics (hủy, xóa, tùy, mã hóa) and the design system's
   terminology ("bảng nhớ tạm", not "clipboard").
 
@@ -114,7 +121,8 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
   `plans/20260925-implementation/reports/` and end with the status block from
   `~/.claude/rules/orchestration-protocol.md`.
 - **Read in this order before coding a task:** this file → `docs/detailed-design/README.md`
-  (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C19) →
+  (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C20; read `X.md` or its Vietnamese
+  twin `X.vi.md`) →
   `docs/detailed-design/00-common-specs.md` (protocol, errors, data model, settings keys) → the
   phase file → the leaf functions it names → `docs/code-standards.md`. UI work also reads
   `docs/design-system/README.md`, the platform section in `docs/design-system/3-platforms/` and the
@@ -122,7 +130,8 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 - **Contracts:** wire format, error codes, settings keys and tables live in `00-common-specs.md`;
   change them there first, then the leaf spec (run `python3 tools/docs/validate_design_docs.py`,
   must print `problems=0`), then code. Never invent message types, error codes or UI strings in code
-  — UI strings come verbatim from the leaf specs.
+  — UI strings come from the string catalog, whose text matches the leaf specs (English in `X.md`,
+  Vietnamese in `X.vi.md`).
 - **File ownership:** every part is its own git repository. Android agents work in `android/`
   (handlive-android) and, when the contract data must change, in `shared/` (handlive-shared) as
   separate commits; Apple agents `apple/` + `shared/`; relay agents `relay/` + `shared/`. Docs,
