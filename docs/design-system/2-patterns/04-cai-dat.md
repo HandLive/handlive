@@ -1,102 +1,109 @@
-# Cài đặt
+English | [Tiếng Việt](04-cai-dat.vi.md)
 
-Mục này quy định màn Cài đặt trên từng nền tảng: cửa sổ nhiều pane trên Mac, tab Cài đặt kiểu danh
-sách nhóm trên iPhone, iPad và Android, cùng nhãn chính xác của các khóa SET-02. Cài đặt thuộc từng
-thiết bị, không đồng bộ sang thiết bị khác; đối phương chỉ biết qua capability.
+# Settings
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/settings ·
+This section defines the Settings screens on each platform: a multi-pane window on the Mac, a Settings
+tab with a grouped list on iPhone, iPad, and Android, and the exact labels of the SET-02 keys. Settings
+belong to each device and don't sync to other devices; the other side only learns about them through
+capabilities.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/settings ·
 https://developer.apple.com/design/human-interface-guidelines/toggles
 
-## Quy tắc chung
+## General rules
 
-- Ít cài đặt, mặc định tốt (0.9.5); tùy chọn gắn với một việc để ngay chỗ việc đó.
-- Thay đổi có hiệu lực ngay, không nút "Áp dụng". Khóa ảnh hưởng capability thì gửi
-  `capability/update`; đối phương áp dụng trong ≤ 1 s khi cùng mạng Wi-Fi.
-- Nhãn nói điều xảy ra khi bật; chú thích dưới nhóm nói hệ quả.
-- Bật tính năng cần luồng kích hoạt (`ConsentSheet` nghe gọi trên Mac, CAM-01, công bố Hỗ trợ tiếp
-  cận) thì công tắc chỉ bật hẳn khi luồng xong. Tắt tính năng đang chạy (đang phát camera, âm thanh
-  cuộc gọi đang ở Mac) thì hỏi xác nhận bằng `Alert` (SET-02 E9).
-- Không lặp cài đặt của hệ thống (giao diện, cỡ chữ); dẫn tới đó bằng nút.
-- Hành động phá hủy ở nhóm cuối, luôn qua `Alert`. Nút mở alert hoặc sheet có "…" trên Mac, không có
-  trên iPhone, Android.
+- Few settings, good defaults (0.9.5); an option tied to a task lives right where that task happens.
+- Changes take effect immediately, with no "Apply" button. Keys that affect capabilities send
+  `capability/update`; the other side applies them within ≤ 1 s on the same Wi-Fi network.
+- The label says what happens when the setting is on; the caption under the group states the
+  consequences.
+- Turning on a feature that needs an activation flow (`ConsentSheet` for Call Audio on Mac, CAM-01,
+  the Accessibility disclosure): the switch only turns fully on once the flow is complete. Turning off
+  a feature that's running (the camera is streaming, call audio is on the Mac) asks for confirmation
+  with an `Alert` (SET-02 E9).
+- Don't duplicate system settings (appearance, text size); link to them with a button.
+- Destructive actions go in the last group, always through an `Alert`. Buttons that open an alert or a
+  sheet have "…" on the Mac, but not on iPhone or Android.
 
-## macOS: cửa sổ Cài đặt
+## macOS: the Settings window
 
-- Mở bằng ⌘, hoặc "Cài đặt…" trong menu HandLive và `MenuBarMenu`, không bằng nút trên toolbar.
-  `Settings` scene; `SettingsLink` chỉ có từ macOS 14.
-- Toolbar pane không tùy biến, luôn hiện, luôn đánh dấu pane đang mở; tiêu đề cửa sổ là tên pane; mở
-  lại pane xem gần nhất.
-- Nút thu nhỏ và phóng to mờ; cửa sổ co theo pane.
-- Mỗi pane là `Form` với `.formStyle(.grouped)`. Tính năng chính dùng switch mini
-  (`.toggleStyle(.switch)` + `.controlSize(.mini)`); tùy chọn phụ dùng checkbox thụt lề dưới nó, mờ
-  khi tính năng chính tắt. Chú thích nhóm kiểu `mac-footnote`.
+- Opened with ⌘, or "Settings…" in the HandLive menu and in `MenuBarMenu`, not with a toolbar button.
+  `Settings` scene; `SettingsLink` exists only from macOS 14.
+- The pane toolbar isn't customizable, is always visible, and always highlights the open pane; the
+  window title is the pane's name; reopening shows the last pane viewed.
+- The minimize and zoom buttons are dimmed; the window resizes to fit the pane.
+- Each pane is a `Form` with `.formStyle(.grouped)`. Main features use mini switches
+  (`.toggleStyle(.switch)` + `.controlSize(.mini)`); secondary options use checkboxes indented beneath
+  them, dimmed while the main feature is off. Group captions use the `mac-footnote` style.
 
-| Pane | Dòng (kiểu · khóa) |
+| Pane | Rows (type · key) |
 |---|---|
-| Chung `gearshape` | Switch "Hiện HandLive trên thanh menu" (tắt thì app có biểu tượng Dock) · switch "Mở HandLive khi đăng nhập" (`SMAppService`) · switch "Kết nối qua Internet" (`relay.enabled`) · nút "Xóa thiết bị khỏi máy chủ…" · nút phá hủy "Xóa toàn bộ dữ liệu HandLive…" |
-| Thiết bị `candybarphone` | `DeviceRow` của điện thoại với "Chi tiết…" và "Hủy ghép nối…"; chưa có thì "Ghép điện thoại…" (PAIR-02) |
-| Bảng nhớ tạm `doc.on.clipboard` | Switch "Đồng bộ bảng nhớ tạm" (`feature.clipboard`) › checkbox "Đồng bộ ảnh" (`clip.send_images`), "Chặn nội dung nhạy cảm" (`clip.block_sensitive`) · pop-up "Tự xóa bảng nhớ tạm đã nhận": Tắt, Sau 1 phút, Sau 5 phút (`clip.auto_clear_s`), chú thích "Chỉ xóa nội dung nhận từ thiết bị khác, và chỉ khi bạn chưa sao chép gì mới." · macOS 15.4+: dòng "Dán từ ứng dụng khác" với "Mở Cài đặt hệ thống" (CLIP-02 trường 2–3) |
-| Tin nhắn `message` | Switch "Tin nhắn SMS" (`feature.sms`) › checkbox "Thông báo SMS mới" (`sms.notify`) › checkbox "Hiện nội dung trong thông báo" (`sms.preview`) · "Lần đồng bộ cuối: 5 phút trước" và nút "Đồng bộ lại toàn bộ SMS…" · chú thích "Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại." |
-| Cuộc gọi `phone` | Switch "Cuộc gọi" (`feature.call`) › checkbox "Thông báo cuộc gọi" (`call.notify`), "Đổ chuông trên Mac" (`call.ringtone`) · danh sách "Tin trả lời nhanh", tối đa 6 mẫu (`call.quick_replies`) · switch "Nghe gọi trên Mac" (`feature.call_audio`) › pop-up "Điện thoại dùng cho Bluetooth" (`call_audio.phone_bt_address`), checkbox "Dự phòng qua Wi-Fi (cần Shizuku)" (`call_audio.allow_opus_fallback`), danh sách kiểm tra AUDIO-01 bước 12 |
-| Camera `web.camera` | Switch "Dùng điện thoại làm webcam" (`feature.camera`) › danh sách kiểm tra CAM-01 kèm "Cài driver micro" · pop-up "Camera mặc định": Camera trước, Camera sau (`cam.default_camera`) · pop-up "Chất lượng mặc định": Tự động, 480p, 720p, 1080p (`cam.default_quality`) · checkbox "Tự tăng tốc qua USB" (`cam.usb_boost`) · nút "Hiện lại hướng dẫn gỡ lỗi USB" (`cam.usb_wizard_dismissed`) · nút "Gỡ camera và micro ảo…" |
+| General `gearshape` | Switch "Show HandLive in Menu Bar" (when off, the app has a Dock icon) · switch "Open HandLive at Login" (`SMAppService`) · switch "Internet Connection" (`relay.enabled`) · button "Remove Device from Server…" · destructive button "Erase All HandLive Data…" |
+| Devices `candybarphone` | The phone's `DeviceRow` with "Details…" and "Unpair…"; if there's none yet, "Pair Phone…" (PAIR-02) |
+| Clipboard `doc.on.clipboard` | Switch "Sync Clipboard" (`feature.clipboard`) › checkboxes "Sync Images" (`clip.send_images`), "Block Sensitive Content" (`clip.block_sensitive`) · pop-up "Auto-Clear Received Clipboard": Off, After 1 Minute, After 5 Minutes (`clip.auto_clear_s`), caption "Only clears content received from another device, and only if you haven't copied anything new." · macOS 15.4+: a "Paste from Other Apps" row with "Open System Settings" (CLIP-02 fields 2–3) |
+| Messages `message` | Switch "SMS Messages" (`feature.sms`) › checkbox "New SMS Notifications" (`sms.notify`) › checkbox "Show Content in Notifications" (`sms.preview`) · "Last synced: 5 minutes ago" and the button "Resync All SMS…" · caption "Marking messages as read on this device doesn't change their status on the phone." |
+| Calls `phone` | Switch "Calls" (`feature.call`) › checkboxes "Call Notifications" (`call.notify`), "Ring on Mac" (`call.ringtone`) · the "Quick Replies" list, up to 6 templates (`call.quick_replies`) · switch "Call Audio on Mac" (`feature.call_audio`) › pop-up "Phone for Bluetooth" (`call_audio.phone_bt_address`), checkbox "Wi-Fi Fallback (Requires Shizuku)" (`call_audio.allow_opus_fallback`), the AUDIO-01 step 12 checklist |
+| Camera `web.camera` | Switch "Use Phone as Webcam" (`feature.camera`) › the CAM-01 checklist with "Install Microphone Driver" · pop-up "Default Camera": Front Camera, Back Camera (`cam.default_camera`) · pop-up "Default Quality": Automatic, 480p, 720p, 1080p (`cam.default_quality`) · checkbox "Automatic USB Boost" (`cam.usb_boost`) · button "Show USB Debugging Guide Again" (`cam.usb_wizard_dismissed`) · button "Remove Virtual Camera and Microphone…" |
 
-Xác nhận "Đồng bộ lại toàn bộ SMS…": "Xóa tin nhắn đã lưu trên MacBook của Lan và tải lại từ điện
-thoại? Tin đang chờ gửi được giữ lại." với "Hủy" và "Đồng bộ lại" (SMS-01 trường 6).
+Confirmation for "Resync All SMS…": "Delete the messages stored on Lan's MacBook and load them again from
+the phone? Messages waiting to be sent are kept." with "Cancel" and "Resync" (SMS-01 field 6).
 
-## iOS và iPadOS: tab Cài đặt
+## iOS and iPadOS: the Settings tab
 
-- `List` kiểu `.insetGrouped` (`GroupedList`), large title "Cài đặt"; header nhóm sentence case,
-  trên iOS 16–18 đặt `.textCase(nil)` để không bị viết hoa toàn bộ.
-- Thứ tự nhóm: Điện thoại (`DeviceRow`, mở chi tiết PAIR-02) · Bảng nhớ tạm ("Đồng bộ bảng nhớ tạm",
-  "Đồng bộ ảnh", "Tự xóa bảng nhớ tạm đã nhận" mở danh sách chọn có dấu kiểm) · Tin nhắn ("Tin nhắn
-  SMS", "Thông báo SMS mới", "Hiện nội dung trong thông báo", "Đồng bộ lại toàn bộ SMS") · Cuộc gọi
-  ("Cuộc gọi", "Thông báo cuộc gọi") · "Kết nối qua Internet" · Quyền ("Thông báo", "Mạng cục bộ",
-  giá trị Bật/Tắt) · Dữ liệu ("Xóa thiết bị khỏi máy chủ", "Xóa toàn bộ dữ liệu HandLive").
-- Không có "Chặn nội dung nhạy cảm": iPhone chỉ gửi khi người dùng chạm Dán (QC3).
-- Quyền bị tắt: dòng có lý do `text-orange` và "Mở cài đặt" (`UIApplication.openSettingsURLString`).
-  Time-sensitive bị tắt: "Thông báo cuộc gọi có thể bị chế độ Tập trung chặn" (SET-03 trường 8).
+- A `List` with the `.insetGrouped` style (`GroupedList`), large title "Settings"; group headers in
+  sentence case, and on iOS 16–18 set `.textCase(nil)` so they aren't uppercased.
+- Group order: Phone (`DeviceRow`, opens the PAIR-02 details) · Clipboard ("Sync Clipboard", "Sync
+  Images", "Auto-Clear Received Clipboard" opening a choice list with checkmarks) · Messages ("SMS
+  Messages", "New SMS Notifications", "Show Content in Notifications", "Resync All SMS") · Calls
+  ("Calls", "Call Notifications") · "Internet Connection" · Permissions ("Notifications", "Local
+  Network", values On/Off) · Data ("Remove Device from Server", "Erase All HandLive Data").
+- No "Block Sensitive Content": the iPhone only sends when the user taps Paste (QC3).
+- Permission turned off: the row shows a reason in `text-orange` and "Open Settings"
+  (`UIApplication.openSettingsURLString`). Time-sensitive turned off: "Call notifications may be
+  blocked by Focus" (SET-03 field 8).
 
-## Android: tab Cài đặt
+## Android: the Settings tab
 
-- Cùng danh sách nhóm kiểu Apple (`HLGroupedList`, `HLSwitch` màu `system-green`) với các khóa của
-  Android: "Đồng bộ bảng nhớ tạm", "Tự gửi khi sao chép" (`clip.auto_send`, chú thích "Đã đồng ý lúc
-  14:05, 24/09/2026"), "Đồng bộ ảnh", "Chặn nội dung nhạy cảm", "Tự xóa bảng nhớ tạm đã nhận", "Tin
-  nhắn SMS", "Cuộc gọi", "Nghe gọi trên Mac" và "Dự phòng qua Wi-Fi (cần Shizuku)" kèm trạng thái
-  Shizuku, "Dùng điện thoại làm webcam", "Kết nối qua Internet", nhóm Dữ liệu.
-- Dòng "Quyền và chạy nền" mở thẻ từng tính năng (SET-01 trường 10) và trạng thái chạy nền (trường
-  6–9).
-- Dẫn thẳng tới trang của hệ thống, không làm lại: thông tin app
-  `ACTION_APPLICATION_DETAILS_SETTINGS`; thông báo `ACTION_APP_NOTIFICATION_SETTINGS`, từng kênh
-  `ACTION_CHANNEL_NOTIFICATION_SETTINGS`; `ACTION_ACCESSIBILITY_SETTINGS`; miễn tối ưu pin. Quyền bị
-  từ chối thì khóa vẫn lưu `true` và dòng hiện lý do (SET-02 E2).
+- The same Apple-style grouped list (`HLGroupedList`, `HLSwitch` in `system-green`) with Android's
+  keys: "Sync Clipboard", "Auto-Send When Copying" (`clip.auto_send`, caption "Agreed on Sep 24, 2026,
+  at 2:05 PM"), "Sync Images", "Block Sensitive Content", "Auto-Clear Received Clipboard", "SMS
+  Messages", "Calls", "Call Audio on Mac" and "Wi-Fi Fallback (Requires Shizuku)" with the Shizuku
+  status, "Use Phone as Webcam", "Internet Connection", the Data group.
+- The "Permissions & Background Activity" row opens the per-feature cards (SET-01 field 10) and the
+  background status (fields 6–9).
+- Link straight to the system pages instead of rebuilding them: app info
+  `ACTION_APPLICATION_DETAILS_SETTINGS`; notifications `ACTION_APP_NOTIFICATION_SETTINGS`, individual
+  channels `ACTION_CHANNEL_NOTIFICATION_SETTINGS`; `ACTION_ACCESSIBILITY_SETTINGS`; the battery
+  optimization exemption. When a permission is denied, the key still stores `true` and the row shows
+  the reason (SET-02 E2).
 
-## Khi tính năng chưa dùng được
+## When a feature isn't available yet
 
-Tính năng chỉ hiệu lực khi bật ở cả hai phía và điện thoại đủ quyền. Lý do nằm dưới tiêu đề dòng,
-màu `text-orange`; switch vô hiệu nhưng vẫn thấy.
+A feature only takes effect when it's on at both ends and the phone has the permissions it needs. The
+reason sits under the row title in `text-orange`; the switch is disabled but stays visible.
 
-| Nguyên nhân | Chữ | Hành động |
+| Cause | Text | Action |
 |---|---|---|
-| Tắt ở thiết bị kia | "Tắt trên Pixel 8 của Lan" | — |
-| Thiếu quyền trên điện thoại | "Thiếu quyền SMS trên điện thoại" | "Xem hướng dẫn" (Mac, iPhone), "Cấp quyền" (Android) |
-| Relay tắt ở phía kia | "Kết nối qua Internet đang tắt trên điện thoại" | — |
-| Tự gửi tắt trên điện thoại | "Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại" | — |
-| Camera khi đang qua Internet | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" | — |
+| Off on the other device | "Off on Lan's Pixel 8" | — |
+| Permission missing on the phone | "SMS permission missing on the phone" | "View Instructions" (Mac, iPhone), "Grant Access" (Android) |
+| Relay off on the other side | "Internet connection is off on the phone" | — |
+| Auto-send off on the phone | "Auto-send is off on the phone — use the Send Clipboard button on the phone" | — |
+| Camera while connected over the internet | "Requires the same Wi-Fi network or a USB cable" | — |
 
-## Điểm lệch
+## Deviations
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): nhãn SET-02 "Đồng bộ bảng nhớ tạm", "Tự xóa bảng
-  nhớ tạm đã nhận".
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-02 trường 14 "Dự phòng qua Wi-Fi, cần Shizuku".
-  Còn cần đồng bộ: AUDIO-01 bước 1 ghi pane "Âm thanh cuộc gọi" (design system: pane Cuộc gọi); "Tự
-  chuyển USB khi cắm cáp" (trường 19) theo CAM-04: "Tự tăng tốc qua USB".
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): khóa `mac.menu_bar_extra` (SET-02 trường 31,
-  0.9.5). Còn cần đồng bộ: nút xác nhận "Xóa" (trường 28) đổi thành động từ cụ thể ("Xóa khỏi máy
-  chủ", "Xóa toàn bộ"), đi cùng "Hủy".
+- Synced with the detailed design (September 25, 2026): the SET-02 labels "Sync Clipboard",
+  "Auto-Clear Received Clipboard".
+- Synced with the detailed design (September 25, 2026): SET-02 field 14 "Wi-Fi Fallback, Requires
+  Shizuku". Still to sync: AUDIO-01 step 1 names the pane "Call Audio" (design system: the Calls pane);
+  "Switch to USB When a Cable Is Connected" (field 19) should follow CAM-04: "Automatic USB Boost".
+- Synced with the detailed design (September 25, 2026): the `mac.menu_bar_extra` key (SET-02 field 31,
+  0.9.5). Still to sync: the confirmation button "Delete" (field 28) becomes a specific verb ("Remove
+  from Server", "Erase All"), paired with "Cancel".
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Lưu ngay khi gạt công tắc | Nút "Lưu" hay "Áp dụng" |
-| Nói lý do và cách sửa ngay dưới dòng | Vô hiệu công tắc mà không giải thích |
+| Save as soon as a switch is flipped | A "Save" or "Apply" button |
+| State the reason and the fix right under the row | Disable a switch without explaining why |

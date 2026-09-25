@@ -1,102 +1,111 @@
-# Xin quyền
+English | [Tiếng Việt](02-xin-quyen.vi.md)
 
-Mục này quy định mỗi quyền được xin lúc nào, với câu giải thích nào, và giao diện khi bị từ chối.
-Mỗi quyền gắn với một tính năng; thiếu quyền của tính năng này không làm hỏng tính năng khác.
+# Requesting permission
 
-Nguồn HIG:
+This section defines when each permission is requested, with which explanation, and what the
+interface looks like after a denial. Each permission belongs to one feature; a missing permission for
+one feature doesn't break any other feature.
+
+HIG source:
 https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission ·
 https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-screens-windows-or-views
 
-## Quy tắc
+## Rules
 
-- Xin khi người dùng sắp dùng tính năng; thiết lập ban đầu chỉ xin quyền cần để app chạy; mỗi lần
-  một tính năng.
-- `PermissionPrimer` hiện ngay trước hộp thoại hệ thống khi hộp thoại chưa đủ ngữ cảnh: tiêu đề,
-  một–hai câu nói lợi ích và dữ liệu đi đâu, đúng một nút "Tiếp tục" mở hộp thoại. Không "Bỏ qua",
-  không "Hủy", không nút đóng, không nhãn giống "Cho phép".
-- Android luôn có primer: hộp thoại runtime không cho app thêm chữ, primer là lời giải thích duy
-  nhất.
-- Purpose string trên Apple: một câu chủ động, cụ thể, có dấu chấm, bắt đầu bằng "HandLive".
-- Không hỏi lại tự động sau khi bị từ chối; không thưởng, không dọa để đổi lấy quyền.
+- Ask when people are about to use the feature; initial setup asks only for the permissions the app
+  needs to run; one feature at a time.
+- `PermissionPrimer` appears right before the system dialog when the dialog alone doesn't give enough
+  context: a title, one or two sentences on the benefit and where the data goes, and exactly one
+  "Continue" button that opens the dialog. No "Skip", no "Cancel", no close button, no label that looks
+  like "Allow".
+- Android always has a primer: the runtime dialog doesn't let apps add text, so the primer is the only
+  explanation.
+- Purpose strings on Apple platforms: one active, specific sentence that ends with a period and starts
+  with "HandLive".
+- Don't ask again automatically after a denial; no rewards and no threats in exchange for a
+  permission.
 
-## Bảng quyền
+## Permission table
 
-| Quyền | Nền tảng | Lúc xin | Primer | Purpose string hoặc quyền hệ thống |
+| Permission | Platform | When it's requested | Primer | Purpose string or system permission |
 |---|---|---|---|---|
-| Thông báo | macOS, iOS | Thiết lập ban đầu | "Báo khi có tin nhắn và cuộc gọi" | Không có purpose string; `requestAuthorization(options: [.alert, .sound, .badge])`. Time-sensitive đi theo entitlement, không xin riêng |
-| Mạng cục bộ | iOS, macOS 15+ | Thiết lập ban đầu | "Tìm điện thoại trong mạng Wi-Fi" | `NSLocalNetworkUsageDescription`: "HandLive tìm điện thoại Android của bạn trong mạng Wi-Fi để kết nối trực tiếp, không qua Internet." |
-| Thông báo | Android 13+ | Thiết lập ban đầu | "Thông báo cho bạn biết trạng thái kết nối và để bạn xác nhận yêu cầu từ Mac, ví dụ bật camera." | `POST_NOTIFICATIONS` |
-| Chạy nền | Android | Thiết lập ban đầu | "Để Mac và iPhone luôn tới được điện thoại, HandLive cần chạy nền mà không bị hệ thống ngắt." | Hộp thoại miễn tối ưu pin |
-| Camera (quét QR) | Android | Chạm "Quét mã QR" | Đề xuất: "HandLive dùng camera để quét mã QR trên Mac, iPhone hoặc iPad." | `CAMERA`; từ chối thì dùng "Nhập mã PIN" |
-| SMS | Android | Thẻ tính năng sau lần ghép đầu, hoặc khi bật "Tin nhắn SMS" | "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
-| Cuộc gọi | Android | Như SMS, khi bật "Cuộc gọi" | Đề xuất: "Để báo cuộc gọi đến và cho bạn trả lời, từ chối trên Mac, HandLive cần đọc trạng thái điện thoại, nhật ký cuộc gọi và danh bạ." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
-| Tự gửi bảng nhớ tạm | Android | Bật "Tự gửi khi sao chép" | `ConsentSheet` (CLIP-01 trường 2) | Dịch vụ trong Cài đặt › Hỗ trợ tiếp cận |
-| Bluetooth, micro | macOS | Bật "Nghe gọi trên Mac", ngay sau `ConsentSheet` | "Kết nối Bluetooth với điện thoại" | `NSBluetoothAlwaysUsageDescription`: "HandLive dùng Bluetooth để nhận âm thanh cuộc gọi từ điện thoại của bạn." · `NSMicrophoneUsageDescription` (đề xuất): "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại." |
-| Thiết bị ở gần | Android 12+ | Bật "Nghe gọi trên Mac" trên điện thoại | Đề xuất: "Để chuyển âm thanh cuộc gọi sang Mac, HandLive cần kết nối Bluetooth với Mac." | `BLUETOOTH_CONNECT` (Android 10–11 cấp lúc cài) |
-| Trạng thái Tập trung | macOS | Bật "Đổ chuông trên Mac" | Không cần | `NSFocusStatusUsageDescription` (đề xuất): "HandLive xem bạn có đang bật Tập trung để không đổ chuông lúc đó." Chưa cho phép thì không đổ chuông |
-| Camera | macOS | Bật "Dùng điện thoại làm webcam" (CAM-01 bước 3) | Danh sách kiểm tra của CAM-01 | `NSCameraUsageDescription`: "HandLive đưa hình từ điện thoại vào camera ảo HandLive Camera." |
-| Camera, micro | Android | Bật "Dùng điện thoại làm webcam" trên điện thoại (thường ngay sau khi Mac bật) | "Dùng camera cho cuộc họp trên Mac" | `CAMERA`, `RECORD_AUDIO` |
+| Notifications | macOS, iOS | Initial setup | "Get Notified About Messages and Calls" | No purpose string; `requestAuthorization(options: [.alert, .sound, .badge])`. Time-sensitive comes with the entitlement, not with a separate request |
+| Local network | iOS, macOS 15+ | Initial setup | "Find Your Phone on Wi-Fi" | `NSLocalNetworkUsageDescription`: "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, without going through the internet." |
+| Notifications | Android 13+ | Initial setup | "Notifications keep you up to date on the connection status and let you confirm requests from your Mac, such as turning on the camera." | `POST_NOTIFICATIONS` |
+| Background activity | Android | Initial setup | "So your Mac and iPhone can always reach this phone, HandLive needs to run in the background without being stopped by the system." | The battery optimization exemption dialog |
+| Camera (QR scanning) | Android | Tapping "Scan QR Code" | Proposed: "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad." | `CAMERA`; if denied, use "Enter PIN" |
+| SMS | Android | The feature card after the first pairing, or when "SMS Messages" is turned on | "To view and reply to SMS on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
+| Calls | Android | Like SMS, when "Calls" is turned on | Proposed: "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
+| Auto-sending the clipboard | Android | Turning on "Auto-Send When Copying" | `ConsentSheet` (CLIP-01 field 2) | The service in Settings › Accessibility |
+| Bluetooth, microphone | macOS | Turning on "Call Audio on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive uses Bluetooth to receive call audio from your phone." · `NSMicrophoneUsageDescription` (proposed): "HandLive uses the microphone so you can speak on calls transferred from your phone." |
+| Nearby devices | Android 12+ | Turning on "Call Audio on Mac" on the phone | Proposed: "To move call audio to your Mac, HandLive needs to connect to the Mac over Bluetooth." | `BLUETOOTH_CONNECT` (granted at install time on Android 10–11) |
+| Focus status | macOS | Turning on "Ring on Mac" | Not needed | `NSFocusStatusUsageDescription` (proposed): "HandLive checks whether you have a Focus on so it doesn't ring during that time." Until it's allowed, the Mac doesn't ring |
+| Camera | macOS | Turning on "Use Phone as Webcam" (CAM-01 step 3) | The CAM-01 checklist | `NSCameraUsageDescription`: "HandLive brings the picture from your phone into the HandLive Camera virtual camera." |
+| Camera, microphone | Android | Turning on "Use Phone as Webcam" on the phone (usually right after the Mac turns it on) | "Use the Camera for Meetings on Your Mac" | `CAMERA`, `RECORD_AUDIO` |
 
-iPhone và iPad không xin quyền camera (chỉ hiện QR) và không xin quyền dán (`PasteButton`).
+iPhone and iPad request neither the camera permission (they only show the QR code) nor the paste
+permission (`PasteButton`).
 
-Không phải hộp thoại quyền, chỉ hướng dẫn kèm nút mở đúng trang: Camera Extension (CAM-01 trường 5),
-driver micro ảo (CAM-01 trường 8), Dán từ ứng dụng khác trên macOS 15.4+ (C10), mục đăng nhập cần
-duyệt (`SMAppService.openSystemSettingsLoginItems()`), quyền Shizuku (AUDIO-01 bước 10).
+Not permission dialogs, only instructions with a button that opens the right page: the Camera
+Extension (CAM-01 field 5), the virtual microphone driver (CAM-01 field 8), Paste from Other Apps on
+macOS 15.4+ (C10), login items that need approval (`SMAppService.openSystemSettingsLoginItems()`), the
+Shizuku permission (AUDIO-01 step 10).
 
-## Khi bị từ chối
+## After a denial
 
-- Tính năng vẫn bật nhưng chưa dùng được. Dòng của nó trong Cài đặt có lý do màu `text-orange` và
-  một nút: Mac "Mở Cài đặt hệ thống", iOS và Android "Mở cài đặt".
-- Đích mở: Mac `x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth` và các
-  trang tương ứng; iOS `UIApplication.openSettingsURLString`, `openNotificationSettingsURLString`;
+- The feature stays on but can't be used yet. Its row in Settings shows the reason in `text-orange`
+  and one button: on the Mac "Open System Settings", on iOS and Android "Open Settings".
+- Destinations: Mac `x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth` and
+  the matching pages; iOS `UIApplication.openSettingsURLString`, `openNotificationSettingsURLString`;
   Android `ACTION_APPLICATION_DETAILS_SETTINGS`, `ACTION_APP_NOTIFICATION_SETTINGS`,
   `ACTION_ACCESSIBILITY_SETTINGS`.
-- Android không báo từ chối vĩnh viễn: suy từ `perm.requested` và
-  `shouldShowRequestPermissionRationale` (Android 11+ tự chặn sau hai lần). Khi đó không gọi hộp
-  thoại nữa mà hiện "Mở cài đặt".
-- Mac và iPhone thấy quyền còn thiếu trên điện thoại (`permissions_missing`) ở trang Thiết bị, ví dụ
-  "Thiếu quyền SMS trên điện thoại"; điện thoại đăng thông báo gợi ý tối đa một lần mỗi tính năng
-  mỗi 24 h (SET-01 trường 17).
+- Android doesn't report a permanent denial: infer it from `perm.requested` and
+  `shouldShowRequestPermissionRationale` (Android 11+ blocks the dialog on its own after two denials).
+  From then on, don't call the dialog; show "Open Settings" instead.
+- The Mac and iPhone see the permissions missing on the phone (`permissions_missing`) on the Devices
+  page, for example "SMS permission missing on the phone"; the phone posts a suggestion notification
+  at most once per feature every 24 h (SET-01 field 17).
 
-## Riêng Android
+## Android specifics
 
-- Hộp thoại runtime là giao diện hệ thống: không vẽ lại, không che. Hệ thống gộp theo nhóm: SMS,
-  Danh bạ, Điện thoại, Nhật ký cuộc gọi, Camera, Micro, Thiết bị ở gần.
-- Hỗ trợ tiếp cận đi qua `ConsentSheet` toàn màn; chỉ sau "Đồng ý" mới mở Cài đặt › Hỗ trợ tiếp cận.
-  Công bố nói trước về toast của hệ thống "HandLive đã dán từ bộ nhớ đệm" (Android 12+).
-- Bản cài ngoài Google Play trên Android 13+: trước khi mở Hỗ trợ tiếp cận, hướng dẫn "Chế độ cài
-  đặt bị hạn chế": Cài đặt › Ứng dụng › HandLive › ⋮ › "Cho phép chế độ cài đặt bị hạn chế" (SET-01
-  API 6).
+- The runtime dialog is system UI: don't redraw it or cover it. The system groups permissions: SMS,
+  Contacts, Phone, Call logs, Camera, Microphone, Nearby devices.
+- Accessibility goes through the full-screen `ConsentSheet`; only after "Agree" does Settings ›
+  Accessibility open. The disclosure mentions in advance the system toast "HandLive pasted from your
+  clipboard" (Android 12+).
+- Installs from outside Google Play on Android 13+: before opening Accessibility, walk people through
+  "Restricted settings": Settings › Apps › HandLive › ⋮ › "Allow restricted settings" (SET-01 API 6).
 
-## Hai lựa chọn: chỉ ở ConsentSheet
+## Two choices: only in ConsentSheet
 
-| Công bố | Nền tảng | Lựa chọn | Ghi lại |
+| Disclosure | Platform | Choices | Recorded in |
 |---|---|---|---|
-| Nghe gọi trên Mac (`call-audio-v1`) | macOS | "Hủy" (trái) · "Đồng ý" (phải, mặc định, không tô đỏ) | `consent_record` |
-| Tự gửi khi sao chép (CLIP-01 trường 3) | Android | "Gửi thủ công" · "Đồng ý" (tài liệu chi tiết ghi "Không, tôi sẽ gửi thủ công"; nút nên bắt đầu bằng động từ) | `clip.a11y_consent_at` |
+| Call Audio on Mac (`call-audio-v1`) | macOS | "Cancel" (left) · "Agree" (right, default, not red) | `consent_record` |
+| Auto-send when copying (CLIP-01 field 3) | Android | "Send Manually" · "Agree" (the detailed design says "No, I'll send manually"; a button should start with a verb) | `clip.a11y_consent_at` |
 
-Không chọn sẵn. Đổi nội dung công bố thì tăng phiên bản văn bản và hỏi lại.
+Nothing is preselected. When the disclosure's content changes, bump the text version and ask again.
 
-## Điểm lệch
+## Deviations
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định
-  11).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): AUDIO-01 xin quyền micro cùng lúc với Bluetooth
-  (API 3), `NSMicrophoneUsageDescription` khai ở SET-03; AUDIO-02 E7 và AUDIO-04 điều kiện 6 nói rõ
-  khi bị từ chối thì chỉ nghe.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 5 và SET-03 khai
-  `NSFocusStatusUsageDescription`. Còn cần đồng bộ: các câu ghi "Đề xuất" cho Android đưa vào SET-01
-  API 2.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 bước 7 chỉ nói cuộc gọi đến dùng mức nhạy
-  cảm thời gian "để đến kịp lúc"; Mac tôn trọng Tập trung (quyết định 10).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): tài liệu chi tiết viết "Quyền riêng tư & Bảo mật"
-  theo bản tiếng Việt của Apple; kế hoạch triển khai có việc đối chiếu tên mục hệ thống trên máy
-  thật. Dấu kiểu Apple đã áp cho tài liệu chi tiết.
+- Synced with the detailed design (September 25, 2026): SET-03 field 14 now has only "Continue"
+  (decision 11).
+- Synced with the detailed design (September 25, 2026): AUDIO-01 requests the microphone permission
+  together with Bluetooth (API 3), `NSMicrophoneUsageDescription` is declared in SET-03; AUDIO-02 E7
+  and AUDIO-04 condition 6 say clearly that after a denial the call is listen-only.
+- Synced with the detailed design (September 25, 2026): CALL-01 API 5 and SET-03 declare
+  `NSFocusStatusUsageDescription`. Still to sync: the Android sentences marked "Proposed" go into
+  SET-01 API 2.
+- Synced with the detailed design (September 25, 2026): SET-03 step 7 only says that incoming calls
+  use the time-sensitive level "so they arrive in time"; the Mac respects Focus (decision 10).
+- Synced with the detailed design (September 25, 2026): the detailed design writes "Quyền riêng tư &
+  Bảo mật" (Privacy & Security) following Apple's Vietnamese localization; the implementation plan
+  includes a task to check system section names on real devices. Apple-style tone marks have been
+  applied to the detailed design.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Nói lợi ích và dữ liệu đi đâu trong một–hai câu | Viết "để có trải nghiệm tốt hơn" |
-| Để người dùng trả lời trong hộp thoại hệ thống | Thêm nút "Để sau" trên màn giải thích |
-| Giữ tính năng khác chạy khi một quyền bị từ chối | Chặn cả app vì thiếu một quyền |
+| State the benefit and where data goes in one or two sentences | Write "for a better experience" |
+| Let people answer in the system dialog | Add a "Later" button to the primer |
+| Keep other features working when one permission is denied | Block the whole app over one missing permission |

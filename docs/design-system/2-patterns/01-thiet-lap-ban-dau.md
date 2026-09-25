@@ -1,111 +1,118 @@
-# Thiết lập ban đầu
+English | [Tiếng Việt](01-thiet-lap-ban-dau.vi.md)
 
-Mục này quy định lần mở đầu tiên trên từng nền tảng: chào ngắn, xin đúng quyền cần để app chạy, ghép
-nối bằng mã QR rồi vào app. Quyền của từng tính năng để tới lúc dùng tính năng đó.
+# Onboarding
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/onboarding ·
+This section defines the first launch on each platform: a short welcome, only the permissions the app
+needs to run, pairing with a QR code, and then into the app. Each feature's permissions wait until
+that feature is used.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/onboarding ·
 https://developer.apple.com/design/human-interface-guidelines/launching ·
 https://developer.apple.com/design/human-interface-guidelines/privacy#Requesting-permission
 
-## Nguyên tắc
+## Principles
 
-- Ngắn và dạy bằng việc thật: bước ghép nối chính là phần hướng dẫn. Mac và iPhone tối đa 6 màn
-  (SET-03), Android tối đa 5 màn trước ghép nối (SET-01); xong trong 60 s.
-- Chỉ nói về HandLive, không dạy cách dùng máy. Mẹo theo ngữ cảnh (TipKit, iOS 17 và macOS 14 trở
-  lên) thay cho chuỗi màn hướng dẫn.
-- Xin ở đây chỉ quyền cần để chạy: thông báo, mạng cục bộ (Mac, iPhone); thông báo, chạy nền
-  (Android). Bluetooth và micro của Mac xin khi bật "Nghe gọi trên Mac"; quyền camera và Camera
-  Extension khi bật "Dùng điện thoại làm webcam"; quyền SMS, cuộc gọi của Android ở thẻ tính năng
-  sau lần ghép đầu. Chi tiết ở mục Xin quyền.
-- Màn giải thích quyền không có "Bỏ qua"; người dùng từ chối trong hộp thoại của hệ thống. "Bỏ qua"
-  chỉ có ở bước không mở hộp thoại hệ thống, ví dụ hướng dẫn tự khởi chạy theo hãng.
-- Đóng giữa chừng vẫn vào được app: trạng thái trống mời "Ghép điện thoại…" (Android: "Thêm thiết
-  bị"). Bước đã đạt thì tự bỏ qua; lần mở sau chạy tiếp từ bước còn thiếu.
-- Launch screen không mang thương hiệu. iOS: nền `system-background` trơn, không chữ, không logo.
-  macOS không có launch screen. Android 12+: giữ splash của hệ thống (biểu tượng app trên
-  `system-background`), không thêm chữ. Thương hiệu (`wordmark`, `brand-large-title`, nền
-  `brand-glow`) chỉ ở màn Chào mừng, ghép nối và Đã ghép nối.
+- Short, and teaching through real tasks: the pairing step is the tutorial. Mac and iPhone: at most 6
+  screens (SET-03); Android: at most 5 screens before pairing (SET-01); done within 60 s.
+- Talk only about HandLive; don't teach people how to use their device. Contextual tips (TipKit, iOS
+  17 and macOS 14 or later) take the place of a series of tutorial screens.
+- Ask here only for the permissions needed to run: notifications and local network (Mac, iPhone);
+  notifications and background activity (Android). The Mac's Bluetooth and microphone permissions are
+  requested when "Call Audio on Mac" is turned on; the camera permission and the Camera Extension when
+  "Use Phone as Webcam" is turned on; Android's SMS and call permissions on the feature cards after the
+  first pairing. Details in Requesting permission.
+- Permission primers have no "Skip"; people decline in the system dialog. "Skip" appears only on steps
+  that don't open a system dialog, for example the manufacturer-specific autostart instructions.
+- Closing midway still lets people into the app: the empty state invites them to "Pair Phone…"
+  (Android: "Add Device"). Steps already completed are skipped automatically; the next launch picks up
+  from the first missing step.
+- The launch screen carries no branding. iOS: a plain `system-background`, no text, no logo. macOS has
+  no launch screen. Android 12+: keep the system splash screen (the app icon on `system-background`),
+  with no added text. The brand (`wordmark`, `brand-large-title`, the `brand-glow` background) appears
+  only on the Welcome, pairing, and Paired screens.
 
-## Các bước
+## Steps
 
 ### macOS
 
-Lần chạy đầu, biểu tượng thanh menu hiện "Chưa ghép nối" và cửa sổ chào mở ra phía trước.
+On first launch, the menu bar icon shows "Not paired" and the welcome window opens in front.
 
-| # | Màn | Nội dung | Nút |
+| # | Screen | Content | Buttons |
 |---|-----|----------|-----|
-| 1 | Chào mừng | "Chào mừng đến với HandLive", dòng tính năng kèm tóm tắt quyền riêng tư: mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn, không cần tài khoản | "Bắt đầu" |
-| 2 | Chuyển vào thư mục Ứng dụng (khi cần) | "Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng." | "Để sau", "Chuyển" |
-| 3 | Thông báo | `PermissionPrimer` | "Tiếp tục" |
-| 4 | Mạng cục bộ (macOS 15+) | `PermissionPrimer` | "Tiếp tục" |
-| 5 | Thanh menu | Hộp chọn "Hiện HandLive trên thanh menu" và "Mở HandLive khi đăng nhập", bật sẵn; chú thích "Khi tắt, HandLive nằm trên Dock." | "Tiếp tục" |
-| 6 | Dán từ ứng dụng khác (macOS 15.4+, khi cần) | Hướng dẫn chọn Luôn cho phép (C10) | "Mở Cài đặt hệ thống", "Tiếp tục" |
-| 7 | Ghép nối | Sheet `PairingCard` trên cửa sổ chào | "Hủy" |
-| 8 | Đã ghép nối | Tên điện thoại, ba việc làm được ngay (chép dán, tin nhắn, cuộc gọi), chỗ của HandLive trên thanh menu | "Xong" |
+| 1 | Welcome | "Welcome to HandLive", feature rows with a privacy summary: end-to-end encrypted, travels only between your devices, no account needed | "Get Started" |
+| 2 | Move to the Applications folder (when needed) | "The virtual camera only works when HandLive is in the Applications folder." | "Not Now", "Move" |
+| 3 | Notifications | `PermissionPrimer` | "Continue" |
+| 4 | Local network (macOS 15+) | `PermissionPrimer` | "Continue" |
+| 5 | Menu bar | Checkboxes "Show HandLive in Menu Bar" and "Open HandLive at Login", checked by default; caption "When this is off, HandLive appears in the Dock." | "Continue" |
+| 6 | Paste from Other Apps (macOS 15.4+, when needed) | Instructions for choosing Always Allow (C10) | "Open System Settings", "Continue" |
+| 7 | Pairing | `PairingCard` sheet over the welcome window | "Cancel" |
+| 8 | Paired | The phone's name, three things you can do right away (copy and paste, messages, calls), where HandLive lives in the menu bar | "Done" |
 
-Bỏ chọn "Hiện HandLive trên thanh menu" thì app chuyển ngay sang có biểu tượng Dock (xem macOS).
+Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a Dock icon (see macOS).
 
-### iOS và iPadOS
+### iOS and iPadOS
 
-| # | Màn | Nội dung | Nút |
+| # | Screen | Content | Buttons |
 |---|-----|----------|-----|
-| 1 | Chào mừng | Tiêu đề và tóm tắt quyền riêng tư như Mac | "Bắt đầu" |
-| 2 | Thông báo | `PermissionPrimer`: khi HandLive đóng, SMS và cuộc gọi đến chỉ tới được bằng thông báo | "Tiếp tục" |
-| 3 | Mạng cục bộ | `PermissionPrimer` | "Tiếp tục" |
-| 4 | Ghép nối | Sheet `PairingCard`: iPhone, iPad hiện QR, không cần quyền camera | "Hủy" |
-| 5 | Đã ghép nối | Tên điện thoại và giới hạn: bảng nhớ tạm đồng bộ khi HandLive đang mở; khi app đóng, SMS và cuộc gọi đến là thông báo; iPhone, iPad không nghe gọi được | "Xong" |
+| 1 | Welcome | Title and privacy summary, as on the Mac | "Get Started" |
+| 2 | Notifications | `PermissionPrimer`: when HandLive is closed, incoming SMS and calls can reach you only through notifications | "Continue" |
+| 3 | Local network | `PermissionPrimer` | "Continue" |
+| 4 | Pairing | `PairingCard` sheet: iPhone and iPad show the QR code, no camera permission needed | "Cancel" |
+| 5 | Paired | The phone's name and the limits: the clipboard syncs while HandLive is open; when the app is closed, incoming SMS and calls arrive as notifications; iPhone and iPad can't take call audio | "Done" |
 
 ### Android
 
-| # | Màn | Nội dung | Nút |
+| # | Screen | Content | Buttons |
 |---|-----|----------|-----|
-| 1 | Chào mừng | Vai trò trung tâm, tóm tắt quyền riêng tư (SET-01 trường 1) | "Bắt đầu" |
-| 2 | Thông báo (Android 13+) | `PermissionPrimer` rồi hộp thoại hệ thống | "Tiếp tục" |
-| 3 | Chạy nền | `PermissionPrimer` rồi hộp thoại miễn tối ưu pin; Android 11+ gợi ý tắt "Tạm dừng hoạt động nếu không dùng" | "Tiếp tục" |
-| 4 | Tự khởi chạy (Xiaomi, OPPO, Samsung…) | Hướng dẫn theo hãng (SET-01 API 5) | "Mở cài đặt của hãng", "Đã xong", "Bỏ qua" |
-| 5 | Ghép nối thiết bị | "Quét mã QR" (giải thích quyền camera ngay trước khung quét) hoặc "Nhập mã PIN" | — |
-| 6 | Xác nhận | "Ghép nối với MacBook của Lan?" kèm Mã an toàn | "Hủy", "Ghép nối" |
-| 7 | Đã ghép nối | Thẻ tính năng (SET-01 trường 10) với "Cấp quyền" cho SMS, cuộc gọi, tự gửi bảng nhớ tạm | "Xong" |
+| 1 | Welcome | The phone's role as the hub, a privacy summary (SET-01 field 1) | "Get Started" |
+| 2 | Notifications (Android 13+) | `PermissionPrimer`, then the system dialog | "Continue" |
+| 3 | Background activity | `PermissionPrimer`, then the battery optimization exemption dialog; on Android 11+, suggest turning off "Pause app activity if unused" | "Continue" |
+| 4 | Autostart (Xiaomi, OPPO, Samsung…) | Manufacturer-specific instructions (SET-01 API 5) | "Open Manufacturer Settings", "Done", "Skip" |
+| 5 | Pair device | "Scan QR Code" (the camera permission is explained right before the scanner) or "Enter PIN" | — |
+| 6 | Confirm | "Pair with Lan's MacBook?" with the Security Code | "Cancel", "Pair" |
+| 7 | Paired | Feature cards (SET-01 field 10) with "Grant Access" for SMS, calls, and auto-sending the clipboard | "Done" |
 
-## Thành phần
+## Components
 
-| Thành phần | Vai trò |
+| Component | Role |
 |------------|---------|
-| `Onboarding` | Màn chào: tiêu đề `brand-large-title`, dòng tính năng, liên kết "HandLive và quyền riêng tư của bạn", một nút chính |
-| `PermissionPrimer` | Màn giải thích trước hộp thoại hệ thống, đúng một nút "Tiếp tục" |
-| `PairingCard` | QR `qr-ink` trên `qr-paper`, cạnh `size-qr` trên Mac, đếm ngược "Mã đổi sau 1:42", "Không quét được? Dùng mã PIN" |
-| `ConsentSheet` | Công bố Hỗ trợ tiếp cận trên Android, mở từ thẻ tự gửi bảng nhớ tạm |
+| `Onboarding` | The welcome screen: a `brand-large-title` title, feature rows, the link "HandLive and Your Privacy", one primary button |
+| `PermissionPrimer` | The explanation screen before the system dialog, with exactly one "Continue" button |
+| `PairingCard` | QR code in `qr-ink` on `qr-paper`, `size-qr` on a side on the Mac, the countdown "Code changes in 1:42", "Can't Scan? Use a PIN" |
+| `ConsentSheet` | The Accessibility disclosure on Android, opened from the auto-send clipboard card |
 
-## Ghép nối (PAIR-01)
+## Pairing (PAIR-01)
 
-- Mac và iPhone/iPad hiện QR, Android quét. Mã tự làm mới sau 120 s.
-- PIN 6 số là đường dự phòng, chỉ dùng được khi cùng mạng Wi-Fi; hiện bằng `code-pin`, nhóm ba số
-  "482 915"; sai quá 3 lần thì sinh mã mới.
-- Lỗi hiện ngay trong sheet, không bằng alert: "Ghép nối không an toàn, thử lại" (E4). Hết hạn thì
-  mã mới tự thay, không báo lỗi.
-- Ghép xong: sheet tự đóng, hai máy cùng hiện "Đã ghép nối với <tên>". Đây là khoảnh khắc Niềm vui:
-  minh họa trên `brand-glow`, rung `success` trên iPhone; bật Giảm chuyển động thì bỏ chuyển động,
-  giữ nội dung. Trong thiết lập ban đầu, màn Đã ghép nối thay cho HUD `Feedback`; ghép lại từ Cài
-  đặt thì chỉ có HUD.
+- The Mac and iPhone/iPad show the QR code; Android scans it. The code refreshes itself after 120 s.
+- The 6-digit PIN is the fallback, usable only on the same Wi-Fi network; it's shown in `code-pin`, in
+  groups of three digits "482 915"; after more than 3 wrong attempts, a new code is generated.
+- Errors show right inside the sheet, not as an alert: "Couldn't pair securely. Try again." (E4). When
+  the code expires, a new one replaces it automatically, with no error.
+- Once paired: the sheet closes itself, and both devices show "Paired with <name>". This is a Delight
+  moment: an illustration on `brand-glow`, a `success` haptic on iPhone; with Reduce Motion on, drop
+  the motion but keep the content. During onboarding, the Paired screen takes the place of the
+  `Feedback` HUD; pairing again from Settings shows only the HUD.
 
-## Điểm lệch
+## Deviations
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 14 chỉ còn "Tiếp tục" (quyết định
-  11).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 đặt hai hộp chọn "Mở HandLive khi đăng nhập"
-  (trường 3) và "Hiện HandLive trên thanh menu" (trường 16) trên màn chào; màn Thanh menu trong bảng
-  bước ở trên là cách trình bày tương đương — khi dựng giao diện theo SET-03.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 trường 11 bỏ câu về quyền dán và nói rõ gửi
-  bằng nút Dán (CLIP-04); giới hạn vẫn hiện ở bước 11 của SET-03.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục"; PAIR-01 trường 5
-  dùng "Ghép nối" / "Hủy".
-- Tài liệu chi tiết viết "huỷ, xoá, tuỳ"; mục này viết kiểu Apple "hủy, xóa, tùy".
+- Synced with the detailed design (September 25, 2026): SET-03 field 14 now has only "Continue"
+  (decision 11).
+- Synced with the detailed design (September 25, 2026): SET-03 puts the two checkboxes "Open HandLive
+  at Login" (field 3) and "Show HandLive in Menu Bar" (field 16) on the welcome screen; the Menu bar
+  screen in the step table above is an equivalent presentation — when building the UI, follow SET-03.
+- Synced with the detailed design (September 25, 2026): SET-03 field 11 drops the sentence about
+  paste permission and says clearly that sending uses the Paste button (CLIP-04); the limits still
+  appear at step 11 of SET-03.
+- Synced with the detailed design (September 25, 2026): SET-01 field 6 uses "Continue"; PAIR-01 field 5
+  uses "Pair" / "Cancel".
+- The Vietnamese detailed design writes "huỷ, xoá, tuỳ"; the Vietnamese version of this section uses
+  the Apple style "hủy, xóa, tùy".
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |-----|-----------|
-| Cho người dùng tới bước ghép nối trong ≤ 3 lần chạm | Chuỗi màn giới thiệu tính năng |
-| Hỏi quyền khi người dùng hiểu vì sao cần | Xin mọi quyền ngay lúc mở app |
-| Cho vào app kể cả khi chưa ghép nối | Khóa app tới khi ghép xong |
-| Nói thẳng giới hạn của iPhone, iPad | Hứa tính năng nền tảng không cho phép |
+| Get people to the pairing step in ≤ 3 taps | A series of feature introduction screens |
+| Ask for a permission once people understand why it's needed | Ask for every permission as soon as the app opens |
+| Let people into the app even before pairing | Lock the app until pairing is done |
+| Be upfront about the limits of iPhone and iPad | Promise features the platform doesn't allow |

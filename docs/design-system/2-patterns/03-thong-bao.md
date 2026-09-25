@@ -1,102 +1,107 @@
-# Thông báo
+English | [Tiếng Việt](03-thong-bao.vi.md)
 
-Mục này liệt kê mọi thông báo HandLive gửi, loại và mức ngắt quãng của từng cái, câu chữ, hành động
-và cách tôn trọng Tập trung. Thông báo trên Android dùng mẫu và kênh của Android; trên Mac, iPhone,
-iPad dùng thông báo của Apple.
+# Notifications
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/notifications ·
+This section lists every notification HandLive sends, the type and interruption level of each, the
+wording, the actions, and how Focus is respected. On Android, notifications use Android's templates
+and channels; on Mac, iPhone, and iPad they're Apple notifications.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/notifications ·
 https://developer.apple.com/design/human-interface-guidelines/managing-notifications
 
 ## Mac, iPhone, iPad
 
-| Thông báo | Nền tảng | Loại · mức | Tiêu đề · nội dung | Hành động |
+| Notification | Platform | Type · level | Title · body | Actions |
 |---|---|---|---|---|
-| Tin SMS mới (SMS-02) | Mac, iOS | Liên lạc `INSendMessageIntent`, active | "Nguyễn Văn A" · "Nhớ mang theo tài liệu" | "Trả lời" (ô nhập, nút "Gửi"), "Đánh dấu đã đọc" |
-| Cuộc gọi đến (CALL-01) | iOS | Liên lạc `INStartCallIntent`, time-sensitive | "Nguyễn Văn A" · "Cuộc gọi đến · SIM 1" | "Từ chối" (phá hủy, cần mở khóa máy) |
-| Cuộc gọi đến | Mac | Liên lạc `INStartCallIntent`: passive khi `CallPanel` đang hiện (chỉ vào Trung tâm thông báo); time-sensitive khi Tập trung bật và không hiện panel | Như trên | "Trả lời", "Từ chối" |
-| Cuộc gọi nhỡ (CALL-04) | Mac, iOS | Active | Tên, số hoặc "Số ẩn" · "Cuộc gọi nhỡ · 14:05" (kèm "· SIM 1") | "Nhắn tin" (ô nhập) — chỉ khi có số và gửi được SMS |
-| Đã chặn nội dung nhạy cảm (QC3) | Mac | Passive | "Đã chặn nội dung nhạy cảm" · "HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ." | "Vẫn gửi" (hết hạn sau 2 phút) |
-| Xung đột bảng nhớ tạm (QC8) | Mac | Active | "Chưa ghi lên Pixel 8 của Lan" · "Thiết bị này vừa có nội dung sao chép mới." | "Gửi lại" (hết hạn sau 2 phút) |
-| Camera (CAM-05) | Mac | Active (quá nóng), passive (pin yếu) | Không tiêu đề riêng. Quá nóng: "Điện thoại quá nóng — đã dừng camera. Hãy để máy nguội rồi thử lại." Pin yếu: "Pin điện thoại dưới 20 % — HandLive giảm chất lượng xuống 720p. Cắm sạc hoặc cáp USB để giữ chất lượng." | — |
+| New SMS (SMS-02) | Mac, iOS | Communication `INSendMessageIntent`, active | "Nguyễn Văn A" · "Don't forget the documents" | "Reply" (text field, "Send" button), "Mark as Read" |
+| Incoming call (CALL-01) | iOS | Communication `INStartCallIntent`, time-sensitive | "Nguyễn Văn A" · "Incoming call · SIM 1" | "Decline" (destructive, requires unlocking the device) |
+| Incoming call | Mac | Communication `INStartCallIntent`: passive while `CallPanel` is showing (goes only to Notification Center); time-sensitive when a Focus is on and the panel isn't shown | Same as above | "Answer", "Decline" |
+| Missed call (CALL-04) | Mac, iOS | Active | Name, number, or "No Caller ID" · "Missed call · 2:05 PM" (plus "· SIM 1") | "Message" (text field) — only when there's a number and SMS can be sent |
+| Sensitive content blocked (QC3) | Mac | Passive | "Sensitive content blocked" · "HandLive doesn't send content that looks like a password or card number." | "Send Anyway" (expires after 2 minutes) |
+| Clipboard conflict (QC8) | Mac | Active | "Not copied to Lan's Pixel 8" · "That device just copied something new." | "Send Again" (expires after 2 minutes) |
+| Camera (CAM-05) | Mac | Active (overheating), passive (low battery) | No title of its own. Overheating: "The phone is too hot — the camera has stopped. Let the phone cool down, then try again." Low battery: "Phone battery is below 20% — HandLive lowered the quality to 720p. Plug in a charger or a USB cable to keep the quality." | — |
 
-- Nội dung ẩn: `sms.preview` tắt thì nội dung là "Tin nhắn SMS mới" (SMS-02 trường 2). Người dùng
-  tắt bản xem trước trong cài đặt hệ thống thì hệ thống dùng `hiddenPreviewsBodyPlaceholder`: "Tin
-  nhắn SMS mới" (`HL_SMS`), "Cuộc gọi đến" (`HL_CALL_INCOMING`), "Cuộc gọi nhỡ" (`HL_CALL_MISSED`).
-- iPhone đang khóa, extension không đọc được khóa: nội dung chung "Tin nhắn SMS mới", "Cuộc gọi đến
-  trên điện thoại", "Cuộc gọi nhỡ trên điện thoại", không có hành động (C3).
-- Mỗi hành động có SF Symbol: Trả lời tin `arrowshape.turn.up.left`, Đánh dấu đã đọc
-  `envelope.open`, Trả lời cuộc gọi `phone.fill`, Từ chối `phone.down.fill`, Nhắn tin `message`, Vẫn
-  gửi `paperplane`, Gửi lại `arrow.clockwise`.
-- Nhóm: `threadIdentifier` theo hội thoại (`sms:<pair_id>:<thread_id>`) và `calls`; push dùng
-  `apns-collapse-id` để không lặp.
+- Hidden content: with `sms.preview` off, the body is "New SMS message" (SMS-02 field 2). When the user
+  turns off previews in the system settings, the system uses `hiddenPreviewsBodyPlaceholder`: "New SMS
+  message" (`HL_SMS`), "Incoming call" (`HL_CALL_INCOMING`), "Missed call" (`HL_CALL_MISSED`).
+- iPhone locked and the extension can't read the keys: generic content "New SMS message", "Incoming
+  call on your phone", "Missed call on your phone", with no actions (C3).
+- Every action has an SF Symbol: Reply to a message `arrowshape.turn.up.left`, Mark as Read
+  `envelope.open`, Answer a call `phone.fill`, Decline `phone.down.fill`, Message `message`, Send
+  Anyway `paperplane`, Send Again `arrow.clockwise`.
+- Grouping: `threadIdentifier` per conversation (`sms:<pair_id>:<thread_id>`) and `calls`; push uses
+  `apns-collapse-id` to avoid duplicates.
 
 ## Android
 
-| Kênh (id) | Mức | Thông báo | Hành động |
+| Channel (id) | Level | Notification | Actions |
 |---|---|---|---|
-| `hl_service` "Dịch vụ kết nối" | `IMPORTANCE_LOW`, thường trực, không huy hiệu | "HandLive đang chờ kết nối" · "Đã kết nối với MacBook của Lan" · "Đã kết nối với 2 thiết bị" | "Gửi bảng nhớ tạm" |
-| `camera_request` | `IMPORTANCE_HIGH` (heads-up), tự hủy sau 60 s | "MacBook của Lan muốn dùng camera và micro" | "Bật", "Từ chối" |
-| `camera_live` | `IMPORTANCE_LOW`, thường trực | "Đang dùng camera cho MacBook của Lan" | "Đổi camera", "Tắt micro" hoặc "Bật micro", "Dừng" (tối đa 3) |
-| `camera_alert` | `IMPORTANCE_DEFAULT` | Quá nóng, pin yếu — cùng câu như Mac | — |
-| `clipboard` (đề xuất) | `IMPORTANCE_LOW` (không âm, như passive) | Đã chặn nội dung nhạy cảm; xung đột; tiến trình ảnh trên 1 MiB "Đang gửi ảnh tới MacBook của Lan — 45 %" | "Vẫn gửi"; "Gửi lại"; "Hủy" |
-| `permission` (đề xuất) | `IMPORTANCE_LOW` | "MacBook của Lan cần quyền đọc SMS trên điện thoại — chạm để cho phép" (SET-01 trường 17) | — |
+| `hl_service` "Connection Service" | `IMPORTANCE_LOW`, ongoing, no badge | "HandLive is waiting for a connection" · "Connected to Lan's MacBook" · "Connected to 2 devices" | "Send Clipboard" |
+| `camera_request` | `IMPORTANCE_HIGH` (heads-up), cancels itself after 60 s | "Lan's MacBook wants to use the camera and microphone" | "Turn On", "Decline" |
+| `camera_live` | `IMPORTANCE_LOW`, ongoing | "Using the camera for Lan's MacBook" | "Switch Camera", "Turn Off Microphone" or "Turn On Microphone", "Stop" (3 at most) |
+| `camera_alert` | `IMPORTANCE_DEFAULT` | Overheating, low battery — the same wording as on the Mac | — |
+| `clipboard` (proposed) | `IMPORTANCE_LOW` (silent, like passive) | Sensitive content blocked; conflict; progress for images over 1 MiB "Sending image to Lan's MacBook — 45%" | "Send Anyway"; "Send Again"; "Cancel" |
+| `permission` (proposed) | `IMPORTANCE_LOW` | "Lan's MacBook needs permission to read SMS on this phone — tap to allow" (SET-01 field 17) | — |
 
-- Mẫu, biểu tượng nhỏ và cách hiện là của Android: `NotificationCompat`, biểu tượng nhỏ đơn sắc
-  (Material Symbols), hành động là `PendingIntent` mở thẳng activity hoặc service (Android 12+ chặn
-  trampoline).
-- Người dùng tắt từng kênh trong cài đặt thông báo của Android; HandLive dẫn tới bằng
-  `ACTION_CHANNEL_NOTIFICATION_SETTINGS`, không tự làm công tắc riêng.
+- The template, the small icon, and the presentation belong to Android: `NotificationCompat`, a
+  monochrome small icon (Material Symbols), and actions that are `PendingIntent`s opening an activity
+  or service directly (Android 12+ blocks trampolines).
+- People turn off individual channels in Android's notification settings; HandLive links there with
+  `ACTION_CHANNEL_NOTIFICATION_SETTINGS` and doesn't build switches of its own.
 
-## Tập trung
+## Focus
 
-- Thông báo liên lạc (tin nhắn, cuộc gọi) để hệ thống lọc theo người gửi, người gọi mà người dùng
-  cho phép; HandLive không tự quyết.
-- Time-sensitive chỉ cho cuộc gọi đang đổ chuông: sự kiện đang xảy ra, vượt Tập trung và tóm tắt
-  theo lịch. Lần đầu hệ thống hỏi người dùng có giữ kiểu này không; người dùng tắt được. Không dùng
-  time-sensitive cho gì khác.
-- Mac: Tập trung đang lọc người gọi thì `CallPanel` không hiện, không đổ chuông; cuộc gọi vẫn có
-  trong `MenuBarMenu` (quyết định 10). Chưa được cấp quyền đọc Tập trung thì không đổ chuông, panel
-  vẫn hiện (CALL-01 API 5).
-- Thông báo không phải liên lạc ở mức passive, active vào tóm tắt theo lịch khi người dùng bật tóm
-  tắt; tin nhắn trực tiếp và time-sensitive đến ngay.
+- Communication notifications (messages, calls) let the system filter by the senders and callers the
+  user allows; HandLive doesn't decide on its own.
+- Time-sensitive is only for a call that's ringing: an event happening right now, which breaks through
+  Focus and the scheduled summary. The first time, the system asks the user whether to keep this kind
+  of notification; the user can turn it off. Don't use time-sensitive for anything else.
+- Mac: when a Focus is filtering out the caller, `CallPanel` doesn't appear and nothing rings; the call
+  is still in `MenuBarMenu` (decision 10). Without permission to read the Focus status, the Mac doesn't
+  ring, but the panel still appears (CALL-01 API 5).
+- Non-communication notifications at the passive and active levels go into the scheduled summary when
+  the user has it turned on; direct messages and time-sensitive notifications arrive immediately.
 
-## Quy tắc
+## Rules
 
-- Một sự kiện, một thông báo. Cuộc gọi nhỡ mỗi thiết bị báo một lần; thông báo nhạy cảm, xung đột
-  mới thay cái cũ; tin đến qua đồng bộ bù (SMS-01) chỉ cập nhật danh sách và huy hiệu; mất kết nối,
-  kết nối lại không có thông báo.
-- Lỗi không đi bằng thông báo: lỗi hiện ngay chỗ gây ra nó (mục Phản hồi, tải và lỗi). Ngoại lệ duy
-  nhất: kết quả của hành động làm ngay trên thông báo khi app không mở.
-- Huy hiệu chỉ đếm việc chưa xem: số hội thoại chưa đọc trên biểu tượng app iOS, tab Tin nhắn và
-  ngay sau biểu tượng thanh menu Mac; tab Cuộc gọi đếm cuộc gọi nhỡ chưa xem. Xem xong thì giảm
-  ngay. Không vẽ huy hiệu giả.
-- App đang ở phía trước thì không gửi thông báo mà cập nhật giao diện: hội thoại đang mở không báo
-  tin của chính nó (SMS-02 bước 7); iPhone đang mở HandLive khi có cuộc gọi thì hiện banner trong
-  app (CALL-01 bước 8); iPhone nhận xung đột bảng nhớ tạm lúc đang mở app thì báo ngay trên thẻ gửi
-  (CLIP-04 E6).
-- Câu chữ: tiêu đề ngắn, không dấu chấm, không chữ "HandLive"; nội dung là câu đầy đủ, không tự cắt;
-  không lộ nội dung vừa sao chép. Tối đa 4 hành động, mỗi hành động là động từ ngắn; không có hành
-  động chỉ để mở app.
-- Không dùng thông báo để bảo người dùng làm việc; ngoại lệ là gợi ý cấp quyền trên Android, tối đa
-  một lần mỗi tính năng mỗi 24 h.
+- One event, one notification. A missed call is reported once per device; a new sensitive-content or
+  conflict notification replaces the old one; messages that arrive through catch-up sync (SMS-01) only
+  update the list and the badge; losing and regaining the connection produces no notification.
+- Errors don't go out as notifications: an error shows right where it happened (the Feedback, loading,
+  and errors section). The only exception: the result of an action taken directly on a notification
+  while the app isn't open.
+- Badges count only things not yet seen: the number of unread conversations on the iOS app icon, on the
+  Messages tab, and right after the Mac menu bar icon; the Calls tab counts unseen missed calls. They go
+  down as soon as the items are seen. Don't draw fake badges.
+- When the app is in the foreground, don't send notifications; update the interface instead: an open
+  conversation doesn't notify about its own messages (SMS-02 step 7); an iPhone with HandLive open when
+  a call comes in shows an in-app banner (CALL-01 step 8); an iPhone that receives a clipboard conflict
+  while the app is open reports it right on the send card (CLIP-04 E6).
+- Wording: a short title, no period, no "HandLive"; the body is a complete sentence that isn't cut
+  short by hand; never reveal what was just copied. At most 4 actions, each a short verb; no action
+  that only opens the app.
+- Don't use notifications to tell people to do things; the exception is the permission suggestion on
+  Android, at most once per feature every 24 h.
 
-## Điểm lệch
+## Deviations
 
-- Lệch có chủ đích: iPhone báo lỗi của hành động làm từ thông báo bằng thông báo cục bộ, vì app
-  không mở: "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại." (CALL-02 E8),
-  "Chưa gửi được, mở HandLive để thử lại" (SMS-04 E8).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SMS-02 API 4 có `HL_SMS_REPLY` và
-  `HL_SMS_MARK_READ` ("Đánh dấu đã đọc", chỉ trên máy này theo SMS-05).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 6 (I-NSE) và API 7 (Mac) dùng
-  `INStartCallIntent`; kênh `clipboard` (CLIP-01 trường 8, 12) và `permission` (SET-01 trường 17).
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CONN-04 API 4 và CALL-01 trường 11 không đặt tiêu
-  đề push, hệ thống tự hiện tên app.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 5 "Gửi bảng nhớ tạm"; dấu kiểu Apple.
+- Intentional deviation: the iPhone reports errors from actions taken on a notification with a local
+  notification, because the app isn't open: "Couldn't send the decline command. The call is still
+  ringing on the phone." (CALL-02 E8), "Couldn't send. Open HandLive to try again." (SMS-04 E8).
+- Synced with the detailed design (September 25, 2026): SMS-02 API 4 has `HL_SMS_REPLY` and
+  `HL_SMS_MARK_READ` ("Mark as Read", only on this device, per SMS-05).
+- Synced with the detailed design (September 25, 2026): CALL-01 API 6 (I-NSE) and API 7 (Mac) use
+  `INStartCallIntent`; the `clipboard` channel (CLIP-01 fields 8, 12) and the `permission` channel
+  (SET-01 field 17).
+- Synced with the detailed design (September 25, 2026): CONN-04 API 4 and CALL-01 field 11 don't set a
+  push title; the system shows the app name itself.
+- Synced with the detailed design (September 25, 2026): SET-01 field 5 "Send Clipboard"; Apple-style
+  tone marks.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Để hệ thống lọc tin và cuộc gọi theo người trong Tập trung | Tự vượt Tập trung cho tin nhắn thường |
-| Gộp tin cùng hội thoại vào một nhóm | Mỗi lần kết nối lại xả hàng loạt thông báo cũ |
-| Hành động làm xong việc mà không cần mở app | Nút "Mở" trùng với chạm vào thông báo |
+| Let the system filter messages and calls by person in Focus | Break through Focus for ordinary messages |
+| Group messages from the same conversation together | Dump a pile of old notifications after every reconnection |
+| Actions that finish the task without opening the app | An "Open" button that does the same as tapping the notification |

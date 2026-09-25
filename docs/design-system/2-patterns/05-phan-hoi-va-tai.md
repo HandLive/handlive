@@ -1,118 +1,123 @@
-# Phản hồi, tải và lỗi
+English | [Tiếng Việt](05-phan-hoi-va-tai.vi.md)
 
-Mục này quy định cách HandLive báo kết quả, trạng thái chờ, tiến trình và lỗi: mức ngắt quãng khớp
-với tầm quan trọng, đặt ngay chỗ người dùng đang nhìn, luôn nói bước tiếp theo.
+# Feedback, loading, and errors
 
-Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/feedback ·
+This section defines how HandLive reports results, waiting states, progress, and errors: the level of
+interruption matches the importance, the message appears right where the user is looking, and it
+always says what to do next.
+
+HIG source: https://developer.apple.com/design/human-interface-guidelines/feedback ·
 https://developer.apple.com/design/human-interface-guidelines/loading ·
 https://developer.apple.com/design/human-interface-guidelines/progress-indicators ·
 https://developer.apple.com/design/human-interface-guidelines/alerts
 
-## Chọn cách báo
+## Choosing how to report
 
-| Tình huống | Cách báo | Ví dụ |
+| Situation | How | Example |
 |---|---|---|
-| Thao tác chủ động xong | `Feedback`. Mac: biểu tượng thanh menu đổi sang `checkmark` ~1 giây rồi trở lại. iPhone, Android: HUD kính ~1,5 giây kèm rung | "Đã gửi tới Pixel 8 của Lan" |
-| Việc tự động thành công | Im lặng, trạng thái cập nhật tại chỗ. Riêng lần đầu chép từ điện thoại sang Mac có dấu `checkmark` như trên (khoảnh khắc Niềm vui) | — |
-| Đang chờ, xếp hàng | Chữ trạng thái ngay trên đối tượng | "Đang chờ điện thoại", "2 tin đang chờ điện thoại", "Chạm Bật trên điện thoại" |
-| Lỗi có cách sửa | Ngay chỗ gây lỗi, kèm nút sửa | "Gửi lỗi · Không có sóng" và "Thử lại" dưới bong bóng |
-| Mất kết nối | Chỉ `StatusIndicator` | "Mất kết nối" và "Kết nối lại ngay" |
-| Hành động không hoàn tác | `Alert` xác nhận | "Hủy ghép nối với Pixel 8 của Lan?" |
-| Lỗi app không tự phục hồi | `Alert` có nút dẫn tới cách sửa | Tạo khóa thất bại lúc thiết lập (SET-03 E1), nút "Thử lại" |
+| An action the user started completes | `Feedback`. Mac: the menu bar icon changes to `checkmark` for ~1 second, then changes back. iPhone, Android: a glass HUD for ~1.5 seconds with a haptic | "Sent to Lan's Pixel 8" |
+| An automatic task succeeds | Silence; the status updates in place. Only the first copy from phone to Mac gets the `checkmark` above (a Delight moment) | — |
+| Waiting, queued | Status text right on the item | "Waiting for phone", "2 messages waiting for phone", "Tap Turn On on the phone" |
+| An error that can be fixed | Right where the error happened, with a button that fixes it | "Not sent · No service" and "Try Again" under the bubble |
+| Connection lost | `StatusIndicator` only | "Connection lost" and "Reconnect Now" |
+| An action that can't be undone | A confirmation `Alert` | "Unpair Lan's Pixel 8?" |
+| An error the app can't recover from on its own | An `Alert` with a button that leads to the fix | Key generation failed during setup (SET-03 E1), with a "Try Again" button |
 
-- Mac, macOS 14+: `.contentTransition(.symbolEffect(.replace))`, từ macOS 15 hệ thống tự dùng Magic
-  Replace; macOS 13 đổi biểu tượng không hiệu ứng.
-- Rung: iOS `UINotificationFeedbackGenerator` `.success` / `.error` (iOS 17+ `.sensoryFeedback`);
+- Mac, macOS 14+: `.contentTransition(.symbolEffect(.replace))`; from macOS 15 the system uses Magic
+  Replace on its own; macOS 13 changes the icon with no effect.
+- Haptics: iOS `UINotificationFeedbackGenerator` `.success` / `.error` (iOS 17+ `.sensoryFeedback`);
   Android `HapticFeedbackConstants.CONFIRM` / `REJECT` (API 30+), API 29 `CONTEXT_CLICK`.
-- Android khi HandLive không hiện trên màn (ô Cài đặt nhanh, nút trong thông báo, bảng chia sẻ):
-  toast của hệ thống thay cho HUD.
-- Giảm chuyển động: HUD chỉ hiện và ẩn mờ, biểu tượng thanh menu đổi thẳng. VoiceOver và TalkBack
-  đọc cùng câu.
-- HUD không có nút. Việc cần làm ("Vẫn gửi", "Gửi lại") đi bằng `Notification` hoặc nằm trong màn
-  đang mở.
+- Android, when HandLive isn't on screen (the Quick Settings tile, a notification button, the share
+  sheet): the system toast replaces the HUD.
+- Reduce Motion: the HUD only fades in and out, and the menu bar icon swaps directly. VoiceOver and
+  TalkBack read the same sentence.
+- The HUD has no buttons. Things to do ("Send Anyway", "Send Again") go through `Notification` or live
+  in the screen that's open.
 
-## Lỗi
+## Errors
 
-Viết như nói chuyện: điều gì xảy ra, vì sao, làm gì tiếp. Không "Lỗi", không mã lỗi, không đổ lỗi
-cho người dùng.
+Write the way you'd speak: what happened, why, and what to do next. No "Error", no error codes, no
+blaming the user.
 
-| Lỗi | Chỗ hiện | Chữ | Hành động |
+| Error | Where it shows | Text | Action |
 |---|---|---|---|
-| Gửi SMS thất bại (SMS-04 E7) | Dưới bong bóng | "Gửi lỗi · Điện thoại đang ở chế độ máy bay" | "Thử lại" |
-| Tải tin cũ khi không có phiên (SMS-03 E2) | Dải đầu hội thoại | "Kết nối điện thoại để tải tin cũ hơn" | Tự tải khi kết nối lại |
-| Lệnh cuộc gọi không tới (CALL-02 E5) | Trong `CallPanel` | "Không gửi được lệnh tới điện thoại" | Panel về trạng thái trước |
-| Thao tác chỉ có qua Bluetooth (CALL-03 E2) | Trong `CallPanel`, thay ba nút bị ẩn | "Nối Bluetooth với điện thoại để giữ máy, bấm số, tắt tiếng" | — |
-| Nội dung sao chép quá lớn (CLIP-01 E5) | Mac: dòng trạng thái `MenuBarMenu`; Android: toast | "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)" | — |
-| Điện thoại không ghi được (CLIP-02 E8) | Mac: dòng trạng thái `MenuBarMenu` | "Không ghi được bảng nhớ tạm trên điện thoại" | — |
-| Camera khi đang qua Internet (CAM-02 E1) | Xem trước camera, `MenuBarMenu` | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" | — |
-| Ghép nối sai xác thực (PAIR-01 E4) | Trong sheet ghép nối | "Ghép nối không an toàn, thử lại" | Mã QR mới |
-| Máy chủ không phản hồi (SET-02 E5) | Dưới nút vừa dùng | "Không kết nối được máy chủ, hãy thử lại sau" | — |
+| SMS failed to send (SMS-04 E7) | Under the bubble | "Not sent · The phone is in Airplane Mode" | "Try Again" |
+| Loading older messages without a session (SMS-03 E2) | Banner at the top of the conversation | "Connect the phone to load older messages" | Loads automatically on reconnection |
+| A call command didn't get through (CALL-02 E5) | In `CallPanel` | "Couldn't send the command to the phone" | The panel returns to its previous state |
+| Actions available only over Bluetooth (CALL-03 E2) | In `CallPanel`, in place of the three hidden buttons | "Connect to the phone over Bluetooth to hold, use the keypad, or mute" | — |
+| Copied content too large (CLIP-01 E5) | Mac: the `MenuBarMenu` status line; Android: a toast | "Content is too large to send (1 MB of text at most)" | — |
+| The phone couldn't write it (CLIP-02 E8) | Mac: the `MenuBarMenu` status line | "Couldn't write to the clipboard on the phone" | — |
+| Camera while connected over the internet (CAM-02 E1) | Camera preview, `MenuBarMenu` | "Requires the same Wi-Fi network or a USB cable" | — |
+| Pairing failed authentication (PAIR-01 E4) | In the pairing sheet | "Couldn't pair securely. Try again." | A new QR code |
+| Server not responding (SET-02 E5) | Under the button just used | "Couldn't connect to the server. Try again later." | — |
 
-## Alert: chỉ hai việc
+## Alerts: only two jobs
 
-- Xác nhận hành động không hoàn tác: "Hủy ghép nối" (PAIR-03), "Xóa thiết bị khỏi máy chủ", "Xóa
-  toàn bộ dữ liệu HandLive" (câu SET-02 trường 29), "Đồng bộ lại toàn bộ SMS" (SMS-01 trường 6), "Gỡ
-  camera và micro ảo" (CAM-01 A1), tắt tính năng đang chạy (SET-02 E9).
-- Lỗi không tự phục hồi: tạo khóa thất bại (SET-03 E1, SET-01 E9); "Không khởi động được dịch vụ kết
-  nối" với "Thử lại" (SET-01 E2); "Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?" (SET-02
-  E7).
-- Mac: "Hủy" bên trái, hành động bên phải là nút mặc định, không tô đỏ vì người dùng chủ động chọn
-  (quyết định 12); Esc hoặc ⌘. là Hủy. iPhone, Android: action sheet, hành động phá hủy màu đỏ ở
-  trên, "Hủy" dưới cùng.
-- Không alert lúc vừa mở app; không hai alert chồng nhau.
+- Confirming an action that can't be undone: "Unpair" (PAIR-03), "Remove Device from Server", "Erase
+  All HandLive Data" (wording from SET-02 field 29), "Resync All SMS" (SMS-01 field 6), "Remove Virtual
+  Camera and Microphone" (CAM-01 A1), turning off a feature that's running (SET-02 E9).
+- Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
+  start the connection service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Remove
+  from this device anyway?" (SET-02 E7).
+- Mac: "Cancel" on the left, the action on the right as the default button, not red, because the user
+  chose it deliberately (decision 12); Esc or ⌘. means Cancel. iPhone, Android: an action sheet, with
+  the destructive action in red at the top and "Cancel" at the bottom.
+- No alert right as the app opens; never two alerts stacked on top of each other.
 
-## Mất kết nối
+## Connection lost
 
-- Không alert, không thông báo, kể cả khi mất rồi có lại nhiều lần. Chỉ `StatusIndicator`: biểu
-  tượng thanh menu thêm `.slash`, dòng "Mất kết nối", "Điện thoại ngoại tuyến · lần cuối 14:05" hoặc
-  "Đang kết nối…"; khi đang chờ thử lại: "Thử lại sau 8 s" và "Kết nối lại ngay" (CONN-02 trường
-  3–4).
-- Dữ liệu đã đồng bộ vẫn xem được. Việc cần điện thoại thì xếp hàng ("Đang chờ điện thoại") hoặc mờ
-  kèm lý do: nút Dán vô hiệu với "Chưa kết nối với điện thoại" (CLIP-04 trường 4).
-- `CallPanel` mất phiên: "Mất kết nối với điện thoại" (CALL-03 E6).
-- "Cần ghép nối lại" (cặp bị thu hồi) là `status-error` vì người dùng phải làm gì đó: kèm "Ghép điện
-  thoại…".
+- No alert and no notification, even when the connection drops and comes back many times. Only
+  `StatusIndicator`: the menu bar icon adds `.slash`, and the row reads "Connection lost", "Phone
+  offline · last seen 2:05 PM", or "Connecting…"; while waiting to retry: "Retrying in 8 s" and
+  "Reconnect Now" (CONN-02 fields 3–4).
+- Synced data stays viewable. Tasks that need the phone are queued ("Waiting for phone") or dimmed with
+  a reason: the Paste button is disabled with "Not connected to the phone" (CLIP-04 field 4).
+- `CallPanel` losing its session: "Lost connection to the phone" (CALL-03 E6).
+- "Needs re-pairing" (the pairing was revoked) is `status-error` because the user has to do something:
+  it comes with "Pair Phone…".
 
-## Tải và tiến trình
+## Loading and progress
 
-- Hiện dữ liệu cục bộ ngay, đồng bộ ở nền; không chặn cả màn. Lần đầu: dải "Đang đồng bộ tin nhắn…"
-  và "Đã tải 1 500 tin" trên danh sách (SMS-01 trường 1–2); "Đang tải tin cũ hơn" ở đầu hội thoại
-  (SMS-03 trường 10).
-- Câu cụ thể thay cho "Đang tải…". Mac: spinner nhỏ không nhãn cạnh nội dung đang tải.
-- Biết tổng thì dùng thanh xác định; không đổi spinner thành thanh giữa chừng. Ảnh trên 1 MiB: "Đang
-  gửi ảnh tới Pixel 8 của Lan — 45 %", kích thước MB, nút "Hủy" (CLIP-03) — Mac trong `MenuBarMenu`,
-  Android trong thông báo, iPhone trên thẻ gửi.
-- Nút đang xử lý đổi nhãn và khóa tới khi có kết quả: "Đang ghép nối…", "Đang trả lời…", "Đang từ
-  chối…" (CALL-02 trường 9).
-- Tự làm mới; kéo để làm mới trên iPhone chỉ là cách phụ.
+- Show local data immediately and sync in the background; don't block the whole screen. The first
+  time: the banner "Syncing messages…" and "Loaded 1,500 messages" on the list (SMS-01 fields 1–2);
+  "Loading older messages" at the top of a conversation (SMS-03 field 10).
+- A specific sentence instead of "Loading…". Mac: a small spinner without a label next to the content
+  being loaded.
+- When the total is known, use a determinate bar; don't turn a spinner into a bar midway. Images over 1
+  MiB: "Sending image to Lan's Pixel 8 — 45%", the size in MB, a "Cancel" button (CLIP-03) — on the Mac
+  in `MenuBarMenu`, on Android in the notification, on iPhone on the send card.
+- A button that's working changes its label and stays locked until there's a result: "Pairing…",
+  "Answering…", "Declining…" (CALL-02 field 9).
+- Refresh automatically; pull to refresh on iPhone is only a secondary way.
 
-## Trạng thái trống
+## Empty states
 
-| Chỗ | Chữ | Bước tiếp |
+| Where | Text | Next step |
 |---|---|---|
-| Mac, iPhone chưa ghép nối | "Chưa ghép nối" | "Ghép điện thoại…" |
-| Android chưa có thiết bị | "Chưa có thiết bị nào" | "Thêm thiết bị" |
-| Tin nhắn trống (SMS-03 E1) | "Chưa có tin nhắn" kèm trạng thái đồng bộ | Chờ đồng bộ, hoặc "Tin nhắn mới" |
-| Tính năng tắt hoặc thiếu quyền trên điện thoại | Lý do như trong Cài đặt | "Xem hướng dẫn" |
-| Bảng nhớ tạm trên iPhone | "Chưa nhận gì" | Câu hướng dẫn sao chép trên điện thoại |
+| Mac, iPhone not paired | "Not Paired" | "Pair Phone…" |
+| Android with no devices | "No Devices" | "Add Device" |
+| No messages (SMS-03 E1) | "No Messages" with the sync status | Wait for the sync, or "New Message" |
+| Feature off or permission missing on the phone | The reason, as in Settings | "View Instructions" |
+| The clipboard on iPhone | "Nothing Received Yet" | A sentence explaining how to copy on the phone |
 
-Tab trên iPhone không bao giờ ẩn hay vô hiệu vì trống; tab nói lý do ngay trong nội dung.
+Tabs on iPhone are never hidden or disabled because they're empty; each tab explains why right in its
+content.
 
-## Điểm lệch
+## Deviations
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CLIP-01 E5, CLIP-02 E5 và E8, CLIP-03 E2 báo lỗi
-  tại chỗ — dòng trạng thái của `MenuBarMenu` (Mac) hoặc toast (Android); thông báo chỉ còn cho việc
-  cần hành động ("Vẫn gửi", "Gửi lại").
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CAM-05 trường 1 dùng cam (`status-connecting`) cho
-  cả "Đang thích ứng với mạng" và "Giới hạn do nhiệt/pin", khác nhau bằng chữ và biểu tượng; "Tốt"
-  dùng `status-connected`.
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): "Không ghi được bảng nhớ tạm trên điện thoại"; dấu
-  kiểu Apple.
+- Synced with the detailed design (September 25, 2026): CLIP-01 E5, CLIP-02 E5 and E8, and CLIP-03 E2
+  report errors in place — in the `MenuBarMenu` status line (Mac) or a toast (Android); notifications
+  are kept only for tasks that need an action ("Send Anyway", "Send Again").
+- Synced with the detailed design (September 25, 2026): CAM-05 field 1 uses orange
+  (`status-connecting`) for both "Adapting to the network" and "Limited by heat/battery", told apart by
+  text and icon; "Good" uses `status-connected`.
+- Synced with the detailed design (September 25, 2026): "Couldn't write to the clipboard on the phone";
+  Apple-style tone marks.
 
-## Nên và không nên
+## Dos and don'ts
 
-| Nên | Không nên |
+| Do | Don't |
 |---|---|
-| Báo thành công khi người dùng vừa chủ động làm | Báo mỗi lần tự đồng bộ bình thường |
-| Giữ dữ liệu cũ trên màn khi mất kết nối | Thay màn bằng vòng quay hay alert |
-| Nói lý do và nút sửa cạnh chỗ lỗi | "Đã xảy ra lỗi" chung chung |
+| Confirm success when the user has just acted | Report every routine automatic sync |
+| Keep the old data on screen when the connection drops | Replace the screen with a spinner or an alert |
+| State the reason and put a fix button next to the error | A generic "Something went wrong" |
