@@ -1,4 +1,9 @@
-"""Build the HandLive detailed-design artifact (single HTML) plus a local Mermaid parse-check page."""
+"""Build the HandLive detailed-design artifact (single HTML) plus a local Mermaid parse-check page.
+
+Usage: build_design_html.py [--lang en|vi] — English (`X.md`, default) or Vietnamese (`X.vi.md`) pages;
+outputs build/docs/handlive-detailed-design[.vi].html, preview-local[.vi].html and mermaid-check[.vi].html.
+"""
+import argparse
 import html
 import re
 from pathlib import Path
@@ -9,9 +14,31 @@ from markdown.extensions.toc import slugify_unicode
 DOC_DIR = Path(__file__).resolve().parents[2] / "docs" / "detailed-design"
 OUT_DIR = Path(__file__).resolve().parents[2] / "build" / "docs"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-ORDER = ["README.md", "00-common-specs.md"] + sorted(p.name for p in DOC_DIR.glob("0[1-8]-*.md"))
-FILE_ANCHOR = {name: "f-" + name.split(".")[0].split("-")[0].lower() for name in ORDER}
-FILE_ANCHOR["README.md"] = "f-readme"
+LABELS = {
+    "en": {"suffix": ".md", "out": "", "contents": "Contents and conventions", "overview": "Group overview",
+           "group_prefix": "Function group: ", "title": "HandLive Detailed Design", "sub": "Detailed design · v1.2",
+           "menu": "Contents", "h1": "HandLive detailed design", "version": "Version 1.2", "groups": "function groups",
+           "leaves": "leaf functions", "lang": "en"},
+    "vi": {"suffix": ".vi.md", "out": ".vi", "contents": "Mục lục và quy ước", "overview": "Tổng quan nhóm",
+           "group_prefix": "Nhóm chức năng: ", "title": "HandLive Thiết kế chi tiết", "sub": "Tài liệu thiết kế chi tiết · v1.2",
+           "menu": "Mục lục", "h1": "Tài liệu thiết kế chi tiết HandLive", "version": "Phiên bản 1.2", "groups": "nhóm chức năng",
+           "leaves": "chức năng lá", "lang": "vi"},
+}
+SWITCHER = __import__("re").compile(r"^(English \| \[Tiếng Việt\]\([^)]*\)|\[English\]\([^)]*\) \| Tiếng Việt)\s*\n")
+L = LABELS["en"]
+ORDER, FILE_ANCHOR = [], {}
+
+
+def select_language(lang):
+    """Pick the pages of one language and their in-page anchors."""
+    global L, ORDER, FILE_ANCHOR
+    L = LABELS[lang]
+    suffix = L["suffix"]
+    groups = sorted(p.name for p in DOC_DIR.glob("0[1-8]-*.md")
+                    if p.name.endswith(suffix) and (lang == "vi" or not p.name.endswith(".vi.md")))
+    ORDER = ["README" + suffix, "00-common-specs" + suffix] + groups
+    FILE_ANCHOR = {name: "f-" + name.split(".")[0].split("-")[0].lower() for name in ORDER}
+    FILE_ANCHOR["README" + suffix] = "f-readme"
 
 CSS = """
 :root {
@@ -119,28 +146,28 @@ def postprocess(body, prefix):
 def build():
     sections, nav_items, mermaid_blocks, leaf_count = [], [], [], 0
     for name in ORDER:
-        text = (DOC_DIR / name).read_text(encoding="utf-8")
+        text = SWITCHER.sub("", (DOC_DIR / name).read_text(encoding="utf-8"), count=1)
         mermaid_blocks += [(name, b) for b in re.findall(r"```mermaid\n(.*?)```", text, flags=re.S)]
         anchor = FILE_ANCHOR[name]
-        render_text = re.sub(r"^# .+\n", "", text, count=1) if name == "README.md" else text
+        render_text = re.sub(r"^# .+\n", "", text, count=1) if name.startswith("README") else text
         body = postprocess(md_to_html(render_text), anchor)
         sections.append(f'<section class="file" id="{anchor}">{body}</section>')
         h1 = re.search(r"^# (.+)$", text, flags=re.M).group(1)
         leaves = re.findall(r"^## (\d+\.\d+) ([A-Z]+-\d+) — (.+)$", text, flags=re.M)
         leaf_count += len(leaves)
-        if name == "README.md":
-            nav_items.append(f'<a href="#{anchor}">Mục lục và quy ước</a>')
+        if name.startswith("README"):
+            nav_items.append(f'<a href="#{anchor}">{L["contents"]}</a>')
         elif leaves:
             links = "".join(
                 f'<a href="#{anchor}-{slugify_unicode(f"{n} {c} — {t}", "-")}"><span class="code">{c}</span>{html.escape(t)}</a>'
                 for n, c, t in leaves)
-            title = html.escape(h1.replace("Nhóm chức năng: ", ""))
-            nav_items.append(f'<details><summary>{title}</summary><a href="#{anchor}">Tổng quan nhóm</a>{links}</details>')
+            title = html.escape(re.sub(r"^\d+\.\s*", "", h1).replace(L["group_prefix"], ""))
+            nav_items.append(f'<details><summary>{title}</summary><a href="#{anchor}">{L["overview"]}</a>{links}</details>')
         else:
             nav_items.append(f'<a href="#{anchor}">{html.escape(h1)}</a>')
 
     group_count = sum(1 for n in ORDER if re.match(r"0[1-8]-", n))
-    head = f"""<title>HandLive Thiết kế chi tiết</title>
+    head = f"""<title>{L["title"]}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>{CSS}</style>"""
@@ -148,25 +175,25 @@ def build():
 <div class="layout">
   <aside class="sidebar" id="sidebar">
     <div class="brand">HandLive</div>
-    <div class="brand-sub">Tài liệu thiết kế chi tiết · v1.0</div>
-    <button class="menu-toggle" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')">Mục lục</button>
+    <div class="brand-sub">{L["sub"]}</div>
+    <button class="menu-toggle" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')">{L["menu"]}</button>
     <nav>{''.join(nav_items)}</nav>
   </aside>
   <main>
     <div class="doc-head">
-      <h1>Tài liệu thiết kế chi tiết HandLive</h1>
-      <div class="meta"><span>Phiên bản 1.0</span><span>2026-09-24</span><span>{group_count} nhóm chức năng</span><span>{leaf_count} chức năng lá</span><span>Android · macOS · iOS · Relay</span></div>
+      <h1>{L["h1"]}</h1>
+      <div class="meta"><span>{L["version"]}</span><span>2026-09-25</span><span>{group_count} {L["groups"]}</span><span>{leaf_count} {L["leaves"]}</span><span>Android · macOS · iOS · Relay</span></div>
     </div>
     {''.join(sections)}
   </main>
 </div>
 """
-    (OUT_DIR / "handlive-detailed-design.html").write_text(page, encoding="utf-8")
+    (OUT_DIR / f"handlive-detailed-design{L['out']}.html").write_text(page, encoding="utf-8")
     preview = ('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
                + page +
                '<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>'
                '<script>mermaid.initialize({startOnLoad:true, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default"});</script>')
-    (OUT_DIR / "preview-local.html").write_text(preview, encoding="utf-8")
+    (OUT_DIR / f"preview-local{L['out']}.html").write_text(preview, encoding="utf-8")
 
     checks = "".join(f'<pre class="src" data-file="{html.escape(f)}">{html.escape(b)}</pre>' for f, b in mermaid_blocks)
     check_page = f"""<!doctype html><meta charset="utf-8"><title>Mermaid check</title>
@@ -184,10 +211,13 @@ def build():
   document.getElementById('out').textContent = JSON.stringify({{total: res.length, failed: res.filter(r => !r.ok)}});
 }})();
 </script></body>"""
-    (OUT_DIR / "mermaid-check.html").write_text(check_page, encoding="utf-8")
+    (OUT_DIR / f"mermaid-check{L['out']}.html").write_text(check_page, encoding="utf-8")
     print(f"sections={len(sections)} leaves={leaf_count} mermaid={len(mermaid_blocks)} "
           f"html_kb={len(page.encode()) // 1024}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Export docs/detailed-design as one HTML page")
+    parser.add_argument("--lang", choices=sorted(LABELS), default="en")
+    select_language(parser.parse_args().lang)
     build()
