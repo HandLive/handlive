@@ -25,3 +25,6 @@
 # Python caches and cross-agent locks
 __pycache__/
 /.locks/
+
+# Agent worktrees created by Claude Code
+/.claude/worktrees/

@@ -79,7 +79,7 @@ tools/workspace.sh status
 | [`docs/code-standards.md`](docs/code-standards.md) | Quy ước code từng nền tảng |
 | [`docs/deployment-guide.md`](docs/deployment-guide.md) | Đóng gói và phân phối (App Store, PKG, cloud relay) |
 | [`docs/codebase-summary.md`](docs/codebase-summary.md) | Bản đồ codebase, cập nhật khi code đổi |
-| [`docs/detailed-design/README.md`](docs/detailed-design/README.md) | Thiết kế chi tiết: 33 chức năng, giao thức, mã lỗi, mô hình dữ liệu |
+| [`docs/detailed-design/README.md`](docs/detailed-design/README.vi.md) | Thiết kế chi tiết: 33 chức năng, giao thức, mã lỗi, mô hình dữ liệu |
 
 ## Giấy phép
 
