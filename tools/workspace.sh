@@ -8,6 +8,7 @@
 #   tools/workspace.sh run <lệnh git…>              chạy một lệnh git trong cả năm kho, ví dụ: run fetch --all
 #   tools/workspace.sh remotes <group-url>         đặt origin cho cả năm kho: <group-url>/handlive[-phần].git
 #   tools/workspace.sh push                         đẩy main của bốn kho thành phần; hub đẩy main và nhánh hiện tại
+#   tools/workspace.sh hooks                        bật hook .githooks (từ chối commit mang tên công cụ AI) cho cả năm kho
 set -euo pipefail
 
 HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -54,5 +55,11 @@ case "${1:-}" in
         git -C "$dir" push -u origin main
       fi
     done ;;
-  *) sed -n '2,10p' "$0"; exit 2 ;;
+  hooks)
+    for repo in hub "${PARTS[@]}"; do
+      dir="$(repo_dir "$repo")"; [ -f "$dir/.githooks/commit-msg" ] || continue
+      chmod +x "$dir/.githooks/commit-msg" "$dir/.githooks/check-commits.sh"
+      git -C "$dir" config core.hooksPath .githooks && echo "$repo: core.hooksPath = .githooks"
+    done ;;
+  *) sed -n '2,11p' "$0"; exit 2 ;;
 esac
