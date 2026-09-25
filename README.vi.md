@@ -27,7 +27,7 @@ Trải nghiệm gần với Microsoft Phone Link và Apple Continuity, nhưng **
 - **Mã hóa đầu-cuối** áp dụng toàn hệ thống. Nội dung dùng XChaCha20-Poly1305. Hai máy trao khóa bằng X25519 và HKDF, ghép cặp qua **mã QR**. Âm thanh Opus đi qua hai lớp mã hóa. Âm thanh HFP dựa vào mã hóa của liên kết Bluetooth (plan §13 D11).
 - **Cloud relay** (Rust, Actix-web) chỉ chuyển tiếp khối dữ liệu đã mã hóa khi thiết bị ở ngoài mạng nội bộ. Relay không đọc nội dung.
 
-Chi tiết: [`docs/system-architecture.md`](docs/system-architecture.md) và [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
+Chi tiết: [`docs/system-architecture.md`](docs/system-architecture.vi.md) và [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
 
 ## Lộ trình
 
@@ -39,7 +39,7 @@ Xây lần lượt. Mỗi phase là một phần dùng được.
 4. **Âm thanh cuộc gọi**: HFP/SCO, dự phòng Opus, khử tiếng vang.
 5. **Camera và mic ảo**: CMIOExtension và AudioServerPlugin trên macOS.
 
-Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.md).
+Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.vi.md).
 
 ## Cấu trúc: năm kho, một workspace
 
@@ -72,13 +72,13 @@ tools/workspace.sh status
 
 | File | Nội dung |
 |------|----------|
-| [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) | Sản phẩm là gì, mục tiêu, phạm vi, ràng buộc |
-| [`docs/system-architecture.md`](docs/system-architecture.md) | Kiến trúc, kênh truyền, giao thức, bảo mật |
-| [`docs/project-roadmap.md`](docs/project-roadmap.md) | Năm phase và ước lượng công sức |
-| [`docs/design-guidelines.md`](docs/design-guidelines.md) | Nguyên tắc trải nghiệm và bảo mật |
-| [`docs/code-standards.md`](docs/code-standards.md) | Quy ước code từng nền tảng |
-| [`docs/deployment-guide.md`](docs/deployment-guide.md) | Đóng gói và phân phối (App Store, PKG, cloud relay) |
-| [`docs/codebase-summary.md`](docs/codebase-summary.md) | Bản đồ codebase, cập nhật khi code đổi |
+| [`docs/project-overview-pdr.md`](docs/project-overview-pdr.vi.md) | Sản phẩm là gì, mục tiêu, phạm vi, ràng buộc |
+| [`docs/system-architecture.md`](docs/system-architecture.vi.md) | Kiến trúc, kênh truyền, giao thức, bảo mật |
+| [`docs/project-roadmap.md`](docs/project-roadmap.vi.md) | Năm phase và ước lượng công sức |
+| [`docs/design-guidelines.md`](docs/design-guidelines.vi.md) | Nguyên tắc trải nghiệm và bảo mật |
+| [`docs/code-standards.md`](docs/code-standards.vi.md) | Quy ước code từng nền tảng |
+| [`docs/deployment-guide.md`](docs/deployment-guide.vi.md) | Đóng gói và phân phối (App Store, PKG, cloud relay) |
+| [`docs/codebase-summary.md`](docs/codebase-summary.vi.md) | Bản đồ codebase, cập nhật khi code đổi |
 | [`docs/detailed-design/README.md`](docs/detailed-design/README.vi.md) | Thiết kế chi tiết: 33 chức năng, giao thức, mã lỗi, mô hình dữ liệu |
 
 ## Giấy phép
