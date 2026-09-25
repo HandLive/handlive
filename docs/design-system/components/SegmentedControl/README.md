@@ -1,26 +1,30 @@
+English | [Tiếng Việt](README.vi.md)
+
 # SegmentedControl
 
-Nhóm hai đến năm lựa chọn loại trừ nhau, liên quan chặt với cùng một nội dung. HandLive dùng cho
-camera Trước/Sau, bộ lọc hội thoại và tab của menu popover (nếu có).
+A group of two to five mutually exclusive choices that are closely tied to the same content. HandLive
+uses it for the Front/Back camera, the conversation filter, and the tabs of a popover menu (if there is
+one).
 
-## Dùng khi nào
+## When to use
 
-| Tình huống | Dùng | Không dùng |
+| Situation | Use | Don't use |
 |-----------|------|------------|
-| Camera "Trước" / "Sau" trong Xem trước camera | `SegmentedControl` | — |
-| Lọc "Tất cả" / "Chưa đọc" trong danh sách hội thoại (iOS) | `SegmentedControl` dưới large title | Tab bar |
-| Chất lượng "Tự động / 480p / 720p / 1080p" | Pop-up (`Picker` kiểu `.menu`) vì có mặc định và nhiều mức | Segmented |
-| Chuyển giữa khu vực chính của app | Tab bar (iOS/Android), toolbar pane (Cài đặt Mac) | Segmented |
+| Camera "Front" / "Back" in Camera Preview | `SegmentedControl` | — |
+| The "All" / "Unread" filter in the conversation list (iOS) | `SegmentedControl` under the large title | Tab bar |
+| Quality "Automatic / 480p / 720p / 1080p" | A pop-up (`Picker` with the `.menu` style), because it has a default and many levels | Segmented control |
+| Switching between the app's main areas | Tab bar (iOS/Android), pane toolbar (Mac Settings) | Segmented control |
 
-- Tối đa ~5 đoạn trên iPhone và Android, ~5–7 trên Mac. Các đoạn rộng bằng nhau; nhãn là danh từ,
-  sentence case; chữ **hoặc** biểu tượng, không trộn.
-- Đoạn đang chọn: nền `tertiary-system-background` nổi trên rãnh `tertiary-system-fill`, chữ đậm hơn
-  — không chỉ đổi màu.
+- At most ~5 segments on iPhone and Android, ~5–7 on the Mac. Segments are equal in width; labels are
+  nouns (title-style in English, sentence case in Vietnamese); text **or** icons, never mixed.
+- The selected segment: a `tertiary-system-background` background raised above a
+  `tertiary-system-fill` track, with bolder text — not just a change of color.
 - API: `Picker(...).pickerStyle(.segmented)` (SwiftUI), `NSSegmentedControl`, Android `HLSegmented`
-  (mỗi đoạn cao ≥ 36 dp, cả nhóm cao 48 dp vùng chạm).
+  (each segment ≥ 36 dp tall, the whole group a 48 dp hit area).
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên đặt nhãn giới thiệu trước control trên Mac khi ý nghĩa chưa rõ ("Camera:").
-- Không dùng segmented cho hành động tức thì (đó là nút); không để một đoạn vô hiệu mà không nói lý
-  do — ẩn hẳn khi điện thoại chỉ có một camera.
+- Do put an introductory label before the control on the Mac when the meaning isn't clear
+  ("Camera:").
+- Don't use a segmented control for immediate actions (those are buttons); don't leave a segment
+  disabled without saying why — hide it entirely when the phone has only one camera.

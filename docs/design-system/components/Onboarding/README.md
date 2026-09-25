@@ -1,31 +1,35 @@
+English | [Tiếng Việt](README.vi.md)
+
 # Onboarding
 
-Màn chào lần đầu mở app — khoảnh khắc thương hiệu chính của HandLive. Ngắn, bỏ qua được, nói về
-HandLive chứ không dạy cách dùng hệ thống (SET-03). HIG không cho dùng launch screen để làm thương
-hiệu; màn này là chỗ đúng.
+The welcome screen the first time the app opens — HandLive's main brand moment. Short, skippable, and
+about HandLive rather than teaching people how to use the system (SET-03). The HIG doesn't allow
+branding on the launch screen; this screen is the right place for it.
 
-## Cấu tạo
+## Anatomy
 
-| Phần | Quy cách |
+| Part | Specification |
 |------|---------|
-| Nền | `system-background` với quầng `brand-glow` phía trên (màu thương hiệu nằm ở lớp nội dung) |
-| Tiêu đề | "Chào mừng đến với HandLive", `brand-large-title`; chữ "HandLive" màu `brand-fire` |
-| Ba–bốn dòng tính năng | SF Symbol màu `brand-fire` + tiêu đề đậm + một câu. Mac: bảng nhớ tạm, tin nhắn và cuộc gọi, webcam, riêng tư. iPhone/iPad: bảng nhớ tạm, tin nhắn, thông báo cuộc gọi, riêng tư. Android: vai trò trung tâm, riêng tư |
-| Liên kết | "HandLive và quyền riêng tư của bạn" (mở trang giải thích ngắn) |
-| Nút | "Bắt đầu" — `Button` nổi bật, dưới cùng (iPhone, Android) hoặc góc phải dưới (Mac); các bước sau dùng "Tiếp tục", bước cuối "Xong" |
+| Background | `system-background` with a `brand-glow` halo at the top (the brand color lives in the content layer) |
+| Title | "Welcome to HandLive", `brand-large-title`; the word "HandLive" in `brand-fire` |
+| Three or four feature rows | An SF Symbol in `brand-fire` + a bold title + one sentence. Mac: clipboard, messages and calls, webcam, privacy. iPhone/iPad: clipboard, messages, call notifications, privacy. Android: the phone's role as the hub, privacy |
+| Link | "HandLive and Your Privacy" (opens a short explanation page) |
+| Button | "Get Started" — a prominent `Button`, at the bottom (iPhone, Android) or in the bottom-right corner (Mac); later steps use "Continue", and the last step "Done" |
 
-Luồng sau màn chào: `PermissionPrimer` cho quyền cần để chạy → (Mac) hỏi "Hiện HandLive trên thanh
-menu" → `PairingCard` → xong. Mọi quyền khác hỏi khi dùng tính năng.
+The flow after the welcome screen: `PermissionPrimer` for the permissions needed to run → (Mac) ask
+about "Show HandLive in Menu Bar" → `PairingCard` → done. Every other permission is requested when its
+feature is used.
 
-## Theo nền tảng
+## By platform
 
-- **macOS:** cửa sổ chào 520×560 pt, không thay đổi cỡ, nút đóng hoạt động (đóng = để sau; mở lại từ
-  menu "Ghép điện thoại…"). macOS không có launch screen.
-- **iOS/iPadOS:** toàn màn hình (iPad: form sheet); dòng tính năng co giãn theo Dynamic Type, cuộn
-  được ở cỡ AX.
-- **Android:** toàn màn hình, edge-to-edge; Be Vietnam Pro cho tiêu đề, Inter cho nội dung.
+- **macOS:** a 520×560 pt welcome window, not resizable, with a working close button (closing means
+  "later"; reopen it from the "Pair Phone…" menu item). macOS has no launch screen.
+- **iOS/iPadOS:** full screen (iPad: a form sheet); the feature rows scale with Dynamic Type and scroll
+  at the AX sizes.
+- **Android:** full screen, edge-to-edge; Be Vietnam Pro for the title, Inter for the content.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên để người dùng tới được việc chính (ghép nối) trong ≤ 3 lần chạm.
-- Không hiện lại màn chào sau khi đã xong; không nhồi điều khoản, không hỏi đánh giá app ở đây.
+- Do let people reach the main task (pairing) in ≤ 3 taps.
+- Don't show the welcome screen again once it's done; don't stuff terms and conditions in here, and
+  don't ask for an app rating here.

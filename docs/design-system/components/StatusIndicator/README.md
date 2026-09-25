@@ -1,38 +1,43 @@
+English | [Tiếng Việt](README.vi.md)
+
 # StatusIndicator
 
-Cho biết liên kết giữa hai máy đang ra sao: biểu tượng tô màu trạng thái đi kèm chữ. Là chỉ báo
-trong ngữ cảnh — HIG khuyên dùng chỉ báo thay cho alert khi mất kết nối.
+Shows how the link between the two devices is doing: an icon tinted with the status color, alongside
+text. It's an in-context indicator — the HIG recommends an indicator rather than an alert when the
+connection is lost.
 
-## Trạng thái
+## States
 
-| Trạng thái | Chữ | SF Symbol ↔ Material | Màu biểu tượng |
+| State | Text | SF Symbol ↔ Material | Icon color |
 |-----------|-----|----------------------|----------------|
-| Kết nối qua cùng mạng Wi-Fi | "Đã kết nối qua Wi-Fi" (nhãn ngắn "LAN") | `wifi` ↔ `wifi` | `status-connected` |
-| Kết nối qua Internet | "Đã kết nối qua Internet" | `globe` ↔ `public` | `status-connected` |
-| Kết nối qua USB (camera) | "Đang dùng USB" | `cable.connector` ↔ `usb` | `status-connected` |
-| Đang kết nối | "Đang kết nối…" | chấm nhấp nháy | `status-connecting` |
-| Điện thoại ngoại tuyến | "Điện thoại ngoại tuyến · lần cuối 14:05" | `antenna.radiowaves.left.and.right.slash` ↔ `mobile_off` | `status-offline` |
-| Máy này mất mạng | "Mất kết nối" | `wifi.slash` ↔ `wifi_off` | `status-offline` |
-| Cần ghép nối lại | "Cần ghép nối lại" | `exclamationmark.triangle.fill` ↔ `warning` | `status-error` |
-| Đang phát camera | "Đang phát camera" | chấm nhấp nháy | `status-connected` |
+| Connected over the same Wi-Fi network | "Connected via Wi-Fi" (short label "LAN") | `wifi` ↔ `wifi` | `status-connected` |
+| Connected over the internet | "Connected over the internet" | `globe` ↔ `public` | `status-connected` |
+| Connected over USB (camera) | "Using USB" | `cable.connector` ↔ `usb` | `status-connected` |
+| Connecting | "Connecting…" | A pulsing dot | `status-connecting` |
+| Phone offline | "Phone offline · last seen 2:05 PM" | `antenna.radiowaves.left.and.right.slash` ↔ `mobile_off` | `status-offline` |
+| This device has lost its network | "Connection lost" | `wifi.slash` ↔ `wifi_off` | `status-offline` |
+| Needs re-pairing | "Needs re-pairing" | `exclamationmark.triangle.fill` ↔ `warning` | `status-error` |
+| Camera live | "Camera live" | A pulsing dot | `status-connected` |
 
-- Đã đồng bộ với tài liệu chi tiết (25/09/2026): CONN-01 và PAIR-02 dùng "Đã kết nối qua Wi-Fi", "Đã
-  kết nối qua Internet"; "LAN" chỉ còn trong nhãn ngắn dạng viên.
-- Chữ dùng `secondary-label`, kiểu `mac-subheadline` / `ios-subheadline` / `android-subheadline` cho
-  cả dạng dòng và dạng viên; chỉ biểu tượng hoặc chấm mang màu. Không bao giờ chỉ có chấm màu.
-- Dạng viên (`pill`) dùng cho nhãn ngắn trên đầu popover, cửa sổ: nền `tertiary-system-fill`, biểu
-  tượng màu trạng thái, chữ `label`.
-- VoiceOver/TalkBack đọc câu đầy đủ: "Đã kết nối qua Wi-Fi với Pixel 8 của Lan".
-- Nhấp nháy chỉ cho "Đang kết nối" và "Đang phát camera", tắt khi bật Giảm chuyển động
+- Synced with the detailed design (September 25, 2026): CONN-01 and PAIR-02 use "Connected via Wi-Fi",
+  "Connected over the internet"; "LAN" remains only in the short pill label.
+- Text uses `secondary-label`, in the `mac-subheadline` / `ios-subheadline` / `android-subheadline`
+  style for both the row and the pill forms; only the icon or dot carries color. Never a colored dot
+  alone.
+- The pill form (`pill`) is for short labels at the top of popovers and windows: a
+  `tertiary-system-fill` background, an icon in the status color, `label` text.
+- VoiceOver/TalkBack read the full sentence: "Connected via Wi-Fi to Lan's Pixel 8".
+- Pulsing only for "Connecting" and "Camera live", and off when Reduce Motion is on
   (`duration-pulse`).
 
-## Ở đâu
+## Where
 
-Menu của thanh menu Mac (dòng đầu), đầu cửa sổ Tin nhắn khi mất kết nối, dòng `DeviceRow`, màn Thiết
-bị trên Android và iPhone, panel cuộc gọi khi mất phiên ("Mất kết nối với điện thoại").
+The Mac menu bar menu (the first row), the top of the Messages window when the connection is lost,
+`DeviceRow` rows, the Devices screen on Android and iPhone, and the call panel when the session is lost
+("Lost connection to the phone").
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên cập nhật tại chỗ, không đẩy thông báo mỗi lần kết nối lại.
-- Không dùng đỏ cho ngoại tuyến thông thường — ngoại tuyến là xám; đỏ chỉ khi người dùng phải làm gì
-  đó.
+- Do update in place; don't push a notification on every reconnection.
+- Don't use red for an ordinary offline state — offline is gray; red is only for when the user has to
+  do something.

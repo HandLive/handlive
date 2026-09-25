@@ -1,30 +1,34 @@
+English | [Tiếng Việt](README.vi.md)
+
 # PairingCard
 
-Ghép nối hai máy bằng mã QR (PAIR-01): **Mac và iPhone/iPad hiện mã, Android quét.** Khi không quét
-được thì dùng mã PIN 6 số (chỉ trong cùng mạng Wi-Fi). Là một khoảnh khắc thương hiệu: nền
-`brand-glow` ở lớp nội dung.
+Pairs two devices with a QR code (PAIR-01): **the Mac and iPhone/iPad show the code; Android scans it.**
+When scanning isn't possible, a 6-digit PIN is used instead (only on the same Wi-Fi network). It's a
+brand moment: a `brand-glow` background in the content layer.
 
-## Phía hiện mã (Mac, iPhone, iPad)
+## The showing side (Mac, iPhone, iPad)
 
-| Phần | Quy cách |
+| Part | Specification |
 |------|---------|
-| Tiêu đề | "Ghép nối điện thoại" — `brand-title` (Mac: sheet trên cửa sổ chào hoặc Cài đặt; iPhone: sheet cỡ lớn có "Hủy" ở góc trái) |
-| Hướng dẫn | "Mở HandLive trên điện thoại Android, chạm Thêm thiết bị rồi quét mã này." |
-| Mã QR | Luôn `qr-ink` trên `qr-paper` ở mọi giao diện, cạnh `size-qr` (220 pt), trong thẻ bo `radius-card` |
-| Tên máy | Tên máy này, để người dùng chọn đúng trên điện thoại |
-| Đếm ngược | "Mã đổi sau 1:42" — số dùng `timer` (monospacedDigit) |
-| Dự phòng | Nút chữ "Không quét được? Dùng mã PIN" → hiện 6 số kiểu `code-pin` ("482 915") |
+| Title | "Pair Phone" — `brand-title` (Mac: a sheet on the welcome window or Settings; iPhone: a large sheet with "Cancel" in the top-left corner) |
+| Instructions | "Open HandLive on your Android phone, tap Add Device, then scan this code." |
+| QR code | Always `qr-ink` on `qr-paper` in every appearance, `size-qr` on a side (220 pt), in a card with `radius-card` corners |
+| Device name | This device's name, so the user picks the right one on the phone |
+| Countdown | "Code changes in 1:42" — the digits use `timer` (monospacedDigit) |
+| Fallback | The text button "Can't Scan? Use a PIN" → shows 6 digits in the `code-pin` style ("482 915") |
 
-Ghép xong: sheet tự đóng, `Feedback` "Đã ghép nối với Pixel 8 của Lan" và rung `success` (iPhone).
+Once paired: the sheet closes itself, with `Feedback` "Paired with Lan's Pixel 8" and a `success`
+haptic (iPhone).
 
-## Phía quét (Android)
+## The scanning side (Android)
 
-Màn camera toàn màn hình: khung ngắm bốn góc màu `on-video`, lớp tối ngoài khung, câu "Hướng camera
-vào mã QR trên Mac hoặc iPhone", nút kính tròn đóng (`xmark` ↔ `close`) ở góc trên trái, nút kính
-"Nhập mã PIN" ở dưới. Quét được: rung `CONFIRM`, hiện tên máy và **Mã an toàn** để đối chiếu.
+A full-screen camera view: a four-corner viewfinder in `on-video`, a dark layer outside the frame, the
+sentence "Point the camera at the QR code on your Mac or iPhone", a round glass close button (`xmark` ↔
+`close`) in the top-left corner, and a glass "Enter PIN" button at the bottom. Once the code is scanned:
+a `CONFIRM` haptic, then the device name and the **Security Code** are shown for comparison.
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên giữ độ sáng tối đa của mã: không phủ kính, không đổi màu mã theo giao diện Tối.
-- Không đặt đếm ngược đỏ nhấp nháy; hết giờ thì tự tạo mã mới.
-- Không yêu cầu nhập tay thông tin mạng; mã QR đã đủ.
+- Do keep the code at its brightest: no glass over it, and no color change in the Dark appearance.
+- Don't make the countdown flash red; when time runs out, generate a new code automatically.
+- Don't ask people to type in network details; the QR code is enough.

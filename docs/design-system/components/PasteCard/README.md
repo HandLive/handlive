@@ -1,30 +1,33 @@
+English | [Tiếng Việt](README.vi.md)
+
 # PasteCard
 
-Tab Bảng nhớ tạm trên iPhone và iPad (CLIP-04): gửi nội dung vừa sao chép sang điện thoại, và xem,
-sao chép lại nội dung vừa nhận. iOS không cho app đọc bảng nhớ tạm khi chạy nền, nên người dùng gửi
-bằng một lần chạm vào nút **Dán** của hệ thống.
+The Clipboard tab on iPhone and iPad (CLIP-04): send what was just copied to the phone, and view and
+copy again what was just received. iOS doesn't let apps read the clipboard in the background, so
+people send with one tap on the system **Paste** button.
 
-## Cấu tạo
+## Anatomy
 
-| Phần | Quy cách |
+| Part | Specification |
 |------|---------|
-| Gửi | Thẻ "Gửi sang Pixel 8 của Lan" với `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — nút dán của hệ thống, **không** bật hộp thoại "Cho phép dán"; tô `accent`, dạng capsule; câu giải thích một dòng dưới nút |
-| Kết quả | `Feedback` HUD "Đã gửi tới Pixel 8 của Lan" + rung `success`; chưa kết nối: "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" |
-| Nhận gần nhất | Thẻ nội dung (văn bản rút gọn 3 dòng hoặc ảnh thu nhỏ), dòng "Từ Pixel 8 của Lan · 14:05", nút "Sao chép" (`document.on.document`) |
-| Nội dung nhạy cảm | Không hiện nội dung, chỉ "Nội dung nhạy cảm đã được ẩn" |
-| Trống | "Chưa nhận gì" và câu hướng dẫn sao chép trên điện thoại |
+| Send | A "Send to Lan's Pixel 8" card with `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — the system paste button, which does **not** trigger the "Allow Paste" dialog; tinted `accent`, capsule-shaped; a one-line explanation under the button |
+| Result | The `Feedback` HUD "Sent to Lan's Pixel 8" + a `success` haptic; when not connected: "Not connected — will send if reconnected within 2 minutes" |
+| Last received | A content card (text trimmed to 3 lines, or a thumbnail), the line "From Lan's Pixel 8 · 2:05 PM", a "Copy" button (`document.on.document`) |
+| Sensitive content | The content isn't shown, only "Sensitive content hidden" |
+| Empty | "Nothing Received Yet" and a sentence explaining how to copy on the phone |
 
-Thanh tab (iOS 26 trở lên là kính nổi): "Bảng nhớ tạm", "Tin nhắn" (huy hiệu số chưa đọc, màu
-`badge`), "Cuộc gọi", "Cài đặt"; biểu tượng bản đặc, tab đang chọn màu `accent`.
+The tab bar (floating glass on iOS 26 and later): "Clipboard", "Messages" (with an unread count badge
+in `badge`), "Calls", "Settings"; filled icons, the selected tab in `accent`.
 
 ## Android
 
-Android là máy trung tâm nên không có tab này: gửi thủ công bằng ô Cài đặt nhanh "Gửi bảng nhớ tạm",
-nút trong thông báo thường trực, hoặc bảng chia sẻ — đều là giao diện của Android. Tự gửi khi sao
-chép bật trong Cài đặt (cần Hỗ trợ tiếp cận, xem `ConsentSheet`).
+Android is the hub, so it has no such tab: manual sending goes through the "Send Clipboard" Quick
+Settings tile, the button in the ongoing notification, or the share sheet — all of them Android
+interfaces. Auto-send when copying is turned on in Settings (it needs Accessibility; see
+`ConsentSheet`).
 
-## Nên và không nên
+## Dos and don'ts
 
-- Nên để nút Dán là thao tác đầu tiên trong vùng dễ với; không đặt hai nút dán.
-- Không đọc bảng nhớ tạm bằng code khi mở app (sẽ bật hộp thoại xin phép của iOS).
-- Không giữ lịch sử dài; chỉ mục nhận gần nhất.
+- Do make the Paste button the first action, within easy reach; don't add a second paste button.
+- Don't read the clipboard in code when the app opens (that would trigger iOS's permission prompt).
+- Don't keep a long history; only the most recently received item.
