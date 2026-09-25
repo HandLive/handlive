@@ -199,8 +199,8 @@ Two exceptions:
 **Responses** use `type` = `ack`, plaintext:
 
 ```json
-{"re":"<id của yêu cầu>","ok":true,"data":{ }}
-{"re":"<id của yêu cầu>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"Không có sóng","details":{}}}
+{"re":"<id of the request>","ok":true,"data":{ }}
+{"re":"<id of the request>","ok":false,"error":{"code":"SMS_NO_SERVICE","message":"Không có sóng","details":{}}}
 ```
 
 General rules:
@@ -956,7 +956,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
       "key": "status.connected_wifi",
       "en": "Connected via Wi-Fi",
       "vi": "Đã kết nối qua Wi-Fi",
-      "comment": "StatusIndicator khi phiên đi qua LAN (0.11)",
+      "comment": "StatusIndicator when the session runs over the LAN (0.11)",
       "platforms": ["android", "macos", "ios"],
       "specs": ["PAIR-02", "CONN-01"]
     },
@@ -964,7 +964,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
       "key": "pairing.paired_with",
       "en": "Paired with {device_name}",
       "vi": "Đã ghép nối với {device_name}",
-      "comment": "Phản hồi khi ghép nối xong",
+      "comment": "Feedback when pairing completes",
       "platforms": ["android", "macos", "ios"],
       "args": [{"name": "device_name", "type": "string"}],
       "specs": ["PAIR-01"]
@@ -973,7 +973,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
       "key": "sms.unread_count",
       "en": {"one": "{count} unread message", "other": "{count} unread messages"},
       "vi": {"other": "{count} tin chưa đọc"},
-      "comment": "Nhãn trợ năng của ThreadRow",
+      "comment": "Accessibility label of ThreadRow",
       "platforms": ["macos", "ios"],
       "args": [{"name": "count", "type": "int"}],
       "specs": ["SMS-03"]
@@ -983,7 +983,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
       "plist_key": "NSMicrophoneUsageDescription",
       "en": "HandLive uses the microphone to send your voice during calls taken on this Mac.",
       "vi": "HandLive dùng micro để gửi giọng nói của bạn trong cuộc gọi nghe trên Mac này.",
-      "comment": "Purpose string xin quyền micro (SET-03, AUDIO-01)",
+      "comment": "Purpose string of the microphone permission request (SET-03, AUDIO-01)",
       "platforms": ["macos"],
       "specs": ["SET-03", "AUDIO-01"]
     }
