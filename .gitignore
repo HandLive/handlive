@@ -21,3 +21,7 @@
 
 # Kho ".github" của org (hồ sơ, file cộng đồng mặc định) — clone vào đây bằng tools/workspace.sh clone
 /.github-org/
+
+# Python caches and cross-agent locks
+__pycache__/
+/.locks/
