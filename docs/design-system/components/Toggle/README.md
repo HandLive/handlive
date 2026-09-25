@@ -10,7 +10,7 @@ Công tắc và ô chọn cho cài đặt bật/tắt. Mac phân biệt switch (
 | iOS/iPadOS | Switch ở cuối dòng danh sách: `Toggle` trong `Form`/`List` | Switch ở dòng riêng, có chú thích dưới nhóm |
 | Android | `HLSwitch` cỡ 51×31 dp trong dòng 56 dp (cả dòng là vùng chạm) | Như tính năng chính |
 
-- Màu bật: iOS và Android dùng `system-green` như mặc định của iOS; Mac dùng màu nhấn (`accent-fill`, hoặc màu người dùng chọn trong Cài đặt hệ thống).
+- Màu bật: iOS và Android dùng `system-green` như mặc định của iOS; Mac dùng màu nhấn (`accent-fill`, hoặc màu người dùng chọn trong Cài đặt hệ thống). Núm công tắc dùng `switch-thumb`.
 - Tắt tính năng chính thì tùy chọn phụ vẫn hiện nhưng mờ (checkbox trên Mac) — không ẩn, để người dùng thấy sẽ bật lại được gì.
 - Nhãn nói tác dụng khi bật; chú thích dưới nhóm giải thích hệ quả. Không dùng switch cho hành động tức thì — dùng `Button`.
 - Công tắc không chỉ đổi màu: vị trí núm cũng đổi. Trạng thái được đọc bằng lời ("Bật"/"Tắt").

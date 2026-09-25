@@ -54,6 +54,8 @@ Cỡ mặc định (Large). Android dùng token `android-*` cùng tên đuôi (`
 
 Tracking: SF tự chỉnh theo cỡ. Token `android-*` dùng tracking động của Inter (Body −0.013 em thay −0.026 em của SF).
 
+Trường phụ của kiểu chữ — `relativeTo` (phóng theo Dynamic Type), `emphasisWeight` (cột Nhấn mạnh), `fontFeatures` (như `tnum` của `timer`) — nằm trong `shared/design-tokens/type-extras.json`, tách khỏi `tokens.json` để giữ định dạng của artifact; bộ sinh mã đọc cả hai.
+
 ## Body từ xSmall đến AX5
 
 | xSmall | Small | Medium | Large | xLarge | xxLarge | xxxLarge | AX1 | AX2 | AX3 | AX4 | AX5 |

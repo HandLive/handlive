@@ -7,10 +7,10 @@ Nút bấm theo ba thuộc tính của HIG — kiểu (style), nội dung (chữ
 | Kiểu | Khi dùng | macOS / iOS (SwiftUI) | Android (Compose) | Token |
 |------|----------|----------------------|-------------------|-------|
 | Nổi bật (prominent) | Hành động chính của màn, tối đa một (hiếm khi hai) | `.borderedProminent`; từ 26: `.glassProminent` | `HLButton(style = Prominent)` | `accent-fill`, `on-accent` |
-| Kính / viền | Hành động phụ đứng cạnh nút chính | `.bordered`; từ 26: `.glass` | `HLButton(style = Glass)` | `glass-fill`, `glass-stroke` |
+| Kính / viền | Hành động phụ đứng cạnh nút chính | `.bordered`; từ 26: `.glass` | `HLButton(style = Glass)` | `glass-fill`, `glass-stroke`, chữ `label` |
 | Nhạt màu nhấn (tinted) | Hành động nên thấy nhưng không phải chính ("Mở cài đặt") | `.bordered` + `.tint(.accentColor)` | `style = Tinted` | `accent-tint`, `accent` |
 | Chữ (plain) | Liên kết, lệnh phụ trong câu | `.borderless` / `.plain` | `style = Plain` | `accent` |
-| Phá hủy (destructive) | Hủy ghép nối, xóa lịch sử | `role: .destructive` | `style = Destructive` | `destructive-text`, `call-decline-fill` |
+| Phá hủy (destructive) | Hủy ghép nối, xóa lịch sử | `role: .destructive` | `style = Destructive` | `destructive-text` trên nền kính (`glass-fill`, `glass-stroke`); nền đỏ đặc `call-decline-fill` chỉ cho nút tròn Từ chối, Kết thúc trong `CallPanel` |
 
 - Vai trò: bình thường, chính (phản hồi Return), hủy (phản hồi Esc), phá hủy. **Không** gán vai trò chính cho nút phá hủy.
 - Phân biệt mức ưu tiên bằng kiểu, không bằng cỡ. Mỗi màn một nút nổi bật.

@@ -8,7 +8,7 @@ Danh sách nhóm kiểu Cài đặt của iPhone — các nhóm bo góc trên n�
 |------|---------|-------|
 | Tiêu đề nhóm | Sentence case (không còn viết hoa toàn bộ từ Liquid Glass), 13 pt Semibold | `secondary-label` |
 | Nhóm | Nền ô, góc bo đồng tâm (`radius-sheet` từ iOS 26, `radius-row` trên iOS 16–18) | `secondary-system-grouped-background` |
-| Dòng | Cao ≥ 44 pt (Android 56 dp); biểu tượng vuông 30 pt bo 8 pt, glyph trắng trên màu; chữ `ios-body` | `label`, `separator` |
+| Dòng | Cao ≥ 44 pt (Android 56 dp); biểu tượng vuông `size-row-icon` (30 pt) bo `radius-row-icon` (8 pt), glyph `on-icon-fill` trên màu; chữ `ios-body` | `label`, `separator` |
 | Giá trị | Bên phải, trước mũi tên | `secondary-label` |
 | Mũi tên | `chevron.forward` ↔ `chevron_right` khi dòng mở màn con | `tertiary-label` |
 | Chú thích nhóm | Câu hoàn chỉnh giải thích hệ quả | `secondary-label` |

@@ -16,7 +16,7 @@ Cho biết liên kết giữa hai máy đang ra sao: biểu tượng tô màu tr
 | Đang phát camera | "Đang phát camera" | chấm nhấp nháy | `status-connected` |
 
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CONN-01 và PAIR-02 dùng "Đã kết nối qua Wi-Fi", "Đã kết nối qua Internet"; "LAN" chỉ còn trong nhãn ngắn dạng viên.
-- Chữ dùng `secondary-label`; chỉ biểu tượng hoặc chấm mang màu. Không bao giờ chỉ có chấm màu.
+- Chữ dùng `secondary-label`, kiểu `mac-subheadline` / `ios-subheadline` / `android-subheadline` cho cả dạng dòng và dạng viên; chỉ biểu tượng hoặc chấm mang màu. Không bao giờ chỉ có chấm màu.
 - Dạng viên (`pill`) dùng cho nhãn ngắn trên đầu popover, cửa sổ: nền `tertiary-system-fill`, biểu tượng màu trạng thái, chữ `label`.
 - VoiceOver/TalkBack đọc câu đầy đủ: "Đã kết nối qua Wi-Fi với Pixel 8 của Lan".
 - Nhấp nháy chỉ cho "Đang kết nối" và "Đang phát camera", tắt khi bật Giảm chuyển động (`duration-pulse`).

@@ -48,12 +48,12 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 
 | Token | Dùng cho |
 |---|---|
-| `accent` | Liên kết, biểu tượng đang chọn, `unread`, `focus-ring`. Chữ đạt 4.5:1 trên mọi nền |
-| `accent-fill` | Nền nút chính, `bubble-outgoing` |
+| `accent` | Chữ liên kết, biểu tượng đang chọn, `unread`, `focus-ring`. Chữ đạt 4.5:1 trên mọi nền; không làm nền có chữ trắng |
+| `accent-fill` | Nền nút chính, `bubble-outgoing`; là giá trị của Color Set `AccentColor` trên Apple (4 giao diện), nên nút nổi bật của hệ thống giữ chữ trắng ≥ 4.5:1 ở giao diện Tối |
 | `on-accent` | Chữ và biểu tượng trên `accent-fill` |
 | `accent-tint` | Nền nhạt vùng chọn. Không đặt chữ `accent` dưới 13 pt lên nền này |
 
-- Apple: AccentColor khai báo trong asset catalog (4 biến thể), control hệ thống tự lấy; control tự dựng dùng `Color.accentColor` hoặc `NSColor.controlAccentColor`.
+- Apple: Color Set `AccentColor` lấy giá trị `accent-fill` (4 biến thể; target app đặt `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`); control hệ thống tự lấy; control tự dựng dùng `Color.accentColor` hoặc `NSColor.controlAccentColor` cho nền và `accent` cho chữ, liên kết, biểu tượng.
 - Tiết chế: mỗi màn một nút tô màu, tối đa hai. Phân biệt mức ưu tiên bằng kiểu nút, không bằng cỡ.
 - macOS: màu nhấn của app chỉ hiện khi người dùng để Màu nhấn là Nhiều màu (Cài đặt hệ thống › Giao diện). Người dùng chọn màu khác thì control theo màu đó; HandLive không ép xanh lá. Màu mang nghĩa cố định (trạng thái, nút cuộc gọi) không đổi theo. Chọn Graphite thì nền cửa sổ nhuốm màu hình nền; control tự dựng ở trạng thái trung tính nên hơi trong suốt.
 - Liquid Glass: chỉ tô nền của một hành động chính trên lớp kính (`.buttonStyle(.glassProminent)`, `Glass.tint(_:)`); không tô chữ hay biểu tượng trên kính; không tô nhiều control cùng lúc. Chấm trạng thái trên kính được phép.
@@ -85,7 +85,7 @@ Luôn kèm biểu tượng khác hình (`phone.fill`, `phone.down.fill`), vị t
 ## Đỏ, xanh lá và mù màu
 
 - Người mù màu khó phân biệt đỏ với xanh lá. Mọi cặp đỏ–xanh lá của HandLive phải khác nhau ở cả ba lớp: biểu tượng, vị trí, chữ.
-- Khi bật Phân biệt không dùng màu (Differentiate Without Color), chấm trạng thái đổi thành biểu tượng có hình, ví dụ `checkmark.circle.fill`, `exclamationmark.triangle.fill`. Android không có cài đặt này nên luôn hiện chữ trạng thái.
+- Khi bật Phân biệt không dùng màu (Differentiate Without Color), chấm trạng thái đổi thành biểu tượng có hình: `checkmark.circle.fill` (đã kết nối), `ellipsis.circle.fill` (đang kết nối), `exclamationmark.triangle.fill` (lỗi), `record.circle` (đang phát camera). Android không có cài đặt này nên luôn hiện chữ trạng thái.
 
 ## Tương phản cao
 
