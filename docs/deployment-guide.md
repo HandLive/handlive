@@ -10,6 +10,8 @@
 
 ## macOS app
 
+- Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1); ký Developer ID cho app, extension camera và driver micro; target app đặt `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
+
 - **Virtual mic (AudioServerPlugin):** không thể cài qua Mac App Store (sandbox chặn `/Library/Audio/Plug-Ins/HAL/`). Phân phối:
   - PKG installer **signed + notarized** (`xcrun notarytool submit` + `stapler staple`), embed trong app; first-run detect thiếu plugin → mở PKG bằng Installer (Installer tự xin quyền quản trị) → `postinstall` chạy `killall coreaudiod` với quyền root. Không cần privileged helper (`SMJobBless` deprecated từ macOS 13; `launchctl kickstart` bị chặn từ macOS 14.4).
   - Song song: `brew install --cask handlive` (cài cả app + plugin).
@@ -22,10 +24,16 @@
 
 ## Cloud relay (Rust)
 
+- Biến môi trường: `DATABASE_URL`, `REDIS_URL`, `RELAY_JWT_SECRET` (byte UTF-8 thô, ≥ 32 byte, xoay theo lịch). Giới hạn theo IP chỉ tin `X-Forwarded-For` từ reverse proxy đặt trước relay (Caddy hoặc nginx).
+
 - **D5:** self-host 1 VPS (Hetzner/OVH, ~$20/tháng) cho Phase 2. Docker + systemd. Stateless.
 - Scale: monitor CPU/bandwidth, alert >70% → thêm VPS. Migrate managed (fly.io/Railway) khi >500 concurrent users.
 - TLS: Let's Encrypt + cert pinning phía client.
 - Ước tính: 100 concurrent Opus calls ≈ 12GB/giờ; commodity VPS 20TB/tháng đủ ~1000 users.
+
+## CI
+
+Bốn workflow GitHub Actions (`.github/workflows/`): `ci-android` (`./gradlew check`), `ci-apple` (`xcodebuild test` từng package và build app), `ci-relay` (fmt, clippy, test; service PostgreSQL 16 và Redis 7 cho test tích hợp), `ci-shared` (script kiểm vector, schema, tài liệu). Cần remote GitHub; bật branch protection bắt buộc bốn check trên `main`.
 
 ## USB boost (tùy chọn)
 
