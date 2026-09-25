@@ -62,7 +62,7 @@ HandLive/                # kho hub "handlive"
 
 ```sh
 git clone <group-url>/handlive.git HandLive && cd HandLive
-tools/workspace.sh clone <group-url>      # ví dụ git@github.com:handlive
+tools/workspace.sh clone <group-url>      # ví dụ git@github.com:HandLive
 tools/workspace.sh status
 ```
 
