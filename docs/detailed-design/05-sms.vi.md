@@ -875,7 +875,7 @@ flowchart TB
 | 3 | Hệ thống | M-APP / I-APP | Sinh `local_id` (UUIDv7); ghi `sms_outbox` với `state = pending`, `thread_id` (null với số mới), `addresses_json`, `body`, `sub_id`; hiện bong bóng tạm "Đang chờ điện thoại". |  |
 | 4 | Hệ thống | M-APP / I-APP | Kiểm phiên `/v1/ctl` và `can_send`. | Không có phiên → E1. `can_send = false` → E3. |
 | 5 | Hệ thống | M-APP / I-APP | Sinh `id` envelope, gửi `sms/send` (API 1), tăng `attempts`. Không có `ack` trong `REQUEST_TIMEOUT` → gửi lại **cùng `id`** sau 5 s, 15 s, 45 s (`SMS_OUTBOX_RETRY`). Khi có phiên mới, các dòng `pending` được gửi lại theo thứ tự `created_at`. | Hết 3 lần → E1; trả lời nhanh trên iOS → E8. |
-| 6 | Hệ thống | A-SVC, A-SMS | Kiểm theo thứ tự: `feature.sms`, `SEND_SMS`, tham số, người nhận (libphonenumber → E.164), nội dung, SIM; chống trùng theo `id` và `local_id`. | `ack` lỗi → client đặt `failed` và `last_error` (E2–E6). |
+| 6 | Hệ thống | A-SVC, A-SMS | Kiểm theo thứ tự của bảng lỗi API 1: `feature.sms`, `SEND_SMS`, tham số, độ dài nội dung, người nhận (libphonenumber → E.164), SIM. Chống trùng theo `id` trước khi kiểm và theo `local_id` ngay sau bước tham số (`local_id` đã nhận thì bỏ qua các bước kiểm còn lại). | `ack` lỗi → client đặt `failed` và `last_error` (E2–E6). |
 | 7 | Hệ thống | A-SVC, M-APP / I-APP | Android trả `ack` `{accepted: true, parts}`; client đặt `state = sending`, hiện "Đang gửi…". |  |
 | 8 | Hệ thống | A-SMS, OS | Ghi `local_id` vào `SendRegistry`; chia tin bằng `divideMessage`, gửi bằng `sendMultipartTextMessage` qua `SmsManager` của `sub_id` (API 3), mỗi phần một PendingIntent "sent" và "delivered". Gửi `sms/status` `sending`. |  |
 | 9 | Hệ thống | A-SMS, A-SVC | Nhận kết quả từng phần: mọi phần `RESULT_OK` → `sms/status` `sent`; mọi phần có báo phát thành công → `delivered`; phần đầu tiên lỗi → `failed` kèm `error_code` (API 2). Client cập nhật `sms_outbox.state`. | E7, E10. |
@@ -944,8 +944,10 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 - **Logic nghiệp vụ:**
   1. `ack` được gửi ngay sau khi kiểm xong, **trước** khi radio gửi; kết quả gửi đi qua
      `sms/status`.
-  2. Chuẩn hóa người nhận bằng libphonenumber với vùng = quốc gia của SIM gửi: số hợp lệ → E.164;
-     chuỗi 3–8 chữ số → giữ nguyên (tổng đài ngắn); còn lại → `SMS_INVALID_ADDRESS`.
+  2. Chuẩn hóa người nhận bằng libphonenumber với vùng = quốc gia của SIM gửi (logic 3), hoặc vùng
+     của mạng hay của điện thoại khi không xác định được SIM: số hợp lệ → E.164; chuỗi 3–8 chữ số →
+     giữ nguyên (tổng đài ngắn); còn lại → `SMS_INVALID_ADDRESS`, lỗi này được kiểm trước
+     `SMS_SIM_UNAVAILABLE`.
   3. Chọn SIM: có `sub_id` → phải thuộc danh sách SIM hoạt động; vắng →
      `SmsManager.getDefaultSmsSubscriptionId()`; giá trị này không hợp lệ (máy đặt "luôn hỏi") mà
      chỉ có 1 SIM → dùng SIM đó, nhiều SIM → `SMS_SIM_UNAVAILABLE`. Danh sách SIM hoạt động

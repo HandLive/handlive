@@ -889,7 +889,7 @@ flowchart TB
 | 3 | System | M-APP / I-APP | Generate `local_id` (UUIDv7); write `sms_outbox` with `state = pending`, `thread_id` (null for a new number), `addresses_json`, `body`, `sub_id`; show the placeholder bubble "Waiting for phone". |  |
 | 4 | System | M-APP / I-APP | Check the `/v1/ctl` session and `can_send`. | No session → E1. `can_send = false` → E3. |
 | 5 | System | M-APP / I-APP | Generate the envelope `id`, send `sms/send` (API 1), increment `attempts`. No `ack` within `REQUEST_TIMEOUT` → resend with the **same `id`** after 5 s, 15 s, 45 s (`SMS_OUTBOX_RETRY`). When a new session exists, the `pending` rows are sent again in `created_at` order. | After 3 attempts → E1; quick reply on iOS → E8. |
-| 6 | System | A-SVC, A-SMS | Checks, in order: `feature.sms`, `SEND_SMS`, parameters, recipient (libphonenumber → E.164), text, SIM; deduplicate by `id` and `local_id`. | Error `ack` → the client sets `failed` and `last_error` (E2–E6). |
+| 6 | System | A-SVC, A-SMS | Checks in the order of the API 1 error table: `feature.sms`, `SEND_SMS`, parameters, text length, recipient (libphonenumber → E.164), SIM. Deduplicates by `id` before the checks and by `local_id` right after the parameters (an accepted `local_id` skips the remaining checks). | Error `ack` → the client sets `failed` and `last_error` (E2–E6). |
 | 7 | System | A-SVC, M-APP / I-APP | Android returns the `ack` `{accepted: true, parts}`; the client sets `state = sending` and shows "Sending…". |  |
 | 8 | System | A-SMS, OS | Record `local_id` in `SendRegistry`; split the message with `divideMessage` and send it with `sendMultipartTextMessage` through the `SmsManager` of `sub_id` (API 3), with a "sent" and a "delivered" PendingIntent for each part. Send `sms/status` `sending`. |  |
 | 9 | System | A-SMS, A-SVC | Receive the result of each part: every part `RESULT_OK` → `sms/status` `sent`; every part with a successful delivery report → `delivered`; the first part that fails → `failed` with `error_code` (API 2). The client updates `sms_outbox.state`. | E7, E10. |
@@ -958,9 +958,10 @@ Errors (`ack.error.code`), in the order they are checked:
 - **Business logic:**
   1. The `ack` is sent as soon as the checks pass, **before** the radio sends; the sending result
      goes through `sms/status`.
-  2. The recipient is normalized with libphonenumber, using the country of the sending SIM as the
-     region: a valid number → E.164; a string of 3–8 digits → kept as is (short code); anything
-     else → `SMS_INVALID_ADDRESS`.
+  2. The recipient is normalized with libphonenumber, using the country of the sending SIM (logic 3)
+     as the region, or the network's or the phone's region when no SIM can be determined: a valid
+     number → E.164; a string of 3–8 digits → kept as is (short code); anything else →
+     `SMS_INVALID_ADDRESS`, which is checked before `SMS_SIM_UNAVAILABLE`.
   3. SIM selection: `sub_id` given → it must be in the list of active SIMs; absent →
      `SmsManager.getDefaultSmsSubscriptionId()`; if that value is invalid (the phone is set to
      "always ask") and there is only 1 SIM → use that SIM, several SIMs → `SMS_SIM_UNAVAILABLE`. The
