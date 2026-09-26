@@ -1,70 +1,52 @@
 [English](deployment-guide.md) | Tiếng Việt
 
-# HandLive — Deployment & Distribution
+# HandLive: Đóng gói và phân phối
 
-> Chưa có build pipeline. Đây là kế hoạch phân phối theo quyết định D5/D7/D8 trong plan gốc.
+> Chưa có pipeline build. Đây là kế hoạch phân phối theo quyết định D5, D7 và D8 trong plan gốc.
 
-## Android app
+## Ứng dụng Android
 
-- **Play Store:** cần Permissions Declaration Form cho `READ_SMS` /`SEND_SMS`/`READ_CALL_LOG` theo
-  ngoại lệ "Cross-device synchronization or transfer of SMS or calls", và khai báo dùng
-  Accessibility API (D4/D12) — chuẩn bị video demo + use-case doc + privacy policy, nộp sớm (P1
-  milestone 2) để biết kết quả trước ship.
-- **Fallback phân phối** (nếu Play Store reject SMS): F-Droid + direct APK. Đọc SMS qua Notification
-  Listener nếu mất `SEND_SMS`.
-- Shizuku (tùy chọn) cho đường âm thanh cuộc gọi Opus/WS — wizard hướng dẫn cài; phải khởi động lại
-  Shizuku sau mỗi lần bật máy (plan §13 D10).
+- **Play Store.** Cần Permissions Declaration Form cho `READ_SMS`, `SEND_SMS` và `READ_CALL_LOG`, theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls". Khai báo dùng Accessibility API (D4/D12). Chuẩn bị video demo, tài liệu use-case và privacy policy. Nộp sớm ở mốc P1 milestone 2 để biết kết quả trước khi phát hành.
+- **Phân phối dự phòng.** Nếu Play Store từ chối quyền SMS, phát hành qua F-Droid và APK trực tiếp. Khi mất `SEND_SMS`, đọc SMS qua Notification Listener.
+- **Shizuku** là tùy chọn cho đường âm thanh cuộc gọi Opus/WS. Wizard hướng dẫn cài. Người dùng khởi động lại Shizuku sau mỗi lần bật máy (plan §13 D10).
 
-## macOS app
+## Ứng dụng macOS
 
-- Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1); ký Developer ID cho app,
-  extension camera và driver micro; target app đặt
-  `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
+- Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1). Ký Developer ID cho app, extension camera và driver micro. Target app đặt `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
+- **Micro ảo (AudioServerPlugin).** Mac App Store không cài plugin này. Sandbox chặn `/Library/Audio/Plug-Ins/HAL/`. Phân phối theo hai đường:
+  - PKG **đã ký và notarized** (`xcrun notarytool submit`, rồi `stapler staple`), nhúng trong app. Lần chạy đầu, app thấy thiếu plugin thì mở PKG bằng Installer. Installer tự xin quyền quản trị. `postinstall` chạy `killall coreaudiod` với quyền root. Không cần privileged helper. `SMJobBless` deprecated từ macOS 13. `launchctl kickstart` bị chặn từ macOS 14.4.
+  - Song song: `brew install --cask handlive`. Lệnh này cài cả app và plugin.
+- **Camera ảo (CMIOExtension).** System extension nằm trong app bundle, tương thích App Store. Người dùng chấp thuận trong System Settings, mục Login Items & Extensions.
+- Yêu cầu macOS 13 trở lên.
 
-- **Virtual mic (AudioServerPlugin):** không thể cài qua Mac App Store (sandbox chặn
-  `/Library/Audio/Plug-Ins/HAL/`). Phân phối:
-  - PKG installer **signed + notarized** (`xcrun notarytool submit` + `stapler staple`), embed trong
-    app; first-run detect thiếu plugin → mở PKG bằng Installer (Installer tự xin quyền quản trị) →
-    `postinstall` chạy `killall coreaudiod` với quyền root. Không cần privileged helper
-    (`SMJobBless` deprecated từ macOS 13; `launchctl kickstart` bị chặn từ macOS 14.4).
-  - Song song: `brew install --cask handlive` (cài cả app + plugin).
-- **Virtual camera (CMIOExtension):** system extension trong app bundle — App Store compatible. User
-  approve trong System Settings > Login Items & Extensions.
-- macOS 13+.
+## Ứng dụng iOS và iPadOS
 
-## iOS/iPadOS app
-
-- App Store bình thường. APNs cho push. iOS 16+.
+Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 trở lên.
 
 ## Cloud relay (Rust)
 
-- Biến môi trường: `DATABASE_URL`, `REDIS_URL`, `RELAY_JWT_SECRET` (byte UTF-8 thô, ≥ 32 byte, xoay
-  theo lịch). Giới hạn theo IP chỉ tin `X-Forwarded-For` từ reverse proxy đặt trước relay (Caddy
-  hoặc nginx).
-
-- **D5:** self-host 1 VPS (Hetzner/OVH, ~$20/tháng) cho Phase 2. Docker + systemd. Stateless.
-- Scale: monitor CPU/bandwidth, alert >70% → thêm VPS. Migrate managed (fly.io/Railway) khi >500
-  concurrent users.
-- TLS: Let's Encrypt + cert pinning phía client.
-- Ước tính: 100 concurrent Opus calls ≈ 12GB/giờ; commodity VPS 20TB/tháng đủ ~1000 users.
+- Biến môi trường: `DATABASE_URL`, `REDIS_URL`, `RELAY_JWT_SECRET` (byte UTF-8 thô, từ 32 byte, xoay theo lịch). Giới hạn theo IP chỉ tin `X-Forwarded-For` từ reverse proxy đặt trước relay, Caddy hoặc nginx.
+- **D5.** Tự host một VPS (Hetzner hoặc OVH, khoảng 20 USD mỗi tháng) cho Phase 2. Docker và systemd. Relay không giữ trạng thái.
+- Mở rộng: theo dõi CPU và băng thông. Cảnh báo khi vượt 70 phần trăm, rồi thêm VPS. Chuyển sang nền tảng managed (fly.io hoặc Railway) khi quá 500 người dùng cùng lúc.
+- TLS: Let's Encrypt, kèm cert pinning phía client.
+- Ước tính: 100 cuộc gọi Opus cùng lúc khoảng 12 GB mỗi giờ. VPS thông thường, 20 TB mỗi tháng, đủ cho khoảng 1000 người dùng.
 
 ## CI
 
-Mỗi kho một workflow GitHub Actions trong `.github/workflows/` của kho đó: `ci-android` (`./gradlew
-check`), `ci-apple` (`xcodebuild test` từng package, SwiftLint, build app), `ci-relay` (fmt, clippy,
-test; service PostgreSQL 16 và Redis 7 cho test tích hợp), `ci-shared` (kiểm vector, vector sinh
-lại, schema đối chiếu ví dụ tài liệu) và `ci-docs` ở hub (khuôn tài liệu, schema). Mỗi workflow dựng
-lại bố cục workspace bằng `actions/checkout`: hub ở gốc (khi cần tài liệu, checkout trước), phần vào
-`<phần>/`, `handlive-shared` vào `shared/`; tên kho lấy theo
-`${{ github.repository_owner }}/handlive-<phần>` nên cả năm kho phải nằm cùng một group/organization
-và giữ đúng tên (`handlive`, `handlive-android`, `handlive-apple`, `handlive-relay`,
-`handlive-shared`). Kho private: tạo secret `HANDLIVE_REPOS_TOKEN` (fine-grained PAT hoặc token
-GitHub App, quyền Contents: read trên năm kho) ở cấp organization; kho public thì `github.token` đủ.
-Sửa `shared/` hay tài liệu không tự kích hoạt CI nền tảng — chạy tay bằng `workflow_dispatch`. Mỗi workflow lấy nhánh trùng tên của `handlive-shared` và hub nếu có (ví dụ `feat/phase-01-clipboard` ở mọi kho), không có thì `main`. Bật
-branch protection bắt buộc check tương ứng trên `main` của từng kho.
+Mỗi kho có một workflow GitHub Actions trong `.github/workflows/` của kho đó.
 
-## USB boost (tùy chọn)
+- `ci-android` chạy `./gradlew check`.
+- `ci-apple` chạy `xcodebuild test` từng package, SwiftLint, rồi build app.
+- `ci-relay` chạy fmt, clippy và test. Test tích hợp dùng PostgreSQL 16 và Redis 7.
+- `ci-shared` kiểm vector, vector sinh lại, và schema đối chiếu ví dụ trong tài liệu.
+- `ci-docs` ở hub kiểm khuôn tài liệu và schema.
 
-ADB port-forward (`adb forward tcp:PORT tcp:PORT`), auto-detect qua IOKit
-`IOServiceAddMatchingNotification`. Wizard 3 bước bật USB Debugging lần đầu; sau đó auto-switch. UVC
-native để dành v2.
+Mỗi workflow dựng lại bố cục workspace bằng `actions/checkout`. Hub nằm ở gốc, checkout trước khi cần tài liệu. Phần mã vào `<phần>/`. `handlive-shared` vào `shared/`. Tên kho lấy theo `${{ github.repository_owner }}/handlive-<phần>`. Cả năm kho phải nằm cùng một organization và giữ đúng tên: `handlive`, `handlive-android`, `handlive-apple`, `handlive-relay`, `handlive-shared`.
+
+Kho private: tạo secret `HANDLIVE_REPOS_TOKEN` ở cấp organization. Token là fine-grained PAT hoặc token GitHub App, quyền Contents: read trên năm kho. Kho public thì `github.token` đủ.
+
+Sửa `shared/` hoặc tài liệu không tự kích hoạt CI nền tảng. Chạy tay bằng `workflow_dispatch`. Mỗi workflow lấy nhánh trùng tên của `handlive-shared` và hub nếu có, ví dụ `feat/phase-01-clipboard` ở mọi kho. Không có nhánh đó thì dùng `main`. Bật branch protection. Nhánh `main` mỗi kho phải qua check tương ứng.
+
+## Tăng tốc USB (tùy chọn)
+
+ADB port-forward (`adb forward tcp:PORT tcp:PORT`). Tự nhận cáp qua IOKit `IOServiceAddMatchingNotification`. Wizard ba bước bật USB Debugging lần đầu. Các lần sau tự chuyển. UVC native để dành cho v2.

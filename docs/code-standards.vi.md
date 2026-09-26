@@ -2,7 +2,7 @@
 
 # HandLive — Code Standards
 
-> Quy ước cho mọi kho của workspace. Bổ sung khi có quy ước mới.
+> Quy ước cho mọi kho trong workspace. Bổ sung khi có quy ước mới.
 
 ## Chung
 
