@@ -906,7 +906,7 @@ SET-02 function manages these keys.
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Coalesces the `onChange` calls of the SMS provider |
 | `CALLLOG_SYNC_WINDOW` | 90 days, at most 500 entries |  |
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 minutes / 60 s |  |
-| `RELAY_IDLE_DISCONNECT` | 5 minutes | Android disconnects from the relay by itself when idle |
+| `RELAY_IDLE_DISCONNECT` | 5 minutes | Android leaves the relay after this long without a relayed session, a rendezvous or traffic (CONN-03 step 2) |
 | `RELAY_RATE_LIMIT` | REST 60/minute, push 30/minute, 2 MiB/s per pair and direction |  |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2.5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |

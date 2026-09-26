@@ -897,7 +897,7 @@ SET-02 quản lý các khóa này.
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Gom các lần `onChange` của provider SMS |
 | `CALLLOG_SYNC_WINDOW` | 90 ngày, tối đa 500 mục |  |
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 phút / 60 s |  |
-| `RELAY_IDLE_DISCONNECT` | 5 phút | Android tự ngắt relay khi rảnh |
+| `RELAY_IDLE_DISCONNECT` | 5 phút | Android tự rời relay sau chừng này thời gian không có phiên qua relay, điểm hẹn hay lưu lượng (CONN-03 bước 2) |
 | `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp mỗi chiều |  |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2,5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
