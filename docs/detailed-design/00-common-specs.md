@@ -947,9 +947,12 @@ stateDiagram-v2
   Discovering --> ConnectingRelay: past LAN_DISCOVERY_GRACE and relay.enabled
   ConnectingRelay --> WaitingPeer: relay OK, peer offline
   WaitingPeer --> Handshaking: presence online
+  WaitingPeer --> Discovering: the phone appears on the LAN (hint-matching mDNS instance)
   ConnectingRelay --> Handshaking: presence online
   Connected --> Backoff: connection lost
   Connected --> ConnectingLAN: on the relay and the LAN is found (upgrade)
+  Connected --> WaitingPeer: relayed session ends, relay link still up (the phone left, CONN-03 E8)
+  Handshaking --> WaitingPeer: relayed handshake ends, relay link still up (the phone left)
   Backoff --> Discovering: wait is over, the network changed or the phone reappeared on mDNS
   Connected --> Idle: unpaired
 ```
@@ -961,7 +964,7 @@ camera channel uses USB); every instance fails the pin → "Needs to be paired a
 name (status line, screen-reader text of the status indicator): "Connected via Wi-Fi to \<name>",
 "Connected over the internet to \<name>", "Connected via USB to \<name>".
 
-From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule.
+From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. Over the relay, a session or handshake that ends while the `/v1/relay` link stays up means the phone left (CONN-03 E8): back to `WaitingPeer`, not `Backoff`; while in `WaitingPeer`, a hint-matching mDNS instance leads back to `Discovering` for a LAN session. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule.
 
 ## 0.12 Localization and the UI string catalog
 

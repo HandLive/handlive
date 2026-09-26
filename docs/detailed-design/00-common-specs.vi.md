@@ -938,9 +938,12 @@ stateDiagram-v2
   Discovering --> ConnectingRelay: quá LAN_DISCOVERY_GRACE và relay.enabled
   ConnectingRelay --> WaitingPeer: relay OK, đối phương offline
   WaitingPeer --> Handshaking: presence online
+  WaitingPeer --> Discovering: điện thoại xuất hiện trong LAN (instance mDNS có hint khớp)
   ConnectingRelay --> Handshaking: presence online
   Connected --> Backoff: mất kết nối
   Connected --> ConnectingLAN: đang qua relay và thấy LAN (nâng cấp)
+  Connected --> WaitingPeer: phiên qua relay kết thúc, liên kết relay vẫn còn (điện thoại đã rời, CONN-03 E8)
+  Handshaking --> WaitingPeer: bắt tay qua relay kết thúc, liên kết relay vẫn còn (điện thoại đã rời)
   Backoff --> Discovering: hết thời gian chờ, đổi mạng hoặc điện thoại xuất hiện lại trên mDNS
   Connected --> Idle: hủy ghép nối
 ```
@@ -952,7 +955,7 @@ camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại
 trạng thái, câu đọc màn hình của chỉ báo trạng thái): "Đã kết nối qua Wi-Fi với <tên>",
 "Đã kết nối qua Internet với <tên>", "Đã kết nối qua USB với <tên>".
 
-Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường.
+Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Qua relay, phiên hoặc bước bắt tay kết thúc trong khi liên kết `/v1/relay` vẫn còn nghĩa là điện thoại đã rời (CONN-03 E8): quay về `WaitingPeer`, không về `Backoff`; khi đang ở `WaitingPeer`, thấy instance mDNS có hint khớp thì quay về `Discovering` để mở phiên LAN. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường.
 
 ## 0.12 Bản địa hóa và catalog chuỗi giao diện
 
