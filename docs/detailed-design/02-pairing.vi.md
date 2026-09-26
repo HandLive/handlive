@@ -768,7 +768,8 @@ WHERE pair_id = :pair_id;
 DELETE FROM paired_device
 WHERE pair_id = :pair_id AND revoked_at IS NOT NULL;
 
--- [Thiết kế] Mac/iOS, bước 7 (một giao dịch): xóa dữ liệu đồng bộ và đặt bia mộ
+-- [Thiết kế] Mac/iOS, bước 7: xóa dữ liệu đồng bộ trong một giao dịch (không có khóa ngoại, 0.9.3), rồi
+-- đặt bia mộ trong kho cặp
 DELETE FROM sms_message    WHERE pair_id = :pair_id;
 DELETE FROM sms_thread     WHERE pair_id = :pair_id;
 DELETE FROM sms_outbox     WHERE pair_id = :pair_id;

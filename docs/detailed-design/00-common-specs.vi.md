@@ -649,10 +649,11 @@ tin đã gửi qua `SmsManager` vào hộp Sent).
 
 ### 0.9.3 Mac/iOS — SQLite `handlive.sqlite` (GRDB + SQLCipher)
 
-Phase 1 chỉ cần `paired_device`: M-APP giữ nó trong một file niêm phong bằng `db_key` (XChaCha20-Poly1305, AAD `handlive/v1/paired-devices`) sau cùng một API kho; cơ sở dữ liệu SQLCipher dưới đây dùng từ Phase 2 (bảng SMS). File dữ liệu trên Mac dùng lớp bảo vệ "tới lần mở khóa đầu tiên" vì app thanh menu vẫn ghi khi màn hình khóa; nội dung đã được niêm phong bằng `db_key`.
+`paired_device` không phải một bảng của cơ sở dữ liệu này: M-APP và I-APP giữ các cặp trong một file niêm phong bằng `db_key` (XChaCha20-Poly1305, AAD `handlive/v1/paired-devices`) sau API kho cặp, như ở Phase 1; cơ sở dữ liệu SQLCipher chứa các bảng còn lại dưới đây, từ Phase 2 (bảng SMS). Vì vậy các bảng này mang `pair_id` mà không có khóa ngoại tới `paired_device`, và việc hủy ghép nối (PAIR-03 bước 7, SET-02 A4 cũng chạy cho mọi cặp) xóa tường minh các dòng của cặp. File dữ liệu trên Mac dùng lớp bảo vệ "tới lần mở khóa đầu tiên" vì app thanh menu vẫn ghi khi màn hình khóa; nội dung đã được niêm phong bằng `db_key`.
 
 ```sql
--- [Thiết kế] Cặp ghép nối phía client (PRK nằm trong Keychain, account = pair_id)
+-- [Thiết kế] Cặp ghép nối phía client: bản ghi của file cặp niêm phong, không phải bảng của cơ sở dữ liệu này
+-- (PRK nằm trong Keychain, account = pair_id)
 CREATE TABLE paired_device (
   pair_id           TEXT    PRIMARY KEY,
   peer_device_id    TEXT    NOT NULL UNIQUE,
@@ -675,7 +676,7 @@ CREATE TABLE paired_device (
 
 -- [Thiết kế] Hội thoại SMS
 CREATE TABLE sms_thread (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- không có khóa ngoại (xem ở trên)
   thread_id         INTEGER NOT NULL,
   addresses_json    TEXT    NOT NULL,                    -- ["+84900000123"]
   display_name      TEXT,
@@ -688,7 +689,7 @@ CREATE TABLE sms_thread (
 
 -- [Thiết kế] Tin nhắn SMS
 CREATE TABLE sms_message (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- không có khóa ngoại (xem ở trên)
   message_key       TEXT    NOT NULL,                    -- sms:<_id>
   thread_id         INTEGER NOT NULL,
   address           TEXT    NOT NULL,
@@ -706,7 +707,7 @@ CREATE INDEX idx_sms_message_thread_ts ON sms_message (pair_id, thread_id, ts DE
 -- [Thiết kế] Hàng đợi gửi SMS từ Mac/iOS
 CREATE TABLE sms_outbox (
   local_id          TEXT    PRIMARY KEY,
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- không có khóa ngoại (xem ở trên)
   thread_id         INTEGER,
   addresses_json    TEXT    NOT NULL,
   body              TEXT    NOT NULL,
@@ -720,7 +721,7 @@ CREATE TABLE sms_outbox (
 
 -- [Thiết kế] Con trỏ đồng bộ theo luồng dữ liệu
 CREATE TABLE sync_cursor (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- không có khóa ngoại (xem ở trên)
   stream            TEXT    NOT NULL CHECK (stream IN ('sms','calllog')),
   cursor            TEXT    NOT NULL,                    -- chuỗi mờ do Android cấp
   updated_at        INTEGER NOT NULL,
@@ -729,7 +730,7 @@ CREATE TABLE sync_cursor (
 
 -- [Thiết kế] Nhật ký cuộc gọi
 CREATE TABLE call_log_entry (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- không có khóa ngoại (xem ở trên)
   entry_id          INTEGER NOT NULL,
   number            TEXT,
   display_name      TEXT,

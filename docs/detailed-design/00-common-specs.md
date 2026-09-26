@@ -658,10 +658,11 @@ writes messages sent through `SmsManager` into the Sent box).
 
 ### 0.9.3 Mac/iOS — SQLite `handlive.sqlite` (GRDB + SQLCipher)
 
-Phase 1 needs only `paired_device`: M-APP keeps it in a file sealed with `db_key` (XChaCha20-Poly1305, AAD `handlive/v1/paired-devices`) behind the same store API; the SQLCipher database below is used from Phase 2 (SMS tables). Data files on the Mac use the "until first unlock" protection class because the menu bar app keeps writing while the screen is locked; the content is sealed with `db_key` anyway.
+`paired_device` is not a table of this database: M-APP and I-APP keep the pairs in a file sealed with `db_key` (XChaCha20-Poly1305, AAD `handlive/v1/paired-devices`) behind the pair store API, as in Phase 1; the SQLCipher database holds the other tables below, from Phase 2 (SMS tables). So these tables carry `pair_id` without a foreign key to `paired_device`, and unpairing (PAIR-03 step 7, also run for every pair by SET-02 A4) deletes a pair's rows explicitly. Data files on the Mac use the "until first unlock" protection class because the menu bar app keeps writing while the screen is locked; the content is sealed with `db_key` anyway.
 
 ```sql
--- [Design] Pairs on the client side (the PRK lives in the Keychain, account = pair_id)
+-- [Design] Pairs on the client side: the record of the sealed pair file, not a table of this database
+-- (the PRK lives in the Keychain, account = pair_id)
 CREATE TABLE paired_device (
   pair_id           TEXT    PRIMARY KEY,
   peer_device_id    TEXT    NOT NULL UNIQUE,
@@ -684,7 +685,7 @@ CREATE TABLE paired_device (
 
 -- [Design] SMS conversations
 CREATE TABLE sms_thread (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- no foreign key (see above)
   thread_id         INTEGER NOT NULL,
   addresses_json    TEXT    NOT NULL,                    -- ["+84900000123"]
   display_name      TEXT,
@@ -697,7 +698,7 @@ CREATE TABLE sms_thread (
 
 -- [Design] SMS messages
 CREATE TABLE sms_message (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- no foreign key (see above)
   message_key       TEXT    NOT NULL,                    -- sms:<_id>
   thread_id         INTEGER NOT NULL,
   address           TEXT    NOT NULL,
@@ -715,7 +716,7 @@ CREATE INDEX idx_sms_message_thread_ts ON sms_message (pair_id, thread_id, ts DE
 -- [Design] Queue of SMS sent from Mac/iOS
 CREATE TABLE sms_outbox (
   local_id          TEXT    PRIMARY KEY,
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- no foreign key (see above)
   thread_id         INTEGER,
   addresses_json    TEXT    NOT NULL,
   body              TEXT    NOT NULL,
@@ -729,7 +730,7 @@ CREATE TABLE sms_outbox (
 
 -- [Design] Sync cursors per data stream
 CREATE TABLE sync_cursor (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- no foreign key (see above)
   stream            TEXT    NOT NULL CHECK (stream IN ('sms','calllog')),
   cursor            TEXT    NOT NULL,                    -- opaque string issued by Android
   updated_at        INTEGER NOT NULL,
@@ -738,7 +739,7 @@ CREATE TABLE sync_cursor (
 
 -- [Design] Call log
 CREATE TABLE call_log_entry (
-  pair_id           TEXT    NOT NULL REFERENCES paired_device(pair_id) ON DELETE CASCADE,
+  pair_id           TEXT    NOT NULL,                    -- no foreign key (see above)
   entry_id          INTEGER NOT NULL,
   number            TEXT,
   display_name      TEXT,

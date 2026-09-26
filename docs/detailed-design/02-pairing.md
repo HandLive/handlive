@@ -784,7 +784,8 @@ WHERE pair_id = :pair_id;
 DELETE FROM paired_device
 WHERE pair_id = :pair_id AND revoked_at IS NOT NULL;
 
--- [Design] Mac/iOS, step 7 (one transaction): delete the synced data and set the tombstone
+-- [Design] Mac/iOS, step 7: delete the synced data in one transaction (no foreign key, 0.9.3), then set
+-- the tombstone in the pair store
 DELETE FROM sms_message    WHERE pair_id = :pair_id;
 DELETE FROM sms_thread     WHERE pair_id = :pair_id;
 DELETE FROM sms_outbox     WHERE pair_id = :pair_id;
