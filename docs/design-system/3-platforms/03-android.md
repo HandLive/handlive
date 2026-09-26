@@ -109,8 +109,6 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 
 - Synced with the detailed design (September 25, 2026): CLIP-01 fields 4–5 "Send Clipboard".
 - Synced with the detailed design (September 25, 2026): SET-01 field 6 uses "Continue".
-- The Vietnamese detailed design writes "Huỷ"; the Vietnamese version of this page uses the Apple style
-  "Hủy".
 
 ## Dos and don'ts
 

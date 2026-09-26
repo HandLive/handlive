@@ -127,7 +127,6 @@ dọc thay vì cắt chữ. Tiêu đề thương hiệu dùng `Font.custom(_:siz
   `content.updating(from:)` để thành thông báo liên lạc (quyết định 15).
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CLIP-04 trường 1 "Gửi sang <tên điện thoại>";
   SET-03 trường 11 bỏ câu về quyền dán.
-- Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
 
 ## Nên và không nên
 

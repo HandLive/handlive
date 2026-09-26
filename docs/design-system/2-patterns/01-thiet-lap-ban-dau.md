@@ -105,8 +105,6 @@ Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a 
   appear at step 11 of SET-03.
 - Synced with the detailed design (September 25, 2026): SET-01 field 6 uses "Continue"; PAIR-01 field 5
   uses "Pair" / "Cancel".
-- The Vietnamese detailed design writes "huỷ, xoá, tuỳ"; the Vietnamese version of this section uses
-  the Apple style "hủy, xóa, tùy".
 
 ## Dos and don'ts
 

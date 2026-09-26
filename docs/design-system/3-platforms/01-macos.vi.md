@@ -137,7 +137,6 @@ người dùng bấm vào panel.
   activation policy `.accessory` ↔ `.regular`; SET-02 trường 31 `mac.menu_bar_extra`.
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-04 trường 1 đặt nhật ký ở thanh bên cửa sổ Tin
   nhắn; CAM-03 dùng menu con Camera trong `MenuBarMenu` và cửa sổ Xem trước camera.
-- Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
 
 ## Nên và không nên
 

@@ -108,7 +108,6 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CLIP-01 trường 4–5 "Gửi bảng nhớ tạm".
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục".
-- Tài liệu chi tiết viết "Huỷ"; ở đây viết kiểu Apple "Hủy".
 
 ## Nên và không nên
 

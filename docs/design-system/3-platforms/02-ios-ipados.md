@@ -135,8 +135,6 @@ and `DeviceRow` stack vertically instead of truncating text. Brand titles use
   (decision 15).
 - Synced with the detailed design (September 25, 2026): CLIP-04 field 1 "Send to \<phone name>";
   SET-03 field 11 drops the sentence about paste permission.
-- The Vietnamese detailed design writes "Huỷ"; the Vietnamese version of this page uses the Apple style
-  "Hủy".
 
 ## Dos and don'ts
 

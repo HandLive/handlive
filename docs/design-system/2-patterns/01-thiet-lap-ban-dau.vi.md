@@ -101,7 +101,6 @@ Bỏ chọn "Hiện HandLive trên thanh menu" thì app chuyển ngay sang có b
   bằng nút Dán (CLIP-04); giới hạn vẫn hiện ở bước 11 của SET-03.
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-01 trường 6 dùng "Tiếp tục"; PAIR-01 trường 5
   dùng "Ghép nối" / "Hủy".
-- Tài liệu chi tiết viết "huỷ, xoá, tuỳ"; mục này viết kiểu Apple "hủy, xóa, tùy".
 
 ## Nên và không nên
 

@@ -140,8 +140,6 @@ after the user clicks the panel.
 - Synced with the detailed design (September 25, 2026): CALL-04 field 1 puts the call log in the
   sidebar of the Messages window; CAM-03 uses the Camera submenu in `MenuBarMenu` and the Camera
   Preview window.
-- The Vietnamese detailed design writes "Huỷ"; the Vietnamese version of this page uses the Apple style
-  "Hủy".
 
 ## Dos and don'ts
 
