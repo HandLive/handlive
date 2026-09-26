@@ -753,8 +753,10 @@ CREATE TABLE consent_record (
 CREATE UNIQUE INDEX consent_record_active ON consent_record (feature, text_version) WHERE revoked_at IS NULL;
 ```
 
-iOS dùng cùng lược đồ, trừ `consent_record`. File nằm trong App Group container để I-APP và I-NSE
-dùng chung vị trí (I-NSE hiện không ghi DB).
+iOS dùng cùng lược đồ, trừ `consent_record`. File nằm trong vùng chứa riêng của I-APP (Application
+Support), không nằm trong App Group container: I-NSE không bao giờ mở file này (nó đọc `PRK` qua nhóm
+keychain dùng chung và `sms.preview` từ `UserDefaults` của App Group), và iOS buộc dừng ứng dụng đang
+tạm ngưng mà còn giữ khóa SQLite trên một file trong vùng chứa dùng chung (0xDEAD10CC).
 
 ### 0.9.4 Relay — PostgreSQL 16 và Redis 7
 

@@ -543,8 +543,9 @@ Content-Type: application/json
      sổ đang được dùng.
   2. Hội thoại nhiều địa chỉ dùng danh mục `HL_SMS_GROUP`, chỉ có `HL_SMS_MARK_READ` (v1 không trả
      lời hội thoại nhóm — SMS-04 E9).
-  3. I-NSE đọc `sms.preview` từ `UserDefaults` của App Group, không ghi cơ sở dữ liệu (0.9.3); không
-     đọc được khóa hoặc giải mã lỗi → giữ nội dung mặc định và nhóm chung `sms`, không đặt danh mục (E4).
+  3. I-NSE đọc `sms.preview` từ `UserDefaults` của App Group, không bao giờ mở cơ sở dữ liệu (0.9.3);
+     không đọc được khóa hoặc giải mã lỗi → giữ nội dung mặc định và nhóm chung `sms`, không đặt danh
+     mục (E4).
   4. Thông báo được gỡ khi hội thoại đã đọc trên điện thoại (SMS-05) hoặc được mở trên thiết bị
      (SMS-03).
 

@@ -554,7 +554,7 @@ Content-Type: application/json
      conversation is open in the window in use.
   2. Conversations with several addresses use the category `HL_SMS_GROUP`, which has only
      `HL_SMS_MARK_READ` (v1 does not reply to group conversations — SMS-04 E9).
-  3. I-NSE reads `sms.preview` from the App Group's `UserDefaults` and does not write to the database
+  3. I-NSE reads `sms.preview` from the App Group's `UserDefaults` and never opens the database
      (0.9.3); if it cannot read the keys or decryption fails → keep the default content and the
      generic `sms` group, and set no category (E4).
   4. Notifications are removed when the conversation has been read on the phone (SMS-05) or opened

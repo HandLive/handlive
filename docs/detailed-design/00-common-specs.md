@@ -762,8 +762,10 @@ CREATE TABLE consent_record (
 CREATE UNIQUE INDEX consent_record_active ON consent_record (feature, text_version) WHERE revoked_at IS NULL;
 ```
 
-iOS uses the same schema, except `consent_record`. The file lives in the App Group container so that
-I-APP and I-NSE share its location (I-NSE currently does not write to the DB).
+iOS uses the same schema, except `consent_record`. The file lives in I-APP's own container
+(Application Support), not in the App Group container: I-NSE never opens it (it reads `PRK` through the
+shared keychain group and `sms.preview` from the App Group's `UserDefaults`), and iOS terminates a
+suspended app that holds an SQLite lock on a file in a shared container (0xDEAD10CC).
 
 ### 0.9.4 Relay — PostgreSQL 16 and Redis 7
 
