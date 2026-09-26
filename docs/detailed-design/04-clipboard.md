@@ -376,7 +376,7 @@ override fun onClick() {
 | `mime` | enum{text/plain\| image/png\| image/jpeg} | Yes | `text/plain` is always UTF-8 |
 | `text` | string | When `kind = text` and sent inline | The whole text; envelope plaintext ≤ `CLIP_INLINE_MAX` |
 | `transfer` | object | When `kind = image` or the text goes in chunks | `{transfer_id, size, sha256, chunk_size, chunk_count}` — specified in CLIP-03 API 3 |
-| `width`, `height` | int32 | Images only | Size in pixels |
+| `width`, `height` | int32 | When `kind = image` | Size in pixels; required for every image, absent for text |
 | `sensitive` | bool | Yes | `true` only when the user chose "Send Anyway" (QC3) |
 | `origin_ts` | timestamp | Yes | When the content was read on the origin device (origin device clock); used only for QC8 (b) |
 | `source` | enum{auto\| manual\| share\| mac\| ios} | Yes | How the clip was created: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
@@ -1149,16 +1149,16 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | "Send Clipboard to Phone" card | view | Output | Shown on the main screen when `feature.clipboard = true` | Title "Send to \<phone name>" with the system Paste button (field 2) |
+| 1 | "Send Clipboard to Phone" card | view | Output | Shown on the main screen when `feature.clipboard = true` | Title "Send to \<phone name>" with the system Paste button (field 2) and the one-line hint "Tap Paste to send what you just copied." under it |
 | 2 | System Paste button | action (`UIPasteControl` / `PasteButton`) | Input | Enabled by the system when the clipboard has an accepted type | Label and icon set by the system ("Paste"); a tap sends right away |
-| 3 | Suggestion banner | string | Output | Hidden | "The iPhone clipboard has new content — paste to send it to Lan's Pixel" (or "…has a new image…" when `hasImages`); with a close button |
+| 3 | Suggestion banner | string | Output | Hidden | "The iPhone clipboard has new content — paste to send it to Lan's Pixel" (or "…has a new image…" when `hasImages`); "iPhone" stands for `{device_type}` = "iPhone" or "iPad" from `UIDevice.current.model`, never translated; with a close button |
 | 4 | Card connection state | enum{connected\| disconnected} | Output | Per session | `disconnected` → "Not connected to the phone", Paste button disabled |
 | 5 | Send result | string | Output | — | "Sent to \<phone name>" or "Couldn't send. Try again." |
 | 6 | Image send/receive progress | int32 (%) | Output | 0 | Images > 1 MiB, with a "Cancel" button (CLIP-03 fields 2–4) |
 | 7 | Content error message | string | Output | — | "Only text or images can be sent" (E3), "Content is too large to send (up to 1 MB of text, 10 MB for images)" (E4) |
 | 8 | Conflict notification | string | Output | — | Same as CLIP-01 field 12, with the phone's name |
 | 9 | "Send Again" button | action | Input | — | Same as CLIP-01 field 13 |
-| 10 | Clipboard content after receiving | string or image | Output | The content just received | Can be pasted in other apps; on this device only; expires by itself (CLIP-05) |
+| 10 | Clipboard content after receiving | string or image | Output | The content just received | Can be pasted in other apps; on this device only; expires by itself (CLIP-05)<br>The Clipboard tab shows the last content received (`PasteCard`); before anything arrives: "Nothing Received Yet" · "Content copied on the phone or Mac appears here while HandLive is open." |
 
 ### 4.4.4 Business flow
 
@@ -1269,7 +1269,8 @@ defaults.set(ownWriteChangeCount, forKey: "clip.seen_change_count")
      calls `string`, `image`, `url`, `items` of `UIPasteboard`.
   2. `changeCount` differs from `clip.seen_change_count` and from the `changeCount` of HandLive's latest
      write → there is unsent local content (E2), show the banner; `hasStrings`, `hasImages`, `hasURLs`
-     are used only to pick the banner wording.
+     are used only to pick the banner wording. The device word of the banner (`{device_type}`) is
+     `UIDevice.current.model` ("iPhone" or "iPad"), never translated.
   3. Save the seen `changeCount` in `clip.seen_change_count` (App Group UserDefaults) so that the next
      app launch can still compare; after a device restart `changeCount` may be smaller than the saved
      value → still treated as different.

@@ -368,7 +368,7 @@ override fun onClick() {
 | `mime` | enum{text/plain\| image/png\| image/jpeg} | Có | `text/plain` luôn là UTF-8 |
 | `text` | string | Khi `kind = text` và gửi thẳng | Toàn bộ văn bản; plaintext envelope ≤ `CLIP_INLINE_MAX` |
 | `transfer` | object | Khi `kind = image` hoặc văn bản đi theo chunk | `{transfer_id, size, sha256, chunk_size, chunk_count}` — đặc tả ở CLIP-03 API 3 |
-| `width`, `height` | int32 | Chỉ ảnh | Kích thước điểm ảnh |
+| `width`, `height` | int32 | Khi `kind = image` | Kích thước điểm ảnh; bắt buộc với mọi ảnh, không có với văn bản |
 | `sensitive` | bool | Có | `true` chỉ khi người dùng chọn "Vẫn gửi" (QC3) |
 | `origin_ts` | timestamp | Có | Thời điểm nội dung được đọc trên thiết bị gốc (đồng hồ thiết bị gốc); chỉ dùng cho QC8 (b) |
 | `source` | enum{auto\| manual\| share\| mac\| ios} | Có | Đường tạo clip: Android `auto`/`manual`/`share`; Mac `mac`; iOS `ios` |
@@ -1119,7 +1119,7 @@ UserDefaults.standard.integer(forKey: "clip.auto_clear_s")      # bước 11 (Ma
 | Tác nhân | Chính: Người dùng. Hệ thống: I-APP, OS (`UIPasteboard`, `UIPasteControl`), A-SVC, A-CLIP, M-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1. I-APP đã ghép nối (PAIR-01), đang foreground và có phiên `/v1/ctl` (CONN-01/CONN-03) với clipboard hiệu lực (QC1). 2. iOS/iPadOS 16+. |
 | Điều kiện sau | **Nhận:** `UIPasteboard.general` chứa clip, chỉ trên máy này, hết hạn theo CLIP-05; I-APP nhớ `changeCount` sau khi ghi (QC4) và lưu vào `clip.seen_change_count`.<br>**Gửi:** clipboard Android chứa nội dung và đã chuyển tiếp tới Mac nếu Mac đang kết nối; I-APP hiện "Đã gửi tới <tên điện thoại>", ẩn banner. |
-| Ngoại lệ | E1 — I-APP ở nền hoặc bị treo: không nhận gì; quay lại foreground khi clip mới nhất còn trong 120 s thì nhận (QC7), quá hạn thì không.<br>E2 — Lúc I-APP active, `changeCount` khác giá trị đã thấy và không phải lần ghi của HandLive (có nội dung sao chép tại chỗ chưa gửi): `push` đến trong 5 s đầu sau khi phiên được lập không được ghi (giữ nội dung tại chỗ, `ack` `ignored`/`conflict`, không gửi `clipboard/conflict`); banner gợi ý hiện để người dùng gửi.<br>E3 — Nội dung dán không phải văn bản, URL hay ảnh hỗ trợ: `CLIP_UNSUPPORTED_MIME`, báo "Chỉ gửi được văn bản hoặc ảnh".<br>E4 — Quá 1 MiB văn bản hoặc 10 MiB ảnh: `CLIP_TOO_LARGE`, thông báo.<br>E5 — Không có phiên: nút Dán bị vô hiệu, thẻ hiện "Chưa kết nối với điện thoại".<br>E6 — Android xung đột (QC8): nhận `clipboard/conflict` → thông báo có "Gửi lại".<br>E7 — `clip.send_images = false`: nút Dán chỉ nhận văn bản và URL; ảnh đến bị chặn từ phía gửi qua `mimes` (QC1).<br>E8 — Lỗi truyền ảnh hoặc văn bản lớn: theo CLIP-03 E4–E9.<br>E9 — Không có `ack` trong 10 s: báo "Gửi không thành công, thử lại"; I-APP không phát lại tự động. |
+| Ngoại lệ | E1 — I-APP ở nền hoặc bị treo: không nhận gì; quay lại foreground khi clip mới nhất còn trong 120 s thì nhận (QC7), quá hạn thì không.<br>E2 — Lúc I-APP active, `changeCount` khác giá trị đã thấy và không phải lần ghi của HandLive (có nội dung sao chép tại chỗ chưa gửi): `push` đến trong 5 s đầu sau khi phiên được lập không được ghi (giữ nội dung tại chỗ, `ack` `ignored`/`conflict`, không gửi `clipboard/conflict`); banner gợi ý hiện để người dùng gửi.<br>E3 — Nội dung dán không phải văn bản, URL hay ảnh hỗ trợ: `CLIP_UNSUPPORTED_MIME`, báo "Chỉ gửi được văn bản hoặc ảnh".<br>E4 — Quá 1 MiB văn bản hoặc 10 MiB ảnh: `CLIP_TOO_LARGE`, thông báo.<br>E5 — Không có phiên: nút Dán bị vô hiệu, thẻ hiện "Chưa kết nối với điện thoại".<br>E6 — Android xung đột (QC8): nhận `clipboard/conflict` → thông báo có "Gửi lại".<br>E7 — `clip.send_images = false`: nút Dán chỉ nhận văn bản và URL; ảnh đến bị chặn từ phía gửi qua `mimes` (QC1).<br>E8 — Lỗi truyền ảnh hoặc văn bản lớn: theo CLIP-03 E4–E9.<br>E9 — Không có `ack` trong 10 s: báo "Gửi không thành công, thử lại."; I-APP không phát lại tự động. |
 | Yêu cầu đặc biệt | **Quyền riêng tư iOS 16+:** I-APP không gọi API đọc nội dung `UIPasteboard` (`string`, `image`, `url`, `items`…) nên không bao giờ gây hộp thoại "Cho phép dán"; chỉ dùng `changeCount`, `hasStrings`, `hasImages`, `hasURLs` (không đọc nội dung) và nút Dán của hệ thống (thao tác của người dùng).<br>Ghi clipboard không cần quyền. `.localOnly` chặn Universal Clipboard.<br>Không truy cập clipboard khi ở nền; I-NSE không xử lý clipboard.<br>**Hiệu năng:** khi đã có phiên như QC9; kết nối lại khi mở ứng dụng theo mục tiêu < 3 s của CONN-01.<br>**iPadOS:** chạy như nhau ở Split View, Stage Manager khi scene đang foreground. |
 
 ### 4.4.2 Màn hình
@@ -1130,16 +1130,16 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Thẻ "Gửi bảng nhớ tạm sang điện thoại" | view | Output | Hiện trên màn hình chính khi `feature.clipboard = true` | Tiêu đề "Gửi sang <tên điện thoại>" kèm nút Dán hệ thống (trường 2) |
+| 1 | Thẻ "Gửi bảng nhớ tạm sang điện thoại" | view | Output | Hiện trên màn hình chính khi `feature.clipboard = true` | Tiêu đề "Gửi sang <tên điện thoại>" kèm nút Dán hệ thống (trường 2) và dòng hướng dẫn "Chạm Dán để gửi nội dung vừa sao chép." ngay dưới nút |
 | 2 | Nút Dán của hệ thống | action (`UIPasteControl` / `PasteButton`) | Input | Hệ thống tự bật khi clipboard có kiểu được nhận | Nhãn và biểu tượng do hệ thống đặt ("Dán"); chạm là gửi ngay |
-| 3 | Banner gợi ý | string | Output | Ẩn | "Bảng nhớ tạm trên iPhone có nội dung mới — dán để gửi sang Pixel của Lan" (hoặc "…có ảnh mới…" khi `hasImages`); có nút đóng |
+| 3 | Banner gợi ý | string | Output | Ẩn | "Bảng nhớ tạm trên iPhone có nội dung mới — dán để gửi sang Pixel của Lan" (hoặc "…có ảnh mới…" khi `hasImages`); "iPhone" là `{device_type}` = "iPhone" hoặc "iPad" lấy từ `UIDevice.current.model`, không dịch; có nút đóng |
 | 4 | Trạng thái kết nối của thẻ | enum{connected\| disconnected} | Output | Theo phiên | `disconnected` → "Chưa kết nối với điện thoại", nút Dán vô hiệu |
-| 5 | Kết quả gửi | string | Output | — | "Đã gửi tới <tên điện thoại>" hoặc "Gửi không thành công, thử lại" |
+| 5 | Kết quả gửi | string | Output | — | "Đã gửi tới <tên điện thoại>" hoặc "Gửi không thành công, thử lại." |
 | 6 | Tiến trình gửi/nhận ảnh | int32 (%) | Output | 0 | Ảnh > 1 MiB, kèm nút "Hủy" (CLIP-03 trường 2–4) |
 | 7 | Thông báo lỗi nội dung | string | Output | — | "Chỉ gửi được văn bản hoặc ảnh" (E3), "Nội dung quá lớn để gửi (tối đa 1 MB văn bản, 10 MB ảnh)" (E4) |
 | 8 | Thông báo xung đột | string | Output | — | Như CLIP-01 trường 12, với tên điện thoại |
 | 9 | Nút "Gửi lại" | action | Input | — | Như CLIP-01 trường 13 |
-| 10 | Nội dung clipboard sau khi nhận | string hoặc image | Output | Nội dung vừa nhận | Dán được trong ứng dụng khác; chỉ trên máy này; tự hết hạn (CLIP-05) |
+| 10 | Nội dung clipboard sau khi nhận | string hoặc image | Output | Nội dung vừa nhận | Dán được trong ứng dụng khác; chỉ trên máy này; tự hết hạn (CLIP-05)<br>Tab Bảng nhớ tạm hiện nội dung nhận gần nhất (`PasteCard`); khi chưa nhận gì: "Chưa nhận gì" · "Nội dung sao chép trên điện thoại hoặc Mac sẽ hiện ở đây khi HandLive đang mở." |
 
 ### 4.4.4 Luồng nghiệp vụ
 
@@ -1248,7 +1248,8 @@ defaults.set(ownWriteChangeCount, forKey: "clip.seen_change_count")
      không gọi `string`, `image`, `url`, `items` của `UIPasteboard`.
   2. `changeCount` khác `clip.seen_change_count` và khác `changeCount` của lần ghi gần nhất của
      HandLive → có nội dung tại chỗ chưa gửi (E2), hiện banner; `hasStrings`, `hasImages`, `hasURLs`
-     chỉ dùng để chọn câu chữ banner.
+     chỉ dùng để chọn câu chữ banner. Tên loại máy trong banner (`{device_type}`) lấy từ
+     `UIDevice.current.model` ("iPhone" hoặc "iPad"), không dịch.
   3. Lưu `changeCount` đã thấy vào `clip.seen_change_count` (UserDefaults của App Group) để lần mở
      ứng dụng sau vẫn so được; sau khi khởi động lại máy `changeCount` có thể nhỏ hơn giá trị đã lưu
      → vẫn coi là khác.
