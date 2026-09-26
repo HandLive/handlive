@@ -161,10 +161,14 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
     người gửi và phát lại `env` nguyên từng byte, không tuần tự hóa lại:
     `{"from":"<device_id>","env":<env gốc>}`. Với khung `HR`, relay thay `device_id` đích bằng
     `device_id` nguồn và chuyển khung HL đi nguyên vẹn.
+  - Ngoại lệ duy nhất là điểm hẹn ghép nối (`rv_msg`, PAIR-01 API 7). Ở đó relay đọc `env.type` và
+    đọc payload `pair` chưa mã hóa (giải b64) để chặn `pair/hello` có `mode = "pin"`, vì ghép bằng
+    PIN chỉ dùng trong LAN.
 
 ### 0.4.4 Push (P2)
 
-- **Android (FCM):** data message ưu tiên cao, TTL 60 s, **không chứa nội dung**:
+- **Android (FCM):** data message ưu tiên cao, TTL tối đa 60 s (relay giới hạn `ttl_s`),
+  `collapse_key` là `wake`, **không chứa nội dung**:
   `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
 - **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung, gửi bằng `loc-key` (khóa catalog nhóm `push`, 0.12.4) để iPhone tự dịch; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. `hl` là base64 chuẩn có padding của JSON envelope dạng UTF-8, cùng chuỗi với `env_b64` của `POST /v1/push` (CONN-04 API 2), dài ≤ 3 000 ký tự base64. Tổng payload ≤ 4 KB.
 - Mac không đăng ký push; khi thức dậy, M-APP kết nối lại và đồng bộ theo con trỏ.
@@ -356,7 +360,9 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 - Không log nội dung (clipboard, SMS, số điện thoại, tên liên hệ) ở bất kỳ thành phần nào.
 - SQLite trên Mac/iOS mã hóa bằng SQLCipher (qua GRDB); khóa 32 byte trong Keychain.
 - Chữ ký Ed25519 kiểm chặt: đúng 64 byte và S < L (RFC 8032 §5.1.7); không dùng hàm kiểm dễ dãi (vector âm trong `shared/test-vectors/ed25519.json`). Bộ ký có thể thêm ngẫu nhiên (CryptoKit): chữ ký khác từng byte nhưng vẫn hợp lệ, nên không bên nào so chữ ký theo byte — luôn kiểm bằng khóa công khai.
-- Relay chỉ lưu thống kê theo `device_hash` = SHA-256(`device_id` ‖ muối theo tháng), giữ 30 ngày.
+- Relay chỉ lưu thống kê theo `device_hash` = SHA-256(`device_id` 16 byte ‖ muối theo tháng), giữ 30
+  ngày. Muối là 32 byte ngẫu nhiên, chỉ lưu trong Redis (`usage_salt:<YYYY-MM>`, 0.9.4). Khi muối hết
+  hạn thì không còn nối được các mã băm với nhau. Redis khởi động lại giữa tháng thì dùng muối mới.
 
 ## 0.7 Danh mục loại tin
 
@@ -478,9 +484,9 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | POST | `/v1/auth/challenge` | — | Lấy challenge | CONN-03 |
 | POST | `/v1/auth/token` | — | Đổi chữ ký lấy JWT | CONN-03 |
 | PUT | `/v1/devices/me/push-token` | JWT | Cập nhật push token | CONN-04 |
-| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Xóa thiết bị khỏi relay. `false`: gỡ đăng ký im lặng, các cặp vẫn dùng được trong LAN. `true`: thu hồi mọi cặp và báo đối phương | SET-02 |
+| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Xóa thiết bị khỏi relay. `false`: gỡ đăng ký im lặng, các cặp vẫn dùng được trong LAN. `true`: thu hồi mọi cặp và báo đối phương. Thiếu `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
 | POST | `/v1/pairs` | JWT | Đăng ký cặp (bản chứng thực + 2 chữ ký) | PAIR-01 |
-| GET | `/v1/pairs` | JWT | Danh sách cặp của thiết bị | PAIR-02, CONN-03 |
+| GET | `/v1/pairs` | JWT | Danh sách cặp của thiết bị; `?include_revoked=` chỉ nhận `true` hoặc `false`, giá trị khác → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
 | POST | `/v1/pairs/{pair_id}/revoke` | JWT | Thu hồi cặp | PAIR-03 |
 | POST | `/v1/push` | JWT | Gửi push tới thiết bị cùng cặp | CONN-04 |
 | GET (WS) | `/v1/relay` | JWT | Kênh relay | CONN-03 |
@@ -805,6 +811,9 @@ Khóa Redis `[Thiết kế]`:
 | `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
 | `rl:<device_id>:<nhóm>:<phút>` | counter | 120 s | Rate limit |
 | `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2) |
+| `usage_salt:<YYYY-MM>` | string (32 byte ngẫu nhiên) | 40 ngày | Muối theo tháng của `device_hash` (0.6.5), chỉ lưu ở đây |
+| `maintenance:<ngày>` | string (khóa) | 25 h | Chỉ instance lấy được khóa mới chạy dọn dữ liệu hằng ngày |
+| `wake:<device_id>:<lý do>` | string | 300 s | Gộp các push `wake` lặp cùng lý do (CONN-04 API 2); nhả khi gửi lỗi |
 
 Việc dọn dữ liệu chạy hằng ngày:
 
@@ -889,7 +898,7 @@ SET-02 quản lý các khóa này.
 | `CALLLOG_SYNC_WINDOW` | 90 ngày, tối đa 500 mục |  |
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 phút / 60 s |  |
 | `RELAY_IDLE_DISCONNECT` | 5 phút | Android tự ngắt relay khi rảnh |
-| `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp |  |
+| `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp mỗi chiều |  |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2,5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
 | `CAM_STATS_INTERVAL` | 1 s |  |

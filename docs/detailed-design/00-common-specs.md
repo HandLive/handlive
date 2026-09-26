@@ -163,10 +163,14 @@ through TXT.
     `device_id` and re-emits `env` byte for byte, never re-serialized:
     `{"from":"<device_id>","env":<raw env>}`. In an `HR` frame it puts the source `device_id` in place
     of the destination one and forwards the HL frame unchanged.
+  - The only exception is the pairing rendezvous (`rv_msg`, PAIR-01 API 7): there the relay reads
+    `env.type` and decodes the unencrypted `pair` payload to block a `pair/hello` with
+    `mode = "pin"`, because PIN pairing is LAN-only.
 
 ### 0.4.4 Push (P2)
 
-- **Android (FCM):** high-priority data message, TTL 60 s, **no content**:
+- **Android (FCM):** high-priority data message, TTL at most 60 s (the relay caps `ttl_s`),
+  `collapse_key` `wake`, **no content**:
   `{"t":"wake","p":"<pair_id>","r":"<reason>"}`.
 - **iOS (APNs):** `alert` push, `mutable-content: 1`, `apns-priority: 10`. The default displayed content is generic and is sent as a `loc-key` (a catalog key of the `push` group, 0.12.4) so the iPhone translates it itself; the `hl` field carries the envelope encrypted with `K_push` for I-NSE to decrypt and replace the content. `hl` is standard base64 with padding of the UTF-8 envelope JSON, the same string as `env_b64` of `POST /v1/push` (CONN-04 API 2), ≤ 3,000 characters of base64. Total payload ≤ 4 KB.
 - The Mac does not register for push; when it wakes up, M-APP reconnects and syncs from its cursors.
@@ -362,8 +366,9 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 - No component logs content (clipboard, SMS, phone numbers, contact names).
 - SQLite on Mac/iOS is encrypted with SQLCipher (through GRDB); 32-byte key in the Keychain.
 - Ed25519 signatures are verified strictly: exactly 64 bytes and S < L (RFC 8032 §5.1.7); never use a lax verifier (negative vectors in `shared/test-vectors/ed25519.json`). Signers may add randomness (CryptoKit does): signatures then differ byte for byte but stay valid, so no side compares signatures as bytes — always verify with the public key.
-- The relay only keeps statistics per `device_hash` = SHA-256(`device_id` ‖ monthly salt), for 30
-  days.
+- The relay only keeps statistics per `device_hash` = SHA-256(16-byte `device_id` ‖ monthly salt),
+  for 30 days. The salt is 32 random bytes kept only in Redis (`usage_salt:<YYYY-MM>`, 0.9.4): once
+  it expires the hashes can no longer be linked, and a Redis restart mid-month starts a new salt.
 
 ## 0.7 Message type catalog
 
@@ -487,9 +492,9 @@ Examples in the function groups may quote only the relevant part.
 | POST | `/v1/auth/challenge` | — | Get a challenge | CONN-03 |
 | POST | `/v1/auth/token` | — | Exchange a signature for a JWT | CONN-03 |
 | PUT | `/v1/devices/me/push-token` | JWT | Update the push token | CONN-04 |
-| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Remove the device from the relay. `false`: silent deregistration, the pairs stay usable on the LAN. `true`: revoke every pair and notify the peers | SET-02 |
+| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Remove the device from the relay. `false`: silent deregistration, the pairs stay usable on the LAN. `true`: revoke every pair and notify the peers. Without `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
 | POST | `/v1/pairs` | JWT | Register a pair (attestation + 2 signatures) | PAIR-01 |
-| GET | `/v1/pairs` | JWT | List the device's pairs | PAIR-02, CONN-03 |
+| GET | `/v1/pairs` | JWT | List the device's pairs; `?include_revoked=` takes only `true` or `false`, any other value → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
 | POST | `/v1/pairs/{pair_id}/revoke` | JWT | Revoke a pair | PAIR-03 |
 | POST | `/v1/push` | JWT | Send a push to a device of the same pair | CONN-04 |
 | GET (WS) | `/v1/relay` | JWT | Relay channel | CONN-03 |
@@ -815,6 +820,9 @@ Redis keys `[Design]`:
 | `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 days | Pairs revoked because the peer deleted all of its data (`DELETE /v1/devices/me?revoke_pairs=true`, the `pairs` row has already been deleted); `pair_revoked` is sent when the device connects to the relay, then the key is deleted |
 | `rl:<device_id>:<group>:<minute>` | counter | 120 s | Rate limit |
 | `rl:ip:<ip>:reg:<hour>` | counter | 3,600 s | 10 new registrations/hour/IP (CONN-03 API 1); the IP is taken from `X-Forwarded-For` only when the request comes from a trusted reverse proxy (Phase 2) |
+| `usage_salt:<YYYY-MM>` | string (32 random bytes) | 40 days | Monthly salt of `device_hash` (0.6.5), kept only here |
+| `maintenance:<day>` | string (lock) | 25 h | Only the instance that takes it runs the daily cleanup |
+| `wake:<device_id>:<reason>` | string | 300 s | Coalesces repeated `wake` pushes with the same reason (CONN-04 API 2); released when the send fails |
 
 Data cleanup runs daily:
 
@@ -899,7 +907,7 @@ SET-02 function manages these keys.
 | `CALLLOG_SYNC_WINDOW` | 90 days, at most 500 entries |  |
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 minutes / 60 s |  |
 | `RELAY_IDLE_DISCONNECT` | 5 minutes | Android disconnects from the relay by itself when idle |
-| `RELAY_RATE_LIMIT` | REST 60/minute, push 30/minute, 2 MiB/s per pair |  |
+| `RELAY_RATE_LIMIT` | REST 60/minute, push 30/minute, 2 MiB/s per pair and direction |  |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2.5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
 | `CAM_STATS_INTERVAL` | 1 s |  |
