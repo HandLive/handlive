@@ -203,6 +203,12 @@ HLMacUI 32, HLiOSUI 12), "Done linting! Found 0 violations, 0 serious in 302 fil
 
 - On the Mac, "View Instructions" opens an alert but has no ellipsis: the catalog has only `common.view_instructions`,
   and the design system names the button without one. Proposal: accept, or add a Mac `…_ellipsis` key.
+- Resolved (shared 9014a1d): every Mac "View Instructions" button now reads "View Instructions…"
+  (`common.view_instructions_ellipsis`, chosen with `#if os(macOS)` in HLSMSUI's `SmsInstructionsButton`: Settings ›
+  Messages, the sync banner, above a conversation, the device details), iPhone and iPad keep `common.view_instructions`
+  — handlive-apple 27b101a "feat(apple): regenerate the String Catalogs from handlive-shared 9014a1d", 5a73597
+  "feat(apple): end View Instructions with an ellipsis on the Mac"; `--check` OK, HLSMSUI 11 / HLMacUI 32 / HLiOSUI 12 /
+  HLLocalization 9 tests passed, SwiftLint 0 violations in 302 files, CI run 36238821075 success (all targets).
 
 Status: DONE_WITH_CONCERNS
 Summary: The Mac reaches the phone through the relay (REST, pins, `/v1/relay`, rendezvous pairing, wake pushes,
