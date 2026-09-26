@@ -97,5 +97,6 @@ và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md
 
 Phase 0 và mã Phase 1 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`,
 `phase-01-*.md`) → cổng G1 (còn mở): chạy ma trận thiết bị của `shared/tools/bench/README.md` trên điện thoại và
-Mac thật; Phase 1 đã gộp vào `main` → Phase 2 (SMS, app iOS, relay, push). Xem
+Mac thật; Phase 1 đã gộp vào `main` → Phase 2 (SMS, app iOS, relay, push), đang làm trên nhánh
+`feat/phase-02-sms-ios-relay`. Xem
 `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.

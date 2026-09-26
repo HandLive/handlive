@@ -97,5 +97,6 @@ repository's commands. Module details and task cards: `plans/20260925-implementa
 
 Phase 0 and the Phase 1 code are done (reports: `plans/20260925-implementation/reports/phase-00-*.md`,
 `phase-01-*.md`) → gate G1 (open): run the device matrix of `shared/tools/bench/README.md` on real phones and Macs;
-Phase 1 is already merged into `main` → Phase 2 (SMS, iOS app, relay, push). See
+Phase 1 is already merged into `main` → Phase 2 (SMS, iOS app, relay, push), in progress on
+`feat/phase-02-sms-ios-relay`. See
 `plans/20260925-implementation/plan.md` and `docs/project-roadmap.md`.
