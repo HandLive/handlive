@@ -124,6 +124,91 @@ payload against `push.schema.json`; no envelope, token or id in any log record.
   `RELAY_APNS_*`), locked and unlocked, including the 50-minute provider-token renewal on a long-running relay.
 - FCM wake reaches a real Android phone (needs a Firebase project and a service account; `RELAY_FCM_*`).
 
-Status: DONE_WITH_CONCERNS
-Summary: relay-push sends FCM wakes and APNs alerts exactly as CONN-04 API 3–4 (HTTP/2, ES256 provider token, OAuth2 service account, loc-key only), and POST /v1/push checks pair, platform, token, limits and coalescing with the spec's error mapping; tested against local mock providers, the shared push vectors and schemas, in CI.
-Concerns/Blockers: push_outbox stays on the phone as the detailed design defines it (card and spec disagree); the SMS thread-id cannot be produced by the relay (schema/vectors need a decision); the real-iPhone < 2 s check needs Apple credentials.
+## Follow-up (after spec sync 1 and shared sync 1)
+
+Coordinator decisions applied: `push_outbox` stays on the phone (the relay retries once, then 502; dead tokens 409),
+and the APNs `thread-id` is the generic `sms` for SMS pushes. Hub `main` up to 427d911 (batches 2–3 of
+`phase-02-spec-sync-1.md`), handlive-shared b07271f (`phase-02-shared-sync-1.md`). Temporary PostgreSQL/Redis started
+again for this work and stopped afterwards.
+
+**Re-check against the batch 2/3 wording.** Already matching, no change: CONN-03 API 6 logic 2–6 (NOT_PAIRED also for
+the sender itself, `from` ignored, `env` byte for byte, 256 KiB, 2 MiB/s per pair and direction, NOT_CONNECTED from 0
+receivers or a failed publish), CONN-04 API 2–4 except the TTL default (errors, `collapse_key` visible ASCII
+0x21–0x7E, FCM `wake` / min(ttl_s, 60), one retry after 500 ms, 409 for dead tokens, 400/403 → 502, `sound`),
+0.9.4 Redis keys, 0.6.5 salt, PAIR-01 API 7 (NOT_CONNECTED without another member, recreated `rv_id`, PIN block) and
+API 8 (400 platforms, 404 locked out), SET-02 API 2 logic 5 (presence deleted before the close), 0.7.4 400s. Gaps
+found and fixed:
+
+1. **CONN-04 API 2** `ttl_s` default for `call_incoming` 60 → 30 (09554d6).
+2. **CONN-03 API 6 logic 1**: a malformed wrapper got `BAD_REQUEST` with its `to` when the `to` was a valid device id
+   but `env` was missing or not an object → now never with `to` (fc4351e); an oversized wrapper whose `to` is not a
+   device id echoed that `to` in `PAYLOAD_TOO_LARGE` → the wrapper is now checked before the size (2887e28).
+3. **CONN-04 API 1** (batch 3 C4): only the APNs topic equal to `RELAY_APNS_TOPIC` is accepted; with APNs unconfigured
+   no topic matches, so no APNs token is stored and a push to that device answers 409 instead of 502 (2f9e5ac). Test
+   states that register APNs tokens use an "offline" APNs configuration (key generated once per test binary in Cargo's
+   target tmp directory, endpoints nobody listens on).
+4. **CONN-03 API 4 logic 6**: a write stuck for 10 s must drop the connection with 4500; the relay ended it silently
+   and did not bound pings and pongs, so a receiver that stopped reading could hold its task on a full session. Every
+   write is now bounded by `RelaySettings.write_timeout` (10 s) and a timeout ends the connection with 4500 (8dccdd2);
+   new test with a client that never reads: the connection is dropped, presence released, the phone told
+   (de9c7c3).
+5. READMEs: TTL defaults per reason and the topic rule (5770372).
+
+**Shared vectors and schemas (step 2).** `push-envelope.json` now has 8 push requests (thread-id `sms`,
+`collapse_key` `sms:12847`, call `ttl_s` 30, five SMS text-cut cases). The APNs request the relay sends for each equals
+the vector exactly — headers, `apns-expiration` = now + `ttl_s`, payload — and every SMS and call payload passes
+`push#apns-payload`; the "only difference" exceptions are gone from `shared_push_vectors.rs` and `shared_schemas.rs`
+(f87b18b; comment in `payload.rs`, bd2e31b). No relay code change was needed for the schema updates (`BAD_REQUEST`
+without `to`, visible-ASCII `collapse_key`, `ttl_s` 0–86,400, FCM ttl/collapse), as the shared agent noted; the
+per-reason `ttl_s` pins of `push-request` are a sender profile, the relay keeps accepting the whole range.
+
+### Commits (handlive-relay, `feat/phase-02-sms-ios-relay`)
+
+| Hash | Subject |
+|------|---------|
+| 09554d6 | fix(relay): default incoming-call pushes to a 30 s TTL |
+| fc4351e | fix(relay): never echo the destination of a malformed wrapper |
+| 2f9e5ac | fix(relay): accept APNs tokens only for the configured topic |
+| 5770372 | docs: state the push TTL defaults and the APNs topic rule |
+| 8dccdd2 | fix(relay): drop a connection whose writes are stuck with 4500 |
+| de9c7c3 | test(relay): check that a receiver that stops reading is dropped |
+| 2887e28 | fix(relay): check the wrapper before the size of a text frame |
+| bd2e31b | docs(relay): describe the generic SMS thread-id as the spec now does |
+| f87b18b | test(relay): match the updated push vectors and schemas exactly |
+
+### Checks (real output)
+
+```text
+$ cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+fmt ok
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.64s
+tests/mock_providers.rs 4 passed · payload_and_verdicts.rs 5 · shared_push_vectors.rs 1 · limits_and_usage.rs 6
+tests/relay_wire_formats.rs 9 · shared_relay_vectors.rs 3 · shared_signature_vectors.rs 6 …
+→ 67 passed, 0 failed (all service-free tests)
+
+$ set -a && . ./.env.example && set +a && cargo test -- --ignored      (PostgreSQL 18 + Redis, local)
+Running tests/db_push_rest.rs        test result: ok. 3 passed; 0 failed
+Running tests/relay_log_privacy.rs   test result: ok. 1 passed; 0 failed
+Running tests/relay_ws_forwarding.rs test result: ok. 4 passed; 0 failed
+Running tests/relay_ws_lifecycle.rs  test result: ok. 7 passed; 0 failed   (5 repeated runs, all green)
+Running tests/shared_schemas.rs      test result: ok. 1 passed; 0 failed
+→ 36 passed, 0 failed (all integration tests)
+
+$ gh run view 36225756264 -R HandLive/handlive-relay        (head f87b18b)
+✓ commit đứng tên người thật · ✓ test tích hợp (PostgreSQL 16 + Redis 7) · ✓ fmt + clippy + test
+hub → main, handlive-shared → feat/phase-02-sms-ios-relay
+```
+
+### Notes
+
+- `rv_msg` for a rendezvous the sender is not in (never joined, or expired) answers `BAD_REQUEST`; PAIR-01 API 7
+  logic 5 only covers "no other member" (NOT_CONNECTED). Proposal: add this case to logic 5.
+- APNs 403 `ExpiredProviderToken` / `InvalidProviderToken`: the relay signs a new provider token and tries once more
+  before answering 502 (CONN-04 API 4 says "403 → configuration error, 502"; an expired provider token is not a
+  configuration error). Proposal: mention the renewal in API 4.
+- A dropped stalled receiver is unregistered and its presence released at once; its TCP socket is then closed by the
+  operating system when the peer or TCP gives up, which does not affect routing.
+
+Status: DONE
+Summary: relay-push sends FCM wakes and APNs alerts exactly as CONN-04 API 3–4, and POST /v1/push follows the settled contract (30 s call TTL, configured APNs topic only, generic thread-id, dead tokens 409, push_outbox on the phone); the follow-up closed four gaps against the synced specs, and the relay's APNs requests now equal the shared push vectors and schemas exactly; local and CI checks green.
+Concerns/Blockers: none; the real-iPhone (< 2 s) and real-Android push checks stay pending until Apple and Firebase credentials are available.
