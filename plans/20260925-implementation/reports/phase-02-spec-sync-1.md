@@ -1,7 +1,8 @@
-# Phase 2 — spec sync 1: decisions from the S2.1, S2.2, S2.3, T2.1 (batch 1), R2.1, R2.2 (batch 2) reports, the coordinator's answers (batch 3), the shared sync (batch 4) and the A2.1, A2.2 reports (batch 5)
+# Phase 2 — spec sync 1: decisions from the S2.1, S2.2, S2.3, T2.1 (batch 1), R2.1, R2.2 (batch 2) reports, the coordinator's answers (batch 3), the shared sync (batch 4), the A2.1, A2.2 reports (batch 5), the M2.1, M2.2, I2.1, I2.2 reports (batch 6) and the answers to its questions (batch 7)
 
 Hub `main`, both languages in every commit, pushed (`0d88586..340e1fe` batches 1–2, `340e1fe..32af250` batch 3,
-`7bf7f25..0978671` and `0978671..8868120` batch 4, `f67d57d..d7ed548` batch 5).
+`7bf7f25..0978671` and `0978671..8868120` batch 4, `f67d57d..d7ed548` batch 5, `b13b3ca..393196a` batch 6,
+`393196a..a3fc27b` batch 7).
 Nested repos (`android/`, `apple/`, `relay/`, `shared/`) untouched; shared tools run read-only.
 
 ## Batch 1 — decisions applied
@@ -113,6 +114,32 @@ Source: the "Spec deviations and proposals" of `phase-02-A2.1.md` (points 1, 2, 
 | E6 | 05 · SMS-04 API 4 logic 1, step 10; 00 · 0.10 `SMS_SEND_MATCH_WINDOW` note | The window of `SendRegistry.match`: an entry with the same address and text that is still waiting for its final result (`sent` = every part sent, or `failed`) or got it at most `SMS_SEND_MATCH_WINDOW` (60 s) ago |
 | E7 | 01 · SET-01 field 17; DS · 2-patterns/03-thong-bao (en, vi) | "Lan's MacBook needs SMS permission on this phone — tap to allow" / "MacBook của Lan cần quyền SMS trên điện thoại — chạm để cho phép", plus "(the same text whichever SMS permission is missing)". Wording taken from the existing `pairing.reason_missing_sms_permission` ("Missing SMS permission on the phone" / "Thiếu quyền SMS trên điện thoại") and matching the A2.1 proposal |
 
+## Batch 6 — decisions applied
+
+Source: the "Spec deviations and proposals" of `phase-02-M2.1.md` (2, 4, 5), `phase-02-M2.2.md` (3, 4),
+`phase-02-I2.1.md` (1, 3, 5). Apple code read on `feat/phase-02-sms-ios-relay` (read-only): `HLTransport`
+(`ConnectionStateMachine`, `ConnectionManager+Relay`, `+Supervise`), `HLSMS` (`SmsDatabase`, `SmsStore`), `HLAppCore`
+(`PairedDeviceStore`), `HLMacUI` (`MenuBarViews`, `ServerSettingsSections`, `AppModel+Messages`), `HLiOSUI`
+(`IOSSetupView`, `ClipboardTabView`, `DataSettingsSection`, `IOSRootView`, `IOSNotifying`, `IOSAppDelegate`).
+
+| # | Where | Change |
+|---|---|---|
+| F1 | 05 · SMS-02 field 6, SMS-05 field 4; 01 · SET-03 field 11, SET-02 field 28; 04 · CLIP-04 field 3 | VoiceOver text of the unread badge "3 unread conversations" / "3 hội thoại chưa đọc" (Mac: in the menu bar icon's label after the connection status; iOS: on the Messages tab), and both iOS places named (app icon and Messages tab). SET-03 field 11 title "How HandLive Works on iPhone and iPad" / "Cách HandLive hoạt động trên iPhone và iPad". CLIP-04 banner close button: `xmark`, VoiceOver "Close" / "Đóng" (the label the design system already gives `xmark`). SET-02 field 28: the confirmations are titled "Remove Device from Server" / "Delete All HandLive Data" (no ellipsis) on every platform, message = field 29, as the Mac `alert` and iOS `confirmationDialog` code does |
+| F2 | 05 · SMS-01 E2, field 7; DS · 2-patterns/05-phan-hoi-va-tai (en, vi) | Field 7 for E2: "Missing SMS permission on the phone" (what the apps show today) with "View Instructions", which opens an alert: title "Grant SMS Permission on Your Phone" / "Cấp quyền SMS trên điện thoại", message "On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS." / "Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Tin nhắn SMS, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép SMS.", one "OK". Every Android name is an existing catalog text (`settings.title`, `settings.permissions_background`, `settings.sms_messages`, `permission.grant`, `common.open_settings`) |
+| F3 | 01 · SET-03 step 2; 00 · 0.9.3 (file location); 05 · SMS-02 API 4 logic 3 | `handlive.sqlite` on iPhone/iPad lives in I-APP's own container (Application Support, as `SmsDatabase.defaultURL`), not in the App Group container: I-NSE never opens it (it reads `PRK` through the shared keychain group and `sms.preview` from the App Group's `UserDefaults`), and iOS terminates a suspended app holding an SQLite lock on a file in a shared container (0xDEAD10CC) |
+| F4 | 00 · 0.11 diagram + text | `WaitingPeer → Discovering` (a hint-matching mDNS instance: the phone is on the LAN) and `Connected → WaitingPeer`, `Handshaking → WaitingPeer` (a relayed session or handshake ends while the `/v1/relay` link stays up: the phone left, CONN-03 E8), as `ConnectionStateMachine` has them |
+| F5 | 00 · 0.9.3 intro, `paired_device` comment, five tables; 02 · PAIR-03 query comment | `paired_device` is not a table of `handlive.sqlite`: M-APP and I-APP keep the pairs in the sealed pair file of Phase 1 (`PairedDeviceStore`), so the tables carry `pair_id` without a foreign key and unpairing (PAIR-03 step 7, also run for every pair by SET-02 A4) deletes a pair's rows explicitly (`SmsStore.deletePair`) |
+| F6 | 02 · PAIR-01 field 3 | iOS 16+: `UIDevice.current.name` is only "iPhone"/"iPad" without `com.apple.developer.device-information.user-assigned-device-name`; until Apple grants it, the phone shows that generic name (the deployment guide already asks for the entitlement, hub b13b3ca) |
+
+## Batch 7 — decisions applied
+
+Source: the coordinator's answers to the two batch 6 questions.
+
+| # | Where | Change |
+|---|---|---|
+| G1 | 01 · SET-02 field 28; DS · components/Alert (en, vi), 2-patterns/04-cai-dat (en, vi) | Question titles on every platform, as the Alert README and the HIG ask: "Remove This Device from the Server?" / "Xóa thiết bị này khỏi máy chủ?" (field 26) and "Delete All HandLive Data?" / "Xóa toàn bộ dữ liệu HandLive?" (field 27); message = field 29, buttons = field 28 ("Remove from Server" / "Delete All" + "Cancel"). The Alert README row names the titles; the settings pattern has a line for the two confirmations next to the "Resync All SMS…" one. This replaces the batch 6 F1 titles |
+| G2 | 02 · PAIR-02 field 9; DS · 3-platforms/02-ios-ipados (en, vi), 2-patterns/05-phan-hoi-va-tai (en, vi), 2-patterns/04-cai-dat (en, vi) | Selecting a missing SMS permission (`READ_SMS`, `SEND_SMS`) opens the SMS-01 field 7 alert (`sms.permission_instructions_title` / `_body`, `common.ok`); the other permissions get their instructions with their phases. Design system: the iOS sheet "Instructions for granting permissions on the phone (PAIR-02 field 9)" is removed from the sheet table, the alert pattern names PAIR-02 field 9, and the settings pattern's "View Instructions" (Mac, iPhone) says it opens the SMS-01 field 7 alert |
+
 ## Deviations and interpretations (closest correct change)
 
 1. **24 (SMS-01 E6/E7):** text applied to E7 only. E6 is a provider read error on the phone; "…on this device" would be false.
@@ -146,7 +173,7 @@ Source: the "Spec deviations and proposals" of `phase-02-A2.1.md` (points 1, 2, 
     leaf specs: the SMS status "Waiting for phone" in 05-phan-hoi-va-tai (CONN-02's "2 messages waiting for the phone"
     is kept), the PasteCard not-connected state (CLIP-04 E5, API 4 logic 1: no queued resend on iPhone), and the
     SMS-03 E1 empty-state sentence. MessageBubble `preview.html` is left as is: it is an HTML preview, and showing a
-    two-part counter needs the multi-part `{limit}` rule (question 1).
+    two-part counter needs the multi-part `{limit}` rule (the batch 3 question, settled in 427d911).
 15. **D2 (batch 4), snippet step:** the brief says "only then cut `thread.snippet` to 160 code points without '…'".
     That is how SMS-01 builds the snippet, and it is now written in the SMS-01 `snippet` row. In the push, though, the
     Android code (`fitSnippet`) and the vector "crowded group conversation" (snippet 160 → 89 = 88 + "…") shorten the
@@ -164,6 +191,30 @@ Source: the "Spec deviations and proposals" of `phase-02-A2.1.md` (points 1, 2, 
     "Internet Connection", SET-02 field 21), as `SettingsScreen` does for E3 and as A2.2 proposed.
 19. **E6, 0.10:** `SMS_SEND_MATCH_WINDOW` (60 s) already existed in 0.10, contrary to A2.1 ("the spec gives no
     window"); the leaf texts lacked the "still waiting for the final result" half. The 0.10 note now says the same.
+20. **F1, iOS badge places:** SMS-02 field 6 and SMS-05 field 4 said "app icon (iOS)" while SMS-03 field 5 and the
+    design system say "Messages tab"; the iOS code does both (`setBadgeCount` and the tab's `.badge`), so both fields
+    name both. The Mac's `MenuBarIcon` label reads only the connection status today; the count goes after it.
+21. **F1, alert titles:** SET-02 field 28 now states the titles the Mac and iOS code use, on every platform. The Alert
+    README's content rule asks for a complete question as a title ("Unpair Lan's Pixel 8?"); these two are action
+    names (question 1). Superseded by G1 (batch 7): question titles with new keys.
+22. **F2, design system:** the alert pattern (2-patterns/05-phan-hoi-va-tai) allowed two jobs only; F2 creates an
+    informational alert, so the section is now "Alerts: only three jobs" with "instructions the user asked for" (the
+    Alert README already keeps "OK" for purely informational alerts). PAIR-02 field 9 ("select to see
+    instructions", a sheet on iOS per 3-platforms/02-ios-ipados) still has no text (question 2). Answered by G2.
+23. **F4, one more edge:** `.peerOffline` also leaves `Handshaking` over the relay (`ConnectionStateMachine`), so 0.11
+    has `Handshaking → WaitingPeer` besides `Connected → WaitingPeer`. The background LAN upgrade that replays the
+    0.11 events only on success (M2.2 point 4) is not written into 0.11: the `Connected → ConnectingLAN` edge stays.
+24. **F5, all five tables:** the reason (no `paired_device` table in `handlive.sqlite`) holds for every table of that
+    database, so `call_log_entry` (Phase 3) lost its foreign key too; Android's 0.9.2 keeps its foreign keys
+    (`paired_device` is a table there). `CREATE TABLE paired_device` stays in the SQL block as the record of the
+    sealed file, with a comment saying so.
+25. **G2, which permissions:** "when the missing permission is SMS" is read as `READ_SMS` and `SEND_SMS`, the ones
+    the alert's "allow SMS" fixes. `READ_CONTACTS` and `READ_PHONE_STATE` are Phase 2 permissions too but get no
+    instructions yet ("the other permissions come with their phases"); for contacts, SMS-01 field 8 already shows its
+    hint.
+26. **G2, the iOS sheet:** 3-platforms/02-ios-ipados listed a sheet (medium/large, grabber, `xmark`) for the PAIR-02
+    field 9 instructions; no spec asks for that sheet any more, so the row is removed in both languages rather than
+    left for the later phases.
 
 ## Commits (hub `main`)
 
@@ -197,6 +248,14 @@ Source: the "Spec deviations and proposals" of `phase-02-A2.1.md` (points 1, 2, 
 | 5d867af | docs(spec): keep one order of the SMS-04 refusal checks (batch 5: E5) |
 | 9bc1a1f | docs(spec): state the SMS_SEND_MATCH_WINDOW rule of the Sent-box match (batch 5: E6) |
 | d7ed548 | docs(spec): use one permission suggestion text for every SMS permission (batch 5: E7) |
+| 18c17b4 | docs(spec): write the unread count label, the iOS limits title, the close label and the alert titles (batch 6: F1) |
+| bfbb8e2 | docs(spec): open an instructions alert from View Instructions in SMS-01 E2 (batch 6: F2) |
+| 8c4af22 | docs(spec): keep the iOS database in the app's own container (batch 6: F3) |
+| ec578bc | docs(spec): add the relay-route transitions to the client state machine (batch 6: F4) |
+| 134da3d | docs(spec): drop the foreign keys to paired_device from handlive.sqlite (batch 6: F5) |
+| 393196a | docs(spec): say which name an iPhone or iPad sends at pairing (batch 6: F6) |
+| 95852fd | docs(spec): give the Remove from Server and Delete All confirmations question titles (batch 7: G1) |
+| a3fc27b | docs(spec): open the SMS instructions alert from PAIR-02 field 9 (batch 7: G2) |
 
 All signed off (Hồ Xuân Dũng <me@hxd.vn>), no AI trailer; `.githooks/check-commits.sh origin/main..HEAD` → "commit sạch:
 đã kiểm 14 commit" (batches 1–2), "đã kiểm 4 commit" (batch 3), "đã kiểm 2 commit" and "đã kiểm 1 commit" (batch 4);
@@ -206,10 +265,59 @@ refused to run because other agents had uncommitted files in the shared working 
 nothing was missing. Two later local commits of another agent (fd4bb81, dd852c7) were left for that agent to push.
 Batch 5: `.githooks/check-commits.sh origin/main..HEAD` → "commit sạch: đã kiểm 7 commit"; `git push origin main` →
 `f67d57d..d7ed548` (fast-forward, working tree clean).
+Batch 6: "commit sạch: đã kiểm 6 commit"; `git push origin main` → `b13b3ca..393196a` (fast-forward; the coordinator's
+dbb1546, 817af09, 0d01f36 and the other agents' hub commits were already on `main`).
+Batch 7: "commit sạch: đã kiểm 2 commit"; `git push origin main` → `393196a..a3fc27b` (fast-forward).
 
 ## Checks (final state, real output)
 
-After batch 5 (hub at d7ed548; `shared/` at b07271f):
+After batch 7 (hub at a3fc27b; `shared/` at 9ff23b7):
+
+```text
+$ python3 tools/docs/validate_design_docs.py | tail -1
+files=16 leaves=66 problems=0
+$ python3 tools/docs/check_bilingual_docs.py | tail -1
+pairs=67 missing=0 problems=0 warnings=0
+$ cd shared && tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -4
+  en: 304 of 304 texts found in 50 English docs
+  vi: 304 of 304 texts found in 50 Vietnamese docs
+== 304 strings, 0 errors, 0 warnings
+OK
+$ tools/.venv/bin/python tools/schemas/check_schemas.py      (exit 0)
+  … enum khớp bảng spec: 16 · loc-key có trong catalog: 3 · ví dụ 01–08: 191 · envelope trong env_b64/hl: 31
+  · mẫu dương: 69 · mẫu âm: 157 · ví dụ catalog chuỗi giao diện: 1 · tin trong test vector: 52
+  XANH: mọi kiểm tra đạt
+```
+
+Still 0 `--docs` warnings: batches 6–7 change no catalog text, and every text of the table below is already quoted in
+the specs (en in `X.md`, vi in `X.vi.md`), so the shared catalog can take the rows without new warnings. Both commits
+were checked with the two doc checkers before they were made; `apple_diacritics.py` dry run on every changed `.vi.md`:
+nothing new (3-platforms/02-ios-ipados.vi.md keeps its existing note quoting "Huỷ", see Follow-ups).
+
+After batch 6, history (hub at 393196a; `shared/` at 9ff23b7, which took the batch 5 catalog rows):
+
+```text
+$ python3 tools/docs/validate_design_docs.py | tail -1
+files=16 leaves=66 problems=0
+$ python3 tools/docs/check_bilingual_docs.py | tail -1
+pairs=67 missing=0 problems=0 warnings=0
+$ cd shared && tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -4
+  en: 304 of 304 texts found in 50 English docs
+  vi: 304 of 304 texts found in 50 Vietnamese docs
+== 304 strings, 0 errors, 0 warnings
+OK
+$ tools/.venv/bin/python tools/schemas/check_schemas.py      (exit 0)
+  … enum khớp bảng spec: 16 · loc-key có trong catalog: 3 · ví dụ 01–08: 191 · envelope trong env_b64/hl: 31
+  · mẫu dương: 69 · mẫu âm: 157 · ví dụ catalog chuỗi giao diện: 1 · tin trong test vector: 52
+  XANH: mọi kiểm tra đạt
+```
+
+`--docs` has no warning: batch 6 changes no catalog text, and texts not yet in the catalog do not warn. Once the shared
+agent adds the batch 6 keys below, each of them is already quoted (en in `X.md`, vi in `X.vi.md`). Each of the 6 commits
+was checked with the two doc checkers before it was made (problems=0 every time); `apple_diacritics.py` dry run on every
+changed `.vi.md`: nothing to fix.
+
+After batch 5, history (hub at d7ed548; `shared/` at b07271f):
 
 ```text
 $ python3 tools/docs/validate_design_docs.py | tail -1
@@ -286,7 +394,25 @@ Status after batch 4: the shared agent has added every proposed key below and th
 (handlive-shared ac85789 and 2dd4a46, `phase-02-shared-sync-1.md` §1); the catalog has 304 strings and all of them are
 quoted in the specs. Batch 4 adds no text and proposes no catalog change.
 
-Batch 5 (E4, E7) — the shared catalog follows:
+Batches 6 and 7 — final rows for the shared catalog (apply as is; this table replaces the batch 6 one, whose `macos`
+additions to `settings.remove_from_server` and `settings.delete_all_data` are withdrawn by G1):
+
+| Key | Action | Platforms | Args | en | vi | Specs | Comment |
+|---|---|---|---|---|---|---|---|
+| `a11y.unread_conversations` | add | macos, ios | `count` int (plural) | one: "{count} unread conversation" · other: "{count} unread conversations" | other: "{count} hội thoại chưa đọc" | SMS-02, SMS-05 | VoiceOver text of the unread badge: after the connection status in the menu bar icon's label (Mac), on the Messages tab (iOS) — SMS-02 field 6 |
+| `setup.ios_limits_title` | add | ios | — | How HandLive Works on iPhone and iPad | Cách HandLive hoạt động trên iPhone và iPad | SET-03 | Title of the limits screen, above `setup.ios_limits` (SET-03 field 11) |
+| `common.close` | add | ios | — | Close | Đóng | CLIP-04 | VoiceOver label of an `xmark` close button, e.g. the new-content banner (CLIP-04 field 3; design system 1-foundations/08) |
+| `sms.permission_instructions_title` | add | macos, ios | — | Grant SMS Permission on Your Phone | Cấp quyền SMS trên điện thoại | SMS-01, PAIR-02 | Title of the alert opened by "View Instructions" (SMS-01 field 7, E2) or a missing SMS permission in the device details (PAIR-02 field 9) |
+| `sms.permission_instructions_body` | add | macos, ios | — | On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS. | Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Tin nhắn SMS, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép SMS. | SMS-01, PAIR-02 | Message of the same alert; the Android names are the catalog texts of `settings.title`, `settings.permissions_background`, `settings.sms_messages`, `permission.grant`, `common.open_settings` |
+| `common.ok` | add | macos, ios | — | OK | OK | SMS-01, PAIR-02 | The only button of an informational alert |
+| `settings.remove_from_server_title` | add | android, macos, ios | — | Remove This Device from the Server? | Xóa thiết bị này khỏi máy chủ? | SET-02 | Title of the confirmation of field 26 (SET-02 field 28); message `settings.remove_from_server_warning`, buttons `settings.remove_from_server_confirm` + `common.cancel` |
+| `settings.delete_all_data_title` | add | android, macos, ios | — | Delete All HandLive Data? | Xóa toàn bộ dữ liệu HandLive? | SET-02 | Title of the confirmation of field 27 (SET-02 field 28); message `settings.delete_all_data_warning`, buttons `settings.delete_all_confirm` + `common.cancel` |
+| `settings.remove_from_server` | update comment | android, ios (unchanged: the Mac button is `settings.remove_from_server_ellipsis`) | — | unchanged | unchanged | SET-02 | Row/button label of field 26 in Settings › Data; the confirmation title is `settings.remove_from_server_title` |
+| `settings.delete_all_data` | update comment | android, ios (unchanged: the Mac button is `settings.delete_all_data_ellipsis`) | — | unchanged | unchanged | SET-02 | Row/button label of field 27 in Settings › Data; the confirmation title is `settings.delete_all_data_title` |
+| `pairing.reason_missing_sms_permission` | add spec | unchanged | — | unchanged | unchanged | + SMS-01 | Also the SMS-01 field 7 reason for E2 |
+| `common.view_instructions` | update comment | unchanged | — | unchanged | unchanged | unchanged | Opens the SMS-01 field 7 alert (`sms.permission_instructions_title` / `_body`, `common.ok`) |
+
+Batch 5 (E4, E7) — taken by the shared catalog in handlive-shared 9ff23b7:
 
 | Key | Change | en | vi | Spec · field |
 |---|---|---|---|---|
@@ -359,24 +485,39 @@ design system with texts already listed above.
 - **Android:** SMS push `collapse_key` = `message_key`; code-point cut loop of step 5b; `push_outbox` owned by A2.2.
 - **Apple:** I-NSE sets `threadIdentifier` = `sms:<pair_id>:<thread_id>`; `HL_SMS_GROUP`; new texts once in the catalog.
 - **Design system:** the leftovers listed after batch 2 are aligned in batch 3 (C5), except MessageBubble
-  `preview.html` ("2 tin SMS"; question 1). The design-system artifact needs republishing after the batch 1 and 3 edits
+  `preview.html` ("2 tin SMS"), updated by the coordinator in 298544d. The design-system artifact needs republishing after the batch 1 and 3 edits
   (CLAUDE.md: docs first, then the artifact).
 - **Batch 5 — Shared:** the catalog rows above (then `--docs` is back to 0 warnings); no schema or vector change.
 - **Batch 5 — Android:** send `session/bye` before ending a relayed session in every case (idle 4411, failed rekey
   4410, replacement 4409; A2.2 point 5) and read a received one as its close (E3); show `error.relay_pin_mismatch`
   under Internet Connection (E4); the field 17 text comes from the catalog (E7). E1, E2, E5 and E6 already match the
-  code. Optional: `RelayRegistrar.checkPairs` could set `relay_registered = 1` for a pair the relay lists while the
-  flag is 0 (question 1 below).
+  code. `RelayRegistrar.checkPairs` should set `relay_registered = 1` for a pair the relay lists while the flag is 0
+  (PAIR-02 API 1 logic 3 since hub dbb1546).
 - **Batch 5 — Apple:** before ending a relayed session send `session/bye` (`shutdown` unless another reason applies);
   on a received one end the relayed session, `replaced` → CONN-02 E7 (E3). `POST /v1/pairs` with the 404 rule of
   PAIR-01 API 8 logic 6 (E2).
+- **Batch 6 — Shared:** replaced by the final table of batches 6 and 7 (Batch 7 — Shared).
+- **Batch 6 — Apple:** add `a11y.unread_conversations` to the menu bar icon's label and the Messages tab; a title on
+  the iOS limits screen; `common.close` on the banner's close button; the "View Instructions" button with its alert
+  (SMS-01 E2, today the reason shows without it). F3, F4 and F5 already match the code; F6 is the entitlement
+  request (deployment guide); the alert titles change again in batch 7 (G1).
+- **Batch 6 — Design system:** the alert pattern now lists the third job (F2); the artifact needs republishing.
+- **Batch 7 — Shared:** the final table of batches 6 and 7 above, as is.
+- **Batch 7 — Apple:** the Mac alerts and the iOS confirmation dialogs take `settings.remove_from_server_title` /
+  `settings.delete_all_data_title` as titles (today `settings.remove_from_server` / `settings.delete_all_data`); a
+  missing `READ_SMS`/`SEND_SMS` in the device details opens the SMS-01 field 7 alert.
+- **Batch 7 — Android:** the action sheets of SET-02 fields 26–27 take the same two title keys.
+- **Batch 7 — Design system:** republish after G1/G2. Noticed while checking: 3-platforms/01-macos, 02-ios-ipados and
+  03-android (en, vi) still say the Vietnamese detailed design writes "Huỷ"; it writes "Hủy" everywhere now, so those
+  notes can go.
 
 ## Unresolved questions
 
-1. **Batch 5, E2 gap (proposal, needs a decision):** after a second 404 a device waits 24 h. If the peer completes
-   the pair in the meantime, the waiting device keeps `relay_registered = 0` until its next call, and the phone
-   creates no relay demand for that pair (E1 counts relay-registered pairs only). Proposed line for PAIR-02 API 1
-   logic 3: "a pair that `GET /v1/pairs` lists without `revoked_at` → `relay_registered = 1`". Not applied.
+None open. Batch 6's two questions were answered by G1 (question titles) and G2 (PAIR-02 field 9 opens the SMS-01
+field 7 alert) and applied in batch 7.
+
+Batch 5: the E2 gap question was answered by the coordinator in hub dbb1546 (a pair `GET /v1/pairs` lists without
+`revoked_at` → `relay_registered = 1`).
 
 Earlier batches: none open. The four questions of batches 1–2 were answered by C1–C4; the multi-part `{limit}`
 question of batch 3 was settled by the coordinator in hub 427d911 (`{limit}` = capacity of the current number of
@@ -384,5 +525,5 @@ parts) and the MessageBubble preview updated in 298544d; the two shared-sync que
 the SMS cut reading) are D1 and D2.
 
 Status: DONE
-Summary: All decisions of batches 1–5 (37 + 15 + 5 + 3 + 7, plus the batch-4 addendum D4, D5 and the APNs note) are applied in both languages in 28 signed-off hub commits, pushed (0d88586..d7ed548); both doc checkers print problems=0 and check_schemas prints XANH; check_strings --docs has the 2 expected warnings of E7 until the catalog takes the new field 17 texts.
-Concerns/Blockers: none; deviations 13 (Mac E3 "missed calls"), 15 (the push cuts the snippet like the body, per the code and vectors) and 16–17 (batch 5: network change, `shutdown` for the other ends) are worth a glance; question 1 (E2 gap) is a proposal.
+Summary: All decisions of batches 1–7 (37 + 15 + 5 + 3 + 7 + 6 + 2, plus the batch-4 addendum D4, D5 and the APNs note) are applied in both languages in 36 signed-off hub commits, pushed (0d88586..a3fc27b); both doc checkers print problems=0, check_strings --docs is at 0 warnings (304/304) and check_schemas prints XANH; the final catalog table of batches 6–7 has 8 new keys and 4 metadata changes.
+Concerns/Blockers: none; deviations 13, 15, 16–17, 22–24 and 25–26 (batch 7: which permissions count as SMS, the removed iOS instructions sheet) are worth a glance.
