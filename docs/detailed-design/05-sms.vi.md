@@ -399,7 +399,7 @@ flowchart TB
 | 8 | Hệ thống | M-APP / I-APP, OS | Tạo thông báo (API 4): tiêu đề, nội dung theo `sms.preview`, nhóm theo hội thoại, nút "Trả lời". |  |
 | 9 | Người dùng | M-APP / I-APP / I-NSE | Xem thông báo; chạm để mở hội thoại (SMS-03) hoặc trả lời nhanh (SMS-04). |  |
 | 10 | Hệ thống | A-SVC, R-API, PUSH | Với mỗi cặp iOS/iPadOS không có phiên, SMS hiệu lực theo capability gần nhất và `features.sms.notify = true`, khi tin là `inbox`: dựng envelope `sms/new` mã hóa bằng `K_push`, gọi `POST /v1/push` `kind = alert` (API 2, CONN-04). | Relay lỗi → E3 (`push_outbox`). |
-| 11 | Hệ thống | I-NSE | Nhận push. Máy đang mở khóa: đọc `PRK`, tính `K_push`, giải mã, thay tiêu đề và nội dung như bước 8, gắn danh mục có nút "Trả lời". Máy đang khóa hoặc giải mã lỗi: giữ nội dung chung chung. | E4. |
+| 11 | Hệ thống | I-NSE | Nhận push. Máy đang mở khóa: đọc `PRK`, tính `K_push`, giải mã, thay tiêu đề và nội dung như bước 8, đặt `threadIdentifier` (API 4), gắn danh mục có nút "Trả lời". Máy đang khóa hoặc giải mã lỗi: giữ nội dung chung chung. | E4. |
 | 12 | Hệ thống | A-SMS | Ghi `last_sms_id` = `_id` lớn nhất đã xử lý (kể cả dòng bỏ qua), không chờ client. Sau đó chạy phần tính trạng thái đọc (SMS-05 bước 3). |  |
 
 ### 5.2.5 Đặc tả API/service
@@ -525,7 +525,7 @@ Content-Type: application/json
 | `title` | Trường 1 |
 | `subtitle` | Trường 3, rỗng nếu chỉ có 1 SIM |
 | `body` | Trường 2 |
-| `threadIdentifier` | `sms:<pair_id>:<thread_id>` — gom thông báo theo hội thoại |
+| `threadIdentifier` | `sms:<pair_id>:<thread_id>` — gom thông báo theo hội thoại; với push, I-NSE đặt sau khi giải mã (`thread-id` của APNs là nhóm chung `sms`, CONN-04 API 4) |
 | `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi", chữ gợi ý trong ô nhập "Tin nhắn SMS") và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại); hội thoại nhiều người dùng `HL_SMS_GROUP` (logic 2) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — dùng cho trả lời nhanh (SMS-04) và gỡ thông báo (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
@@ -543,7 +543,7 @@ Content-Type: application/json
   2. Hội thoại nhiều địa chỉ dùng danh mục `HL_SMS_GROUP`, chỉ có `HL_SMS_MARK_READ` (v1 không trả
      lời hội thoại nhóm — SMS-04 E9).
   3. I-NSE đọc `sms.preview` từ `UserDefaults` của App Group, không ghi cơ sở dữ liệu (0.9.3); không
-     đọc được khóa hoặc giải mã lỗi → giữ nội dung mặc định, không đặt danh mục (E4).
+     đọc được khóa hoặc giải mã lỗi → giữ nội dung mặc định và nhóm chung `sms`, không đặt danh mục (E4).
   4. Thông báo được gỡ khi hội thoại đã đọc trên điện thoại (SMS-05) hoặc được mở trên thiết bị
      (SMS-03).
 

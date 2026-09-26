@@ -404,7 +404,7 @@ flowchart TB
 | 8 | System | M-APP / I-APP, OS | Create the notification (API 4): title, body according to `sms.preview`, grouped by conversation, "Reply" button. |  |
 | 9 | User | M-APP / I-APP / I-NSE | Views the notification; taps it to open the conversation (SMS-03) or sends a quick reply (SMS-04). |  |
 | 10 | System | A-SVC, R-API, PUSH | For each iOS/iPadOS pair without a session, with SMS active according to the latest capability and `features.sms.notify = true`, when the message is `inbox`: build an `sms/new` envelope encrypted with `K_push` and call `POST /v1/push` with `kind = alert` (API 2, CONN-04). | Relay error → E3 (`push_outbox`). |
-| 11 | System | I-NSE | Receives the push. Device unlocked: read `PRK`, derive `K_push`, decrypt, replace the title and body as in step 8, attach the category with the "Reply" button. Device locked or decryption error: keep the generic content. | E4. |
+| 11 | System | I-NSE | Receives the push. Device unlocked: read `PRK`, derive `K_push`, decrypt, replace the title and body as in step 8, set `threadIdentifier` (API 4), attach the category with the "Reply" button. Device locked or decryption error: keep the generic content. | E4. |
 | 12 | System | A-SMS | Write `last_sms_id` = the largest `_id` processed (skipped rows included), without waiting for clients. Then run the read-state computation (SMS-05 step 3). |  |
 
 ### 5.2.5 API/service specification
@@ -535,7 +535,7 @@ Content-Type: application/json
 | `title` | Field 1 |
 | `subtitle` | Field 3, empty if there is only 1 SIM |
 | `body` | Field 2 |
-| `threadIdentifier` | `sms:<pair_id>:<thread_id>` — groups notifications by conversation |
+| `threadIdentifier` | `sms:<pair_id>:<thread_id>` — groups notifications by conversation; for a push, I-NSE sets it after decrypting (the APNs `thread-id` is the generic `sms`, CONN-04 API 4) |
 | `categoryIdentifier` | `HL_SMS`, with the actions `HL_SMS_REPLY` (`UNTextInputNotificationAction`, title "Reply", button "Send", text field placeholder "SMS Message") and `HL_SMS_MARK_READ` (`UNNotificationAction`, title "Mark as Read", not `.foreground`: sets `local_read_ts` on this device per SMS-05 and removes the conversation's notifications); a group conversation uses `HL_SMS_GROUP` (logic 2) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — used for quick reply (SMS-04) and for removing notifications (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
@@ -554,8 +554,8 @@ Content-Type: application/json
   2. Conversations with several addresses use the category `HL_SMS_GROUP`, which has only
      `HL_SMS_MARK_READ` (v1 does not reply to group conversations — SMS-04 E9).
   3. I-NSE reads `sms.preview` from the App Group's `UserDefaults` and does not write to the database
-     (0.9.3); if it cannot read the keys or decryption fails → keep the default content and set no
-     category (E4).
+     (0.9.3); if it cannot read the keys or decryption fails → keep the default content and the
+     generic `sms` group, and set no category (E4).
   4. Notifications are removed when the conversation has been read on the phone (SMS-05) or opened
      on the device (SMS-03).
 
