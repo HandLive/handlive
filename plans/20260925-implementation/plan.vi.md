@@ -2,7 +2,7 @@
 
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); Phase 2 đang làm trên nhánh `feat/phase-02-sms-ios-relay` từ 26/09/2026, chủ dự án cho bắt đầu trước cổng G1 · **Nguồn:**
+**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); mã Phase 2 đã xong trên nhánh `feat/phase-02-sms-ios-relay` (26/09/2026, chủ dự án cho bắt đầu trước cổng G1; chưa gộp: còn kiểm trên máy thật, relay, APNs, FCM và cổng G1, G2, `reports/phase-02-summary.md`) · **Nguồn:**
 `plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.2
 (33 chức năng lá, C1–C20), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.

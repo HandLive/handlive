@@ -2,7 +2,7 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 in progress on `feat/phase-02-sms-ios-relay` since 2026-09-26, started before G1 by decision of the project owner · **Sources:**
+**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 code complete on `feat/phase-02-sms-ios-relay` (2026-09-26, started before G1 by decision of the project owner; not merged: the real-device, relay, APNs and FCM checks and gates G1 and G2 are open, `reports/phase-02-summary.md`) · **Sources:**
 `plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
 (33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
