@@ -31,7 +31,7 @@
 | Tác nhân | Chính: Hệ thống. Phụ: Người dùng (theo dõi tiến độ, yêu cầu đồng bộ lại). Thành phần: M-APP hoặc I-APP, A-SVC, A-SMS, OS (Telephony provider, Contacts provider), R-API (chỉ chuyển tiếp khi đi qua relay). |
 | Điều kiện trước | 1. Cặp hiệu lực (PAIR-01).<br>2. Phiên `/v1/ctl` đã bắt tay và hai bên đã trao đổi `capability/hello` (CONN-01 trong LAN hoặc CONN-03 qua relay).<br>3. SMS hiệu lực với cặp.<br>4. Client không có lần đồng bộ SMS nào khác đang chạy cho cặp này. |
 | Điều kiện sau | **Thành công:** `sms_thread`, `sms_message` chứa dữ liệu tới mốc chụp của điện thoại; `sync_cursor` (`stream = 'sms'`) giữ con trỏ mới; `unread_count` và cờ `read` khớp điện thoại.<br>**Dừng giữa chừng:** các trang đã ghi được giữ nguyên (ghi lặp không sinh trùng), con trỏ cũ không đổi; lần kết nối sau đồng bộ lại từ con trỏ cũ. |
-| Ngoại lệ | E1 — SMS tắt ở một phía: không đồng bộ; nếu Android vẫn nhận `sms/sync` thì trả `FEATURE_DISABLED`.<br>E2 — Điện thoại thiếu `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`), client hiển thị hướng dẫn SET-01.<br>E3 — Thiếu `READ_CONTACTS`: vẫn đồng bộ, `display_name = null`, client hiển thị số.<br>E4 — Mất kết nối hoặc `TIMEOUT` giữa chừng: dừng, giữ dữ liệu đã ghi, chạy lại ở lần kết nối sau.<br>E5 — Con trỏ hoặc `page_token` không hợp lệ (`SMS_CURSOR_INVALID`): với `page_token` → bắt đầu lại từ con trỏ đang lưu; với con trỏ → tự "Đồng bộ lại toàn bộ SMS" (A2).<br>E6 — Lỗi đọc provider trên Android (`INTERNAL`): thử lại 1 lần sau 5 s, sau đó chờ lần kết nối sau.<br>E7 — Lỗi ghi cơ sở dữ liệu trên client (hết dung lượng, không mở được SQLCipher): hủy giao dịch của trang, dừng, báo lỗi không chặn. |
+| Ngoại lệ | E1 — SMS tắt ở một phía: không đồng bộ; nếu Android vẫn nhận `sms/sync` thì trả `FEATURE_DISABLED`.<br>E2 — Điện thoại thiếu `READ_SMS`: `PERMISSION_MISSING` (`details.permission = "android.permission.READ_SMS"`), client hiển thị hướng dẫn SET-01.<br>E3 — Thiếu `READ_CONTACTS`: vẫn đồng bộ, `display_name = null`, client hiển thị số.<br>E4 — Mất kết nối hoặc `TIMEOUT` giữa chừng: dừng, giữ dữ liệu đã ghi, chạy lại ở lần kết nối sau.<br>E5 — Con trỏ hoặc `page_token` không hợp lệ (`SMS_CURSOR_INVALID`): với `page_token` → bắt đầu lại từ con trỏ đang lưu; với con trỏ → tự "Đồng bộ lại toàn bộ SMS" (A2).<br>E6 — Lỗi đọc provider trên Android (`INTERNAL`): thử lại 1 lần sau 5 s, sau đó chờ lần kết nối sau.<br>E7 — Lỗi ghi cơ sở dữ liệu trên client (hết dung lượng, không mở được SQLCipher): hủy giao dịch của trang, dừng, báo lỗi không chặn "Không lưu được tin nhắn trên máy này". |
 | Yêu cầu đặc biệt | **Hiệu năng:** lần đầu (tối đa 10 000 tin) xong ≤ 20 s trong LAN, ≤ 40 s qua relay; đồng bộ bù dưới 500 tin xong ≤ 2 s.<br>Danh sách hội thoại hiện dần sau từng trang; ghi cơ sở dữ liệu trên hàng đợi nền, giao diện không bị chặn.<br>Android đọc provider trên luồng nền, không giữ con trỏ provider giữa các trang.<br>**Bảo mật:** dữ liệu chỉ nằm trong `handlive.sqlite` mã hóa SQLCipher (0.6.5); không log nội dung, số, tên.<br>**Tuân thủ:** quyền SMS (`READ_SMS`, `SEND_SMS`) cần Permissions Declaration Form của Google Play theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls" (`docs/deployment-guide.md`); thiết kế phát hiện tin mới bằng `ContentObserver` nên không cần `RECEIVE_SMS`; nếu bị từ chối, Plan B dùng Notification Listener chỉ để nhận tin mới, khi đó không có đồng bộ lịch sử.<br>**Giới hạn v1:** tin bị xóa trên điện thoại không được xóa theo trên Mac/iOS; người dùng dùng "Đồng bộ lại toàn bộ SMS" để làm sạch. |
 
 ### 5.1.2 Màn hình
@@ -43,7 +43,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Trạng thái đồng bộ | enum{idle\| syncing\| done\| failed} | Output | `idle` | Dải trạng thái trên đầu danh sách hội thoại: "Đang đồng bộ tin nhắn…", "Đồng bộ lỗi — sẽ thử lại khi kết nối". Ẩn khi `idle` hoặc `done` |
-| 2 | Số tin đã tải | int32 | Output | 0 | Chỉ hiện trong lần đồng bộ đầu: "Đã tải 1.500 tin" |
+| 2 | Số tin đã tải | int32 | Output | 0 | Chỉ hiện trong lần đồng bộ đầu: "Đã tải 1500 tin" (số không có dấu ngăn nghìn, 0.12.1) |
 | 3 | Danh sách hội thoại | array\<object> | Output | Rỗng | Các dòng `sms_thread`, cập nhật sau từng trang; cách hiển thị ở SMS-03 |
 | 4 | Lần đồng bộ cuối | timestamp | Output | `sync_cursor.updated_at` | Cài đặt → Tin nhắn; hiển thị tương đối ("5 phút trước") |
 | 5 | Nút "Đồng bộ lại toàn bộ SMS" | action | Input | — | Cài đặt → Tin nhắn; vô hiệu khi không có phiên tới điện thoại |
@@ -159,7 +159,7 @@ flowchart TB
 | `cursor` | string | Con trỏ sau khi hoàn tất cả lần đồng bộ (giống nhau ở mọi trang); client chỉ lưu khi `has_more = false` |
 | `page_token` | string | Có khi `has_more = true` |
 | `has_more` | bool | Còn trang tiếp theo |
-| `unread` | array\<object> | Chỉ ở trang cuối: mọi hội thoại có tin chưa đọc trên điện thoại, mỗi mục `{thread_id, unread_count, read_up_to_ts}` — ý nghĩa như `sms/read_changed` (SMS-05) |
+| `unread` | array\<object> | Chỉ ở trang cuối: mọi hội thoại có tin chưa đọc trên điện thoại, mỗi mục `{thread_id, unread_count, read_up_to_ts}` với `unread_count ≥ 1` — ý nghĩa như `sms/read_changed` (SMS-05) |
 
 Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING`, `BAD_REQUEST` (tham số ngoài giới
 hạn), `SMS_CURSOR_INVALID` (`details.reason` = `cursor` hoặc `page_token`), `INTERNAL`.
@@ -338,7 +338,7 @@ DELETE FROM sms_thread  WHERE pair_id = :pair_id;
 | Điều kiện trước | 1.<br>SMS hiệu lực với ít nhất một cặp; A-SVC đang chạy và A-SMS đã đăng ký observer.<br>2.<br>Để nhận ngay: client có phiên `/v1/ctl` (CONN-01/CONN-03); riêng iOS có thể nhận qua push nếu đã đăng ký push (CONN-04) và `features.sms.notify = true`.<br>3.<br>Người dùng đã cho phép HandLive hiển thị thông báo trên Mac/iOS (SET-03). |
 | Điều kiện sau | Tin và tóm tắt hội thoại có trong `sms_message`, `sms_thread` của mọi client đang kết nối; thông báo được hiển thị theo `sms.notify` và `sms.preview`; `sms_observer_state.last_sms_id` = `_id` lớn nhất đã xử lý. Client không kết nối nhận tin ở lần SMS-01 kế tiếp. |
 | Ngoại lệ | E1 — Không có client nào kết nối và không cặp nào cần push: chỉ cập nhật `last_sms_id`.<br>E2 — `sms.notify = false` trên client: lưu tin, không thông báo.<br>E3 — Relay hoặc APNs lỗi: xử lý theo CONN-04 (`push_outbox`, thử lại tới khi hết hạn); iOS vẫn nhận tin qua SMS-01.<br>E4 — iPhone đang khóa: I-NSE không đọc được khóa (Keychain `WhenUnlockedThisDeviceOnly`) → hiển thị "Tin nhắn SMS mới", không có nút trả lời.<br>E5 — Người dùng tắt quyền thông báo của HandLive: chỉ cập nhật danh sách và huy hiệu.<br>E6 — Mất `READ_SMS` khi đang chạy: gỡ observer, gửi `capability/update` với `permissions_missing`; client hiển thị hướng dẫn.<br>E7 — Dòng mới là tin nháp: bỏ qua. |
-| Yêu cầu đặc biệt | **Hiệu năng:** từ lúc provider ghi tin tới khi Mac hiện thông báo < 500 ms trong LAN (gộp `onChange` 100 ms, truy vấn ≤ 50 ms), ≤ 1 s qua relay; push iOS phụ thuộc APNs.<br>**Riêng tư:** nội dung push mà relay và APNs thấy luôn chung chung; nội dung thật nằm trong envelope mã hóa bằng `K_push`. `sms.preview = false` ẩn nội dung tin khỏi thông báo.<br>**Tin cậy:** observer chạy trong A-SVC (foreground service); `last_sms_id` lưu bền nên khởi động lại không phát lại tin cũ và không bỏ sót tin mới.<br>**Tuân thủ:** như SMS-01 (Permissions Declaration Form; Plan B Notification Listener chỉ nhận tin). |
+| Yêu cầu đặc biệt | **Hiệu năng:** từ `ContentObserver.onChange` đầu tiên của lượt gộp (không quan sát được lúc provider ghi tin) tới khi Mac hiện thông báo < 500 ms trong LAN (gộp `onChange` 100 ms, truy vấn ≤ 50 ms), ≤ 1 s qua relay, cả hai xét ở phân vị 95; push iOS phụ thuộc APNs.<br>**Riêng tư:** nội dung push mà relay và APNs thấy luôn chung chung; nội dung thật nằm trong envelope mã hóa bằng `K_push`. `sms.preview = false` ẩn nội dung tin khỏi thông báo.<br>**Tin cậy:** observer chạy trong A-SVC (foreground service); `last_sms_id` lưu bền nên khởi động lại không phát lại tin cũ và không bỏ sót tin mới.<br>**Tuân thủ:** như SMS-01 (Permissions Declaration Form; Plan B Notification Listener chỉ nhận tin). |
 
 ### 5.2.2 Màn hình
 
@@ -455,8 +455,8 @@ flowchart TB
 | `to` | `device_id` của iPhone/iPad |
 | `kind` | `alert` |
 | `reason` | `sms_new` |
-| `env_b64` | Envelope `sms/new` (API 1, không có `local_id`) mã hóa bằng `K_push`, ≤ 3 000 byte |
-| `collapse_key` | `sms:<message_key>` — relay và APNs gộp các lần gửi lặp của cùng một tin |
+| `env_b64` | Envelope `sms/new` (API 1, không có `local_id`) mã hóa bằng `K_push`, dạng base64 chuẩn có padding, ≤ 3 000 ký tự (logic 3) |
+| `collapse_key` | Chính `message_key` (ví dụ `sms:12847`) — relay và APNs gộp các lần gửi lặp của cùng một tin |
 | `ttl_s` | 86 400 |
 
 - **Response:** theo CONN-04. Lỗi relay liên quan: 409 `PUSH_TOKEN_MISSING` (bỏ qua, iOS bù qua
@@ -470,7 +470,7 @@ Host: relay.example.com
 Authorization: Bearer <jwt>
 Content-Type: application/json
 
-{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"<b64: envelope sms/new mã hóa bằng K_push>","collapse_key":"sms:sms:12847","ttl_s":86400}
+{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"<b64: envelope sms/new mã hóa bằng K_push>","collapse_key":"sms:12847","ttl_s":86400}
 ```
 
 - **Logic nghiệp vụ:**
@@ -479,8 +479,10 @@ Content-Type: application/json
      `features.sms.notify = true`, tin có `box = inbox`.
   2. Nội dung APNs mặc định (hiện khi I-NSE không giải mã được) là không đặt tiêu đề (hệ thống hiện
      tên app), nội dung "Tin nhắn SMS mới"; không chứa số điện thoại hay nội dung tin.
-  3. Payload APNs ≤ 4 KB (0.4.4): Android cắt `body` trong envelope push theo byte UTF-8 và thêm
-     "…"; nội dung đầy đủ đến qua SMS-01 khi I-APP kết nối.
+  3. Payload APNs ≤ 4 KB (0.4.4): Android cắt `message.body` còn tối đa 1 000 ký tự tại ranh giới
+     code point, kết thúc bằng "…". Nếu `env_b64` vẫn dài hơn 3 000 ký tự thì rút gọn tiếp
+     `message.body`, rồi `thread.snippet`, tại ranh giới code point, mỗi lần kết thúc bằng "…"
+     (CONN-04 bước 5b). Nội dung đầy đủ đến qua SMS-01 khi I-APP kết nối.
   4. Push lỗi tạm thời → ghi `push_outbox` (0.9.1), thử lại theo CONN-04; quá hạn thì bỏ.
   5. Mac không bao giờ nhận push (0.4.4).
 
@@ -524,7 +526,7 @@ Content-Type: application/json
 | `subtitle` | Trường 3, rỗng nếu chỉ có 1 SIM |
 | `body` | Trường 2 |
 | `threadIdentifier` | `sms:<pair_id>:<thread_id>` — gom thông báo theo hội thoại |
-| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi") và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại) |
+| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi", chữ gợi ý trong ô nhập "Tin nhắn SMS") và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại); hội thoại nhiều người dùng `HL_SMS_GROUP` (logic 2) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — dùng cho trả lời nhanh (SMS-04) và gỡ thông báo (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
 
@@ -538,8 +540,8 @@ Content-Type: application/json
 - **Logic nghiệp vụ:**
   1. Không tạo thông báo khi `box` khác `inbox`, `sms.notify = false`, hoặc hội thoại đang mở ở cửa
      sổ đang được dùng.
-  2. Hội thoại nhiều địa chỉ dùng danh mục không có `HL_SMS_REPLY` (v1 không trả lời hội thoại nhóm
-     — SMS-04 E9).
+  2. Hội thoại nhiều địa chỉ dùng danh mục `HL_SMS_GROUP`, chỉ có `HL_SMS_MARK_READ` (v1 không trả
+     lời hội thoại nhóm — SMS-04 E9).
   3. I-NSE đọc `sms.preview` từ `UserDefaults` của App Group, không ghi cơ sở dữ liệu (0.9.3); không
      đọc được khóa hoặc giải mã lỗi → giữ nội dung mặc định, không đặt danh mục (E4).
   4. Thông báo được gỡ khi hội thoại đã đọc trên điện thoại (SMS-05) hoặc được mở trên thiết bị
@@ -611,8 +613,8 @@ Ghi `push_outbox` khi push lỗi: xem CONN-04.
 | Tác nhân | Chính: Người dùng. Hệ thống: M-APP / I-APP, A-SVC, A-SMS, OS (Telephony provider), R-API (chỉ chuyển tiếp khi đi qua relay). |
 | Điều kiện trước | 1. Cặp hiệu lực. 2. Có dữ liệu từ SMS-01 hoặc SMS-02 (nếu chưa, hiển thị trạng thái trống). 3. Tải tin cũ hơn cần phiên `/v1/ctl` và SMS hiệu lực. |
 | Điều kiện sau | Danh sách và hội thoại hiển thị đúng dữ liệu cục bộ; tin cũ tải thêm được lưu vào `sms_message` (không trùng, không ghi đè); `sms_thread.local_read_ts` của hội thoại vừa mở = `last_ts`; thông báo của hội thoại đó bị gỡ. |
-| Ngoại lệ | E1 — Chưa có hội thoại: trạng thái trống "Chưa có tin nhắn" kèm trạng thái đồng bộ SMS-01.<br>E2 — Không có phiên tới điện thoại khi cần tải thêm: dải "Kết nối điện thoại để tải tin cũ hơn"; khi kết nối lại mà người dùng vẫn ở đầu hội thoại thì tự tải.<br>E3 — `SMS_THREAD_NOT_FOUND`: hội thoại đã bị xóa trên điện thoại → giữ dữ liệu cục bộ, dải "Hội thoại không còn trên điện thoại", không tải thêm.<br>E4 — `TIMEOUT` hoặc `INTERNAL`: dải lỗi kèm nút "Thử lại".<br>E5 — `FEATURE_DISABLED`, `PERMISSION_MISSING`: hiển thị lý do như SMS-01 E1, E2.<br>E6 — Lỗi đọc cơ sở dữ liệu cục bộ: báo lỗi, cho thử lại. |
-| Yêu cầu đặc biệt | **Hiệu năng:** mở danh sách hoặc một hội thoại ≤ 200 ms (đọc theo trang, dùng chỉ mục `idx_sms_message_thread_ts`); một trang `sms/history` ≤ 1 s trong LAN; cuộn mượt với hội thoại hàng chục nghìn tin (trang 50 tin, phân trang keyset).<br>**Khả dụng:** mỗi bong bóng có nhãn VoiceOver gồm người gửi, thời điểm, trạng thái; theo cỡ chữ hệ thống (Dynamic Type trên iOS); thời điểm hiển thị theo múi giờ của thiết bị.<br>**Riêng tư:** chỉ đọc từ cơ sở dữ liệu mã hóa; tin tải thêm không đi qua bộ nhớ đệm nào khác. |
+| Ngoại lệ | E1 — Chưa có hội thoại: trạng thái trống "Chưa có tin nhắn" · "Tin nhắn từ điện thoại sẽ hiện ở đây sau lần đồng bộ đầu tiên." kèm trạng thái đồng bộ SMS-01.<br>E2 — Không có phiên tới điện thoại khi cần tải thêm: dải "Kết nối điện thoại để tải tin cũ hơn"; khi kết nối lại mà người dùng vẫn ở đầu hội thoại thì tự tải.<br>E3 — `SMS_THREAD_NOT_FOUND`: hội thoại đã bị xóa trên điện thoại → giữ dữ liệu cục bộ, dải "Hội thoại không còn trên điện thoại", không tải thêm.<br>E4 — `TIMEOUT` hoặc `INTERNAL`: dải lỗi "Không tải được tin cũ hơn" kèm nút "Thử lại".<br>E5 — `FEATURE_DISABLED`, `PERMISSION_MISSING`: hiển thị lý do như SMS-01 E1, E2.<br>E6 — Lỗi đọc cơ sở dữ liệu cục bộ: báo lỗi, cho thử lại. |
+| Yêu cầu đặc biệt | **Hiệu năng:** mở danh sách hoặc một hội thoại ≤ 200 ms (đọc theo trang, dùng chỉ mục `idx_sms_message_thread_ts`); một trang `sms/history` ≤ 1 s trong LAN; cuộn mượt với hội thoại hàng chục nghìn tin (trang 50 tin, phân trang keyset).<br>**Khả dụng:** mỗi bong bóng có nhãn VoiceOver gồm người gửi, thời điểm, trạng thái: "{sender}, {time}" với tin nhận, "Bạn, {time}, {status}" với tin gửi (`{sender}` là trường 2, hoặc số người gửi dạng quốc gia trong hội thoại nhiều người; `{time}` do formatter của hệ thống định dạng; `{status}` là chữ của trường 8). Nội dung tin là giá trị trợ năng của bong bóng, đọc sau nhãn; theo cỡ chữ hệ thống (Dynamic Type trên iOS); thời điểm hiển thị theo múi giờ của thiết bị.<br>**Riêng tư:** chỉ đọc từ cơ sở dữ liệu mã hóa; tin tải thêm không đi qua bộ nhớ đệm nào khác. |
 
 ### 5.3.2 Màn hình
 
@@ -807,7 +809,7 @@ VALUES (:pair_id, :message_key, :thread_id, :address, :body, :box, :ts, :ts_sent
 | Tác nhân | Chính: Người dùng. Hệ thống: M-APP / I-APP, A-SVC, A-SMS, OS (`SmsManager`, `SubscriptionManager`, `UNUserNotificationCenter`), R-API (chỉ chuyển tiếp khi đi qua relay). |
 | Điều kiện trước | 1. Cặp hiệu lực; SMS hiệu lực và `features.sms.can_send = true` (Android có `SEND_SMS`).<br>2. Điện thoại có ít nhất một SIM hoạt động.<br>3. Gửi ngay cần phiên `/v1/ctl`; không có phiên thì tin được xếp hàng. |
 | Điều kiện sau | **Thành công:** tin nằm trong hộp Sent của điện thoại và trong `sms_message` (`box = sent`, `local_id` = mã tạm); `sms_outbox.state` = `sent` hoặc `delivered`.<br>**Thất bại:** `sms_outbox.state = failed`, `last_error` = mã lỗi, bong bóng có nút "Thử lại".<br>**Chưa gửi:** `state = pending` ("Đang chờ điện thoại") tới khi có phiên hoặc quá 24 h. |
-| Ngoại lệ | E1 — Không có phiên, hoặc không có `ack` sau 3 lần thử lại: giữ `pending`, gửi lại khi có phiên mới; quá 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) hoặc `can_send = false`.<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Nội dung rỗng (`BAD_REQUEST`) hoặc quá 1 600 ký tự (`PAYLOAD_TOO_LARGE`); client chặn trước khi gửi.<br>E6 — `SMS_SIM_UNAVAILABLE`: SIM được chọn không hoạt động, hoặc máy nhiều SIM mà không xác định được SIM mặc định → client mở bộ chọn SIM.<br>E7 — Gửi thất bại ở mạng: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, nút "Thử lại".<br>E8 — Trả lời nhanh trên iOS không nhận được `ack` trong khoảng 20 s: giữ `pending`, hiện thông báo cục bộ "Chưa gửi được, mở HandLive để thử lại".<br>E9 — Hội thoại nhiều người nhận: v1 không cho trả lời từ Mac/iOS.<br>E10 — Nhà mạng không gửi báo phát: trạng thái dừng ở "Đã gửi". |
+| Ngoại lệ | E1 — Không có phiên, hoặc không có `ack` sau 3 lần thử lại: giữ `pending`, gửi lại khi có phiên mới; quá 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) hoặc `can_send = false`: lý do hiện là "Thiếu quyền SMS trên điện thoại" (câu của PAIR-02 trường 8).<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Nội dung rỗng (`BAD_REQUEST`) hoặc quá 1 600 ký tự (`PAYLOAD_TOO_LARGE`); client chặn trước khi gửi.<br>E6 — `SMS_SIM_UNAVAILABLE`: SIM được chọn không hoạt động, hoặc máy nhiều SIM mà không xác định được SIM mặc định → client mở bộ chọn SIM.<br>E7 — Gửi thất bại ở mạng: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, nút "Thử lại".<br>E8 — Trả lời nhanh trên iOS không nhận được `ack` trong khoảng 20 s: giữ `pending`, hiện thông báo cục bộ "Chưa gửi được, mở HandLive để thử lại."<br>E9 — Hội thoại nhiều người nhận: v1 không cho trả lời từ Mac/iOS.<br>E10 — Nhà mạng không gửi báo phát: trạng thái dừng ở "Đã gửi". |
 | Yêu cầu đặc biệt | **Hiệu năng:** bong bóng tạm hiện ≤ 100 ms sau khi bấm Gửi; `ack` ≤ 300 ms trong LAN; "Đã gửi" ≤ 2 s trong điều kiện sóng bình thường (mục tiêu Phase 2).<br>**Không gửi trùng:** thử lại dùng lại cùng `id` envelope; Android chống trùng theo `id` (0.5.1) và theo `local_id` trong 24 h; client không tự gửi lại tin đã được `accepted`.<br>**Riêng tư:** không log nội dung, số nhận; hàng đợi nằm trong cơ sở dữ liệu SQLCipher.<br>**Chi phí:** tin dài bị chia nhiều phần, mỗi phần tính cước như một SMS; client hiển thị số phần ước tính trước khi gửi.<br>**Tuân thủ:** `SEND_SMS` cần Permissions Declaration Form; nếu bị từ chối (Plan B), `can_send = false` và client ẩn ô soạn tin. |
 
 ### 5.4.2 Màn hình
@@ -818,17 +820,17 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Người nhận | e164 | Input | Rỗng | Chỉ với "Tin nhắn mới": nhập số hoặc chọn từ hội thoại có sẵn; kiểm sơ bộ (chữ số, dấu `+`, 3–15 ký tự) trước khi gửi |
+| 1 | Người nhận | e164 | Input | Rỗng | Nhãn "Đến:"; chỉ với "Tin nhắn mới": nhập số hoặc chọn từ hội thoại có sẵn; kiểm sơ bộ (chữ số, dấu `+`, 3–15 ký tự) trước khi gửi |
 | 2 | Nội dung tin | string(1600) | Input | Rỗng | Không cho gửi khi rỗng hoặc chỉ có khoảng trắng |
-| 3 | Bộ đếm ký tự và số phần | string | Output | "0/160" | Ước tính: bảng mã GSM-7 160 ký tự một phần (153 ký tự mỗi phần khi nhiều phần); có ký tự ngoài GSM-7 (ví dụ tiếng Việt có dấu) → 70 (67 mỗi phần). Ví dụ "120/160 · 1 tin" |
-| 4 | SIM gửi | int32 (`sub_id`) | Input/Output | `features.sms.default_sub_id` | Chỉ hiện khi `features.sms.sims` có > 1 SIM; hiển thị theo `label` |
+| 3 | Bộ đếm ký tự và số phần | string | Output | "0/160" | Ước tính: bảng mã GSM-7 160 ký tự một phần (153 ký tự mỗi phần khi nhiều phần); có ký tự ngoài GSM-7 (ví dụ tiếng Việt có dấu) → 70 (67 mỗi phần). Hiển thị "{used}/{limit} · {parts}", trong đó `{parts}` là "1 tin" hoặc "{count} tin" (chuỗi số nhiều, 0.12.1); ô trống hiện "0/160". Ví dụ "120/160 · 1 tin" |
+| 4 | SIM gửi | int32 (`sub_id`) | Input/Output | `features.sms.default_sub_id` | Chỉ hiện khi `features.sms.sims` có > 1 SIM; hiển thị theo `label`; bộ chọn SIM (E6 cũng mở) có tiêu đề "Chọn SIM" |
 | 5 | Nút "Gửi" | action | Input | — | Vô hiệu khi E5 hoặc `can_send = false` |
 | 6 | Bong bóng tạm | string | Output | — | Nội dung vừa gửi, hiện ngay; biến mất khi tin thật đến |
 | 7 | Trạng thái gửi | enum{pending\| sending\| sent\| delivered\| failed} | Output | `pending` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" |
-| 8 | Lý do lỗi | string | Output | Ẩn | Theo mã lỗi: "Không có sóng", "Điện thoại đang ở chế độ máy bay", "Số không hợp lệ", "SIM không hoạt động", "Đã vượt giới hạn gửi, thử lại sau", "Gửi không thành công", "Không kết nối được điện thoại" |
+| 8 | Lý do lỗi | string | Output | Ẩn | Theo mã lỗi: "Không có sóng", "Điện thoại đang ở chế độ máy bay", "Số không hợp lệ", "SIM không hoạt động", "Đã vượt giới hạn gửi, thử lại sau.", "Gửi không thành công", "Không kết nối được điện thoại" |
 | 9 | Nút "Thử lại" | action | Input | — | Trên bong bóng `failed`; tạo `local_id` mới |
 | 10 | Ô trả lời nhanh | string(1600) | Input | Rỗng | Trong thông báo của SMS-02 (hành động `HL_SMS_REPLY`) |
-| 11 | Thông báo "Chưa gửi được" | string | Output | — | Chỉ iOS (E8): "Chưa gửi được, mở HandLive để thử lại" |
+| 11 | Thông báo "Chưa gửi được" | string | Output | — | Chỉ iOS (E8): "Chưa gửi được, mở HandLive để thử lại." |
 
 ### 5.4.4 Luồng nghiệp vụ
 
@@ -1166,7 +1168,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Chỉ báo chưa đọc của hội thoại | bool | Output | `unread_count > 0` và `local_read_ts < last_ts` | Chấm màu, chữ đậm trong danh sách (SMS-03 trường 5) |
-| 2 | Số tin chưa đọc | int32 | Output | `unread_count` | Hiện cạnh hội thoại khi chỉ báo bật |
+| 2 | Số tin chưa đọc | int32 | Output | `unread_count` | Không hiện trong dòng (`ThreadRow` chỉ có chấm, SMS-03 trường 5); là nhãn trợ năng của dòng hội thoại: "2 tin chưa đọc" |
 | 3 | Vạch "Tin chưa đọc" | bool | Output | Theo `sms_message.read` | Đặt trước tin inbox chưa đọc đầu tiên khi mở hội thoại |
 | 4 | Huy hiệu | int32 | Output | 0 | Số hội thoại có chỉ báo bật; biểu tượng menu bar (Mac), biểu tượng ứng dụng (iOS) |
 | 5 | Thông báo SMS đã hiển thị | array\<string> (định danh thông báo) | Output | — | Bị gỡ khi hội thoại đã đọc trên điện thoại hoặc được mở trên thiết bị |
