@@ -29,7 +29,7 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Pairing QR code | string (URI) | Output | Generated when the pairing screen opens | Mac/iOS shows `handlive://pair?v=1&pk=…&ps=…&d=…[&rv=…]`; error correction level M; refreshes automatically after 120 s |
 | 2 | Remaining validity | int32 (seconds) | Output | 120 | Countdown under the QR code; at 0 a new QR code is generated |
-| 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation |
+| 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation<br>On iOS 16 and later `UIDevice.current.name` returns only "iPhone" or "iPad" unless the app has Apple's user-assigned device name entitlement (`com.apple.developer.device-information.user-assigned-device-name`); until Apple grants it, that generic name is what the phone shows |
 | 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ZXing core (no ML Kit, plan decision I8) |
 | 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair with \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
 | 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned<br>Under the six digits on Mac/iOS: "On the phone, tap Add Device, choose Enter PIN, and type this code."<br>Hint on Android: "Type the 6-digit PIN shown on your Mac or iPhone." |

@@ -29,7 +29,7 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Mã QR ghép nối | string (URI) | Output | Sinh khi mở màn hình ghép nối | Mac/iOS hiển thị `handlive://pair?v=1&pk=…&ps=…&d=…[&rv=…]`; mức sửa lỗi M; tự làm mới sau 120 s |
 | 2 | Thời gian hiệu lực còn lại | int32 (giây) | Output | 120 | Đếm ngược dưới QR; về 0 thì sinh QR mới |
-| 3 | Tên thiết bị client | string(64) | Output | Tên máy (`Host.current().localizedName` / `UIDevice.current.name`) | Nằm trong QR (`d`), hiển thị trên Android khi xác nhận |
+| 3 | Tên thiết bị client | string(64) | Output | Tên máy (`Host.current().localizedName` / `UIDevice.current.name`) | Nằm trong QR (`d`), hiển thị trên Android khi xác nhận<br>Từ iOS 16, `UIDevice.current.name` chỉ trả về "iPhone" hoặc "iPad" nếu ứng dụng không có entitlement tên thiết bị do người dùng đặt của Apple (`com.apple.developer.device-information.user-assigned-device-name`); khi Apple chưa cấp entitlement này, điện thoại hiện đúng tên chung đó |
 | 4 | Khung quét QR | camera preview | Input | Camera sau | Android quét bằng CameraX + ZXing core (không ML Kit, kế hoạch I8) |
 | 5 | Xác nhận ghép nối | enum{Ghép nối\| Hủy} | Input | — | Android hỏi "Ghép nối với <tên thiết bị client>?"; "Ghép nối" là nút mặc định, "Hủy" bên trái |
 | 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR<br>Dưới sáu chữ số trên Mac/iOS: "Trên điện thoại, chạm Thêm thiết bị, chọn Nhập mã PIN rồi nhập mã này."<br>Hướng dẫn trên Android: "Nhập mã PIN 6 chữ số đang hiện trên Mac hoặc iPhone." |
