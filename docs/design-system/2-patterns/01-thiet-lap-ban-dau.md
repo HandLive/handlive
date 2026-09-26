@@ -64,7 +64,7 @@ Unchecking "Show HandLive in Menu Bar" immediately switches the app to having a 
 
 | # | Screen | Content | Buttons |
 |---|-----|----------|-----|
-| 1 | Welcome | The phone's role as the hub, a privacy summary (SET-01 field 1) | "Get Started" |
+| 1 | Welcome | The phone syncs with a Mac, iPhone, and iPad; a privacy summary (SET-01 field 1) | "Get Started" |
 | 2 | Notifications (Android 13+) | `PermissionPrimer`, then the system dialog | "Continue" |
 | 3 | Background activity | `PermissionPrimer`, then the battery optimization exemption dialog; on Android 11+, suggest turning off "Pause app activity if unused" | "Continue" |
 | 4 | Autostart (Xiaomi, OPPO, Samsung…) | Manufacturer-specific instructions (SET-01 API 5) | "Open Manufacturer Settings", "Done", "Skip" |

@@ -21,9 +21,9 @@ Thanh tab (iOS 26 trở lên là kính nổi): "Bảng nhớ tạm", "Tin nhắn
 
 ## Android
 
-Android là máy trung tâm nên không có tab này: gửi thủ công bằng ô Cài đặt nhanh "Gửi bảng nhớ tạm",
-nút trong thông báo thường trực, hoặc bảng chia sẻ — đều là giao diện của Android. Tự gửi khi sao
-chép bật trong Cài đặt (cần Hỗ trợ tiếp cận, xem `ConsentSheet`).
+Android không có tab này: người dùng gửi thủ công từ bất cứ đâu trên máy, bằng ô Cài đặt nhanh "Gửi
+bảng nhớ tạm", nút trong thông báo thường trực hoặc bảng chia sẻ — đều là giao diện của Android. Tự
+gửi khi sao chép bật trong Cài đặt (cần Hỗ trợ tiếp cận, xem `ConsentSheet`).
 
 ## Nên và không nên
 

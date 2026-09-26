@@ -61,7 +61,7 @@ Bỏ chọn "Hiện HandLive trên thanh menu" thì app chuyển ngay sang có b
 
 | # | Màn | Nội dung | Nút |
 |---|-----|----------|-----|
-| 1 | Chào mừng | Vai trò trung tâm, tóm tắt quyền riêng tư (SET-01 trường 1) | "Bắt đầu" |
+| 1 | Chào mừng | Điện thoại đồng bộ với Mac, iPhone và iPad; tóm tắt quyền riêng tư (SET-01 trường 1) | "Bắt đầu" |
 | 2 | Thông báo (Android 13+) | `PermissionPrimer` rồi hộp thoại hệ thống | "Tiếp tục" |
 | 3 | Chạy nền | `PermissionPrimer` rồi hộp thoại miễn tối ưu pin; Android 11+ gợi ý tắt "Tạm dừng hoạt động nếu không dùng" | "Tiếp tục" |
 | 4 | Tự khởi chạy (Xiaomi, OPPO, Samsung…) | Hướng dẫn theo hãng (SET-01 API 5) | "Mở cài đặt của hãng", "Đã xong", "Bỏ qua" |
