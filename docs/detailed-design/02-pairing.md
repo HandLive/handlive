@@ -303,7 +303,7 @@ Authentication strings shared by the APIs below:
 |----|--------|------|-------|
 | `rv_joined` | `rv_id` | b64u |  |
 | `rv_joined` | `peer_present` | bool | Both members are present |
-| `error` | `code` | string | `BAD_REQUEST` when the rendezvous already has 2 members or has expired |
+| `error` | `code` | string | `BAD_REQUEST` when the rendezvous already has 2 members; `NOT_CONNECTED` for an `rv_msg` while no other member is in the rendezvous |
 
 - **Example:**
 
@@ -319,7 +319,11 @@ Authentication strings shared by the APIs below:
   3. The relay forwards `env` unchanged to the other member without reading its content; it only
      accepts `env.type = "pair"`.
   4. A `pair/hello` envelope with `mode = "pin"` through the rendezvous is blocked by the relay and
-     also rejected by Android (the PIN is LAN-only).
+     also rejected by Android (the PIN is LAN-only). To block it the relay decodes the unencrypted
+     `pair` payload: the only place where it looks inside an envelope (0.4.3).
+  5. An `rv_msg` while no other member is in the rendezvous → `error NOT_CONNECTED`. An expired
+     `rv_id` cannot be told apart from a new one: `rv_join` creates it again with
+     `peer_present = false`, and the device gives up when step 7 times out (E3).
 
 #### API 8 — `POST /v1/pairs`
 
@@ -343,8 +347,9 @@ Authentication strings shared by the APIs below:
 |------|------|---------|
 | 201 | `{"pair_id":"…","created_at":1727150003210}` | Created |
 | 200 | Same as above | Already exists with identical data (repeated call) |
+| 400 `BAD_REQUEST` | error | Invalid body, or `device_a` is not an Android device or `device_b` is not a Mac, iPhone or iPad |
 | 403 `NOT_PAIRED` | error | The caller is neither `device_a` nor `device_b` |
-| 404 `DEVICE_NOT_FOUND` | error | One side has not registered its device yet → retry later |
+| 404 `DEVICE_NOT_FOUND` | error | One side has not registered its device yet (a device locked out by operations counts as not registered, 0.6.4) → retry later |
 | 409 `PAIR_EXISTS` | error | `pair_id` already exists with different data |
 | 401 `SIGNATURE_INVALID` | error | One of the two signatures is invalid |
 
@@ -365,7 +370,9 @@ Content-Type: application/json
 
 - **Business logic:**
   1. The JWT's `sub` must be `device_a` or `device_b`.
-  2. Both devices must exist and must not be deleted; `ik_sig_pub` is taken from `devices`.
+  2. Both devices must exist and not be locked out (`revoked_at` empty), otherwise 404; `device_a`
+     must be `android` and `device_b` `macos`, `ios` or `ipados`, otherwise 400; `ik_sig_pub` is taken
+     from `devices`.
   3. Parse `attestation` and match it against `pair_id`, `device_a`, `device_b`, `created_at` and the
      two public keys; verify `sig_a` and `sig_b`.
   4. Idempotent write: insert if absent; if present, compare `attestation` — identical → 200,

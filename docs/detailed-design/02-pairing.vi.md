@@ -294,7 +294,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |----|--------|------|-------|
 | `rv_joined` | `rv_id` | b64u |  |
 | `rv_joined` | `peer_present` | bool | Đã có đủ hai thành viên |
-| `error` | `code` | string | `BAD_REQUEST` khi điểm hẹn đã đủ 2 thành viên hoặc hết hạn |
+| `error` | `code` | string | `BAD_REQUEST` khi điểm hẹn đã đủ 2 thành viên; `NOT_CONNECTED` khi gửi `rv_msg` mà điểm hẹn không còn thành viên nào khác |
 
 - **Ví dụ:**
 
@@ -310,7 +310,11 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
   3. Relay chuyển nguyên `env` sang thành viên còn lại, không đọc nội dung; chỉ chấp nhận
      `env.type = "pair"`.
   4. Envelope `pair/hello` có `mode = "pin"` qua điểm hẹn bị relay chặn và Android cũng từ chối (PIN
-     chỉ trong LAN).
+     chỉ trong LAN). Để chặn, relay đọc payload `pair` chưa mã hóa (giải b64). Đây là chỗ duy nhất
+     relay xem bên trong envelope (0.4.3).
+  5. `rv_msg` khi điểm hẹn không còn thành viên nào khác → `error NOT_CONNECTED`. Relay không phân
+     biệt được `rv_id` đã hết hạn với `rv_id` mới, nên `rv_join` tạo lại điểm hẹn với
+     `peer_present = false`. Thiết bị bỏ cuộc khi bước 7 hết thời gian chờ (E3).
 
 #### API 8 — `POST /v1/pairs`
 
@@ -334,8 +338,9 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |------|------|---------|
 | 201 | `{"pair_id":"…","created_at":1727150003210}` | Tạo mới |
 | 200 | như trên | Đã tồn tại với dữ liệu giống hệt (gọi lặp) |
+| 400 `BAD_REQUEST` | lỗi | Body sai, hoặc `device_a` không phải thiết bị Android hay `device_b` không phải Mac, iPhone, iPad |
 | 403 `NOT_PAIRED` | lỗi | Người gọi không phải `device_a` hoặc `device_b` |
-| 404 `DEVICE_NOT_FOUND` | lỗi | Một bên chưa đăng ký thiết bị → thử lại sau |
+| 404 `DEVICE_NOT_FOUND` | lỗi | Một bên chưa đăng ký thiết bị (thiết bị bị vận hành khóa cũng tính là chưa đăng ký, 0.6.4) → thử lại sau |
 | 409 `PAIR_EXISTS` | lỗi | `pair_id` đã có với dữ liệu khác |
 | 401 `SIGNATURE_INVALID` | lỗi | Một trong hai chữ ký sai |
 
@@ -356,7 +361,9 @@ Content-Type: application/json
 
 - **Logic nghiệp vụ:**
   1. `sub` của JWT phải là `device_a` hoặc `device_b`.
-  2. Hai thiết bị phải tồn tại và chưa bị xóa; lấy `ik_sig_pub` từ `devices`.
+  2. Hai thiết bị phải tồn tại và không bị khóa (`revoked_at` rỗng), không thì 404; `device_a` phải là
+     `android`, `device_b` là `macos`, `ios` hoặc `ipados`, không thì 400; lấy `ik_sig_pub` từ
+     `devices`.
   3. Phân tích `attestation`, đối chiếu `pair_id`, `device_a`, `device_b`, `created_at` và hai khóa
      công khai; kiểm `sig_a`, `sig_b`.
   4. Ghi idempotent: chèn nếu chưa có; nếu đã có thì so `attestation` — giống → 200, khác → 409.
