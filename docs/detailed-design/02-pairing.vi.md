@@ -268,7 +268,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |--------|------|----------|-------|
 | `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Có | Mã lỗi (0.8.1) |
 | `message` | string | Có | Mô tả ngắn, không chứa dữ liệu nhạy cảm |
-| `attempts_left` | int32 | Chỉ với `PIN_INVALID` | Số lần nhập còn lại |
+| `attempts_left` | int32 | Bắt buộc với `PIN_INVALID`, không có với mã khác | Số lần nhập còn lại, 0–3 |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -301,7 +301,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 ```json
 {"op":"rv_join","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ"}
 {"op":"rv_joined","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","peer_present":true}
-{"op":"rv_msg","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","env":{"v":1,"type":"pair","id":"0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10","ts":1727150001000,"payload":"eyJvcCI6ImhlbGxvIiwiZGF0YSI6e319"}}
+{"op":"rv_msg","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","env":{"v":1,"type":"pair","id":"01922229-8b68-78ac-815b-67de8e533f5d","ts":1727150001000,"payload":"eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJtb2RlIjoicXIiLCJkZXZpY2VfaWQiOiIyMWZlMzFkZi1hMTU0LTgyNjEtYTI2Yi1mODU0MDQ2ZmQyMjciLCJub25jZSI6ImZrUXp1OE5FM1ZxMU1Nd2FqWm44d0wyT0xSOU9haVZKbVF1dU9waV9UR2ciLCJuYW1lIjoiTWFjQm9vayBj4bunYSBMYW4iLCJwbGF0Zm9ybSI6Im1hY29zIiwibW9kZWwiOiJNYWMxNSwzIiwiaWtfc2lnX3B1YiI6IjExcVlBWUt4Q3JmVlNfN1R5V1FIT2c3aGN2UGFwaU1scndJYWFQY0hVUm8iLCJpa19kaF9wdWIiOiJoU0R3Q1lrd3AxUjBpMzNjdEQ3M1dnMl9PZzBtT0JyMDY2U3BqcXFiVG1vIn19"}}
 ```
 
 - **Logic nghiệp vụ:**

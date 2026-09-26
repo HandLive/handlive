@@ -31,7 +31,7 @@ N/A — no approved wireframe yet.
 | 2 | Remaining validity | int32 (seconds) | Output | 120 | Countdown under the QR code; at 0 a new QR code is generated |
 | 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation |
 | 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ZXing core (no ML Kit, plan decision I8) |
-| 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair With \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
+| 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair with \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
 | 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned<br>Hint on Android: "Type the 6-digit PIN shown on your Mac or iPhone." |
 | 7 | PIN attempts left | int32 | Output | 3 | Shown on Android after a wrong entry: "{count} attempts left" ("1 attempt left") |
 | 8 | Pairing status | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Shown on both devices |
@@ -76,7 +76,7 @@ flowchart TB
 | 2 | System | M-APP / I-APP | Loads or creates `ik_dh`, `ik_sig`; generates a 32-byte `pairing_secret` (`SecRandomCopyBytes`).<br>If the relay is enabled: generate a 16-byte `rv_id`, authenticate with the relay (0.6.4), send `rv_join`.<br>Builds the QR URI and draws the QR code (`CIFilter.qrCodeGenerator`).<br>Starts browsing mDNS for `_handlive._tcp`.<br>Sets a 120 s timer: discard the old secret, go back to step 2. | Relay error → the QR code has no `rv`; pairing on the LAN only. |
 | 3 | User | A-UI | Opens "Pair a Device" and scans the QR code. | No camera permission → E9, switch to the PIN flow (A1). |
 | 4 | System | A-UI | Checks the scheme `handlive`, the host `pair`, `v = 1`, that `pk` and `ps` decode to exactly 32 bytes, `d` ≤ 64 characters and `rv` (if present) is exactly 16 bytes. Checks that active pairs < 8. | Malformed → E1. 8 pairs already → E6. |
-| 5 | User | A-UI | Chooses "Pair" or "Cancel" in the "Pair With \<d>?" dialog. | "Cancel" → E5. |
+| 5 | User | A-UI | Chooses "Pair" or "Cancel" in the "Pair with \<d>?" dialog. | "Cancel" → E5. |
 | 6 | System | A-SVC | Opens a 120 s pairing window: accepts connections on `/v1/pair`; re-registers the mDNS service with TXT `pr` = the first 8 lowercase hex digits of SHA-256 over the 32 decoded bytes of `pk`. If `rv` is present: connect to the relay and send `rv_join`. |  |
 | 7 | System | M-APP / I-APP | Waits up to 20 s: an instance with a matching `pr` is found → go over the LAN; `rv_joined` arrives with `peer_present = true` → go through the relay. The LAN wins if both are available. | No path at all → E3. |
 | 8 | System | M-APP / I-APP | LAN: open `wss://<ip>:<port>/v1/pair` and accept the self-signed certificate, but record the SHA-256 of the certificate seen. Relay: wrap the `pair` envelopes in `rv_msg`. |  |
@@ -277,7 +277,7 @@ Authentication strings shared by the APIs below:
 |--------|------|----------|-------|
 | `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Yes | Error code (0.8.1) |
 | `message` | string | Yes | Short description that contains no sensitive data |
-| `attempts_left` | int32 | Only with `PIN_INVALID` | Number of attempts left |
+| `attempts_left` | int32 | Required with `PIN_INVALID`, absent with any other code | Number of attempts left, 0–3 |
 
 - **Response:** N/A.
 - **Example:**
@@ -310,7 +310,7 @@ Authentication strings shared by the APIs below:
 ```json
 {"op":"rv_join","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ"}
 {"op":"rv_joined","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","peer_present":true}
-{"op":"rv_msg","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","env":{"v":1,"type":"pair","id":"0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10","ts":1727150001000,"payload":"eyJvcCI6ImhlbGxvIiwiZGF0YSI6e319"}}
+{"op":"rv_msg","rv_id":"Eh8kKS4zOD1CR0xRVltgZQ","env":{"v":1,"type":"pair","id":"01922229-8b68-78ac-815b-67de8e533f5d","ts":1727150001000,"payload":"eyJvcCI6ImhlbGxvIiwiZGF0YSI6eyJtb2RlIjoicXIiLCJkZXZpY2VfaWQiOiIyMWZlMzFkZi1hMTU0LTgyNjEtYTI2Yi1mODU0MDQ2ZmQyMjciLCJub25jZSI6ImZrUXp1OE5FM1ZxMU1Nd2FqWm44d0wyT0xSOU9haVZKbVF1dU9waV9UR2ciLCJuYW1lIjoiTWFjQm9vayBj4bunYSBMYW4iLCJwbGF0Zm9ybSI6Im1hY29zIiwibW9kZWwiOiJNYWMxNSwzIiwiaWtfc2lnX3B1YiI6IjExcVlBWUt4Q3JmVlNfN1R5V1FIT2c3aGN2UGFwaU1scndJYWFQY0hVUm8iLCJpa19kaF9wdWIiOiJoU0R3Q1lrd3AxUjBpMzNjdEQ3M1dnMl9PZzBtT0JyMDY2U3BqcXFiVG1vIn19"}}
 ```
 
 - **Business logic:**
