@@ -822,7 +822,7 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Người nhận | e164 | Input | Rỗng | Nhãn "Đến:"; chỉ với "Tin nhắn mới": nhập số hoặc chọn từ hội thoại có sẵn; kiểm sơ bộ (chữ số, dấu `+`, 3–15 ký tự) trước khi gửi |
 | 2 | Nội dung tin | string(1600) | Input | Rỗng | Không cho gửi khi rỗng hoặc chỉ có khoảng trắng |
-| 3 | Bộ đếm ký tự và số phần | string | Output | "0/160" | Ước tính: bảng mã GSM-7 160 ký tự một phần (153 ký tự mỗi phần khi nhiều phần); có ký tự ngoài GSM-7 (ví dụ tiếng Việt có dấu) → 70 (67 mỗi phần). Hiển thị "{used}/{limit} · {parts}", trong đó `{parts}` là "1 tin" hoặc "{count} tin" (chuỗi số nhiều, 0.12.1); ô trống hiện "0/160". Ví dụ "120/160 · 1 tin" |
+| 3 | Bộ đếm ký tự và số phần | string | Output | "0/160" | Ước tính: bảng mã GSM-7 160 ký tự một phần (153 ký tự mỗi phần khi nhiều phần); có ký tự ngoài GSM-7 (ví dụ tiếng Việt có dấu) → 70 (67 mỗi phần). Hiển thị "{used}/{limit} · {parts}", trong đó `{parts}` là "1 tin" hoặc "{count} tin" (chuỗi số nhiều, 0.12.1); ô trống hiện "0/160". `{used}` là số ký tự của tin. `{limit}` là sức chứa của số phần hiện có: 160 cho một phần GSM-7, 153 × số phần khi nhiều phần; 70 cho một phần có ký tự ngoài GSM-7, 67 × số phần khi nhiều phần. Ví dụ "120/160 · 1 tin", "230/306 · 2 tin" |
 | 4 | SIM gửi | int32 (`sub_id`) | Input/Output | `features.sms.default_sub_id` | Chỉ hiện khi `features.sms.sims` có > 1 SIM; hiển thị theo `label`; bộ chọn SIM (E6 cũng mở) có tiêu đề "Chọn SIM" |
 | 5 | Nút "Gửi" | action | Input | — | Vô hiệu khi E5 hoặc `can_send = false` |
 | 6 | Bong bóng tạm | string | Output | — | Nội dung vừa gửi, hiện ngay; biến mất khi tin thật đến |
