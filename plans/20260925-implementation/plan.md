@@ -2,7 +2,7 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`) · **Sources:**
+**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 in progress on `feat/phase-02-sms-ios-relay` since 2026-09-26, started before G1 by decision of the project owner · **Sources:**
 `plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
 (33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
@@ -13,7 +13,7 @@ English | [Tiếng Việt](plan.vi.md)
 |---|-----------|-------|
 | I1 | **Five repositories in one workspace** (since 2026-09-25, decided by the project owner so that each part can go into a group; previously a monorepo): the hub `handlive` (docs, plans, `tools/docs/`) and four repositories `handlive-android`, `handlive-apple` (macOS + iOS + shared Swift packages), `handlive-relay`, `handlive-shared` (test vectors, schemas, design tokens, `tools/vectors`, `tools/schemas`), cloned into `android/`, `apple/`, `relay/`, `shared/` inside the hub folder — `tools/workspace.sh`; report `reports/repo-split.md` | Each part is pushed to the group separately; the three platforms still match one wire protocol because the test vectors and schemas exist in a single copy in `shared/`, and builds and tests read them through `../shared` |
 | I2 | **Phase 0** builds the scaffold, the protocol and encryption libraries and the cross-platform test vectors before any feature | Every later phase reuses them; encryption mismatches between Tink and CryptoKit must surface from the start |
-| I3 | Phases 1 → 5 in roadmap order; one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met (exception: the project owner merged Phase 1 on 2026-09-26 before gate G1; G1 still has to pass before Phase 2 ships) | Each phase is a usable product |
+| I3 | Phases 1 → 5 in roadmap order; one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met (exceptions decided by the project owner on 2026-09-26: Phase 1 merged and Phase 2 started before gate G1; G1 still has to pass before Phase 2 ships) | Each phase is a usable product |
 | I4 | Phases 4 and 5 open with a **one-week spike** with a go/no-go gate (D1, D6) before any feature code | Risks R1, R6 |
 | I5 | UI strings come from the catalog `shared/strings/ui-strings.json` (stable keys, `en` + `vi`, 0.12); the wording matches the detailed design (English `X.md`, Vietnamese `X.vi.md`); the UI is built to the design system (components, tokens, wording) | No strings written in code; both languages always complete |
 | I6 | When code and docs disagree: fix the docs first (00-common-specs → leaf function), run `tools/docs/validate_design_docs.py`, and only then change the code | The docs are the contract between the platforms |
@@ -82,7 +82,7 @@ repository) only when a mismatch is found, and run the validator.
 | Gate | When | Criteria to go ahead | If not met |
 |------|---------|------------------|---------------|
 | G0 | End of Phase 0 | Encryption and envelope test vectors green on Android and Apple; CI green on all three platforms | Phase 1 does not start |
-| G1 | End of Phase 1 | All measurable criteria met (95th percentile, `shared/tools/bench/` scripts) on ≥ 2 real Android phones (Pixel, Samsung) and 1 Mac | Fix before starting Phase 2 |
+| G1 | End of Phase 1 | All measurable criteria met (95th percentile, `shared/tools/bench/` scripts) on ≥ 2 real Android phones (Pixel, Samsung) and 1 Mac | Fix before starting Phase 2 (waived by the project owner on 2026-09-26: Phase 2 has started, and G1 must pass before Phase 2 ships) |
 | G2 | Before the Phase 2 release | Play Console: Permissions Declaration Form for SMS and the call log submitted (`docs/deployment-guide.md`) | Activate Plan B (Notification Listener for incoming SMS; F-Droid/APK distribution) |
 | G4 (spike D1) | First week of Phase 4 | `IOBluetoothHandsFreeDevice` receives SCO audio in the HF role on macOS 13, 14, 15, 26 with Pixel and Samsung | Opus/WS becomes the primary path; HFP keeps only control; update AUDIO-02 and plan D1 |
 | G5 (spike D6) | First week of Phase 5 | CMIOExtension delivers frames to Zoom/Meet/FaceTime; the AudioServerPlugin loopback is audible in meeting apps | Stop Phase 5, write a report |

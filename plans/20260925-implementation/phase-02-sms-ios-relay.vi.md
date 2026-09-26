@@ -31,6 +31,9 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 
 | Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
 |----|------|--------|--------------------|
+| S2.1 [shared] | Catalog chuỗi giao diện cho Phase 2 (0.12, C20): mọi chuỗi người dùng thấy của SMS-01…05, CONN-03, CONN-04 (bảng `loc-key` nhóm `push.*` ở API 4), CLIP-04, PAIR-01 qua relay, PAIR-03 luồng B, SET-02 trường 7–9, 21, 24–30, SET-03 (iOS); chuỗi mục đích xin quyền của iOS; kênh thông báo `sms` của Android | `shared/strings/ui-strings.json` | `check_strings.py` và `--docs` sạch; `en` và `vi` khớp đặc tả lá; vào trước mọi mã giao diện Phase 2 |
+| S2.2 [shared] | JSON Schema: các op `sms` `sync`, `history`, `new`, `send`, `status`, `read_changed` kèm dữ liệu ack; lớp bọc định tuyến và thông điệp điều khiển của relay (0.4.3, 0.7.3); thân REST relay và thân lỗi (0.7.4, 0.8.2); thân push (`POST /v1/push`, dữ liệu FCM, payload APNs; 0.4.4, CONN-04) | `shared/schemas/` | `check_schemas.py` xanh, gồm mọi ví dụ JSON của các đặc tả lá Phase 2 |
+| S2.3 [shared] | Test vector: dẫn xuất `K_push` và một envelope mã hóa bằng `K_push` (CONN-04 API 4, I-NSE giải mã); khung nhị phân định tuyến `HR` (0.4.3) | `shared/test-vectors/` | `verify_vectors.py` 0 lỗi, `generate_vectors.py --check` 0 lệch; test của Android, Apple và relay nạp các file này |
 | R2.1 [relay] | REST: đăng ký thiết bị, cặp, thu hồi, `DELETE /v1/devices/me` (C16), push token; WS `/v1/relay` với lớp bọc `to`/`from`, presence Redis, chuyển tiếp giữa instance qua pub/sub (C5); rate limit; xóa dữ liệu 30 ngày | `relay/crates/relay-server` | Test tích hợp với hai client giả; `cargo clippy` sạch; không có payload trong log |
 | R2.2 [relay] | Push proxy: APNs (token .p8, `apns-collapse-id`, `interruption-level`), FCM; `push_outbox` hạn 30 s; nội dung mặc định theo CONN-04 API 4: chỉ `loc-key`, relay không gửi câu chữ | `relay/crates/relay-push` | Push tới iPhone thật trong < 2 s; hết hạn đúng |
 | A2.1 [android] | SMS: `ContentObserver` trên provider (SMS-02), đồng bộ lịch sử theo trang (SMS-01), gửi qua `SmsManager` với `SendRegistry` và trạng thái `sending → sent → delivered/failed` (SMS-04), đã đọc (SMS-05); quyền SMS theo SET-01 phần B | `android/feature/sms` | Mọi mã lỗi `SMS_*` (0.8) được trả đúng; test với hai SIM |
@@ -41,6 +44,18 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 | I2.2 [iOS] | Notification Service Extension: giải mã envelope bằng `K_push` khi máy mở khóa, thông báo liên lạc `INSendMessageIntent`, hành động trả lời (SMS-04 trong ~20 s nền), nội dung chung khi khóa (C3); đăng ký push (CONN-04) | `apple/iOS/NotificationService` | Test với máy khóa và mở khóa; extension < 30 MB bộ nhớ |
 | T2.1 [test] | Bench: thời gian thông báo SMS và xác nhận trả lời; test tải relay 1 000 kết nối giả | `tools/bench/`, `reports/` | Đạt mục tiêu đo trên máy thật; relay ổn ở 1 000 kết nối |
 | T2.2 [release] | Play Console: Permissions Declaration Form (SMS, nhật ký cuộc gọi), chính sách quyền riêng tư; App Store: mô tả quyền, App Group, capability Communication Notifications | `docs/deployment-guide.md` | Cổng G2 |
+
+## Nhánh và thứ tự làm
+
+- Nhánh `feat/phase-02-sms-ios-relay` ở handlive-shared, handlive-relay, handlive-android và
+  handlive-apple; hub và `HandLive/.github` vẫn làm trên `main`.
+- Mỗi kho một agent, chạy song song: shared (S2.1 → S2.2 → S2.3 → T2.1), relay (R2.1 → R2.2),
+  Android (A2.1 → A2.2), Apple (client relay trong `HLTransport` và kho SMS trong các package trước,
+  rồi M2.1 → M2.2 → I2.1 → I2.2). S2.1 đi đầu vì mọi thẻ giao diện chờ chuỗi của nó; trong lúc chờ,
+  agent nền tảng làm các phần không có giao diện.
+- App iOS và Notification Service Extension chỉ build trên CI (máy macOS có Xcode); máy phát triển
+  chỉ có Command Line Tools.
+- T2.2 (tài liệu) làm trong hub; việc nộp Play Console và App Store là bước của chủ dự án (cổng G2).
 
 ## Kiểm thử
 
