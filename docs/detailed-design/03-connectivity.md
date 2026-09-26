@@ -285,7 +285,7 @@ WHERE revoked_at IS NULL;
 | Actors | Primary: System (M-APP / I-APP, A-SVC). The user can click "Reconnect Now". |
 | Preconditions | There has been a session (`Connected`) before, or the client is in `Backoff`/`Discovering`. |
 | Postconditions | The session is kept or re-established; the displayed status matches reality within ≤ 1 s of detection; `sms_outbox` entries still `pending` are resent; SMS-01 and CALL-04 catch up. |
-| Exceptions | E1 — The network is completely lost: go to `Idle`, wait for `NWPathMonitor`/`NetworkCallback` to report a network, no useless backoff.<br>E2 — The Mac goes to sleep: send `session/bye {reason: shutdown}` if there is still time; on wake-up run CONN-01 immediately.<br>E3 — iOS goes to the background: send `session/bye {reason: shutdown}`, close; while suspended, messages arrive through push (CONN-04).<br>E4 — Rekey without an `ack` within 10 s → close the session, reconnect (a new handshake generates new keys).<br>E5 — `DECRYPT_FAILED` → close 4400, reconnect.<br>E6 — The operating system stops A-SVC (OEM background killing) → the client sees the connection drop; A-SVC `START_STICKY` restarts by itself; SET-01 has already requested the battery optimization exemption.<br>E7 — Closed with 4409 (replaced by a new connection of the same client) → do not reconnect from the old session. |
+| Exceptions | E1 — The network is completely lost: go to `Idle`, wait for `NWPathMonitor`/`NetworkCallback` to report a network, no useless backoff.<br>E2 — The Mac goes to sleep: send `session/bye {reason: shutdown}` if there is still time; on wake-up run CONN-01 immediately.<br>E3 — iOS goes to the background: send `session/bye {reason: shutdown}`, close; while suspended, messages arrive through push (CONN-04).<br>E4 — Rekey without an `ack` within 10 s → close the session, reconnect (a new handshake generates new keys).<br>E5 — `DECRYPT_FAILED` → close 4400, reconnect.<br>E6 — The operating system stops A-SVC (OEM background killing) → the client sees the connection drop; A-SVC `START_STICKY` restarts by itself; SET-01 has already requested the battery optimization exemption.<br>E7 — Closed with 4409 (replaced by a new connection of the same client; over the relay: `session/bye {reason: replaced}`, API 4) → do not reconnect from the old session. |
 | Special requirements | **Performance:** reconnect < 3 s after the network returns; detect a lost connection in ≤ 25 s (15 s ping + 10 s waiting for the pong).<br>**Battery:** the client pings actively, Android only answers with pongs and closes connections that have been silent for more than 45 s; Android does not keep the relay connection when idle for more than 5 minutes.<br>**Backoff:** 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %, back to the start on success. |
 
 ### 3.2.2 Screens
@@ -339,7 +339,7 @@ flowchart TB
 | 4 | System | M-APP / I-APP | Waits per the backoff table (with jitter). No network → `Idle`, wait for a network event. | E1. |
 | 5 | System | M-APP / I-APP | Cancels the wait, runs CONN-01 (LAN first, then CONN-03 after 10 s). |  |
 | 6 | System | The side that reaches the threshold first | Sends `session/rekey`; the receiver answers with an `ack` carrying its own ephemeral key and switches keys; the sender switches keys once it receives the `ack`. The old keys are kept for 30 s for envelopes in flight. | No `ack` → E4. |
-| 7 | System | M-APP / I-APP → A-SVC | On the relay while mDNS sees a matching hint → open a new LAN session per CONN-01 steps 4–9. A-SVC sends `session/bye {reason: replaced}` on the relay session, then closes it with 4409. | E7 for the old session. |
+| 7 | System | M-APP / I-APP → A-SVC | On the relay while mDNS sees a matching hint → open a new LAN session per CONN-01 steps 4–9. A-SVC sends `session/bye {reason: replaced}` on the relay session and ends it (a relayed session has no close code, API 4). | E7 for the old session. |
 | 8 | System | M-APP / I-APP | The user quits the app, the Mac is about to sleep, iOS goes to the background → send `session/bye` and close with 1000. | E2, E3. |
 | 9 | User | M-APP / I-APP | Clicks "Reconnect Now". |  |
 | 10 | System | M-APP / I-APP, A-SVC | Once `Connected` again: resend the `sms_outbox` entries still `pending` in creation order (SMS-04), run SMS-01 and CALL-04 with the stored cursors. |  |
@@ -407,6 +407,13 @@ flowchart TB
 Specified as in PAIR-03 API 2. In this group `reason` is `shutdown` (quit, sleep, background),
 `replaced` (Android replaces an old session with a new session of the same pair) or `update` (the app
 is about to be updated).
+
+A session through the relay has no WebSocket close between the peers: the `/v1/relay` link carries
+the other sessions and stays open, so no close code (4409, 4410, 4411, …) reaches the peer. A device
+therefore always sends `session/bye` before it ends a relayed session: `revoked`, `replaced` or
+`update` as defined, `shutdown` for every other end (quit, sleep, background, relay switched off, and
+the ends that close an established LAN session with 4400, 4410, 4411 or 4500). The receiver ends the
+session when `session/bye` arrives: `replaced` counts as 4409 (E7), any other reason as 1000.
 
 #### Query
 
@@ -663,6 +670,8 @@ flowchart TB
      `GET /v1/pairs`.
   6. No decryption, no logging of `env`; only the envelope count and bytes are added to
      `usage_daily` per `device_hash`.
+  7. Ending a relayed session: there is no WebSocket close between the peers, so the device that
+     ends it always sends `session/bye` first (CONN-02 API 4); the `/v1/relay` link stays open.
 
 #### Query
 

@@ -711,7 +711,8 @@ flowchart TB
 - **URL:** same as API 1
 - **Method:** `WS session/bye` (both directions), encrypted envelope, no ack.
 - **Request (`data`):** `reason` — enum{revoked\|shutdown\|replaced\|update}.
-- **Response:** N/A; the sender closes the WebSocket with code 1000.
+- **Response:** N/A; the sender closes the WebSocket with code 1000 (a session through the relay has
+  no WebSocket of its own: CONN-02 API 4).
 - **Example:** `{"op":"bye","data":{"reason":"revoked"}}`
 - **Business logic:** A receiver of `reason = revoked` cleans up the pair if it has not done so yet
   (in case `pair/revoke` was lost).

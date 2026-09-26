@@ -698,7 +698,8 @@ flowchart TB
 - **URL:** như API 1
 - **Method:** `WS session/bye` (hai chiều), envelope mã hóa, không ack.
 - **Request (`data`):** `reason` — enum{revoked\|shutdown\|replaced\|update}.
-- **Response:** N/A; bên gửi đóng WebSocket với mã 1000.
+- **Response:** N/A; bên gửi đóng WebSocket với mã 1000 (phiên qua relay không có WebSocket riêng:
+  CONN-02 API 4).
 - **Ví dụ:** `{"op":"bye","data":{"reason":"revoked"}}`
 - **Logic nghiệp vụ:** Bên nhận `reason = revoked` dọn cặp nếu chưa dọn (phòng khi mất
   `pair/revoke`).
