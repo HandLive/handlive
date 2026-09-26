@@ -1208,7 +1208,7 @@ flowchart TB
 | 5 | Hệ thống | A-SVC | Với mỗi hội thoại thay đổi: gửi `sms/read_changed` `{thread_id, unread_count, read_up_to_ts}` (API 1) tới mọi client đang có phiên và SMS hiệu lực. | Không có client → E1. |
 | 6 | Hệ thống | M-APP / I-APP | Trong một giao dịch: cập nhật `sms_thread.unread_count`; đặt `read` của tin inbox theo `ts ≤ read_up_to_ts`. | Hội thoại chưa có → E4. |
 | 7 | Hệ thống | M-APP / I-APP | Gỡ thông báo của hội thoại có `ts ≤ read_up_to_ts` (API 2); tính lại huy hiệu. |  |
-| 8 | Người dùng | M-APP / I-APP | Thấy hội thoại hết chỉ báo chưa đọc, hoặc số chưa đọc giảm. |  |
+| 8 | Người dùng | M-APP / I-APP | Thấy hội thoại hết chấm chưa đọc, hoặc vẫn còn chấm khi còn tin chưa đọc; dòng không hiện số, nhãn trợ năng của dòng mang số đó (trường 2). |  |
 | A1 | Người dùng | M-APP / I-APP | Mở hội thoại trên Mac/iOS (SMS-03 bước 4) hoặc trả lời nhanh từ thông báo (SMS-04). |  |
 | A2 | Hệ thống | M-APP / I-APP | Đặt `local_read_ts = last_ts`, gỡ thông báo của hội thoại, tính lại huy hiệu. Không gửi gì tới điện thoại; `unread_count` giữ nguyên. | E3. Tin mới sau đó làm hội thoại chưa đọc trở lại (E6). |
 

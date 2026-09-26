@@ -1235,7 +1235,7 @@ flowchart TB
 | 5 | System | A-SVC | For each changed conversation: send `sms/read_changed` `{thread_id, unread_count, read_up_to_ts}` (API 1) to every client that has a session and SMS active. | No client → E1. |
 | 6 | System | M-APP / I-APP | In one transaction: update `sms_thread.unread_count`; set `read` of the inbox messages according to `ts ≤ read_up_to_ts`. | Conversation not present yet → E4. |
 | 7 | System | M-APP / I-APP | Remove the conversation's notifications with `ts ≤ read_up_to_ts` (API 2); recompute the badge. |  |
-| 8 | User | M-APP / I-APP | Sees the conversation without the unread indicator, or with a lower unread count. |  |
+| 8 | User | M-APP / I-APP | Sees the conversation without the unread dot, or still with it while unread messages remain; the row shows no count, its accessibility label carries it (field 2). |  |
 | A1 | User | M-APP / I-APP | Opens the conversation on Mac/iOS (SMS-03 step 4) or quick-replies from the notification (SMS-04). |  |
 | A2 | System | M-APP / I-APP | Set `local_read_ts = last_ts`, remove the conversation's notifications, recompute the badge. Nothing is sent to the phone; `unread_count` is unchanged. | E3. A later new message makes the conversation unread again (E6). |
 
