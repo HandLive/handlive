@@ -841,7 +841,7 @@ N/A — no approved wireframe yet.
 | 5 | "Send" button | action | Input | — | Disabled for E5 or when `can_send = false` |
 | 6 | Placeholder bubble | string | Output | — | The text just sent, shown right away; disappears when the real message arrives |
 | 7 | Send status | enum{pending\| sending\| sent\| delivered\| failed} | Output | `pending` | "Waiting for phone", "Sending…", "Sent", "Delivered", "Not sent" |
-| 8 | Failure reason | string | Output | Hidden | By error code: "No service", "The phone is in airplane mode", "Invalid number", "The SIM isn't active", "Sending limit reached. Try again later.", "Couldn't send", "Couldn't connect to the phone" |
+| 8 | Failure reason | string | Output | Hidden | By error code: "No service", "The phone is in airplane mode", "Invalid number", "The SIM isn't active", "Missing SMS permission on the phone", "Sending limit reached. Try again later.", "Couldn't send", "Couldn't connect to the phone" |
 | 9 | "Try Again" button | action | Input | — | On a `failed` bubble; creates a new `local_id` |
 | 10 | Quick-reply field | string(1600) | Input | Empty | In the SMS-02 notification (action `HL_SMS_REPLY`) |
 | 11 | "Not sent yet" notification | string | Output | — | iOS only (E8): "Not sent yet. Open HandLive to try again." |

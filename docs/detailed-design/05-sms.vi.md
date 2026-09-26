@@ -827,7 +827,7 @@ N/A — chưa có wireframe được duyệt.
 | 5 | Nút "Gửi" | action | Input | — | Vô hiệu khi E5 hoặc `can_send = false` |
 | 6 | Bong bóng tạm | string | Output | — | Nội dung vừa gửi, hiện ngay; biến mất khi tin thật đến |
 | 7 | Trạng thái gửi | enum{pending\| sending\| sent\| delivered\| failed} | Output | `pending` | "Đang chờ điện thoại", "Đang gửi…", "Đã gửi", "Đã nhận", "Gửi lỗi" |
-| 8 | Lý do lỗi | string | Output | Ẩn | Theo mã lỗi: "Không có sóng", "Điện thoại đang ở chế độ máy bay", "Số không hợp lệ", "SIM không hoạt động", "Đã vượt giới hạn gửi, thử lại sau.", "Gửi không thành công", "Không kết nối được điện thoại" |
+| 8 | Lý do lỗi | string | Output | Ẩn | Theo mã lỗi: "Không có sóng", "Điện thoại đang ở chế độ máy bay", "Số không hợp lệ", "SIM không hoạt động", "Thiếu quyền SMS trên điện thoại", "Đã vượt giới hạn gửi, thử lại sau.", "Gửi không thành công", "Không kết nối được điện thoại" |
 | 9 | Nút "Thử lại" | action | Input | — | Trên bong bóng `failed`; tạo `local_id` mới |
 | 10 | Ô trả lời nhanh | string(1600) | Input | Rỗng | Trong thông báo của SMS-02 (hành động `HL_SMS_REPLY`) |
 | 11 | Thông báo "Chưa gửi được" | string | Output | — | Chỉ iOS (E8): "Chưa gửi được, mở HandLive để thử lại." |
