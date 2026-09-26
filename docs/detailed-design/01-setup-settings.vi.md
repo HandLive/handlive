@@ -47,7 +47,7 @@ N/A — chưa có wireframe được duyệt.
 | 14 | Hướng dẫn "Chế độ cài đặt bị hạn chế" | string | Output | Ẩn | Hiện khi Android 13+ và nguồn cài không phải Google Play (API 6, E7) |
 | 15 | Trạng thái tự gửi clipboard | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` khi `clip.auto_send = true`, đã có `clip.a11y_consent_at` và dịch vụ Hỗ trợ tiếp cận đang chạy; `off` khi `clip.auto_send = false` |
 | 16 | Nút "Mở cài đặt" | action | Input | Hiện khi có quyền bị từ chối vĩnh viễn | Mở trang Thông tin ứng dụng của HandLive (E5) |
-| 17 | Thông báo gợi ý cấp quyền | string | Output | — | A-SVC đăng khi trả `PERMISSION_MISSING` cho client: "MacBook của Lan cần quyền đọc SMS trên điện thoại — chạm để cho phép"; tối đa 1 lần mỗi tính năng mỗi 24 h; kênh `permission` ("Quyền", mô tả "Gợi ý cấp quyền khi Mac hoặc iPhone cần một tính năng trên điện thoại.", `IMPORTANCE_LOW`) |
+| 17 | Thông báo gợi ý cấp quyền | string | Output | — | A-SVC đăng khi trả `PERMISSION_MISSING` cho client: "MacBook của Lan cần quyền SMS trên điện thoại — chạm để cho phép" (cùng một câu dù thiếu quyền SMS nào); tối đa 1 lần mỗi tính năng mỗi 24 h; kênh `permission` ("Quyền", mô tả "Gợi ý cấp quyền khi Mac hoặc iPhone cần một tính năng trên điện thoại.", `IMPORTANCE_LOW`) |
 | 18 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E10 |
 
 ### 1.1.4 Luồng nghiệp vụ

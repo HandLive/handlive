@@ -48,7 +48,7 @@ N/A — no approved wireframe yet.
 | 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when the install source is not Google Play (API 6, E7) |
 | 15 | Automatic clipboard sending status | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` when `clip.auto_send = true`, `clip.a11y_consent_at` is set and the Accessibility service is running; `off` when `clip.auto_send = false` |
 | 16 | "Open Settings" button | action | Input | Shown when a permission is permanently denied | Opens HandLive's App info page (E5) |
-| 17 | Permission suggestion notification | string | Output | — | Posted by A-SVC when it returns `PERMISSION_MISSING` to a client: "Lan's MacBook needs permission to read SMS on this phone — tap to allow"; at most once per feature per 24 h; channel `permission` ("Permissions", description "Suggestions to grant a permission when a Mac or iPhone needs a feature of this phone.", `IMPORTANCE_LOW`) |
+| 17 | Permission suggestion notification | string | Output | — | Posted by A-SVC when it returns `PERMISSION_MISSING` to a client: "Lan's MacBook needs SMS permission on this phone — tap to allow" (the same text whichever SMS permission is missing); at most once per feature per 24 h; channel `permission` ("Permissions", description "Suggestions to grant a permission when a Mac or iPhone needs a feature of this phone.", `IMPORTANCE_LOW`) |
 | 18 | Error message | string | Output | Empty | Text per E1–E10 |
 
 ### 1.1.4 Business flow

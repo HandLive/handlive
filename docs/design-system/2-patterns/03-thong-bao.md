@@ -41,7 +41,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 | `camera_live` | `IMPORTANCE_LOW`, ongoing | "Using the camera for Lan's MacBook" | "Switch Camera", "Turn Off Microphone" or "Turn On Microphone", "Stop" (3 at most) |
 | `camera_alert` | `IMPORTANCE_DEFAULT` | Overheating, low battery — the same wording as on the Mac | — |
 | `clipboard` (proposed) | `IMPORTANCE_LOW` (silent, like passive) | Sensitive content blocked; conflict; progress for images over 1 MiB "Sending image to Lan's MacBook — 45%" | "Send Anyway"; "Send Again"; "Cancel" |
-| `permission` (proposed) | `IMPORTANCE_LOW` | "Lan's MacBook needs permission to read SMS on this phone — tap to allow" (SET-01 field 17) | — |
+| `permission` (proposed) | `IMPORTANCE_LOW` | "Lan's MacBook needs SMS permission on this phone — tap to allow" (SET-01 field 17) | — |
 
 - The template, the small icon, and the presentation belong to Android: `NotificationCompat`, a
   monochrome small icon (Material Symbols), and actions that are `PendingIntent`s opening an activity

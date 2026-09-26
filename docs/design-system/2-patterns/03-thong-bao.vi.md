@@ -41,7 +41,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 | `camera_live` | `IMPORTANCE_LOW`, thường trực | "Đang dùng camera cho MacBook của Lan" | "Đổi camera", "Tắt micro" hoặc "Bật micro", "Dừng" (tối đa 3) |
 | `camera_alert` | `IMPORTANCE_DEFAULT` | Quá nóng, pin yếu — cùng câu như Mac | — |
 | `clipboard` (đề xuất) | `IMPORTANCE_LOW` (không âm, như passive) | Đã chặn nội dung nhạy cảm; xung đột; tiến trình ảnh trên 1 MiB "Đang gửi ảnh tới MacBook của Lan — 45 %" | "Vẫn gửi"; "Gửi lại"; "Hủy" |
-| `permission` (đề xuất) | `IMPORTANCE_LOW` | "MacBook của Lan cần quyền đọc SMS trên điện thoại — chạm để cho phép" (SET-01 trường 17) | — |
+| `permission` (đề xuất) | `IMPORTANCE_LOW` | "MacBook của Lan cần quyền SMS trên điện thoại — chạm để cho phép" (SET-01 trường 17) | — |
 
 - Mẫu, biểu tượng nhỏ và cách hiện là của Android: `NotificationCompat`, biểu tượng nhỏ đơn sắc
   (Material Symbols), hành động là `PendingIntent` mở thẳng activity hoặc service (Android 12+ chặn
