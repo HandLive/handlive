@@ -195,3 +195,59 @@ pairing through the rendezvous, SMS pushes with the push outbox, FCM in the gms 
 24–30 are implemented, tested against fakes and the shared vectors, and pushed.
 Concerns/Blockers: no real relay, APNs or FCM run from here; the backup certificate pin and the relay host must come
 from the owner; spec points 1, 3, 5 and 8 need a decision.
+
+## Follow-up (spec sync batch 5, hub `dbb1546`, shared `9ff23b7`)
+
+What changed after the batch 5 decisions (`phase-02-spec-sync-1.md`), same branch, pushed (head `eaf9395`):
+
+1. **`session/bye` on relayed sessions (CONN-02 API 4, CONN-03 API 6 logic 7)** — `ControlSession` now sends at most
+   one `session/bye` per session and, on a relayed session, always sends one before it ends: `revoked`, `replaced` and
+   `shutdown` as before, `shutdown` for every other end (idle 4411, failed rekey 4410, bad request 4400, internal 4500,
+   a later 4426). A received `session/bye` ends the session on either path without an answer: `replaced` like 4409,
+   any other reason like 1000. Service stop and relay off already said `shutdown`. Interpretation: a peer that sends a
+   new `session/hello` on the relay while the phone still runs its old relayed session has left that session, so the
+   phone ends it at once **without** a bye — the bye would be sealed with keys the peer already dropped, and the Apple
+   client ends its new session on an envelope it cannot open (CONN-02 E5, `ControlSession+Receiving.swift`). A socket
+   ended because the peer left or the link dropped has nobody to tell.
+2. **CONN-03 E7 on Android** — a pin mismatch on the relay REST calls (`RelayPinMismatchException`) or on
+   `/v1/relay` stops the connection and sets `RelayStatus.pinMismatch`; Settings shows `error.relay_pin_mismatch`
+   under Internet Connection in place of the description (E3 wins if both apply). The mark clears when a link opens
+   or the user turns the relay back on; a new demand tries once more, without backoff retries.
+3. **PAIR-02 API 1 logic 3** — `RelayRegistrar.checkPairs` marks a pair `relay_registered = 1` when `GET /v1/pairs`
+   lists it without `revoked_at` while it is still at 0, and ends its 24 h wait.
+4. **Strings** — shared pulled to `9ff23b7` (304 strings); the generated resources carry the new
+   `notification.permission_sms_read` ("{device_name} needs SMS permission on this phone — tap to allow" / "…cần quyền
+   SMS trên điện thoại — chạm để cho phép") and `error.relay_pin_mismatch` for Android. No code change beyond the
+   notifier's doc.
+5. **Re-check of E1, E2, E5, E6** — E2 (404 → register once and repeat, a second 404 → 24 h; other 4xx wait 24 h too,
+   the spec is silent there), E5 (check order, `local_id` right after the parameters, SIM chosen before the address)
+   and E6 (match window from the final result) match the code. **E1 had drifted:** a network change retried only
+   while a demand was recent, so a link that dropped while only an open rendezvous (or relayed session) kept the phone
+   on the relay waited for a new demand; it now retries at once whenever the relay is wanted (fixed, with a test that
+   fails without the fix).
+
+| Hash | Subject |
+|------|---------|
+| 13941da | feat(android): always say session/bye before ending a relayed session |
+| 3d8f905 | test(android): cover the byes of relayed sessions: server ends, idle, peer bye, new hello |
+| 48db9fb | feat(android): report a relay certificate outside the pins (CONN-03 E7) |
+| dbb6258 | test(android): a pin mismatch before or at the link stops and is reported |
+| acd8847 | feat(android): show the certificate error under Internet Connection |
+| 4865512 | test(android): cover the relay errors of Internet Connection and fit the E7 text at 200 % |
+| 7e0357e | feat(android): mark a pair registered when the relay lists it unrevoked |
+| 372f41a | test(android): a pair the peer completed is marked registered and stops waiting |
+| 7fb26d1 | docs(android): quote the SET-01 field 17 text the catalog now carries |
+| 8d72ea9 | fix(android): retry at once on a network change while a rendezvous or session wants the relay |
+| eaf9395 | test(android): a network change reconnects at once while a rendezvous is open |
+
+No handlive-shared commit in the follow-up.
+
+```text
+$ ./gradlew check --continue            # JDK 21, eaf9395 with shared 9ff23b7
+BUILD SUCCESSFUL in 49s
+715 actionable tasks: 87 executed, 628 up-to-date
+```
+
+JVM tests after the follow-up: 500, 0 failures (core/transport 61: `RelayPeerMuxTest` 8 with the new server-end,
+idle, peer-bye and new-hello cases; feature/relay 31: `RelayConnectorTest` 11, `RelayRegistrarTest` 8; app 28 with
+the E7 text at 200 %). CI `ci-android` green on `eaf9395` (run 36228377927).
