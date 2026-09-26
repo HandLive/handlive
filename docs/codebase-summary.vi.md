@@ -6,9 +6,9 @@
 
 ## Trạng thái hiện tại (2026-09-26)
 
-**Mã Phase 1 (bảng nhớ tạm MVP) đã xong** trên nhánh `feat/phase-01-clipboard` của handlive-android,
-handlive-apple, handlive-shared và handlive-relay, CI xanh ở từng kho; chờ cổng G1 (đo trễ và kiểm giao diện
-trên điện thoại Pixel/Samsung và Mac thật) rồi mới gộp vào `main`. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
+**Phase 1 (bảng nhớ tạm MVP) đã gộp vào `main`** của handlive-android, handlive-apple, handlive-shared và
+handlive-relay (26/09/2026, CI xanh); cổng G1 (đo trễ và kiểm giao diện trên điện thoại Pixel/Samsung và Mac
+thật) vẫn còn mở. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
 tiếng Việt thứ hai — mọi chuỗi nằm trong catalog dùng chung (C20). Khoảng 297 file Kotlin, 188 file Swift (chưa
 tính file sinh), 29 file Rust và 36 file công cụ Python. Từ 25/09/2026 mã nguồn tách thành **năm kho git trong
 một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`, báo cáo `reports/repo-split.md`):
@@ -96,6 +96,6 @@ và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md
 ## Điểm bắt đầu implement
 
 Phase 0 và mã Phase 1 đã xong (báo cáo: `plans/20260925-implementation/reports/phase-00-*.md`,
-`phase-01-*.md`) → cổng G1: chạy ma trận thiết bị của `shared/tools/bench/README.md` trên điện thoại và Mac
-thật, rồi gộp `feat/phase-01-clipboard` vào `main` ở từng kho → Phase 2 (SMS, app iOS, relay, push). Xem
+`phase-01-*.md`) → cổng G1 (còn mở): chạy ma trận thiết bị của `shared/tools/bench/README.md` trên điện thoại và
+Mac thật; Phase 1 đã gộp vào `main` → Phase 2 (SMS, app iOS, relay, push). Xem
 `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.

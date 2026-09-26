@@ -3,11 +3,13 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 1 code complete, waiting for gate G1 (real-device checks)
+## Project status: Phase 1 merged into main; gate G1 (real-device checks) still open
 
-Phase 0 (scaffold, protocol, crypto, tokens, CI) is merged; the Phase 1 clipboard MVP lives on the branch
-`feat/phase-01-clipboard` of android, apple, shared and relay (CI green) and merges into `main` once gate G1
-passes on real phones and Macs (`shared/tools/bench/README.md`). Phase 1 reports: `plans/20260925-implementation/reports/phase-01-*.md`.
+Phase 0 (scaffold, protocol, crypto, tokens, CI) and the Phase 1 clipboard MVP are merged into `main` of
+android, apple, shared and relay (2026-09-26, CI green). The project owner merged Phase 1 before gate G1: the
+real-device checks (`shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver,
+system setting names) are still open and must pass before Phase 2 ships. Next: Phase 2 (SMS, iOS app, relay,
+push). Reports: `plans/20260925-implementation/reports/phase-01-*.md`, merge record `phase-01-merge.md`.
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level

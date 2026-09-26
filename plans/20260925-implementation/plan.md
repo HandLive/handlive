@@ -2,7 +2,7 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Phase 0 done; Phase 1 code complete on `feat/phase-01-clipboard` in every repository, waiting for gate G1 on real devices (2026-09-26) · **Sources:**
+**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`) · **Sources:**
 `plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
 (33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
@@ -13,7 +13,7 @@ English | [Tiếng Việt](plan.vi.md)
 |---|-----------|-------|
 | I1 | **Five repositories in one workspace** (since 2026-09-25, decided by the project owner so that each part can go into a group; previously a monorepo): the hub `handlive` (docs, plans, `tools/docs/`) and four repositories `handlive-android`, `handlive-apple` (macOS + iOS + shared Swift packages), `handlive-relay`, `handlive-shared` (test vectors, schemas, design tokens, `tools/vectors`, `tools/schemas`), cloned into `android/`, `apple/`, `relay/`, `shared/` inside the hub folder — `tools/workspace.sh`; report `reports/repo-split.md` | Each part is pushed to the group separately; the three platforms still match one wire protocol because the test vectors and schemas exist in a single copy in `shared/`, and builds and tests read them through `../shared` |
 | I2 | **Phase 0** builds the scaffold, the protocol and encryption libraries and the cross-platform test vectors before any feature | Every later phase reuses them; encryption mismatches between Tink and CryptoKit must surface from the start |
-| I3 | Phases 1 → 5 in roadmap order; one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met | Each phase is a usable product |
+| I3 | Phases 1 → 5 in roadmap order; one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met (exception: the project owner merged Phase 1 on 2026-09-26 before gate G1; G1 still has to pass before Phase 2 ships) | Each phase is a usable product |
 | I4 | Phases 4 and 5 open with a **one-week spike** with a go/no-go gate (D1, D6) before any feature code | Risks R1, R6 |
 | I5 | UI strings come from the catalog `shared/strings/ui-strings.json` (stable keys, `en` + `vi`, 0.12); the wording matches the detailed design (English `X.md`, Vietnamese `X.vi.md`); the UI is built to the design system (components, tokens, wording) | No strings written in code; both languages always complete |
 | I6 | When code and docs disagree: fix the docs first (00-common-specs → leaf function), run `tools/docs/validate_design_docs.py`, and only then change the code | The docs are the contract between the platforms |

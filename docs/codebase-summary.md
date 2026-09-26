@@ -6,9 +6,9 @@ English | [Tiếng Việt](codebase-summary.vi.md)
 
 ## Current status (2026-09-26)
 
-**Phase 1 (clipboard MVP) code is complete** on the branch `feat/phase-01-clipboard` of handlive-android,
-handlive-apple, handlive-shared and handlive-relay, with CI green in each; it waits for gate G1 (latency and UI
-checks on real Pixel/Samsung phones and Macs) before it merges into `main`. The UI is multilingual — English by
+**Phase 1 (clipboard MVP) is merged into `main`** of handlive-android, handlive-apple, handlive-shared and
+handlive-relay (2026-09-26, CI green); gate G1 (latency and UI checks on real Pixel/Samsung phones and Macs) is
+still open. The UI is multilingual — English by
 default, Vietnamese second — with every string in the shared catalog (C20). About 297 Kotlin files, 188 Swift
 files (plus generated ones), 29 Rust files and 36 Python tool files. Since 2026-09-25 the source code is split
 into **five git repositories in one workspace** (decision I1 in `plans/20260925-implementation/plan.md`, report
@@ -96,6 +96,6 @@ repository's commands. Module details and task cards: `plans/20260925-implementa
 ## Where to start implementing
 
 Phase 0 and the Phase 1 code are done (reports: `plans/20260925-implementation/reports/phase-00-*.md`,
-`phase-01-*.md`) → gate G1: run the device matrix of `shared/tools/bench/README.md` on real phones and Macs,
-then merge `feat/phase-01-clipboard` into `main` in each repository → Phase 2 (SMS, iOS app, relay, push). See
+`phase-01-*.md`) → gate G1 (open): run the device matrix of `shared/tools/bench/README.md` on real phones and Macs;
+Phase 1 is already merged into `main` → Phase 2 (SMS, iOS app, relay, push). See
 `plans/20260925-implementation/plan.md` and `docs/project-roadmap.md`.

@@ -2,7 +2,7 @@
 
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Phase 0 xong; mã Phase 1 xong trên nhánh `feat/phase-01-clipboard` ở mọi kho, chờ cổng G1 trên máy thật (26/09/2026) · **Nguồn:**
+**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`) · **Nguồn:**
 `plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.2
 (33 chức năng lá, C1–C20), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
@@ -13,7 +13,7 @@
 |---|-----------|-------|
 | I1 | **Năm kho trong một workspace** (từ 25/09/2026, quyết định của chủ dự án để đưa từng phần vào một group; trước đó là monorepo): hub `handlive` (tài liệu, kế hoạch, `tools/docs/`) và bốn kho `handlive-android`, `handlive-apple` (macOS + iOS + Swift packages dùng chung), `handlive-relay`, `handlive-shared` (test vector, schema, design tokens, `tools/vectors`, `tools/schemas`) clone vào `android/`, `apple/`, `relay/`, `shared/` bên trong thư mục hub — `tools/workspace.sh`; báo cáo `reports/repo-split.md` | Mỗi phần đẩy lên group riêng biệt; ba nền tảng vẫn khớp một wire protocol vì test vector và schema chỉ có một bản trong `shared/`, build và test đọc qua `../shared` |
 | I2 | **Phase 0** dựng khung, thư viện giao thức và mã hóa, test vector liên nền tảng trước mọi tính năng | Mọi phase sau dùng lại; sai lệch mã hóa giữa Tink và CryptoKit phải lộ ngay từ đầu |
-| I3 | Thứ tự phase 1 → 5 như roadmap; mỗi phase một nhánh `feat/phase-0N-<slug>`, gộp vào `main` khi đạt tiêu chí đo | Mỗi phase là sản phẩm dùng được |
+| I3 | Thứ tự phase 1 → 5 như roadmap; mỗi phase một nhánh `feat/phase-0N-<slug>`, gộp vào `main` khi đạt tiêu chí đo (ngoại lệ: chủ dự án cho gộp Phase 1 ngày 26/09/2026 trước cổng G1; G1 vẫn phải đạt trước khi phát hành Phase 2) | Mỗi phase là sản phẩm dùng được |
 | I4 | Phase 4 và 5 mở đầu bằng **spike một tuần** có cổng go/no-go (D1, D6) trước khi viết tính năng | Rủi ro R1, R6 |
 | I5 | Chuỗi giao diện lấy từ catalog `shared/strings/ui-strings.json` (khóa ổn định, `en` + `vi`, 0.12); câu chữ khớp tài liệu chi tiết (bản Anh `X.md`, bản Việt `X.vi.md`); giao diện dựng theo design system (thành phần, token, câu chữ) | Không viết chuỗi trong mã; hai ngôn ngữ luôn đủ |
 | I6 | Khi mã và tài liệu lệch nhau: sửa tài liệu trước (00-common-specs → chức năng lá), chạy `tools/docs/validate_design_docs.py`, rồi mới sửa mã | Tài liệu là hợp đồng giữa các nền tảng |
