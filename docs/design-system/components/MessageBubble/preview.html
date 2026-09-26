@@ -17,9 +17,7 @@
   .failrow { display: flex; align-items: center; gap: 6px; align-self: flex-end; }
   .failrow .sym { color: var(--status-error); font-size: 20px; }
   .retry { font: inherit; font-weight: 600; background: none; border: none; color: var(--accent); padding: 0 0 0 4px; cursor: pointer; }
-  .spin { width: 10px; height: 10px; border-radius: var(--radius-capsule); border: 2px solid var(--tertiary-label); border-top-color: var(--secondary-label); box-sizing: border-box; }
-  @media (prefers-reduced-motion: no-preference) { .spin { animation: sp 900ms linear infinite; } }
-  @keyframes sp { to { transform: rotate(360deg); } }
+  .meta.start { align-self: flex-start; margin-left: 4px; }
   .compose { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px 12px; }
   .field { flex: 1; min-width: 0; border-radius: 18px; padding: 7px 12px; font-size: 13px; line-height: 17px; }
   .field small { display: block; font-size: 11px; line-height: 13px; color: var(--secondary-label); margin-top: 2px; }
@@ -33,18 +31,19 @@
   <section class="win conv" aria-label="Hội thoại với Nguyễn Văn A">
     <div class="win-bar"><span class="lights"><i></i><i></i><i></i></span><div class="who"><b>Nguyễn Văn A</b><span>SMS · SIM 1</span></div></div>
     <div class="thread">
-      <span class="day">Hôm nay 13:58</span>
+      <span class="day">Hôm nay</span>
       <div class="bub in">Chiều nay anh qua lấy tài liệu được không? Đến nơi thì gọi em số <a href="#">091 234 5678</a></div>
+      <span class="meta start">13:58</span>
       <div class="bub out">Được, khoảng 3 giờ nhé</div>
       <span class="meta end"><span class="sym">done_all</span>Đã nhận 14:01</span>
       <div class="failrow"><div class="bub out">Nhớ mang theo bản in hợp đồng</div><span class="sym fill">error</span></div>
       <span class="meta end fail">Gửi lỗi · Không có sóng<button class="retry" type="button">Thử lại</button></span>
       <div class="bub out">Em đến cổng thì gọi anh</div>
-      <span class="meta end"><span class="spin" aria-hidden="true"></span>Đang chờ điện thoại</span>
+      <span class="meta end"><span class="sym">schedule</span>Đang chờ điện thoại</span>
     </div>
     <div class="compose">
       <span class="pill"><span class="sym">sim_card</span>SIM 1</span>
-      <div class="field glass">Anh ơi, bãi gửi xe ở tầng hầm B2, lối vào phía đường Nguyễn Trãi, em để sẵn vé ở bảo vệ rồi nhé<small>2 tin SMS</small></div>
+      <div class="field glass">Anh ơi, bãi gửi xe ở tầng hầm B2, lối vào phía đường Nguyễn Trãi, em để sẵn vé ở bảo vệ rồi nhé<small>95/134 · 2 tin</small></div>
       <button class="send" type="button" aria-label="Gửi"><span class="sym bold">arrow_upward</span></button>
     </div>
   </section>
