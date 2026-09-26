@@ -560,6 +560,9 @@ already received in CONN-01 and SET-02; no new call is made.
      and use LAN/USB only. Every pair with `relay_registered = 0` retries `POST /v1/pairs` when a
      network is available, on both devices, with the 404 rule of PAIR-01 API 8 logic 6 (register
      itself again once, then wait 24 h); the peer completes the registration when it registers again.
+     Conversely, a pair that the relay lists without `revoked_at` while the device still has
+     `relay_registered = 0` → set `relay_registered = 1` (the peer completed the registration in the
+     meantime); this also ends a 24 h wait.
 
 #### Query
 

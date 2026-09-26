@@ -548,7 +548,9 @@ CONN-01 và SET-02, không phát sinh lời gọi mới.
      chủ", SET-02) → đặt `relay_registered = 0`, giữ cặp và chỉ dùng LAN/USB. Mọi cặp
      `relay_registered = 0` được thử lại `POST /v1/pairs` khi có mạng, trên cả hai thiết bị, theo quy
      tắc 404 của PAIR-01 API 8 logic 6 (tự đăng ký lại một lần, rồi chờ 24 h); đối phương hoàn tất
-     việc đăng ký khi nó đăng ký lại.
+     việc đăng ký khi nó đăng ký lại. Ngược lại, cặp mà relay liệt kê không có `revoked_at` trong khi
+     thiết bị vẫn để `relay_registered = 0` → đặt `relay_registered = 1` (đối phương đã hoàn tất đăng
+     ký trong lúc chờ). Việc này cũng kết thúc thời gian chờ 24 h.
 
 #### Query
 
