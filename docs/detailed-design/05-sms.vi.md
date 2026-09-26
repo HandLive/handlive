@@ -879,7 +879,7 @@ flowchart TB
 | 7 | Hệ thống | A-SVC, M-APP / I-APP | Android trả `ack` `{accepted: true, parts}`; client đặt `state = sending`, hiện "Đang gửi…". |  |
 | 8 | Hệ thống | A-SMS, OS | Ghi `local_id` vào `SendRegistry`; chia tin bằng `divideMessage`, gửi bằng `sendMultipartTextMessage` qua `SmsManager` của `sub_id` (API 3), mỗi phần một PendingIntent "sent" và "delivered". Gửi `sms/status` `sending`. |  |
 | 9 | Hệ thống | A-SMS, A-SVC | Nhận kết quả từng phần: mọi phần `RESULT_OK` → `sms/status` `sent`; mọi phần có báo phát thành công → `delivered`; phần đầu tiên lỗi → `failed` kèm `error_code` (API 2). Client cập nhật `sms_outbox.state`. | E7, E10. |
-| 10 | Hệ thống | OS, A-SMS | Hệ thống Android ghi tin vào hộp Sent (hoặc `failed`); observer SMS-02 thấy dòng mới, khớp `SendRegistry` (cùng địa chỉ, cùng nội dung, trong 60 s sau kết quả cuối) và gửi `sms/new` kèm `message.local_id` cho client đã gửi (API 4). | Không khớp được → client khớp dự phòng (API 4, logic 3). |
+| 10 | Hệ thống | OS, A-SMS | Hệ thống Android ghi tin vào hộp Sent (hoặc `failed`); observer SMS-02 thấy dòng mới, khớp `SendRegistry` (cùng địa chỉ, cùng nội dung, còn chờ kết quả cuối hoặc không quá 60 s sau đó, `SMS_SEND_MATCH_WINDOW`) và gửi `sms/new` kèm `message.local_id` cho client đã gửi (API 4). | Không khớp được → client khớp dự phòng (API 4, logic 3). |
 | 11 | Hệ thống | M-APP / I-APP | Upsert tin thật có `local_id` → bong bóng tạm biến mất, tin thật hiển thị với trạng thái lấy từ `sms_outbox` theo `local_id`. Tin tới số mới: màn hình soạn chuyển sang hội thoại vừa tạo. |  |
 | 12 | Người dùng | M-APP / I-APP | Thấy "Đã gửi" hoặc "Đã nhận"; hoặc "Gửi lỗi" kèm lý do và "Thử lại". |  |
 | A1 | Người dùng | M-APP / I-APP | Chạm "Thử lại" trên tin lỗi: xóa dòng `sms_outbox` cũ, tạo `local_id` mới, quay lại bước 3 với cùng nội dung, người nhận, SIM. | Nếu điện thoại đã ghi tin lỗi (`box = failed`), tin đó vẫn hiển thị như trên điện thoại. |
@@ -1053,8 +1053,9 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 
 - **Logic nghiệp vụ:**
   1. Android khớp dòng provider mới có `box` = `sent` hoặc `failed` với mục `SendRegistry` cùng địa
-     chỉ và cùng nội dung, trong 60 s sau kết quả cuối của mục đó; nhiều mục khớp → chọn mục cũ
-     nhất; mỗi mục khớp tối đa một dòng.
+     chỉ, cùng nội dung, còn đang chờ kết quả cuối (`sent` hoặc `failed`) hoặc đã có kết quả đó không
+     quá `SMS_SEND_MATCH_WINDOW` (60 s); nhiều mục khớp → chọn mục cũ nhất; mỗi mục khớp tối đa một
+     dòng.
   2. Sau khi khớp, `message_key` được lưu vào `SendRegistry` và gửi kèm các `sms/status` sau đó.
   3. Khớp dự phòng ở client khi `sms/new` có `box = sent` mà thiếu `local_id`: tìm dòng `sms_outbox`
      chưa khớp, cùng người nhận, cùng nội dung, tạo trong 10 phút trước `ts` → gắn `local_id` đó.

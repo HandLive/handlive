@@ -901,7 +901,7 @@ SET-02 function manages these keys.
 | `SMS_OUTBOX_EXPIRY` | 24 h | Waiting messages past the deadline → `failed` |
 | `SMS_PAGE_MAX_BYTES` | 180 KiB plaintext / `ack` | Together with `SMS_PAGE_MAX` keeps the envelope < 256 KiB |
 | `SMS_BODY_MAX` | 1,600 characters |  |
-| `SMS_SEND_MATCH_WINDOW` | 60 s | Matches a sent message in the provider with its `local_id` |
+| `SMS_SEND_MATCH_WINDOW` | 60 s | A new provider row in `sent` or `failed` matches a `SendRegistry` entry still waiting for its final result or at most this long after it (SMS-04 API 4) |
 | `SMS_QUICK_REPLY_TIMEOUT` | 20 s | Quick reply from an iOS notification |
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Coalesces the `onChange` calls of the SMS provider |
 | `CALLLOG_SYNC_WINDOW` | 90 days, at most 500 entries |  |

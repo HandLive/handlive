@@ -893,7 +893,7 @@ flowchart TB
 | 7 | System | A-SVC, M-APP / I-APP | Android returns the `ack` `{accepted: true, parts}`; the client sets `state = sending` and shows "Sending…". |  |
 | 8 | System | A-SMS, OS | Record `local_id` in `SendRegistry`; split the message with `divideMessage` and send it with `sendMultipartTextMessage` through the `SmsManager` of `sub_id` (API 3), with a "sent" and a "delivered" PendingIntent for each part. Send `sms/status` `sending`. |  |
 | 9 | System | A-SMS, A-SVC | Receive the result of each part: every part `RESULT_OK` → `sms/status` `sent`; every part with a successful delivery report → `delivered`; the first part that fails → `failed` with `error_code` (API 2). The client updates `sms_outbox.state`. | E7, E10. |
-| 10 | System | OS, A-SMS | The Android system writes the message into the Sent box (or `failed`); the SMS-02 observer sees the new row, matches it against `SendRegistry` (same address, same text, within 60 s after the final result) and sends `sms/new` with `message.local_id` to the client that sent it (API 4). | No match → the client's fallback matching (API 4, logic 3). |
+| 10 | System | OS, A-SMS | The Android system writes the message into the Sent box (or `failed`); the SMS-02 observer sees the new row, matches it against `SendRegistry` (same address, same text, still waiting for the final result or at most 60 s after it, `SMS_SEND_MATCH_WINDOW`) and sends `sms/new` with `message.local_id` to the client that sent it (API 4). | No match → the client's fallback matching (API 4, logic 3). |
 | 11 | System | M-APP / I-APP | Upsert the real message with its `local_id` → the placeholder bubble disappears and the real message is shown with the status taken from `sms_outbox` by `local_id`. Message to a new number: the compose screen switches to the newly created conversation. |  |
 | 12 | User | M-APP / I-APP | Sees "Sent" or "Delivered"; or "Not sent" with the reason and "Try Again". |  |
 | A1 | User | M-APP / I-APP | Taps "Try Again" on a failed message: the old `sms_outbox` row is deleted, a new `local_id` is created, back to step 3 with the same text, recipient and SIM. | If the phone has already recorded the failed message (`box = failed`), that message is still shown as it is on the phone. |
@@ -1074,8 +1074,9 @@ Errors (`ack.error.code`), in the order they are checked:
 
 - **Business logic:**
   1. Android matches a new provider row whose `box` is `sent` or `failed` with the `SendRegistry`
-     entry that has the same address and the same text, within 60 s after that entry's final result;
-     several entries match → pick the oldest; each entry matches at most one row.
+     entry that has the same address and the same text and is still waiting for its final result
+     (`sent` or `failed`) or got it at most `SMS_SEND_MATCH_WINDOW` (60 s) ago; several entries
+     match → pick the oldest; each entry matches at most one row.
   2. Once matched, the `message_key` is stored in `SendRegistry` and sent with the later
      `sms/status` messages.
   3. Fallback matching on the client when an `sms/new` with `box = sent` lacks `local_id`: find an

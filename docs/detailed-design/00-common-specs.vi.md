@@ -892,7 +892,7 @@ SET-02 quản lý các khóa này.
 | `SMS_OUTBOX_EXPIRY` | 24 h | Tin chờ quá hạn → `failed` |
 | `SMS_PAGE_MAX_BYTES` | 180 KiB plaintext / `ack` | Cùng với `SMS_PAGE_MAX` giữ envelope < 256 KiB |
 | `SMS_BODY_MAX` | 1 600 ký tự |  |
-| `SMS_SEND_MATCH_WINDOW` | 60 s | Ghép tin đã gửi trong provider với `local_id` |
+| `SMS_SEND_MATCH_WINDOW` | 60 s | Dòng provider mới ở `sent` hoặc `failed` khớp mục `SendRegistry` còn chờ kết quả cuối hoặc đã có kết quả đó không quá chừng này (SMS-04 API 4) |
 | `SMS_QUICK_REPLY_TIMEOUT` | 20 s | Trả lời nhanh từ thông báo iOS |
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Gom các lần `onChange` của provider SMS |
 | `CALLLOG_SYNC_WINDOW` | 90 ngày, tối đa 500 mục |  |
