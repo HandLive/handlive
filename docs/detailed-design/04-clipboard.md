@@ -1151,7 +1151,7 @@ N/A — no approved wireframe yet.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | "Send Clipboard to Phone" card | view | Output | Shown on the main screen when `feature.clipboard = true` | Title "Send to \<phone name>" with the system Paste button (field 2) and the one-line hint "Tap Paste to send what you just copied." under it |
 | 2 | System Paste button | action (`UIPasteControl` / `PasteButton`) | Input | Enabled by the system when the clipboard has an accepted type | Label and icon set by the system ("Paste"); a tap sends right away |
-| 3 | Suggestion banner | string | Output | Hidden | "The iPhone clipboard has new content — paste to send it to Lan's Pixel" (or "…has a new image…" when `hasImages`); "iPhone" stands for `{device_type}` = "iPhone" or "iPad" from `UIDevice.current.model`, never translated; with a close button |
+| 3 | Suggestion banner | string | Output | Hidden | "The iPhone clipboard has new content — paste to send it to Lan's Pixel" (or "…has a new image…" when `hasImages`); "iPhone" stands for `{device_type}` = "iPhone" or "iPad" from `UIDevice.current.model`, never translated; with a close button (`xmark`, VoiceOver label "Close") |
 | 4 | Card connection state | enum{connected\| disconnected} | Output | Per session | `disconnected` → "Not connected to the phone", Paste button disabled |
 | 5 | Send result | string | Output | — | "Sent to \<phone name>" or "Couldn't send. Try again." |
 | 6 | Image send/receive progress | int32 (%) | Output | 0 | Images > 1 MiB, with a "Cancel" button (CLIP-03 fields 2–4) |

@@ -353,7 +353,7 @@ N/A — chưa có wireframe được duyệt.
 | 3 | Nhãn SIM | string | Output | Ẩn | Dòng phụ = `label` của SIM theo `sub_id`, chỉ khi điện thoại có > 1 SIM |
 | 4 | Nút "Trả lời" | action + string(1600) | Input | — | Ô nhập trả lời nhanh trong thông báo → SMS-04; không có với hội thoại nhiều người |
 | 5 | Chạm vào thông báo | action | Input | — | Mở hội thoại (SMS-03) |
-| 6 | Huy hiệu chưa đọc | int32 | Output | 0 | Số hội thoại hiển thị chưa đọc (quy tắc SMS-05); trên biểu tượng menu bar (Mac) và biểu tượng ứng dụng (iOS) |
+| 6 | Huy hiệu chưa đọc | int32 | Output | 0 | Số hội thoại hiển thị chưa đọc (quy tắc SMS-05); ngay sau biểu tượng menu bar (Mac), trên biểu tượng ứng dụng và tab Tin nhắn (iOS). VoiceOver đọc là "3 hội thoại chưa đọc" (Mac: trong nhãn của biểu tượng menu bar, sau trạng thái kết nối; iOS: trên tab Tin nhắn) |
 | 7 | Tùy chọn "Thông báo SMS mới" | bool | Input/Output | `sms.notify` = `true` | Cài đặt → Tin nhắn (SET-02) |
 | 8 | Tùy chọn "Hiện nội dung trong thông báo" | bool | Input/Output | `sms.preview` = `true` | Cài đặt → Tin nhắn (SET-02) |
 
@@ -1174,7 +1174,7 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Chỉ báo chưa đọc của hội thoại | bool | Output | `unread_count > 0` và `local_read_ts < last_ts` | Chấm màu, chữ đậm trong danh sách (SMS-03 trường 5) |
 | 2 | Số tin chưa đọc | int32 | Output | `unread_count` | Không hiện trong dòng (`ThreadRow` chỉ có chấm, SMS-03 trường 5); là nhãn trợ năng của dòng hội thoại: "2 tin chưa đọc" |
 | 3 | Vạch "Tin chưa đọc" | bool | Output | Theo `sms_message.read` | Đặt trước tin inbox chưa đọc đầu tiên khi mở hội thoại |
-| 4 | Huy hiệu | int32 | Output | 0 | Số hội thoại có chỉ báo bật; biểu tượng menu bar (Mac), biểu tượng ứng dụng (iOS) |
+| 4 | Huy hiệu | int32 | Output | 0 | Số hội thoại có chỉ báo bật; hiển thị và VoiceOver đọc như SMS-02 trường 6 (biểu tượng menu bar trên Mac, biểu tượng ứng dụng và tab Tin nhắn trên iOS) |
 | 5 | Thông báo SMS đã hiển thị | array\<string> (định danh thông báo) | Output | — | Bị gỡ khi hội thoại đã đọc trên điện thoại hoặc được mở trên thiết bị |
 | 6 | Ghi chú giới hạn | string | Output | "Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại." | Cài đặt → Tin nhắn |
 

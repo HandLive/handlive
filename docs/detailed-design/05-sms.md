@@ -358,7 +358,7 @@ N/A — no approved wireframe yet.
 | 3 | SIM label | string | Output | Hidden | Subtitle = the SIM's `label` for `sub_id`, only when the phone has > 1 SIM |
 | 4 | "Reply" button | action + string(1600) | Input | — | Quick-reply field in the notification → SMS-04; not offered for group conversations |
 | 5 | Tap on the notification | action | Input | — | Opens the conversation (SMS-03) |
-| 6 | Unread badge | int32 | Output | 0 | Number of conversations shown as unread (SMS-05 rule); on the menu bar icon (Mac) and the app icon (iOS) |
+| 6 | Unread badge | int32 | Output | 0 | Number of conversations shown as unread (SMS-05 rule); after the menu bar icon (Mac), on the app icon and the Messages tab (iOS). VoiceOver reads it as "3 unread conversations" (Mac: in the menu bar icon's label, after the connection status; iOS: on the Messages tab) |
 | 7 | "New SMS Notifications" option | bool | Input/Output | `sms.notify` = `true` | Settings → Messages (SET-02) |
 | 8 | "Show Content in Notifications" option | bool | Input/Output | `sms.preview` = `true` | Settings → Messages (SET-02) |
 
@@ -1200,7 +1200,7 @@ N/A — no approved wireframe yet.
 | 1 | Conversation unread indicator | bool | Output | `unread_count > 0` and `local_read_ts < last_ts` | Colored dot, bold text in the list (SMS-03 field 5) |
 | 2 | Unread message count | int32 | Output | `unread_count` | Not shown in the row (`ThreadRow` shows only the dot, SMS-03 field 5); it is the accessibility label of the conversation row: "2 unread messages" |
 | 3 | "Unread messages" divider | bool | Output | From `sms_message.read` | Placed before the first unread inbox message when the conversation opens |
-| 4 | Badge | int32 | Output | 0 | Number of conversations with the indicator on; menu bar icon (Mac), app icon (iOS) |
+| 4 | Badge | int32 | Output | 0 | Number of conversations with the indicator on; shown and read by VoiceOver as SMS-02 field 6 (menu bar icon on the Mac, app icon and Messages tab on iOS) |
 | 5 | SMS notifications shown | array\<string> (notification identifiers) | Output | — | Removed when the conversation has been read on the phone or opened on the device |
 | 6 | Limitation note | string | Output | "Marking as read on this device doesn't change the status on the phone." | Settings → Messages |
 

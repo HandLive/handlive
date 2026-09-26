@@ -1132,7 +1132,7 @@ N/A — chưa có wireframe được duyệt.
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Thẻ "Gửi bảng nhớ tạm sang điện thoại" | view | Output | Hiện trên màn hình chính khi `feature.clipboard = true` | Tiêu đề "Gửi sang <tên điện thoại>" kèm nút Dán hệ thống (trường 2) và dòng hướng dẫn "Chạm Dán để gửi nội dung vừa sao chép." ngay dưới nút |
 | 2 | Nút Dán của hệ thống | action (`UIPasteControl` / `PasteButton`) | Input | Hệ thống tự bật khi clipboard có kiểu được nhận | Nhãn và biểu tượng do hệ thống đặt ("Dán"); chạm là gửi ngay |
-| 3 | Banner gợi ý | string | Output | Ẩn | "Bảng nhớ tạm trên iPhone có nội dung mới — dán để gửi sang Pixel của Lan" (hoặc "…có ảnh mới…" khi `hasImages`); "iPhone" là `{device_type}` = "iPhone" hoặc "iPad" lấy từ `UIDevice.current.model`, không dịch; có nút đóng |
+| 3 | Banner gợi ý | string | Output | Ẩn | "Bảng nhớ tạm trên iPhone có nội dung mới — dán để gửi sang Pixel của Lan" (hoặc "…có ảnh mới…" khi `hasImages`); "iPhone" là `{device_type}` = "iPhone" hoặc "iPad" lấy từ `UIDevice.current.model`, không dịch; có nút đóng (`xmark`, nhãn VoiceOver "Đóng") |
 | 4 | Trạng thái kết nối của thẻ | enum{connected\| disconnected} | Output | Theo phiên | `disconnected` → "Chưa kết nối với điện thoại", nút Dán vô hiệu |
 | 5 | Kết quả gửi | string | Output | — | "Đã gửi tới <tên điện thoại>" hoặc "Gửi không thành công, thử lại." |
 | 6 | Tiến trình gửi/nhận ảnh | int32 (%) | Output | 0 | Ảnh > 1 MiB, kèm nút "Hủy" (CLIP-03 trường 2–4) |
