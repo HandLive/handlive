@@ -47,6 +47,9 @@ https://developer.apple.com/design/human-interface-guidelines/toggles
 
 Confirmation for "Resync All SMS…": "Delete messages saved on Lan's MacBook and download them again from
 the phone? Messages waiting to be sent are kept." with "Cancel" and "Resync" (SMS-01 field 6).
+Confirmations for "Remove Device from Server…" and "Delete All HandLive Data…": "Remove This Device from
+the Server?" and "Delete All HandLive Data?", with the SET-02 field 29 warning as the message, "Cancel" and
+"Remove from Server" or "Delete All" (SET-02 field 28; the same titles on iPhone, iPad and Android).
 
 ## iOS and iPadOS: the Settings tab
 

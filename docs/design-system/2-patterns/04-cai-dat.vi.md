@@ -44,6 +44,9 @@ https://developer.apple.com/design/human-interface-guidelines/toggles
 
 Xác nhận "Đồng bộ lại toàn bộ SMS…": "Xóa tin nhắn đã lưu trên MacBook của Lan và tải lại từ điện
 thoại? Tin đang chờ gửi được giữ lại." với "Hủy" và "Đồng bộ lại" (SMS-01 trường 6).
+Xác nhận "Xóa thiết bị khỏi máy chủ…" và "Xóa toàn bộ dữ liệu HandLive…": "Xóa thiết bị này khỏi máy chủ?"
+và "Xóa toàn bộ dữ liệu HandLive?", nội dung là cảnh báo SET-02 trường 29, với "Hủy" và "Xóa khỏi máy chủ"
+hoặc "Xóa toàn bộ" (SET-02 trường 28; iPhone, iPad và Android dùng cùng tiêu đề).
 
 ## iOS và iPadOS: tab Cài đặt
 

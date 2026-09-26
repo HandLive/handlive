@@ -11,7 +11,7 @@ HandLive dùng rất ít: mất kết nối, gửi lỗi hay thiếu quyền đ�
 | Tình huống | macOS | iOS/iPadOS và Android |
 |-----------|-------|-----------------------|
 | Hủy ghép nối (PAIR-03) — người dùng chủ động chọn | Alert dạng sheet gắn cửa sổ Cài đặt: "Hủy" + "Hủy ghép nối" (mặc định, bên phải) | Hộp chọn hành động (action sheet) mọc từ dòng vừa chạm: "Hủy ghép nối" màu đỏ ở trên, "Hủy" ở dưới |
-| Xóa toàn bộ dữ liệu HandLive, xóa thiết bị khỏi máy chủ (SET-02 trường 28) | Như trên, với "Xóa toàn bộ" hoặc "Xóa khỏi máy chủ" | Như trên, với "Xóa toàn bộ" hoặc "Xóa khỏi máy chủ" |
+| Xóa toàn bộ dữ liệu HandLive, xóa thiết bị khỏi máy chủ (SET-02 trường 28) | Như trên: "Xóa toàn bộ dữ liệu HandLive?" với "Xóa toàn bộ", hoặc "Xóa thiết bị này khỏi máy chủ?" với "Xóa khỏi máy chủ" | Như trên, cùng tiêu đề và nút |
 | Lỗi không tự phục hồi (ví dụ cài camera ảo thất bại) | Alert có nút dẫn tới cách sửa | Alert |
 | Mất kết nối, gửi lỗi, thiếu quyền | Không dùng alert | Không dùng alert |
 
