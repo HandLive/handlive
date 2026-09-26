@@ -432,7 +432,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Điều kiện trước | 1. Có cặp hiệu lực, đã đăng ký relay hoặc đăng ký được ngay (PAIR-01 API 8). 2. `relay.enabled = true` ở cả hai thiết bị. 3. Có Internet. |
 | Điều kiện sau | **Thành công:** phiên E2E qua relay, trạng thái "Đã kết nối qua Internet"; các tính năng dữ liệu hoạt động như LAN (trừ camera và âm thanh cuộc gọi — cần ở gần).<br>**Điện thoại offline:** trạng thái `WaitingPeer` ("Điện thoại ngoại tuyến"), đã gửi push đánh thức. |
-| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`.<br>E7 — Chứng chỉ relay không khớp ghim → không kết nối, báo lỗi bảo mật.<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`. |
+| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`. |
 | Yêu cầu đặc biệt | **Bảo mật:** relay chỉ thấy lớp bọc (`to`/`from`, `type`, kích thước, thời điểm); không có khóa E2E; JWT 15 phút; ghim SPKI ISRG Root X1/X2 + khóa dự phòng.<br>**Tài nguyên:** tối đa 2 MiB/s mỗi cặp; envelope ≤ 256 KiB.<br>**Hiệu năng tham khảo:** SMS, thông báo cuộc gọi qua relay ≤ 1 s khi hai bên đã online.<br>**Vận hành:** relay stateless; presence và định tuyến giữa instance qua Redis; thống kê chỉ theo `device_hash`. |
 
 ### 3.3.2 Màn hình
@@ -630,11 +630,20 @@ flowchart TB
 ```
 
 - **Logic nghiệp vụ:**
-  1. `to` phải là đối phương trong một cặp hiệu lực với người gửi; không → `error NOT_PAIRED`.
-  2. Khung > 256 KiB → `error PAYLOAD_TOO_LARGE`; vượt 2 MiB/s mỗi cặp → trì hoãn đọc socket
+  1. Relay chỉ kiểm lớp bọc: object JSON có `to` là một `device_id` và `env` là object (khung nhị
+     phân: header `HR` 20 byte của 0.4.3 và phải có khung theo sau). Relay không phân tích, không
+     kiểm `env` hay khung HL bên trong. Thiết bị nhận mới kiểm các phần đó (0.5.1, 0.5.2). Lớp bọc
+     hoặc khung `HR` sai định dạng → `error BAD_REQUEST`.
+  2. `to` (hoặc `device_id` của `HR`) phải là đối phương của người gửi trong một cặp đã đăng ký,
+     chưa thu hồi; không → `error NOT_PAIRED` (kể cả khi `to` là chính người gửi).
+  3. `from` do thiết bị gửi lên bị bỏ qua (0.5.1 quy tắc 6). Relay tự đặt `from` là `device_id` của
+     người gửi và phát lại `env` nguyên từng byte, không tuần tự hóa lại:
+     `{"from":"<device_id>","env":<env gốc>}`. Khung `HR` được thay `device_id` đích bằng
+     `device_id` nguồn; khung HL chuyển đi nguyên vẹn.
+  4. Khung > 256 KiB → `error PAYLOAD_TOO_LARGE`; vượt 2 MiB/s mỗi cặp → trì hoãn đọc socket
      (backpressure), không hủy khung.
-  3. Không có `presence:<to>` → `error NOT_CONNECTED`; có → publish `dev:<to>`.
-  4. Không giải mã, không ghi log `env`; chỉ cộng số envelope và byte vào `usage_daily` theo
+  5. Không có `presence:<to>` → `error NOT_CONNECTED`; có → publish `dev:<to>`.
+  6. Không giải mã, không ghi log `env`; chỉ cộng số envelope và byte vào `usage_daily` theo
      `device_hash`.
 
 #### Query
@@ -698,7 +707,7 @@ INCR      rl:<device_id>:relay:<phút>                  # rate limit
 | Điều kiện trước | 1. `relay.enabled = true`; thiết bị đích đã đăng ký relay và có push token. 2. iOS: người dùng đã cho phép thông báo (SET-03). 3. Cặp hợp lệ trên relay. |
 | Điều kiện sau | Token mới nhất nằm trong `devices`; push tới đúng thiết bị; điện thoại kết nối relay trong ≤ 10 s sau wake (mục tiêu tham khảo); iPhone hiển thị thông báo có nội dung khi máy đang mở khóa, nội dung chung khi đang khóa. |
 | Ngoại lệ | E1 — Thiết bị đích chưa có token (409 `PUSH_TOKEN_MISSING`) → bỏ qua; dữ liệu sẽ đến qua đồng bộ khi kết nối.<br>E2 — FCM/APNs lỗi tạm thời (502 `PUSH_PROVIDER_ERROR`) → Android xếp vào `push_outbox`, thử lại theo backoff tới `expires_at`.<br>E3 — Token không còn hợp lệ (FCM `UNREGISTERED`, APNs 410) → relay xóa token; thiết bị đăng ký lại lần mở ứng dụng sau.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE không đọc được khóa (máy khóa) hoặc giải mã lỗi → hiển thị "Có thông báo mới từ điện thoại".<br>E6 — Điện thoại ở chế độ hạn chế nền, FCM bị hạ ưu tiên → thức dậy chậm; SET-01 đã hướng dẫn tắt tối ưu pin.<br>E7 — Envelope cũ hơn 24 h hoặc `id` đã xử lý → I-NSE hiển thị nội dung chung, không xử lý lại. |
-| Yêu cầu đặc biệt | **Bảo mật:** FCM không chứa nội dung; APNs chỉ chứa envelope mã hóa (`K_push`), phần `aps.alert` chỉ có `loc-key` — câu chữ chung do iPhone dịch theo ngôn ngữ của nó (0.12.4).<br>**Giới hạn:** payload APNs ≤ 4 KB → nội dung SMS trong push cắt ở 1 000 ký tự, đầy đủ sau SMS-01.<br>**Chính sách nền tảng:** không dùng PushKit VoIP (iOS 13+ buộc mỗi VoIP push phải báo cuộc gọi cho CallKit); thông báo cuộc gọi đến dùng alert `interruption-level: time-sensitive`; FCM ưu tiên cao chỉ dùng cho việc người dùng cần ngay.<br>**Chống spam:** `apns-collapse-id` theo hội thoại/cuộc gọi; tối đa 30 push/phút mỗi thiết bị gửi. |
+| Yêu cầu đặc biệt | **Bảo mật:** FCM không chứa nội dung; APNs chỉ chứa envelope mã hóa (`K_push`), phần `aps.alert` chỉ có `loc-key` — câu chữ chung do iPhone dịch theo ngôn ngữ của nó (0.12.4).<br>**Giới hạn:** payload APNs ≤ 4 KB → `env_b64` ≤ 3 000 ký tự base64; nội dung SMS trong push được rút gọn theo bước 5b, đầy đủ sau SMS-01.<br>**Chính sách nền tảng:** không dùng PushKit VoIP (iOS 13+ buộc mỗi VoIP push phải báo cuộc gọi cho CallKit); thông báo cuộc gọi đến dùng alert `interruption-level: time-sensitive`; FCM ưu tiên cao chỉ dùng cho việc người dùng cần ngay.<br>**Chống spam:** `apns-collapse-id` theo từng tin SMS hoặc cuộc gọi (API 4); tối đa 30 push/phút mỗi thiết bị gửi. |
 
 ### 3.4.2 Màn hình
 
@@ -748,7 +757,7 @@ flowchart TB
 | 3 | Hệ thống | M-APP / I-APP hoặc A-SVC | Phát sinh sự kiện cần thiết bị đích xử lý mà đích không có phiên (LAN hoặc relay): client cần điện thoại (CONN-03 bước 7, gửi SMS); điện thoại có `sms/new`, `call_event/state` (ringing), `call_event/log_new` (missed) cho iPhone/iPad. | Mac đích → không push, chờ đồng bộ. |
 | 4 | Hệ thống | như trên | Chọn `wake` (đích là Android) hoặc `alert` (đích là iOS/iPadOS). |  |
 | 5a | Hệ thống | M-APP / I-APP | Tạo yêu cầu `wake` với lý do (`user_open`, `sms_send`, `call_action`). | Tối đa 1 wake/5 phút cho cùng lý do. |
-| 5b | Hệ thống | A-SVC | Dựng envelope như khi gửi qua phiên (ví dụ `sms/new`) nhưng mã hóa bằng `K_push`; cắt nội dung SMS 1 000 ký tự; `collapse_key` = `sms:<thread_id>` hoặc `call:<call_id>`. | Relay lỗi → E2, ghi `push_outbox` (hạn: 30 s cho cuộc gọi đến, 24 h cho SMS và cuộc gọi nhỡ). |
+| 5b | Hệ thống | A-SVC | Dựng envelope như khi gửi qua phiên (ví dụ `sms/new`) nhưng mã hóa bằng `K_push`; `env_b64` là base64 chuẩn có padding của JSON envelope dạng UTF-8.<br>SMS: cắt `message.body` còn tối đa 1 000 ký tự tại ranh giới code point, kết thúc bằng "…". Nếu `env_b64` vẫn dài hơn 3 000 ký tự thì rút gọn tiếp `message.body`, rồi `thread.snippet`, tại ranh giới code point, mỗi lần kết thúc bằng "…". Nội dung đầy đủ đến qua SMS-01.<br>`collapse_key` = chính `message_key` với SMS (ví dụ `sms:12847`, vì `message_key` đã có dạng `sms:<_id>`), `call:<call_id>` với cuộc gọi (cuộc gọi nhỡ không biết `call_id`: `calllog:<entry_id>`, CALL-04 API 5). | Relay lỗi → E2, ghi `push_outbox` (hạn: 30 s cho cuộc gọi đến, 24 h cho SMS và cuộc gọi nhỡ). |
 | 6 | Hệ thống | → R-API | `POST /v1/push`. |  |
 | 7 | Hệ thống | R-API, R-DB | Kiểm người gửi và đích cùng một cặp hiệu lực, đích có token, rate limit. | E1, E3, E4. |
 | 8 | Hệ thống | R-API → PUSH | FCM HTTP v1 (Android) hoặc APNs HTTP/2 (iOS). Token hỏng → xóa khỏi `devices` (E3). |  |
@@ -777,11 +786,11 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Có | `apns_sandbox` cho bản build phát triển |
-| `token` | string(4096) | Có | FCM registration token hoặc APNs device token (hex) |
-| `topic` | string(255) | Với APNs | Bundle id của I-APP |
+| `token` | string(4096) | Có | FCM registration token, hoặc APNs device token dạng hex chữ thường |
+| `topic` | string(255) | Với APNs | Bundle id của I-APP; chỉ đi với `apns` hoặc `apns_sandbox`, không bao giờ với `fcm` |
 
-- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` (thiếu `topic` với APNs, provider không khớp
-  nền tảng).
+- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` (thiếu `topic` với APNs hoặc có `topic` với
+  FCM, APNs token không phải hex chữ thường, provider không khớp nền tảng).
 - **Ví dụ:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
 - **Logic nghiệp vụ:** Provider phải khớp `platform` (android ↔ fcm; ios/ipados ↔ apns*); ghi đè
   token cũ.
@@ -798,16 +807,16 @@ flowchart TB
 | `to` | uuid | Có | `device_id` đích |
 | `kind` | enum{wake\| alert} | Có | `wake` chỉ tới Android; `alert` chỉ tới iOS/iPadOS |
 | `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Có |  |
-| `env_b64` | b64 | Với `alert` | Envelope đã mã hóa bằng `K_push`, ≤ 3 000 byte |
+| `env_b64` | b64 | Với `alert` | Base64 chuẩn có padding của JSON envelope dạng UTF-8, mã hóa bằng `K_push` (bước 5b), cùng chuỗi với `hl` của APNs; ≤ 3 000 ký tự base64 |
 | `collapse_key` | string(64) | Không |  |
-| `ttl_s` | int32 | Không | Mặc định 60 (wake, call_incoming), 86 400 (sms_new, call_missed) |
+| `ttl_s` | int32 | Không | Mặc định 60 (wake), 30 (call_incoming, giá trị CALL-01 API 4 gửi), 86 400 (sms_new, call_missed) |
 
 - **Response:** 202 `{"accepted":true}`. Lỗi: 403 `NOT_PAIRED`, 409 `PUSH_TOKEN_MISSING`, 413
   `PAYLOAD_TOO_LARGE`, 429 `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
 - **Ví dụ:**
 
 ```json
-{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…","collapse_key":"sms:118","ttl_s":86400}
+{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…","collapse_key":"sms:12847","ttl_s":86400}
 ```
 
 - **Logic nghiệp vụ:**
@@ -857,9 +866,9 @@ flowchart TB
 
 | `reason` | `aps.alert.loc-key` | Câu chữ (`vi`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | `push.sms_new` (không có tiêu đề; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | `sms:<message_key>` / `sms:<thread_id>` |
+| `sms_new` | `push.sms_new` (không có tiêu đề; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | chính `message_key`, ví dụ `sms:12847` / `sms:<thread_id>` |
 | `call_incoming` | `push.call_incoming` | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
-| `call_missed` | `push.call_missed` | Cuộc gọi nhỡ trên điện thoại | `active` | `calllog:<entry_id>` (không có `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
+| `call_missed` | `push.call_missed` | Cuộc gọi nhỡ trên điện thoại | `active` | `call:<call_id>` khi biết `call_id`, không thì `calllog:<entry_id>` (CALL-04 API 5) / `calls` |
 
 #### Query
 

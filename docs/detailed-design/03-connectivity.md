@@ -437,7 +437,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Actors | Primary: System (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Preconditions | 1. There is a valid pair, already registered with the relay or registrable right away (PAIR-01 API 8). 2. `relay.enabled = true` on both devices. 3. Internet access. |
 | Postconditions | **Success:** an E2E session through the relay, status "Connected over the internet"; the data features work as on the LAN (except the camera and call audio — they need proximity).<br>**Phone offline:** state `WaitingPeer` ("Phone offline"), a wake push has been sent. |
-| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`.<br>E7 — The relay certificate does not match the pin → do not connect, report a security error.<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`. |
+| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`. |
 | Special requirements | **Security:** the relay only sees the wrapper (`to`/`from`, `type`, size, time); it has no E2E key; 15-minute JWT; pinned SPKI of ISRG Root X1/X2 + a backup key.<br>**Resources:** at most 2 MiB/s per pair; envelope ≤ 256 KiB.<br>**Reference performance:** SMS and call notifications through the relay ≤ 1 s when both sides are online.<br>**Operations:** the relay is stateless; presence and routing between instances go through Redis; statistics only per `device_hash`. |
 
 ### 3.3.2 Screens
@@ -639,11 +639,20 @@ flowchart TB
 ```
 
 - **Business logic:**
-  1. `to` must be the peer in a valid pair with the sender; otherwise → `error NOT_PAIRED`.
-  2. Frame > 256 KiB → `error PAYLOAD_TOO_LARGE`; over 2 MiB/s per pair → delay socket reads
+  1. The relay checks only the wrapper: a JSON object whose `to` is a `device_id` and whose `env` is
+     an object (binary frames: the 20-byte `HR` header of 0.4.3, followed by a frame). It never
+     parses or checks `env` or the inner HL frame; the receiving device does (0.5.1, 0.5.2). A
+     malformed wrapper or `HR` frame → `error BAD_REQUEST`.
+  2. `to` (or the `HR` `device_id`) must be the peer of the sender in a registered, unrevoked pair;
+     otherwise → `error NOT_PAIRED` (also when `to` is the sender itself).
+  3. A `from` sent by the device is ignored (0.5.1 rule 6): the relay sets `from` to the sender's
+     `device_id` and re-emits `env` byte for byte, never re-serialized:
+     `{"from":"<device_id>","env":<raw env>}`. An `HR` frame gets the source `device_id` in place of
+     the destination one; the HL frame is forwarded unchanged.
+  4. Frame > 256 KiB → `error PAYLOAD_TOO_LARGE`; over 2 MiB/s per pair → delay socket reads
      (backpressure), no frame is dropped.
-  3. No `presence:<to>` → `error NOT_CONNECTED`; present → publish `dev:<to>`.
-  4. No decryption, no logging of `env`; only the envelope count and bytes are added to
+  5. No `presence:<to>` → `error NOT_CONNECTED`; present → publish `dev:<to>`.
+  6. No decryption, no logging of `env`; only the envelope count and bytes are added to
      `usage_daily` per `device_hash`.
 
 #### Query
@@ -707,7 +716,7 @@ INCR      rl:<device_id>:relay:<minute>                # rate limit
 | Preconditions | 1. `relay.enabled = true`; the target device is registered with the relay and has a push token. 2. iOS: the user has allowed notifications (SET-03). 3. The pair is valid on the relay. |
 | Postconditions | The latest token is in `devices`; the push reaches the right device; the phone connects to the relay within ≤ 10 s of a wake (reference target); the iPhone shows a notification with content while unlocked and generic content while locked. |
 | Exceptions | E1 — The target device has no token yet (409 `PUSH_TOKEN_MISSING`) → skip; the data will arrive through sync once connected.<br>E2 — Temporary FCM/APNs error (502 `PUSH_PROVIDER_ERROR`) → Android queues the push in `push_outbox` and retries with backoff until `expires_at`.<br>E3 — The token is no longer valid (FCM `UNREGISTERED`, APNs 410) → the relay deletes the token; the device registers again the next time the app is opened.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE cannot read the key (device locked) or decryption fails → shows "New notification from your phone".<br>E6 — The phone is in a background-restricted mode and FCM is deprioritized → it wakes up late; SET-01 has already guided the user to turn off battery optimization.<br>E7 — Envelope older than 24 h or `id` already processed → I-NSE shows the generic content and does not process it again. |
-| Special requirements | **Security:** FCM carries no content; APNs only carries the encrypted envelope (`K_push`), and the `aps.alert` part only has a `loc-key` — the iPhone translates the generic wording into its own language (0.12.4).<br>**Limits:** APNs payload ≤ 4 KB → SMS content in a push is cut at 1,000 characters, complete after SMS-01.<br>**Platform policy:** no PushKit VoIP (iOS 13+ requires every VoIP push to report a call to CallKit); incoming call notifications use an alert with `interruption-level: time-sensitive`; high-priority FCM is only used for things the user needs right away.<br>**Anti-spam:** `apns-collapse-id` per conversation/call; at most 30 pushes/minute per sending device. |
+| Special requirements | **Security:** FCM carries no content; APNs only carries the encrypted envelope (`K_push`), and the `aps.alert` part only has a `loc-key` — the iPhone translates the generic wording into its own language (0.12.4).<br>**Limits:** APNs payload ≤ 4 KB → `env_b64` ≤ 3,000 characters of base64; SMS content in a push is shortened per step 5b and arrives complete after SMS-01.<br>**Platform policy:** no PushKit VoIP (iOS 13+ requires every VoIP push to report a call to CallKit); incoming call notifications use an alert with `interruption-level: time-sensitive`; high-priority FCM is only used for things the user needs right away.<br>**Anti-spam:** `apns-collapse-id` per SMS message or call (API 4); at most 30 pushes/minute per sending device. |
 
 ### 3.4.2 Screens
 
@@ -757,7 +766,7 @@ flowchart TB
 | 3 | System | M-APP / I-APP or A-SVC | An event arises that the target device must handle while the target has no session (LAN or relay): the client needs the phone (CONN-03 step 7, sending an SMS); the phone has `sms/new`, `call_event/state` (ringing), `call_event/log_new` (missed) for an iPhone/iPad. | Mac as the target → no push, wait for the sync. |
 | 4 | System | as above | Chooses `wake` (the target is Android) or `alert` (the target is iOS/iPadOS). |  |
 | 5a | System | M-APP / I-APP | Creates a `wake` request with a reason (`user_open`, `sms_send`, `call_action`). | At most 1 wake/5 minutes for the same reason. |
-| 5b | System | A-SVC | Builds the envelope as when sending over a session (e.g. `sms/new`) but encrypts it with `K_push`; cuts SMS content at 1,000 characters; `collapse_key` = `sms:<thread_id>` or `call:<call_id>`. | Relay error → E2, write to `push_outbox` (deadline: 30 s for incoming calls, 24 h for SMS and missed calls). |
+| 5b | System | A-SVC | Builds the envelope as when sending over a session (e.g. `sms/new`) but encrypts it with `K_push`; `env_b64` = standard base64 with padding of the UTF-8 envelope JSON.<br>SMS: `message.body` is cut to at most 1,000 characters at a code-point boundary, ending with "…"; while `env_b64` is still over 3,000 characters, `message.body` and then `thread.snippet` are shortened further at code-point boundaries, each ending with "…"; the full text arrives with SMS-01.<br>`collapse_key` = the `message_key` for an SMS (e.g. `sms:12847`, since `message_key` is already `sms:<_id>`), `call:<call_id>` for a call (a missed call whose `call_id` is unknown: `calllog:<entry_id>`, CALL-04 API 5). | Relay error → E2, write to `push_outbox` (deadline: 30 s for incoming calls, 24 h for SMS and missed calls). |
 | 6 | System | → R-API | `POST /v1/push`. |  |
 | 7 | System | R-API, R-DB | Checks that the sender and the target are in the same valid pair, that the target has a token, and the rate limit. | E1, E3, E4. |
 | 8 | System | R-API → PUSH | FCM HTTP v1 (Android) or APNs HTTP/2 (iOS). Broken token → delete it from `devices` (E3). |  |
@@ -786,11 +795,11 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Yes | `apns_sandbox` for development builds |
-| `token` | string(4096) | Yes | FCM registration token or APNs device token (hex) |
-| `topic` | string(255) | With APNs | Bundle id of I-APP |
+| `token` | string(4096) | Yes | FCM registration token, or the APNs device token in lowercase hex |
+| `topic` | string(255) | With APNs | Bundle id of I-APP; only with `apns` or `apns_sandbox`, never with `fcm` |
 
-- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` (`topic` missing with APNs, provider does
-  not match the platform).
+- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` (`topic` missing with APNs or sent with
+  FCM, an APNs token that is not lowercase hex, provider does not match the platform).
 - **Example:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
 - **Business logic:** The provider must match `platform` (android ↔ fcm; ios/ipados ↔ apns*); the old
   token is overwritten.
@@ -807,16 +816,16 @@ flowchart TB
 | `to` | uuid | Yes | Target `device_id` |
 | `kind` | enum{wake\| alert} | Yes | `wake` only to Android; `alert` only to iOS/iPadOS |
 | `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Yes |  |
-| `env_b64` | b64 | With `alert` | Envelope encrypted with `K_push`, ≤ 3,000 bytes |
+| `env_b64` | b64 | With `alert` | Standard base64 with padding of the UTF-8 JSON of the envelope encrypted with `K_push` (step 5b), the same string as the APNs `hl`; ≤ 3,000 characters of base64 |
 | `collapse_key` | string(64) | No |  |
-| `ttl_s` | int32 | No | Default 60 (wake, call_incoming), 86,400 (sms_new, call_missed) |
+| `ttl_s` | int32 | No | Default 60 (wake), 30 (call_incoming, the value CALL-01 API 4 sends), 86,400 (sms_new, call_missed) |
 
 - **Response:** 202 `{"accepted":true}`. Errors: 403 `NOT_PAIRED`, 409 `PUSH_TOKEN_MISSING`, 413
   `PAYLOAD_TOO_LARGE`, 429 `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
 - **Example:**
 
 ```json
-{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…","collapse_key":"sms:118","ttl_s":86400}
+{"pair_id":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","to":"2c3d4e5f-6a7b-8c9d-8e0f-1a2b3c4d5e6f","kind":"alert","reason":"sms_new","env_b64":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…","collapse_key":"sms:12847","ttl_s":86400}
 ```
 
 - **Business logic:**
@@ -866,9 +875,9 @@ flowchart TB
 
 | `reason` | `aps.alert.loc-key` | Text (`en`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | `push.sms_new` (no title; the system shows the app name) | New SMS message | `active` | `sms:<message_key>` / `sms:<thread_id>` |
+| `sms_new` | `push.sms_new` (no title; the system shows the app name) | New SMS message | `active` | the `message_key`, e.g. `sms:12847` / `sms:<thread_id>` |
 | `call_incoming` | `push.call_incoming` | Incoming call on your phone | `time-sensitive` | `call:<call_id>` / `calls` |
-| `call_missed` | `push.call_missed` | Missed call on your phone | `active` | `calllog:<entry_id>` (without `READ_CALL_LOG`: `call:<call_id>`) / `calls` |
+| `call_missed` | `push.call_missed` | Missed call on your phone | `active` | `call:<call_id>` when the `call_id` is known, otherwise `calllog:<entry_id>` (CALL-04 API 5) / `calls` |
 
 #### Query
 
