@@ -955,7 +955,9 @@ stateDiagram-v2
 Status shown to the user (PAIR-02): `Idle` /`Backoff` → "Disconnected"; `Discovering`
 /`Connecting*`/`Handshaking` → "Connecting…"; `WaitingPeer` → "Phone offline";
 `Connected` → "Connected via Wi-Fi" or "Connected over the internet" ("Connected via USB" while the
-camera channel uses USB); every instance fails the pin → "Needs to be paired again".
+camera channel uses USB); every instance fails the pin → "Needs to be paired again". With the peer's
+name (status line, screen-reader text of the status indicator): "Connected via Wi-Fi to \<name>",
+"Connected over the internet to \<name>", "Connected via USB to \<name>".
 
 From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule.
 

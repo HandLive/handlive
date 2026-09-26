@@ -32,7 +32,7 @@ N/A — no approved wireframe yet.
 | 3 | Client device name | string(64) | Output | The device name (`Host.current().localizedName` / `UIDevice.current.name`) | Carried in the QR code (`d`) and shown on Android for confirmation |
 | 4 | QR scanner | camera preview | Input | Back camera | Android scans with CameraX + ZXing core (no ML Kit, plan decision I8) |
 | 5 | Pairing confirmation | enum{Pair\| Cancel} | Input | — | Android asks "Pair with \<client device name>?"; "Pair" is the default button, "Cancel" is on the left |
-| 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned<br>Hint on Android: "Type the 6-digit PIN shown on your Mac or iPhone." |
+| 6 | PIN | string(6), digits only | Output (Mac/iOS), Input (Android) | Generated when "Use a PIN" is chosen | Fallback when the QR code can't be scanned<br>Under the six digits on Mac/iOS: "On the phone, tap Add Device, choose Enter PIN, and type this code."<br>Hint on Android: "Type the 6-digit PIN shown on your Mac or iPhone." |
 | 7 | PIN attempts left | int32 | Output | 3 | Shown on Android after a wrong entry: "{count} attempts left" ("1 attempt left") |
 | 8 | Pairing status | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Shown on both devices |
 | 9 | Phone name | string(64) | Output | `Settings.Global.DEVICE_NAME` | Shown on Mac/iOS when pairing completes |

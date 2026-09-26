@@ -32,7 +32,7 @@ N/A — chưa có wireframe được duyệt.
 | 3 | Tên thiết bị client | string(64) | Output | Tên máy (`Host.current().localizedName` / `UIDevice.current.name`) | Nằm trong QR (`d`), hiển thị trên Android khi xác nhận |
 | 4 | Khung quét QR | camera preview | Input | Camera sau | Android quét bằng CameraX + ZXing core (không ML Kit, kế hoạch I8) |
 | 5 | Xác nhận ghép nối | enum{Ghép nối\| Hủy} | Input | — | Android hỏi "Ghép nối với <tên thiết bị client>?"; "Ghép nối" là nút mặc định, "Hủy" bên trái |
-| 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR<br>Hướng dẫn trên Android: "Nhập mã PIN 6 chữ số đang hiện trên Mac hoặc iPhone." |
+| 6 | Mã PIN | string(6), chỉ chữ số | Output (Mac/iOS), Input (Android) | Sinh khi chọn "Dùng mã PIN" | Dự phòng khi không quét được QR<br>Dưới sáu chữ số trên Mac/iOS: "Trên điện thoại, chạm Thêm thiết bị, chọn Nhập mã PIN rồi nhập mã này."<br>Hướng dẫn trên Android: "Nhập mã PIN 6 chữ số đang hiện trên Mac hoặc iPhone." |
 | 7 | Số lần nhập PIN còn lại | int32 | Output | 3 | Hiển thị trên Android sau lần nhập sai: "Còn {count} lần thử" |
 | 8 | Trạng thái ghép nối | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Hiển thị trên cả hai thiết bị |
 | 9 | Tên điện thoại | string(64) | Output | `Settings.Global.DEVICE_NAME` | Hiển thị trên Mac/iOS khi ghép xong |

@@ -946,7 +946,9 @@ stateDiagram-v2
 Trạng thái hiển thị cho người dùng (PAIR-02): `Idle` /`Backoff` → "Mất kết nối"; `Discovering`
 /`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến";
 `Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh
-camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại".
+camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại". Kèm tên thiết bị bên kia (dòng
+trạng thái, câu đọc màn hình của chỉ báo trạng thái): "Đã kết nối qua Wi-Fi với <tên>",
+"Đã kết nối qua Internet với <tên>", "Đã kết nối qua USB với <tên>".
 
 Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường.
 
