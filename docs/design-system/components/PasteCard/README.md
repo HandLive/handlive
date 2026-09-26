@@ -10,11 +10,11 @@ people send with one tap on the system **Paste** button.
 
 | Part | Specification |
 |------|---------|
-| Send | A "Send to Lan's Pixel 8" card with `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — the system paste button, which does **not** trigger the "Allow Paste" dialog; tinted `accent`, capsule-shaped; a one-line explanation under the button |
-| Result | The `Feedback` HUD "Sent to Lan's Pixel 8" + a `success` haptic; when not connected: "Not connected — will send if reconnected within 2 minutes" |
+| Send | A "Send to Lan's Pixel 8" card with `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — the system paste button, which does **not** trigger the "Allow Paste" dialog; tinted `accent`, capsule-shaped; under the button the one-line hint "Tap Paste to send what you just copied." (CLIP-04 field 1) |
+| Result | The `Feedback` HUD "Sent to Lan's Pixel 8" + a `success` haptic; when not connected, the Paste button is disabled and the card shows "Not connected to the phone" (CLIP-04 E5) |
 | Last received | A content card (text trimmed to 3 lines, or a thumbnail), the line "From Lan's Pixel 8 · 2:05 PM", a "Copy" button (`document.on.document`) |
 | Sensitive content | The content isn't shown, only "Sensitive content hidden" |
-| Empty | "Nothing Received Yet" and a sentence explaining how to copy on the phone |
+| Empty | "Nothing Received Yet" and "Content copied on the phone or Mac appears here while HandLive is open." (CLIP-04 field 10) |
 
 The tab bar (floating glass on iOS 26 and later): "Clipboard", "Messages" (with an unread count badge
 in `badge`), "Calls", "Settings"; filled icons, the selected tab in `accent`.

@@ -10,11 +10,11 @@ bằng một lần chạm vào nút **Dán** của hệ thống.
 
 | Phần | Quy cách |
 |------|---------|
-| Gửi | Thẻ "Gửi sang Pixel 8 của Lan" với `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — nút dán của hệ thống, **không** bật hộp thoại "Cho phép dán"; tô `accent`, dạng capsule; câu giải thích một dòng dưới nút |
-| Kết quả | `Feedback` HUD "Đã gửi tới Pixel 8 của Lan" + rung `success`; chưa kết nối: "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút" |
+| Gửi | Thẻ "Gửi sang Pixel 8 của Lan" với `PasteButton` (SwiftUI) / `UIPasteControl` (UIKit) — nút dán của hệ thống, **không** bật hộp thoại "Cho phép dán"; tô `accent`, dạng capsule; dưới nút là dòng hướng dẫn "Chạm Dán để gửi nội dung vừa sao chép." (CLIP-04 trường 1) |
+| Kết quả | `Feedback` HUD "Đã gửi tới Pixel 8 của Lan" + rung `success`; chưa kết nối thì nút Dán bị vô hiệu và thẻ hiện "Chưa kết nối với điện thoại" (CLIP-04 E5) |
 | Nhận gần nhất | Thẻ nội dung (văn bản rút gọn 3 dòng hoặc ảnh thu nhỏ), dòng "Từ Pixel 8 của Lan · 14:05", nút "Sao chép" (`document.on.document`) |
 | Nội dung nhạy cảm | Không hiện nội dung, chỉ "Nội dung nhạy cảm đã được ẩn" |
-| Trống | "Chưa nhận gì" và câu hướng dẫn sao chép trên điện thoại |
+| Trống | "Chưa nhận gì" và "Nội dung sao chép trên điện thoại hoặc Mac sẽ hiện ở đây khi HandLive đang mở." (CLIP-04 trường 10) |
 
 Thanh tab (iOS 26 trở lên là kính nổi): "Bảng nhớ tạm", "Tin nhắn" (huy hiệu số chưa đọc, màu
 `badge`), "Cuộc gọi", "Cài đặt"; biểu tượng bản đặc, tab đang chọn màu `accent`.

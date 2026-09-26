@@ -88,6 +88,10 @@ Use the system formatters with the Vietnamese locale; don't build strings by han
 | Number | "1.500"; decimal "0,5" | `.formatted()`, `NumberFormatter` |
 | File size | "5 MB" | `ByteCountFormatStyle`; Android `Formatter.formatShortFileSize` |
 
+A count inside a plural string is the exception: the string catalog passes it as a plain integer, so
+it has no thousands separator, for example "Đã tải 1500 tin" (Downloaded 1500 messages); detailed
+design 0.12.1.
+
 ## Errors
 
 Pattern: what happened, then how to fix it. Show it right next to where the error happened; don't blame
@@ -97,7 +101,7 @@ the user; no error codes, no generic "Lỗi" (Error) title.
 |---|---|
 | "Mã PIN không đúng. Kiểm tra mã trên Mac rồi nhập lại." (The PIN is incorrect. Check the code on your Mac and try again.) | "PIN_INVALID" |
 | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" (Requires the same Wi-Fi network or a USB cable) | "Không hỗ trợ kênh truyền" (Transport not supported) |
-| "Chưa gửi được. Điện thoại đang ở chế độ máy bay." (Not sent yet. The phone is in Airplane Mode.) | "Gửi thất bại" (Send failed) |
+| "Chưa gửi được. Điện thoại đang ở chế độ máy bay." (Not sent yet. The phone is in airplane mode.) | "Gửi thất bại" (Send failed) |
 
 ## Empty states
 
@@ -130,7 +134,7 @@ includes a task to check them on real devices.
 | "Quyền riêng tư và bảo mật" | "Quyền riêng tư & Bảo mật" (Privacy & Security) | SET-03, CLIP-02, AUDIO-01, CAM-01 |
 | "Không, tôi sẽ gửi thủ công" (No, I'll send manually) | "Gửi thủ công" (Send Manually) | CLIP-01 field 3; buttons start with a verb |
 | "Thêm điện thoại" (the Mac button that opens the QR code sheet) | "Thêm điện thoại…" (Add Phone…) | PAIR-01 |
-| "Đã tải 1 500 tin" | "Đã tải 1.500 tin" (Loaded 1,500 messages) | SMS-01; the Vietnamese thousands separator |
+| "Đã tải 1 500 tin" | "Đã tải 1500 tin" (Downloaded 1500 messages) | SMS-01; a count inside a plural string has no grouping (detailed design 0.12.1) |
 
 ## English — the default language
 
@@ -152,7 +156,8 @@ every string has a Vietnamese version that follows the sections above (C20).
 - "internet" is lowercase in sentences ("Connected over the internet") and capitalized when the whole
   string uses title-style capitalization.
 - Numbers, dates, and times follow the English locale through the system formatters ("2:05 PM" in
-  en-US, "Sep 24", "1,500", "0.5", "5 MB"); don't build strings by hand.
+  en-US, "Sep 24", "1,500", "0.5", "5 MB"); don't build strings by hand. A count inside a plural string
+  has no grouping ("Downloaded 1500 messages").
 - Errors: what happened, then how to fix it — "The PIN is incorrect. Check the code on your Mac and try
   again."; no error codes, no generic "Error" title.
 - The "…" character and the rules for buttons, alerts, notifications, and empty states are the same as

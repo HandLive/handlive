@@ -82,6 +82,9 @@ Dùng formatter của hệ thống với locale tiếng Việt, không tự ghé
 | Số | "1.500"; thập phân "0,5" | `.formatted()`, `NumberFormatter` |
 | Dung lượng | "5 MB" | `ByteCountFormatStyle`; Android `Formatter.formatShortFileSize` |
 
+Ngoại lệ: số đếm trong chuỗi số nhiều được catalog chuỗi truyền dạng số nguyên nên không có dấu ngăn
+nghìn, ví dụ "Đã tải 1500 tin" (tài liệu chi tiết 0.12.1).
+
 ## Lỗi
 
 Mẫu: chuyện gì xảy ra, rồi cách xử lý. Đặt ngay cạnh chỗ lỗi; không đổ lỗi cho người dùng; không mã
@@ -122,7 +125,7 @@ chiếu trên máy thật.
 | "Quyền riêng tư và bảo mật" | "Quyền riêng tư & Bảo mật" | SET-03, CLIP-02, AUDIO-01, CAM-01 |
 | "Không, tôi sẽ gửi thủ công" | "Gửi thủ công" | CLIP-01 trường 3; nút bắt đầu bằng động từ |
 | "Thêm điện thoại" (nút Mac mở sheet mã QR) | "Thêm điện thoại…" | PAIR-01 |
-| "Đã tải 1 500 tin" | "Đã tải 1.500 tin" | SMS-01; dấu ngăn nghìn của tiếng Việt |
+| "Đã tải 1 500 tin" | "Đã tải 1500 tin" | SMS-01; số đếm trong chuỗi số nhiều không có dấu ngăn nghìn (tài liệu chi tiết 0.12.1) |
 
 ## Tiếng Anh — ngôn ngữ mặc định
 
@@ -143,7 +146,8 @@ Việt theo các mục trên (C20).
 - "internet" viết thường trong câu ("Connected over the internet"), viết hoa khi cả chuỗi viết hoa
   kiểu tiêu đề.
 - Số, ngày, giờ theo locale tiếng Anh qua formatter của hệ thống ("2:05 PM" ở en-US, "Sep 24",
-  "1,500", "0.5", "5 MB"); không tự ghép chuỗi.
+  "1,500", "0.5", "5 MB"); không tự ghép chuỗi. Số đếm trong chuỗi số nhiều không có dấu ngăn nghìn
+  ("Downloaded 1500 messages").
 - Lỗi: chuyện gì xảy ra rồi cách xử lý — "The PIN is incorrect. Check the code on your Mac and try
   again."; không mã lỗi, không tiêu đề chung chung "Error".
 - Dấu "…" và các quy tắc về nút, alert, thông báo, trạng thái trống như bản tiếng Việt.

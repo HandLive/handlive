@@ -48,7 +48,7 @@ cho người dùng.
 | Điện thoại không ghi được (CLIP-02 E8) | Mac: dòng trạng thái `MenuBarMenu` | "Không ghi được bảng nhớ tạm trên điện thoại" | — |
 | Camera khi đang qua Internet (CAM-02 E1) | Xem trước camera, `MenuBarMenu` | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" | — |
 | Ghép nối sai xác thực (PAIR-01 E4) | Trong sheet ghép nối | "Ghép nối không an toàn, thử lại" | Mã QR mới |
-| Máy chủ không phản hồi (SET-02 E5) | Dưới nút vừa dùng | "Không kết nối được máy chủ, hãy thử lại sau" | — |
+| Máy chủ không phản hồi (SET-02 E5) | Dưới nút vừa dùng | "Không kết nối được máy chủ, hãy thử lại sau." | — |
 
 ## Alert: chỉ hai việc
 
@@ -78,7 +78,7 @@ cho người dùng.
 ## Tải và tiến trình
 
 - Hiện dữ liệu cục bộ ngay, đồng bộ ở nền; không chặn cả màn. Lần đầu: dải "Đang đồng bộ tin nhắn…"
-  và "Đã tải 1 500 tin" trên danh sách (SMS-01 trường 1–2); "Đang tải tin cũ hơn" ở đầu hội thoại
+  và "Đã tải 1500 tin" trên danh sách (SMS-01 trường 1–2); "Đang tải tin cũ hơn" ở đầu hội thoại
   (SMS-03 trường 10).
 - Câu cụ thể thay cho "Đang tải…". Mac: spinner nhỏ không nhãn cạnh nội dung đang tải.
 - Biết tổng thì dùng thanh xác định; không đổi spinner thành thanh giữa chừng. Ảnh trên 1 MiB: "Đang
@@ -94,9 +94,9 @@ cho người dùng.
 |---|---|---|
 | Mac, iPhone chưa ghép nối | "Chưa ghép nối" | "Thêm điện thoại…" |
 | Android chưa có thiết bị | "Chưa có thiết bị nào" | "Thêm thiết bị" |
-| Tin nhắn trống (SMS-03 E1) | "Chưa có tin nhắn" kèm trạng thái đồng bộ | Chờ đồng bộ, hoặc "Tin nhắn mới" |
+| Tin nhắn trống (SMS-03 E1) | "Chưa có tin nhắn" · "Tin nhắn từ điện thoại sẽ hiện ở đây sau lần đồng bộ đầu tiên." kèm trạng thái đồng bộ | Chờ đồng bộ, hoặc "Tin nhắn mới" |
 | Tính năng tắt hoặc thiếu quyền trên điện thoại | Lý do như trong Cài đặt | "Xem hướng dẫn" |
-| Bảng nhớ tạm trên iPhone | "Chưa nhận gì" | Câu hướng dẫn sao chép trên điện thoại |
+| Bảng nhớ tạm trên iPhone | "Chưa nhận gì" · "Nội dung sao chép trên điện thoại hoặc Mac sẽ hiện ở đây khi HandLive đang mở." | Sao chép trên điện thoại hoặc Mac (CLIP-04 trường 10) |
 
 Tab trên iPhone không bao giờ ẩn hay vô hiệu vì trống; tab nói lý do ngay trong nội dung.
 

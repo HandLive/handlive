@@ -11,7 +11,7 @@ permission all show in place (`StatusIndicator`, `GroupedList`), not as an alert
 | Situation | macOS | iOS/iPadOS and Android |
 |-----------|-------|-----------------------|
 | Unpair (PAIR-03) — the user chose it deliberately | A sheet-style alert attached to the Settings window: "Cancel" + "Unpair" (default, on the right) | An action sheet rising from the row just tapped: "Unpair" in red at the top, "Cancel" at the bottom |
-| Erase all HandLive data, remove the device from the server | Same as above | Same as above |
+| Delete all HandLive data, remove the device from the server (SET-02 field 28) | Same as above, with "Delete All" or "Remove from Server" | Same as above, with "Delete All" or "Remove from Server" |
 | An error that can't recover on its own (for example, installing the virtual camera failed) | An alert with a button that leads to the fix | Alert |
 | Connection lost, failed send, missing permission | No alert | No alert |
 

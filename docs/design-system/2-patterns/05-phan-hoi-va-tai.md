@@ -17,7 +17,7 @@ https://developer.apple.com/design/human-interface-guidelines/alerts
 |---|---|---|
 | An action the user started completes | `Feedback`. Mac: the menu bar icon changes to `checkmark` for ~1 second, then changes back. iPhone, Android: a glass HUD for ~1.5 seconds with a haptic | "Sent to Lan's Pixel 8" |
 | An automatic task succeeds | Silence; the status updates in place. Only the first copy from phone to Mac gets the `checkmark` above (a Delight moment) | — |
-| Waiting, queued | Status text right on the item | "Waiting for the phone", "2 messages waiting for the phone", "Tap Turn On on the phone" |
+| Waiting, queued | Status text right on the item | "Waiting for phone", "2 messages waiting for the phone", "Tap Turn On on the phone" |
 | An error that can be fixed | Right where the error happened, with a button that fixes it | "Not sent · No service" and "Try Again" under the bubble |
 | Connection lost | `StatusIndicator` only | "Disconnected" and "Reconnect Now" |
 | An action that can't be undone | A confirmation `Alert` | "Unpair Lan's Pixel 8?" |
@@ -53,7 +53,7 @@ blaming the user.
 
 ## Alerts: only two jobs
 
-- Confirming an action that can't be undone: "Unpair" (PAIR-03), "Remove Device from Server", "Erase
+- Confirming an action that can't be undone: "Unpair" (PAIR-03), "Remove Device from Server", "Delete
   All HandLive Data" (wording from SET-02 field 29), "Resync All SMS" (SMS-01 field 6), "Remove Virtual
   Camera and Microphone" (CAM-01 A1), turning off a feature that's running (SET-02 E9).
 - Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
@@ -70,7 +70,7 @@ blaming the user.
   `StatusIndicator`: the menu bar icon adds `.slash`, and the row reads "Disconnected", "Phone
   offline · last seen 2:05 PM", or "Connecting…"; while waiting to retry: "Retrying in 8 s" and
   "Reconnect Now" (CONN-02 fields 3–4).
-- Synced data stays viewable. Tasks that need the phone are queued ("Waiting for the phone") or dimmed with
+- Synced data stays viewable. Tasks that need the phone are queued ("Waiting for phone") or dimmed with
   a reason: the Paste button is disabled with "Not connected to the phone" (CLIP-04 field 4).
 - `CallPanel` losing its session: "Disconnected from the phone" (CALL-03 E6).
 - "Needs to be paired again" (the pairing was revoked) is `status-error` because the user has to do something:
@@ -79,7 +79,7 @@ blaming the user.
 ## Loading and progress
 
 - Show local data immediately and sync in the background; don't block the whole screen. The first
-  time: the banner "Syncing messages…" and "Loaded 1,500 messages" on the list (SMS-01 fields 1–2);
+  time: the banner "Syncing messages…" and "Downloaded 1500 messages" on the list (SMS-01 fields 1–2);
   "Loading older messages" at the top of a conversation (SMS-03 field 10).
 - A specific sentence instead of "Loading…". Mac: a small spinner without a label next to the content
   being loaded.
@@ -96,9 +96,9 @@ blaming the user.
 |---|---|---|
 | Mac, iPhone not paired | "Not paired" | "Add Phone…" |
 | Android with no devices | "No Devices Yet" | "Add Device" |
-| No messages (SMS-03 E1) | "No Messages Yet" with the sync status | Wait for the sync, or "New Message" |
+| No messages (SMS-03 E1) | "No Messages Yet" · "Messages from your phone appear here after the first sync." with the sync status | Wait for the sync, or "New Message" |
 | Feature off or permission missing on the phone | The reason, as in Settings | "View Instructions" |
-| The clipboard on iPhone | "Nothing Received Yet" | A sentence explaining how to copy on the phone |
+| The clipboard on iPhone | "Nothing Received Yet" · "Content copied on the phone or Mac appears here while HandLive is open." | Copy on the phone or Mac (CLIP-04 field 10) |
 
 Tabs on iPhone are never hidden or disabled because they're empty; each tab explains why right in its
 content.
