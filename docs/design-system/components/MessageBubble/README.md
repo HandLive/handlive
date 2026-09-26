@@ -30,7 +30,7 @@ The status of an outgoing message only moves forward, and each status has its ow
 Reasons by error code, as in SMS-04 field 8: `SMS_NO_SERVICE` "No service" · `SMS_RADIO_OFF`
 "The phone is in airplane mode" · `SMS_LIMIT_EXCEEDED` "Sending limit reached. Try again later." ·
 `SMS_INVALID_ADDRESS` "Invalid number" · `SMS_SIM_UNAVAILABLE` "The SIM isn't active" ·
-`NOT_CONNECTED` "Couldn't connect to the phone" · anything else "Couldn't send".
+`PERMISSION_MISSING` "Missing SMS permission on the phone" · `NOT_CONNECTED` "Couldn't connect to the phone" · anything else "Couldn't send".
 
 ## Compose field
 

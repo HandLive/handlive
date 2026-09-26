@@ -29,7 +29,7 @@ Trạng thái tin gửi chỉ đi tiến, mỗi trạng thái có biểu tượn
 Lý do theo mã lỗi, như SMS-04 trường 8: `SMS_NO_SERVICE` "Không có sóng" · `SMS_RADIO_OFF`
 "Điện thoại đang ở chế độ máy bay" · `SMS_LIMIT_EXCEEDED` "Đã vượt giới hạn gửi, thử lại sau." ·
 `SMS_INVALID_ADDRESS` "Số không hợp lệ" · `SMS_SIM_UNAVAILABLE` "SIM không hoạt động" ·
-`NOT_CONNECTED` "Không kết nối được điện thoại" · khác "Gửi không thành công".
+`PERMISSION_MISSING` "Thiếu quyền SMS trên điện thoại" · `NOT_CONNECTED` "Không kết nối được điện thoại" · khác "Gửi không thành công".
 
 ## Ô soạn tin
 
