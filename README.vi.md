@@ -6,7 +6,7 @@
 >
 > Phương châm: *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 
-**Trạng thái:** Phase 0 đã xong, gồm khung, giao thức, mã hóa, token và CI. Ứng dụng chưa có tính năng cho người dùng. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
+**Trạng thái:** Phase 0 (khung, giao thức, mã hóa, token và CI) và Phase 1 (đồng bộ clipboard giữa Android và Mac) đã gộp vào `main`. Việc kiểm trên máy thật của cổng G1 vẫn còn mở, nên chưa có bản phát hành. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
 
 ## HandLive giải quyết gì
 

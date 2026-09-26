@@ -6,7 +6,7 @@ English | [Tiếng Việt](README.vi.md)
 >
 > Design motto: *"WebSocket for data, Bluetooth for voice."*
 
-**Status:** Phase 0 is done: scaffold, protocol, encryption, tokens and CI. The apps have no user-facing features yet. The source code lives in four separate repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
+**Status:** Phase 0 (scaffold, protocol, encryption, tokens and CI) and Phase 1 (clipboard sync between Android and Mac) are merged into `main`. The real-device checks of gate G1 are still open, so there is no release yet. The source code lives in four separate repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
 
 ## What HandLive solves
 
