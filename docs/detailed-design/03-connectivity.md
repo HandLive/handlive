@@ -438,7 +438,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Preconditions | 1. There is a valid pair, already registered with the relay or registrable right away (PAIR-01 API 8). 2. `relay.enabled = true` on both devices. 3. Internet access. |
 | Postconditions | **Success:** an E2E session through the relay, status "Connected over the internet"; the data features work as on the LAN (except the camera and call audio — they need proximity).<br>**Phone offline:** state `WaitingPeer` ("Phone offline"), a wake push has been sent. |
 | Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`. |
-| Special requirements | **Security:** the relay only sees the wrapper (`to`/`from`, `type`, size, time); it has no E2E key; 15-minute JWT; pinned SPKI of ISRG Root X1/X2 + a backup key.<br>**Resources:** at most 2 MiB/s per pair; envelope ≤ 256 KiB.<br>**Reference performance:** SMS and call notifications through the relay ≤ 1 s when both sides are online.<br>**Operations:** the relay is stateless; presence and routing between instances go through Redis; statistics only per `device_hash`. |
+| Special requirements | **Security:** the relay only sees the wrapper (`to`/`from`, `type`, size, time); it has no E2E key; 15-minute JWT; pinned SPKI of ISRG Root X1/X2 + a backup key.<br>**Resources:** at most 2 MiB/s per pair and direction; envelope ≤ 256 KiB.<br>**Reference performance:** SMS and call notifications through the relay ≤ 1 s when both sides are online.<br>**Operations:** the relay is stateless; presence and routing between instances go through Redis; statistics only per `device_hash`. |
 
 ### 3.3.2 Screens
 
@@ -601,6 +601,11 @@ flowchart TB
      `presence` if it still belongs to this instance, publish `presence offline`.
   5. A JWT that expires while the connection is open does not cut the connection; only the next
      opening needs a new token.
+  6. Limits: the upgrade request counts against the REST limit (`RELAY_RATE_LIMIT`); a frame over
+     1 MiB closes the connection with 4400 (a frame over 256 KiB only gets `error PAYLOAD_TOO_LARGE`,
+     API 6); the relay pings every 15 s and closes with 4411 after 45 s without any frame from the
+     device, pongs included; a receiving connection with 32 MiB waiting to be written, or a write
+     stuck for 10 s, is dropped with 4500 (0.8.3).
 
 #### API 5 — Relay op `presence` and `error`
 
@@ -639,19 +644,23 @@ flowchart TB
 ```
 
 - **Business logic:**
-  1. The relay checks only the wrapper: a JSON object whose `to` is a `device_id` and whose `env` is
-     an object (binary frames: the 20-byte `HR` header of 0.4.3, followed by a frame). It never
-     parses or checks `env` or the inner HL frame; the receiving device does (0.5.1, 0.5.2). A
-     malformed wrapper or `HR` frame → `error BAD_REQUEST`.
+  1. The relay checks only the wrapper: a JSON object whose `to` is a `device_id` (a UUIDv8) and
+     whose `env` is an object (binary frames: the 20-byte `HR` header of 0.4.3, followed by a frame).
+     It never parses or checks `env` or the inner HL frame; the receiving device does (0.5.1, 0.5.2).
+     The only exception is the pairing rendezvous (PAIR-01 API 7, logic 4). A malformed wrapper or
+     `HR` frame, including a `to` or `HR` destination that is not a UUIDv8 → `error BAD_REQUEST`
+     without `to`, so a malformed id is never echoed.
   2. `to` (or the `HR` `device_id`) must be the peer of the sender in a registered, unrevoked pair;
      otherwise → `error NOT_PAIRED` (also when `to` is the sender itself).
   3. A `from` sent by the device is ignored (0.5.1 rule 6): the relay sets `from` to the sender's
      `device_id` and re-emits `env` byte for byte, never re-serialized:
      `{"from":"<device_id>","env":<raw env>}`. An `HR` frame gets the source `device_id` in place of
      the destination one; the HL frame is forwarded unchanged.
-  4. Frame > 256 KiB → `error PAYLOAD_TOO_LARGE`; over 2 MiB/s per pair → delay socket reads
-     (backpressure), no frame is dropped.
-  5. No `presence:<to>` → `error NOT_CONNECTED`; present → publish `dev:<to>`.
+  4. Frame > 256 KiB → `error PAYLOAD_TOO_LARGE`; over 2 MiB/s per pair and direction → delay socket
+     reads (backpressure), no frame is dropped.
+  5. Publish on `dev:<to>`: 0 receivers, or a frame the relay cannot publish (Redis error) →
+     `error NOT_CONNECTED`. `presence:<to>` is not consulted here; it only feeds the `presence` op and
+     `GET /v1/pairs`.
   6. No decryption, no logging of `env`; only the envelope count and bytes are added to
      `usage_daily` per `device_hash`.
 
@@ -697,9 +706,7 @@ SET       presence:<device_id> <instance_id> EX 60     # API 4, renewed every 20
 SUBSCRIBE dev:<device_id>                              # API 4
 SMEMBERS  revoked_notice:<device_id>                   # API 4: send pair_revoked for each element
 DEL       revoked_notice:<device_id>                   # API 4: once they have been sent
-EXISTS    presence:<to>                                # API 6
-PUBLISH   dev:<to> {"from":"<device_id>","env":{...}}  # API 6
-INCR      rl:<device_id>:relay:<minute>                # rate limit
+PUBLISH   dev:<to> {"from":"<device_id>","env":{...}}  # API 6: 0 receivers → NOT_CONNECTED
 ```
 
 ---
@@ -715,7 +722,7 @@ INCR      rl:<device_id>:relay:<minute>                # rate limit
 | Actors | Primary: System (A-SVC, I-APP, I-NSE, R-API, FCM, APNs). Secondary: User (allows notifications on iOS, sees the notifications). |
 | Preconditions | 1. `relay.enabled = true`; the target device is registered with the relay and has a push token. 2. iOS: the user has allowed notifications (SET-03). 3. The pair is valid on the relay. |
 | Postconditions | The latest token is in `devices`; the push reaches the right device; the phone connects to the relay within ≤ 10 s of a wake (reference target); the iPhone shows a notification with content while unlocked and generic content while locked. |
-| Exceptions | E1 — The target device has no token yet (409 `PUSH_TOKEN_MISSING`) → skip; the data will arrive through sync once connected.<br>E2 — Temporary FCM/APNs error (502 `PUSH_PROVIDER_ERROR`) → Android queues the push in `push_outbox` and retries with backoff until `expires_at`.<br>E3 — The token is no longer valid (FCM `UNREGISTERED`, APNs 410) → the relay deletes the token; the device registers again the next time the app is opened.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE cannot read the key (device locked) or decryption fails → shows "New notification from your phone".<br>E6 — The phone is in a background-restricted mode and FCM is deprioritized → it wakes up late; SET-01 has already guided the user to turn off battery optimization.<br>E7 — Envelope older than 24 h or `id` already processed → I-NSE shows the generic content and does not process it again. |
+| Exceptions | E1 — The target device has no token yet (409 `PUSH_TOKEN_MISSING`) → skip; the data will arrive through sync once connected.<br>E2 — Temporary FCM/APNs error (502 `PUSH_PROVIDER_ERROR`) → Android queues the push in `push_outbox` and retries with backoff until `expires_at`.<br>E3 — The token is no longer valid (FCM `UNREGISTERED`, APNs 410) → the relay deletes the token and answers 409 `PUSH_TOKEN_MISSING`, so the phone does not queue a retry; the device registers again the next time the app is opened.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE cannot read the key (device locked) or decryption fails → shows "New notification from your phone".<br>E6 — The phone is in a background-restricted mode and FCM is deprioritized → it wakes up late; SET-01 has already guided the user to turn off battery optimization.<br>E7 — Envelope older than 24 h or `id` already processed → I-NSE shows the generic content and does not process it again. |
 | Special requirements | **Security:** FCM carries no content; APNs only carries the encrypted envelope (`K_push`), and the `aps.alert` part only has a `loc-key` — the iPhone translates the generic wording into its own language (0.12.4).<br>**Limits:** APNs payload ≤ 4 KB → `env_b64` ≤ 3,000 characters of base64; SMS content in a push is shortened per step 5b and arrives complete after SMS-01.<br>**Platform policy:** no PushKit VoIP (iOS 13+ requires every VoIP push to report a call to CallKit); incoming call notifications use an alert with `interruption-level: time-sensitive`; high-priority FCM is only used for things the user needs right away.<br>**Anti-spam:** `apns-collapse-id` per SMS message or call (API 4); at most 30 pushes/minute per sending device. |
 
 ### 3.4.2 Screens
@@ -729,7 +736,7 @@ N/A — no approved wireframe yet.
 | 1 | Notification permission (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | The system asks during SET-03; guidance is shown if `denied` |
 | 2 | Notification title | string | Output | "HandLive" | I-NSE replaces it with the sender's name or "Incoming Call" |
 | 3 | Notification content | string | Output | "New notification from your phone" | I-NSE replaces it with the decrypted content (respects `sms.preview`) |
-| 4 | Notification group | string | Output | — | `thread-id` = SMS conversation or "calls" |
+| 4 | Notification group | string | Output | — | APNs `thread-id` = `sms` or `calls` (the relay cannot see the conversation); after decrypting, I-NSE groups an SMS by conversation with `threadIdentifier` (SMS-02 API 4) |
 
 ### 3.4.4 Business flow
 
@@ -771,7 +778,7 @@ flowchart TB
 | 7 | System | R-API, R-DB | Checks that the sender and the target are in the same valid pair, that the target has a token, and the rate limit. | E1, E3, E4. |
 | 8 | System | R-API → PUSH | FCM HTTP v1 (Android) or APNs HTTP/2 (iOS). Broken token → delete it from `devices` (E3). |  |
 | 9a | System | A-SVC | `onMessageReceived` with `t = wake`: starts/keeps A-SVC (the foreground service start exemption for high-priority FCM), runs CONN-03, waits for the client's handshake; after 5 idle minutes it disconnects from the relay. | E6. |
-| 9b | System | I-NSE | Reads `p` (pair_id) and `hl`; takes `PRK` from the shared Keychain group, derives `K_push`, decrypts; checks `ts` ≤ 24 h and that `id` has not been processed; builds the title/content by message type; calls `contentHandler`. | E5, E7. |
+| 9b | System | I-NSE | Reads `p` (pair_id) and `hl`; takes `PRK` from the shared Keychain group, derives `K_push`, decrypts; checks `ts` ≤ 24 h and that `id` has not been processed; builds the title/content by message type and, for an SMS, sets `threadIdentifier` to its conversation (SMS-02 API 4); calls `contentHandler`. | E5, E7. |
 | 10 | User | I-APP / operating system | Sees the notification; tapping it opens I-APP (CONN-01, sync). On the waiting client: sees "Connected over the internet". |  |
 
 ### 3.4.5 API/service specification
@@ -795,14 +802,14 @@ flowchart TB
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Yes | `apns_sandbox` for development builds |
-| `token` | string(4096) | Yes | FCM registration token, or the APNs device token in lowercase hex |
-| `topic` | string(255) | With APNs | Bundle id of I-APP; only with `apns` or `apns_sandbox`, never with `fcm` |
+| `token` | string(4096) | Yes | FCM registration token, or the APNs device token in lowercase hex (the relay stores APNs tokens lowercase) |
+| `topic` | string(255) | With APNs | Bundle id of I-APP; only with `apns` or `apns_sandbox`: senders never send it with `fcm`, and the relay ignores it there (0.5.1 rule 6) |
 
-- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` (`topic` missing with APNs or sent with
-  FCM, an APNs token that is not lowercase hex, provider does not match the platform).
+- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` (`topic` missing with APNs, an APNs token that is not hex, provider does
+  not match the platform; a Mac never registers a token).
 - **Example:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
-- **Business logic:** The provider must match `platform` (android ↔ fcm; ios/ipados ↔ apns*); the old
-  token is overwritten.
+- **Business logic:** The provider must match `platform` (android ↔ fcm; ios/ipados ↔ apns*; never
+  macos); the old token is overwritten; APNs tokens are stored lowercase.
 
 #### API 2 — `POST /v1/push`
 
@@ -817,11 +824,13 @@ flowchart TB
 | `kind` | enum{wake\| alert} | Yes | `wake` only to Android; `alert` only to iOS/iPadOS |
 | `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Yes |  |
 | `env_b64` | b64 | With `alert` | Standard base64 with padding of the UTF-8 JSON of the envelope encrypted with `K_push` (step 5b), the same string as the APNs `hl`; ≤ 3,000 characters of base64 |
-| `collapse_key` | string(64) | No |  |
-| `ttl_s` | int32 | No | Default 60 (wake), 30 (call_incoming, the value CALL-01 API 4 sends), 86,400 (sms_new, call_missed) |
+| `collapse_key` | string(64) | No | Printable ASCII (it becomes the `apns-collapse-id` header); FCM wakes always use `wake` (API 3) |
+| `ttl_s` | int32 | No | 0–86,400; default 60 (wake), 30 (call_incoming, the value CALL-01 API 4 sends), 86,400 (sms_new, call_missed); FCM caps it at 60 s (0.4.4) |
 
-- **Response:** 202 `{"accepted":true}`. Errors: 403 `NOT_PAIRED`, 409 `PUSH_TOKEN_MISSING`, 413
-  `PAYLOAD_TOO_LARGE`, 429 `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
+- **Response:** 202 `{"accepted":true}`. Errors: 400 `BAD_REQUEST` (invalid body, `kind` and `reason`
+  that do not match, a target of the wrong platform, a Mac), 403 `NOT_PAIRED`, 409
+  `PUSH_TOKEN_MISSING` (also right after a dead token, E3), 413 `PAYLOAD_TOO_LARGE`, 429
+  `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
 - **Example:**
 
 ```json
@@ -830,7 +839,8 @@ flowchart TB
 
 - **Business logic:**
   1. Check that the caller (`sub`) and `to` are the two members of a non-revoked `pair_id`.
-  2. Check that `kind` matches the target platform and that the target has a token.
+  2. Check that `kind` matches the target platform (`wake` → android, `alert` → ios/ipados; a Mac
+     never receives pushes, 0.4.4), otherwise 400, and that the target has a token.
   3. Rate limit of 30 pushes/minute per sender; a `wake` with the same `reason` within 5 minutes is
      coalesced (returns 202 but is not sent again).
   4. Call API 3 or API 4; add to `usage_daily.pushes`. `env_b64` is not kept after sending.
@@ -846,11 +856,13 @@ flowchart TB
 ```
 
 - **Response:** 200 `{"name":"projects/{project_id}/messages/<id>"}`; 404 with `UNREGISTERED` → delete
-  the token (E3); 429/5xx → 502 for the caller.
+  the token and answer 409 `PUSH_TOKEN_MISSING` (E3); 500/503 or a network error → one retry after
+  500 ms inside the request, then 502; other errors (429…) → 502 for the caller.
 - **Example:** as above.
 - **Business logic:** Data messages only (no `notification` block) so that Android handles them in
   `onMessageReceived` even in the background; the service account key lives outside the repo (an
-  environment variable of the relay).
+  environment variable of the relay). `android.collapse_key` is always `wake` and `android.ttl` =
+  min(`ttl_s`, 60) s (0.4.4).
 
 #### API 4 — APNs HTTP/2 (relay → Apple)
 
@@ -862,22 +874,28 @@ flowchart TB
 - **Request:**
 
 ```json
-{"aps":{"alert":{"loc-key":"push.sms_new"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
+{"aps":{"alert":{"loc-key":"push.sms_new"},"mutable-content":1,"sound":"default","thread-id":"sms","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
 ```
 
-- **Response:** 200 (header `apns-id`); 410 `Unregistered` → delete the token (E3); 400/403 → log a
-  configuration error; 429/5xx → 502.
+- **Response:** 200 (header `apns-id`); 410 `Unregistered` → delete the token and answer 409
+  `PUSH_TOKEN_MISSING` (E3); 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) and 403 → log a
+  configuration error and answer 502; 500/503 or a network error → one retry after 500 ms inside the
+  request, then 502; 429 → 502.
 - **Example:** as above; with `reason = call_incoming`: `interruption-level` = `time-sensitive`,
   `thread-id` = `calls`.
 - **Business logic:**
-  1. The .p8 key lives outside the repo; the provider JWT is refreshed every 50 minutes; total payload ≤ 4 KB.
+  1. The .p8 key lives outside the repo; the provider JWT is refreshed every 50 minutes; total payload ≤ 4 KB; `aps` always carries `sound: "default"`.
   2. The default content (shown when I-NSE cannot decrypt, e.g. while the iPhone is locked) is sent as `aps.alert.loc-key` — the relay sends no wording, the iPhone looks the key up in the app's catalog in the device language (0.12.4); it contains no phone number and no content. Keys by `reason`:
 
 | `reason` | `aps.alert.loc-key` | Text (`en`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | `push.sms_new` (no title; the system shows the app name) | New SMS message | `active` | the `message_key`, e.g. `sms:12847` / `sms:<thread_id>` |
+| `sms_new` | `push.sms_new` (no title; the system shows the app name) | New SMS message | `active` | the `message_key`, e.g. `sms:12847` / `sms` |
 | `call_incoming` | `push.call_incoming` | Incoming call on your phone | `time-sensitive` | `call:<call_id>` / `calls` |
 | `call_missed` | `push.call_missed` | Missed call on your phone | `active` | `call:<call_id>` when the `call_id` is known, otherwise `calllog:<entry_id>` (CALL-04 API 5) / `calls` |
+
+  3. `thread-id` is generic (`sms` or `calls`): the conversation is inside the encrypted envelope and
+     `POST /v1/push` has no field for it. After decrypting, I-NSE sets `threadIdentifier` per
+     conversation (SMS-02 API 4); a locked iPhone keeps every SMS push in the `sms` group.
 
 #### Query
 

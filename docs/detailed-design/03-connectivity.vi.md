@@ -433,7 +433,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Điều kiện trước | 1. Có cặp hiệu lực, đã đăng ký relay hoặc đăng ký được ngay (PAIR-01 API 8). 2. `relay.enabled = true` ở cả hai thiết bị. 3. Có Internet. |
 | Điều kiện sau | **Thành công:** phiên E2E qua relay, trạng thái "Đã kết nối qua Internet"; các tính năng dữ liệu hoạt động như LAN (trừ camera và âm thanh cuộc gọi — cần ở gần).<br>**Điện thoại offline:** trạng thái `WaitingPeer` ("Điện thoại ngoại tuyến"), đã gửi push đánh thức. |
 | Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`. |
-| Yêu cầu đặc biệt | **Bảo mật:** relay chỉ thấy lớp bọc (`to`/`from`, `type`, kích thước, thời điểm); không có khóa E2E; JWT 15 phút; ghim SPKI ISRG Root X1/X2 + khóa dự phòng.<br>**Tài nguyên:** tối đa 2 MiB/s mỗi cặp; envelope ≤ 256 KiB.<br>**Hiệu năng tham khảo:** SMS, thông báo cuộc gọi qua relay ≤ 1 s khi hai bên đã online.<br>**Vận hành:** relay stateless; presence và định tuyến giữa instance qua Redis; thống kê chỉ theo `device_hash`. |
+| Yêu cầu đặc biệt | **Bảo mật:** relay chỉ thấy lớp bọc (`to`/`from`, `type`, kích thước, thời điểm); không có khóa E2E; JWT 15 phút; ghim SPKI ISRG Root X1/X2 + khóa dự phòng.<br>**Tài nguyên:** tối đa 2 MiB/s mỗi cặp mỗi chiều; envelope ≤ 256 KiB.<br>**Hiệu năng tham khảo:** SMS, thông báo cuộc gọi qua relay ≤ 1 s khi hai bên đã online.<br>**Vận hành:** relay stateless; presence và định tuyến giữa instance qua Redis; thống kê chỉ theo `device_hash`. |
 
 ### 3.3.2 Màn hình
 
@@ -592,6 +592,10 @@ flowchart TB
   4. Phát `presence online` tới từng đối phương đang online (publish `dev:<peer>`); khi đóng: xóa
      `presence` nếu còn là của instance này, phát `presence offline`.
   5. JWT hết hạn trong lúc kết nối vẫn mở không cắt kết nối; lần mở sau mới cần token mới.
+  6. Giới hạn: yêu cầu upgrade tính vào hạn mức REST (`RELAY_RATE_LIMIT`). Khung lớn hơn 1 MiB → đóng
+     kết nối với 4400 (khung lớn hơn 256 KiB chỉ nhận `error PAYLOAD_TOO_LARGE`, API 6). Relay ping
+     mỗi 15 s và đóng với 4411 khi 45 s không nhận khung nào từ thiết bị, kể cả pong. Kết nối nhận có
+     32 MiB đang chờ ghi, hoặc một lần ghi bị kẹt 10 s, bị ngắt với 4500 (0.8.3).
 
 #### API 5 — Relay op `presence` và `error`
 
@@ -630,19 +634,23 @@ flowchart TB
 ```
 
 - **Logic nghiệp vụ:**
-  1. Relay chỉ kiểm lớp bọc: object JSON có `to` là một `device_id` và `env` là object (khung nhị
-     phân: header `HR` 20 byte của 0.4.3 và phải có khung theo sau). Relay không phân tích, không
-     kiểm `env` hay khung HL bên trong. Thiết bị nhận mới kiểm các phần đó (0.5.1, 0.5.2). Lớp bọc
-     hoặc khung `HR` sai định dạng → `error BAD_REQUEST`.
+  1. Relay chỉ kiểm lớp bọc: object JSON có `to` là một `device_id` (UUIDv8) và `env` là object
+     (khung nhị phân: header `HR` 20 byte của 0.4.3 và phải có khung theo sau). Relay không phân tích,
+     không kiểm `env` hay khung HL bên trong. Thiết bị nhận mới kiểm các phần đó (0.5.1, 0.5.2).
+     Ngoại lệ duy nhất là điểm hẹn ghép nối (PAIR-01 API 7, logic 4). Lớp bọc hoặc khung `HR` sai
+     định dạng, kể cả `to` hay đích `HR` không phải UUIDv8 → `error BAD_REQUEST` không kèm `to`, để
+     không bao giờ lặp lại một id sai định dạng.
   2. `to` (hoặc `device_id` của `HR`) phải là đối phương của người gửi trong một cặp đã đăng ký,
      chưa thu hồi; không → `error NOT_PAIRED` (kể cả khi `to` là chính người gửi).
   3. `from` do thiết bị gửi lên bị bỏ qua (0.5.1 quy tắc 6). Relay tự đặt `from` là `device_id` của
      người gửi và phát lại `env` nguyên từng byte, không tuần tự hóa lại:
      `{"from":"<device_id>","env":<env gốc>}`. Khung `HR` được thay `device_id` đích bằng
      `device_id` nguồn; khung HL chuyển đi nguyên vẹn.
-  4. Khung > 256 KiB → `error PAYLOAD_TOO_LARGE`; vượt 2 MiB/s mỗi cặp → trì hoãn đọc socket
-     (backpressure), không hủy khung.
-  5. Không có `presence:<to>` → `error NOT_CONNECTED`; có → publish `dev:<to>`.
+  4. Khung > 256 KiB → `error PAYLOAD_TOO_LARGE`; vượt 2 MiB/s mỗi cặp mỗi chiều → trì hoãn đọc
+     socket (backpressure), không hủy khung.
+  5. Publish lên `dev:<to>`: 0 bên nhận, hoặc relay không publish được khung (Redis lỗi) →
+     `error NOT_CONNECTED`. Bước này không dùng `presence:<to>`; khóa đó chỉ phục vụ op `presence` và
+     `GET /v1/pairs`.
   6. Không giải mã, không ghi log `env`; chỉ cộng số envelope và byte vào `usage_daily` theo
      `device_hash`.
 
@@ -688,9 +696,7 @@ SET       presence:<device_id> <instance_id> EX 60     # API 4, gia hạn mỗi 
 SUBSCRIBE dev:<device_id>                              # API 4
 SMEMBERS  revoked_notice:<device_id>                   # API 4: gửi pair_revoked cho từng phần tử
 DEL       revoked_notice:<device_id>                   # API 4: sau khi đã gửi
-EXISTS    presence:<to>                                # API 6
-PUBLISH   dev:<to> {"from":"<device_id>","env":{...}}  # API 6
-INCR      rl:<device_id>:relay:<phút>                  # rate limit
+PUBLISH   dev:<to> {"from":"<device_id>","env":{...}}  # API 6: 0 bên nhận → NOT_CONNECTED
 ```
 
 ---
@@ -706,7 +712,7 @@ INCR      rl:<device_id>:relay:<phút>                  # rate limit
 | Tác nhân | Chính: Hệ thống (A-SVC, I-APP, I-NSE, R-API, FCM, APNs). Phụ: Người dùng (cho phép thông báo trên iOS, thấy thông báo). |
 | Điều kiện trước | 1. `relay.enabled = true`; thiết bị đích đã đăng ký relay và có push token. 2. iOS: người dùng đã cho phép thông báo (SET-03). 3. Cặp hợp lệ trên relay. |
 | Điều kiện sau | Token mới nhất nằm trong `devices`; push tới đúng thiết bị; điện thoại kết nối relay trong ≤ 10 s sau wake (mục tiêu tham khảo); iPhone hiển thị thông báo có nội dung khi máy đang mở khóa, nội dung chung khi đang khóa. |
-| Ngoại lệ | E1 — Thiết bị đích chưa có token (409 `PUSH_TOKEN_MISSING`) → bỏ qua; dữ liệu sẽ đến qua đồng bộ khi kết nối.<br>E2 — FCM/APNs lỗi tạm thời (502 `PUSH_PROVIDER_ERROR`) → Android xếp vào `push_outbox`, thử lại theo backoff tới `expires_at`.<br>E3 — Token không còn hợp lệ (FCM `UNREGISTERED`, APNs 410) → relay xóa token; thiết bị đăng ký lại lần mở ứng dụng sau.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE không đọc được khóa (máy khóa) hoặc giải mã lỗi → hiển thị "Có thông báo mới từ điện thoại".<br>E6 — Điện thoại ở chế độ hạn chế nền, FCM bị hạ ưu tiên → thức dậy chậm; SET-01 đã hướng dẫn tắt tối ưu pin.<br>E7 — Envelope cũ hơn 24 h hoặc `id` đã xử lý → I-NSE hiển thị nội dung chung, không xử lý lại. |
+| Ngoại lệ | E1 — Thiết bị đích chưa có token (409 `PUSH_TOKEN_MISSING`) → bỏ qua; dữ liệu sẽ đến qua đồng bộ khi kết nối.<br>E2 — FCM/APNs lỗi tạm thời (502 `PUSH_PROVIDER_ERROR`) → Android xếp vào `push_outbox`, thử lại theo backoff tới `expires_at`.<br>E3 — Token không còn hợp lệ (FCM `UNREGISTERED`, APNs 410) → relay xóa token và trả 409 `PUSH_TOKEN_MISSING`, nên điện thoại không xếp hàng thử lại; thiết bị đăng ký lại lần mở ứng dụng sau.<br>E4 — 429 `RATE_LIMITED`.<br>E5 — I-NSE không đọc được khóa (máy khóa) hoặc giải mã lỗi → hiển thị "Có thông báo mới từ điện thoại".<br>E6 — Điện thoại ở chế độ hạn chế nền, FCM bị hạ ưu tiên → thức dậy chậm; SET-01 đã hướng dẫn tắt tối ưu pin.<br>E7 — Envelope cũ hơn 24 h hoặc `id` đã xử lý → I-NSE hiển thị nội dung chung, không xử lý lại. |
 | Yêu cầu đặc biệt | **Bảo mật:** FCM không chứa nội dung; APNs chỉ chứa envelope mã hóa (`K_push`), phần `aps.alert` chỉ có `loc-key` — câu chữ chung do iPhone dịch theo ngôn ngữ của nó (0.12.4).<br>**Giới hạn:** payload APNs ≤ 4 KB → `env_b64` ≤ 3 000 ký tự base64; nội dung SMS trong push được rút gọn theo bước 5b, đầy đủ sau SMS-01.<br>**Chính sách nền tảng:** không dùng PushKit VoIP (iOS 13+ buộc mỗi VoIP push phải báo cuộc gọi cho CallKit); thông báo cuộc gọi đến dùng alert `interruption-level: time-sensitive`; FCM ưu tiên cao chỉ dùng cho việc người dùng cần ngay.<br>**Chống spam:** `apns-collapse-id` theo từng tin SMS hoặc cuộc gọi (API 4); tối đa 30 push/phút mỗi thiết bị gửi. |
 
 ### 3.4.2 Màn hình
@@ -720,7 +726,7 @@ N/A — chưa có wireframe được duyệt.
 | 1 | Quyền thông báo (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | Hệ thống hỏi ở SET-03; hiển thị hướng dẫn nếu `denied` |
 | 2 | Tiêu đề thông báo | string | Output | "HandLive" | I-NSE thay bằng tên người gửi hoặc "Cuộc gọi đến" |
 | 3 | Nội dung thông báo | string | Output | "Có thông báo mới từ điện thoại" | I-NSE thay bằng nội dung đã giải mã (tôn trọng `sms.preview`) |
-| 4 | Nhóm thông báo | string | Output | — | `thread-id` = hội thoại SMS hoặc "calls" |
+| 4 | Nhóm thông báo | string | Output | — | `thread-id` của APNs = `sms` hoặc `calls` (relay không thấy hội thoại); sau khi giải mã, I-NSE gom SMS theo hội thoại bằng `threadIdentifier` (SMS-02 API 4) |
 
 ### 3.4.4 Luồng nghiệp vụ
 
@@ -762,7 +768,7 @@ flowchart TB
 | 7 | Hệ thống | R-API, R-DB | Kiểm người gửi và đích cùng một cặp hiệu lực, đích có token, rate limit. | E1, E3, E4. |
 | 8 | Hệ thống | R-API → PUSH | FCM HTTP v1 (Android) hoặc APNs HTTP/2 (iOS). Token hỏng → xóa khỏi `devices` (E3). |  |
 | 9a | Hệ thống | A-SVC | `onMessageReceived` với `t = wake`: khởi động/giữ A-SVC (ngoại lệ khởi chạy foreground service từ FCM ưu tiên cao), chạy CONN-03, chờ client bắt tay; rảnh 5 phút thì ngắt relay. | E6. |
-| 9b | Hệ thống | I-NSE | Đọc `p` (pair_id) và `hl`; lấy `PRK` từ Keychain nhóm dùng chung, dẫn xuất `K_push`, giải mã; kiểm `ts` ≤ 24 h và `id` chưa xử lý; dựng tiêu đề/nội dung theo loại tin; gọi `contentHandler`. | E5, E7. |
+| 9b | Hệ thống | I-NSE | Đọc `p` (pair_id) và `hl`; lấy `PRK` từ Keychain nhóm dùng chung, dẫn xuất `K_push`, giải mã; kiểm `ts` ≤ 24 h và `id` chưa xử lý; dựng tiêu đề/nội dung theo loại tin, với SMS thì đặt `threadIdentifier` theo hội thoại (SMS-02 API 4); gọi `contentHandler`. | E5, E7. |
 | 10 | Người dùng | I-APP / hệ điều hành | Thấy thông báo; chạm vào mở I-APP (CONN-01, đồng bộ). Phía client chờ: thấy "Đã kết nối qua Internet". |  |
 
 ### 3.4.5 Đặc tả API/service
@@ -786,14 +792,14 @@ flowchart TB
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Có | `apns_sandbox` cho bản build phát triển |
-| `token` | string(4096) | Có | FCM registration token, hoặc APNs device token dạng hex chữ thường |
-| `topic` | string(255) | Với APNs | Bundle id của I-APP; chỉ đi với `apns` hoặc `apns_sandbox`, không bao giờ với `fcm` |
+| `token` | string(4096) | Có | FCM registration token, hoặc APNs device token dạng hex chữ thường (relay lưu APNs token ở dạng chữ thường) |
+| `topic` | string(255) | Với APNs | Bundle id của I-APP; chỉ đi với `apns` hoặc `apns_sandbox`: bên gửi không gửi kèm `fcm`, relay bỏ qua nếu có (0.5.1 quy tắc 6) |
 
-- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` (thiếu `topic` với APNs hoặc có `topic` với
-  FCM, APNs token không phải hex chữ thường, provider không khớp nền tảng).
+- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` (thiếu `topic` với APNs, APNs token không phải hex, provider không khớp
+  nền tảng; Mac không bao giờ đăng ký token).
 - **Ví dụ:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
-- **Logic nghiệp vụ:** Provider phải khớp `platform` (android ↔ fcm; ios/ipados ↔ apns*); ghi đè
-  token cũ.
+- **Logic nghiệp vụ:** Provider phải khớp `platform` (android ↔ fcm; ios/ipados ↔ apns*; macos không
+  có); ghi đè token cũ; APNs token lưu ở dạng chữ thường.
 
 #### API 2 — `POST /v1/push`
 
@@ -808,11 +814,12 @@ flowchart TB
 | `kind` | enum{wake\| alert} | Có | `wake` chỉ tới Android; `alert` chỉ tới iOS/iPadOS |
 | `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Có |  |
 | `env_b64` | b64 | Với `alert` | Base64 chuẩn có padding của JSON envelope dạng UTF-8, mã hóa bằng `K_push` (bước 5b), cùng chuỗi với `hl` của APNs; ≤ 3 000 ký tự base64 |
-| `collapse_key` | string(64) | Không |  |
-| `ttl_s` | int32 | Không | Mặc định 60 (wake), 30 (call_incoming, giá trị CALL-01 API 4 gửi), 86 400 (sms_new, call_missed) |
+| `collapse_key` | string(64) | Không | ASCII in được (thành header `apns-collapse-id`); FCM wake luôn dùng `wake` (API 3) |
+| `ttl_s` | int32 | Không | 0–86 400; mặc định 60 (wake), 30 (call_incoming, giá trị CALL-01 API 4 gửi), 86 400 (sms_new, call_missed); FCM giới hạn ở 60 s (0.4.4) |
 
-- **Response:** 202 `{"accepted":true}`. Lỗi: 403 `NOT_PAIRED`, 409 `PUSH_TOKEN_MISSING`, 413
-  `PAYLOAD_TOO_LARGE`, 429 `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
+- **Response:** 202 `{"accepted":true}`. Lỗi: 400 `BAD_REQUEST` (body sai, `kind` và `reason` không
+  khớp, đích sai nền tảng, đích là Mac), 403 `NOT_PAIRED`, 409 `PUSH_TOKEN_MISSING` (cả khi token vừa
+  hỏng, E3), 413 `PAYLOAD_TOO_LARGE`, 429 `RATE_LIMITED`, 502 `PUSH_PROVIDER_ERROR`.
 - **Ví dụ:**
 
 ```json
@@ -821,7 +828,8 @@ flowchart TB
 
 - **Logic nghiệp vụ:**
   1. Kiểm người gọi (`sub`) và `to` là hai thành viên của `pair_id` chưa thu hồi.
-  2. Kiểm `kind` khớp nền tảng đích; đích có token.
+  2. Kiểm `kind` khớp nền tảng đích (`wake` → android, `alert` → ios/ipados; Mac không nhận push,
+     0.4.4), không khớp thì 400; đích có token.
   3. Rate limit 30 push/phút mỗi người gửi; `wake` trùng `reason` trong 5 phút bị gộp (trả 202 nhưng
      không gửi lại).
   4. Gọi API 3 hoặc API 4; cộng `usage_daily.pushes`. Không lưu `env_b64` sau khi gửi.
@@ -837,11 +845,12 @@ flowchart TB
 ```
 
 - **Response:** 200 `{"name":"projects/{project_id}/messages/<id>"}`; 404 với `UNREGISTERED` → xóa
-  token (E3); 429/5xx → 502 cho người gọi.
+  token và trả 409 `PUSH_TOKEN_MISSING` (E3); 500/503 hoặc lỗi mạng → thử lại một lần sau 500 ms ngay
+  trong yêu cầu, rồi 502; lỗi khác (429…) → 502 cho người gọi.
 - **Ví dụ:** như trên.
 - **Logic nghiệp vụ:** Chỉ data message (không có khối `notification`) để Android xử lý trong
   `onMessageReceived` kể cả khi ở nền; khóa service account nằm ngoài repo (biến môi trường của
-  relay).
+  relay). `android.collapse_key` luôn là `wake` và `android.ttl` = min(`ttl_s`, 60) s (0.4.4).
 
 #### API 4 — APNs HTTP/2 (relay → Apple)
 
@@ -853,22 +862,28 @@ flowchart TB
 - **Request:**
 
 ```json
-{"aps":{"alert":{"loc-key":"push.sms_new"},"mutable-content":1,"sound":"default","thread-id":"sms:118","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
+{"aps":{"alert":{"loc-key":"push.sms_new"},"mutable-content":1,"sound":"default","thread-id":"sms","interruption-level":"active"},"p":"7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d","hl":"eyJ2IjoxLCJ0eXBlIjoic21zIiwiaWQiOiIwMTky…"}
 ```
 
-- **Response:** 200 (header `apns-id`); 410 `Unregistered` → xóa token (E3); 400/403 → ghi lỗi cấu
-  hình; 429/5xx → 502.
+- **Response:** 200 (header `apns-id`); 410 `Unregistered` → xóa token và trả 409
+  `PUSH_TOKEN_MISSING` (E3); 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) và 403 → ghi lỗi cấu
+  hình, trả 502; 500/503 hoặc lỗi mạng → thử lại một lần sau 500 ms ngay trong yêu cầu, rồi 502;
+  429 → 502.
 - **Ví dụ:** như trên; với `reason = call_incoming`: `interruption-level` = `time-sensitive`,
   `thread-id` = `calls`.
 - **Logic nghiệp vụ:**
-  1. Khóa .p8 nằm ngoài repo; JWT nhà cung cấp làm mới mỗi 50 phút; tổng payload ≤ 4 KB.
+  1. Khóa .p8 nằm ngoài repo; JWT nhà cung cấp làm mới mỗi 50 phút; tổng payload ≤ 4 KB; `aps` luôn có `sound: "default"`.
   2. Nội dung mặc định (hiện khi I-NSE không giải mã được, ví dụ iPhone đang khóa) gửi bằng `aps.alert.loc-key` — relay không gửi câu chữ, iPhone tra khóa trong catalog của app theo ngôn ngữ của máy (0.12.4); không chứa số điện thoại hay nội dung. Khóa gộp theo `reason`:
 
 | `reason` | `aps.alert.loc-key` | Câu chữ (`vi`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
 |----------|-------------------|------------------|----------------------|----------------------------------|
-| `sms_new` | `push.sms_new` (không có tiêu đề; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | chính `message_key`, ví dụ `sms:12847` / `sms:<thread_id>` |
+| `sms_new` | `push.sms_new` (không có tiêu đề; hệ thống hiện tên app) | Tin nhắn SMS mới | `active` | chính `message_key`, ví dụ `sms:12847` / `sms` |
 | `call_incoming` | `push.call_incoming` | Cuộc gọi đến trên điện thoại | `time-sensitive` | `call:<call_id>` / `calls` |
 | `call_missed` | `push.call_missed` | Cuộc gọi nhỡ trên điện thoại | `active` | `call:<call_id>` khi biết `call_id`, không thì `calllog:<entry_id>` (CALL-04 API 5) / `calls` |
+
+  3. `thread-id` là nhóm chung (`sms` hoặc `calls`): hội thoại nằm trong envelope đã mã hóa và
+     `POST /v1/push` không có trường cho nó. Sau khi giải mã, I-NSE đặt `threadIdentifier` theo hội
+     thoại (SMS-02 API 4). iPhone đang khóa giữ mọi push SMS trong nhóm `sms`.
 
 #### Query
 
