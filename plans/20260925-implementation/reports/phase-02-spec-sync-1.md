@@ -1,6 +1,7 @@
-# Phase 2 — spec sync 1: decisions from the S2.1, S2.2, S2.3, T2.1 (batch 1), R2.1, R2.2 (batch 2) reports and the coordinator's answers (batch 3)
+# Phase 2 — spec sync 1: decisions from the S2.1, S2.2, S2.3, T2.1 (batch 1), R2.1, R2.2 (batch 2) reports, the coordinator's answers (batch 3), the shared sync (batch 4) and the A2.1, A2.2 reports (batch 5)
 
-Hub `main`, both languages in every commit, pushed (`0d88586..340e1fe` batches 1–2, `340e1fe..32af250` batch 3).
+Hub `main`, both languages in every commit, pushed (`0d88586..340e1fe` batches 1–2, `340e1fe..32af250` batch 3,
+`7bf7f25..0978671` and `0978671..8868120` batch 4, `f67d57d..d7ed548` batch 5).
 Nested repos (`android/`, `apple/`, `relay/`, `shared/`) untouched; shared tools run read-only.
 
 ## Batch 1 — decisions applied
@@ -94,6 +95,24 @@ No catalog text looked wrong against the spec: the Android names it cites ("Add 
 Note for the gate G1 real-device checks (not a change): macOS 15 shows the login items pane as "Login Items &
 Extensions"; the spec and `setup.login_item_approval_mac` say "Login Items" (the macOS 13–14 name).
 
+## Batch 5 — decisions applied
+
+Source: the "Spec deviations and proposals" of `phase-02-A2.1.md` (points 1, 2, 7) and `phase-02-A2.2.md` (points 1,
+3, 5, 8). Where a decision says "as the code does", the Android code on `feat/phase-02-sms-ios-relay` was read
+(read-only): `feature/relay` (`RelayFeature`, `RelayConnector`, `RelayConnection`, `RelayRegistrar`, `RelayConstants`),
+`core/transport` (`RelayApi`, `ControlServer`, `ControlSession`), `feature/sms` (`SmsSendPipeline`, `SimSelection`,
+`SendRegistry`, `SmsConstants`) and `app` (`SettingsScreen`).
+
+| # | Where | Change |
+|---|---|---|
+| E1 | 03 · CONN-03 description, step 2 (component now also A-SVC); 00 · 0.10 `RELAY_IDLE_DISCONNECT` note | The phone cannot tell that a client waits on the relay, so it connects only on a demand, the list of `RelayFeature`: the service starts or the relay is switched on while a relay-registered pair has no session; a LAN session ends without `session/bye`; SMS-02 detects a new message while such a pair has no session; the phone joins a pairing rendezvous (QR with `rv`); an FCM wake-up. While the last demand is less than `RELAY_IDLE_DISCONNECT` (5 min) old, or a relayed session or a rendezvous is open, it reconnects per `RECONNECT_BACKOFF` and a network change retries at once; it leaves after 5 min without relayed sessions, rendezvous or traffic and comes back only on a new demand. Notes column: no demand and no wake-up push → the client stays in `WaitingPeer` (E5) |
+| E2 | 02 · PAIR-01 API 8 (404 row, logic 1, new logic 6), E8; PAIR-02 API 1 logic 3 | One 404 `DEVICE_NOT_FOUND` for an unknown caller and an unknown peer. Either device of the pair may call (`sub` = `device_a` or `device_b`, else 403). Every device with `relay_registered = 0` retries when a network is available, so the device that registers with the relay last completes the pair and the other gets 200 on its next call. On 404 the device registers itself again once (`POST /v1/devices`) and repeats the call (`RelayApi.authorized`); a second 404 → the next call for that pair waits 24 h (`RelayRegistrar`, `PAIR_RETRY_AFTER_404_MILLIS`). No new error code |
+| E3 | 03 · CONN-02 API 4 (new paragraph), E7, step 7; CONN-03 API 6 new logic 7; 02 · PAIR-03 API 2 response | A relayed session has no WebSocket close between the peers (the `/v1/relay` link stays open, no close code reaches the peer), so a device always sends `session/bye` before it ends one: `revoked`, `replaced`, `update` as defined, `shutdown` for every other end (quit, sleep, background, relay switched off, the ends that close an established LAN session with 4400, 4410, 4411 or 4500). The receiver ends the session on `session/bye`: `replaced` counts as 4409 (E7), any other reason as 1000. Step 7 no longer "closes" the relay session with 4409 |
+| E4 | 03 · CONN-03 E7, field 4; 01 · SET-02 field 21 | E7 applies on any device, Android included. Android shows E3 and E7 in place of the description under "Internet Connection" (SET-02 field 21), which is what `SettingsScreen` already does for E3 |
+| E5 | 05 · SMS-04 step 6, API 1 logic 2 | One order everywhere = the API 1 error table = `SmsSendPipeline.accept`: `feature.sms` → `SEND_SMS` → parameters (`BAD_REQUEST`) → text length (`PAYLOAD_TOO_LARGE`) → recipient (`SMS_INVALID_ADDRESS`) → SIM (`SMS_SIM_UNAVAILABLE`). Step 6 had the recipient before the text. The envelope `id` is de-duplicated before the checks and `local_id` right after the parameters (an accepted `local_id` skips the remaining checks). Logic 2: the SIM of logic 3 is chosen first for the normalization region (the network's or the phone's region when none, as `SimChoices.countryIso`), and the address refusal comes before the SIM refusal |
+| E6 | 05 · SMS-04 API 4 logic 1, step 10; 00 · 0.10 `SMS_SEND_MATCH_WINDOW` note | The window of `SendRegistry.match`: an entry with the same address and text that is still waiting for its final result (`sent` = every part sent, or `failed`) or got it at most `SMS_SEND_MATCH_WINDOW` (60 s) ago |
+| E7 | 01 · SET-01 field 17; DS · 2-patterns/03-thong-bao (en, vi) | "Lan's MacBook needs SMS permission on this phone — tap to allow" / "MacBook của Lan cần quyền SMS trên điện thoại — chạm để cho phép", plus "(the same text whichever SMS permission is missing)". Wording taken from the existing `pairing.reason_missing_sms_permission` ("Missing SMS permission on the phone" / "Thiếu quyền SMS trên điện thoại") and matching the A2.1 proposal |
+
 ## Deviations and interpretations (closest correct change)
 
 1. **24 (SMS-01 E6/E7):** text applied to E7 only. E6 is a provider read error on the phone; "…on this device" would be false.
@@ -133,6 +152,18 @@ Extensions"; the spec and `setup.login_item_approval_mac` say "Login Items" (the
     Android code (`fitSnippet`) and the vector "crowded group conversation" (snippet 160 → 89 = 88 + "…") shorten the
     snippet like the body: the longest cut that fits, ending with "…". Step 5b and SMS-02 API 2 logic 3 say "cut the
     same way", following the code and the vectors as D2 asks.
+16. **E1, network change:** the decision lists "a network change" among the demands. In the code a network change
+    creates no demand: `RelayConnector.networkChanged()` restarts a waiting reconnect at once (backoff back to 0) and
+    runs only while a demand is open (it also re-runs the registrations). Step 2 therefore says "a network change retries
+    at once". The SMS trigger is any new message SMS-02 detects (received or sent from the phone), not only an incoming
+    one, so step 2 says "SMS-02 detects a new message".
+17. **E3, reasons for the other ends:** `session/bye` defines only `revoked|shutdown|replaced|update`. Every end without
+    a reason of its own uses `shutdown`, as the code already does for relay off (`ControlServer.closeSessions`);
+    handshake-time closes (4401, 4408, 4426, 4429) have no session to say goodbye on. No new reason value.
+18. **E4, where Android shows it:** the decision widens E7 only; I also wrote where the phone shows the text (under
+    "Internet Connection", SET-02 field 21), as `SettingsScreen` does for E3 and as A2.2 proposed.
+19. **E6, 0.10:** `SMS_SEND_MATCH_WINDOW` (60 s) already existed in 0.10, contrary to A2.1 ("the spec gives no
+    window"); the leaf texts lacked the "still waiting for the final result" half. The 0.10 note now says the same.
 
 ## Commits (hub `main`)
 
@@ -159,6 +190,13 @@ Extensions"; the spec and `setup.login_item_approval_mac` say "Login Items" (the
 | 83a2577 | docs(spec): pin the push collapse key characters and the exact SMS cut rule (batch 4: D1, D2) |
 | 0978671 | docs(spec): quote the catalog texts that 0.11, PAIR-01 and SET-03 only described (batch 4: D3) |
 | 8868120 | docs(spec): record the relay's rendezvous and APNs provider-token answers (batch 4 addendum: D4, D5, APNs not configured) |
+| c406132 | docs(spec): let either device register the pair and retry after a 404 in PAIR-01 API 8 (batch 5: E2) |
+| 8673dba | docs(spec): list when the phone connects to the relay in CONN-03 step 2 (batch 5: E1) |
+| 9c69969 | docs(spec): send session/bye before ending a relayed session (batch 5: E3) |
+| eee8c6b | docs(spec): apply the relay pin mismatch to every device, Android included (batch 5: E4) |
+| 5d867af | docs(spec): keep one order of the SMS-04 refusal checks (batch 5: E5) |
+| 9bc1a1f | docs(spec): state the SMS_SEND_MATCH_WINDOW rule of the Sent-box match (batch 5: E6) |
+| d7ed548 | docs(spec): use one permission suggestion text for every SMS permission (batch 5: E7) |
 
 All signed off (Hồ Xuân Dũng <me@hxd.vn>), no AI trailer; `.githooks/check-commits.sh origin/main..HEAD` → "commit sạch:
 đã kiểm 14 commit" (batches 1–2), "đã kiểm 4 commit" (batch 3), "đã kiểm 2 commit" and "đã kiểm 1 commit" (batch 4);
@@ -166,10 +204,36 @@ All signed off (Hồ Xuân Dũng <me@hxd.vn>), no AI trailer; `.githooks/check-c
 coordinator's and other agents' hub commits in between were already on `main`). For the last push `git pull --rebase`
 refused to run because other agents had uncommitted files in the shared working tree; the push was a fast-forward, so
 nothing was missing. Two later local commits of another agent (fd4bb81, dd852c7) were left for that agent to push.
+Batch 5: `.githooks/check-commits.sh origin/main..HEAD` → "commit sạch: đã kiểm 7 commit"; `git push origin main` →
+`f67d57d..d7ed548` (fast-forward, working tree clean).
 
 ## Checks (final state, real output)
 
-After batch 4 and its addendum (hub at 8868120; `shared/` at b07271f, the head of `phase-02-shared-sync-1.md`; same
+After batch 5 (hub at d7ed548; `shared/` at b07271f):
+
+```text
+$ python3 tools/docs/validate_design_docs.py | tail -1
+files=16 leaves=66 problems=0
+$ python3 tools/docs/check_bilingual_docs.py | tail -1
+pairs=67 missing=0 problems=0 warnings=0
+$ cd shared && tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -5
+  en: 303 of 304 texts found in 50 English docs
+  WARN notification.permission_sms_read [en]: not quoted in the English specs
+  vi: 303 of 304 texts found in 50 Vietnamese docs
+  WARN notification.permission_sms_read [vi]: not quoted in the Vietnamese specs
+== 304 strings, 0 errors, 2 warnings
+$ tools/.venv/bin/python tools/schemas/check_schemas.py      (exit 0)
+  … enum khớp bảng spec: 16 · loc-key có trong catalog: 3 · ví dụ 01–08: 191 · envelope trong env_b64/hl: 31
+  · mẫu dương: 69 · mẫu âm: 157 · ví dụ catalog chuỗi giao diện: 1 · tin trong test vector: 52
+  XANH: mọi kiểm tra đạt
+```
+
+The 2 `--docs` warnings are expected: E7 changes the SET-01 field 17 text, and the catalog still has the old
+`notification.permission_sms_read` texts. They go back to 0 once the shared catalog takes the texts below. Each of the 7
+commits was checked with the two doc checkers before it was made (problems=0 every time); `apple_diacritics.py` dry run
+on every changed `.vi.md`: nothing to fix.
+
+After batch 4 and its addendum, history (hub at 8868120; `shared/` at b07271f, the head of `phase-02-shared-sync-1.md`; same
 output after 0978671 and after 8868120):
 
 ```text
@@ -221,6 +285,14 @@ $ tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -1
 Status after batch 4: the shared agent has added every proposed key below and the metadata changes on existing keys
 (handlive-shared ac85789 and 2dd4a46, `phase-02-shared-sync-1.md` §1); the catalog has 304 strings and all of them are
 quoted in the specs. Batch 4 adds no text and proposes no catalog change.
+
+Batch 5 (E4, E7) — the shared catalog follows:
+
+| Key | Change | en | vi | Spec · field |
+|---|---|---|---|---|
+| `notification.permission_sms_read` | new texts; comment: "posted for any missing SMS permission (reading, sending, contacts)"; key name kept (stable key, one Android resource reference) | {device_name} needs SMS permission on this phone — tap to allow | {device_name} cần quyền SMS trên điện thoại — chạm để cho phép | SET-01 field 17 (E7) |
+| `error.relay_pin_mismatch` | `platforms` + `android`; comment: "on Android shown in place of the description under Internet Connection (SET-02 field 21)"; add SET-02 to `specs` | unchanged | unchanged | CONN-03 E7, field 4; SET-02 field 21 (E4) |
+| `error.relay_device_revoked` | comment as above; add SET-02 to `specs` (already on android) | unchanged | unchanged | CONN-03 E3, field 4; SET-02 field 21 |
 
 Already added by the shared agent (handlive-shared 335018c, texts identical to the spec — nothing to do):
 
@@ -289,14 +361,28 @@ design system with texts already listed above.
 - **Design system:** the leftovers listed after batch 2 are aligned in batch 3 (C5), except MessageBubble
   `preview.html` ("2 tin SMS"; question 1). The design-system artifact needs republishing after the batch 1 and 3 edits
   (CLAUDE.md: docs first, then the artifact).
+- **Batch 5 — Shared:** the catalog rows above (then `--docs` is back to 0 warnings); no schema or vector change.
+- **Batch 5 — Android:** send `session/bye` before ending a relayed session in every case (idle 4411, failed rekey
+  4410, replacement 4409; A2.2 point 5) and read a received one as its close (E3); show `error.relay_pin_mismatch`
+  under Internet Connection (E4); the field 17 text comes from the catalog (E7). E1, E2, E5 and E6 already match the
+  code. Optional: `RelayRegistrar.checkPairs` could set `relay_registered = 1` for a pair the relay lists while the
+  flag is 0 (question 1 below).
+- **Batch 5 — Apple:** before ending a relayed session send `session/bye` (`shutdown` unless another reason applies);
+  on a received one end the relayed session, `replaced` → CONN-02 E7 (E3). `POST /v1/pairs` with the 404 rule of
+  PAIR-01 API 8 logic 6 (E2).
 
 ## Unresolved questions
 
-None. The four questions of batches 1–2 were answered by C1–C4; the multi-part `{limit}` question of batch 3 was
-settled by the coordinator in hub 427d911 (`{limit}` = capacity of the current number of parts) and the MessageBubble
-preview updated in 298544d; the two shared-sync questions (visible ASCII `collapse_key`, the SMS cut reading) are D1
-and D2.
+1. **Batch 5, E2 gap (proposal, needs a decision):** after a second 404 a device waits 24 h. If the peer completes
+   the pair in the meantime, the waiting device keeps `relay_registered = 0` until its next call, and the phone
+   creates no relay demand for that pair (E1 counts relay-registered pairs only). Proposed line for PAIR-02 API 1
+   logic 3: "a pair that `GET /v1/pairs` lists without `revoked_at` → `relay_registered = 1`". Not applied.
+
+Earlier batches: none open. The four questions of batches 1–2 were answered by C1–C4; the multi-part `{limit}`
+question of batch 3 was settled by the coordinator in hub 427d911 (`{limit}` = capacity of the current number of
+parts) and the MessageBubble preview updated in 298544d; the two shared-sync questions (visible ASCII `collapse_key`,
+the SMS cut reading) are D1 and D2.
 
 Status: DONE
-Summary: All decisions of batches 1–4 (37 + 15 + 5 + 3, plus the batch-4 addendum D4, D5 and the APNs note) are applied in both languages in 21 signed-off hub commits, pushed (0d88586..8868120); both doc checkers print problems=0, check_strings --docs is at 0 warnings (304/304 texts quoted) and check_schemas prints XANH.
-Concerns/Blockers: none; deviations 13 (Mac E3 "missed calls") and 15 (the push cuts the snippet like the body, per the code and vectors) are worth a glance.
+Summary: All decisions of batches 1–5 (37 + 15 + 5 + 3 + 7, plus the batch-4 addendum D4, D5 and the APNs note) are applied in both languages in 28 signed-off hub commits, pushed (0d88586..d7ed548); both doc checkers print problems=0 and check_schemas prints XANH; check_strings --docs has the 2 expected warnings of E7 until the catalog takes the new field 17 texts.
+Concerns/Blockers: none; deviations 13 (Mac E3 "missed calls"), 15 (the push cuts the snippet like the body, per the code and vectors) and 16–17 (batch 5: network change, `shutdown` for the other ends) are worth a glance; question 1 (E2 gap) is a proposal.
