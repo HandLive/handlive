@@ -151,12 +151,24 @@ through TXT.
   - WS binary frame: `[0x48 0x52]` ("HR") ‖ `ver` (1) ‖ `op` (1, `0x01` = forward) ‖ destination/source
     `device_id` (16 bytes) ‖ the intact HL binary frame.
   - Relay control messages: WS text frame `{"op":"<name>", ...}` (0.7.3).
+- Relay handling of `to`/`from` wrappers and `HR` frames (also CONN-03 API 6; the pairing rendezvous
+  keeps its own rules, PAIR-01 API 7):
+  - The relay checks only the wrapper (a JSON object whose `to` is a `device_id` and whose `env` is an
+    object) or the 20-byte `HR` header (magic, `ver` = `0x01`, `op` = `0x01`, `device_id`) and that a
+    frame follows it. It never parses or checks the envelope or the inner HL frame; the receiving
+    device does (0.5.1, 0.5.2).
+  - A malformed wrapper or `HR` frame → relay op `error` with `BAD_REQUEST`; a `to` (or `HR`
+    `device_id`) that is not the peer of the sender in a registered, unrevoked pair → `NOT_PAIRED`.
+  - A `from` sent by a device is ignored (0.5.1 rule 6): the relay sets `from` itself to the sender's
+    `device_id` and re-emits `env` byte for byte, never re-serialized:
+    `{"from":"<device_id>","env":<raw env>}`. In an `HR` frame it puts the source `device_id` in place
+    of the destination one and forwards the HL frame unchanged.
 
 ### 0.4.4 Push (P2)
 
 - **Android (FCM):** high-priority data message, TTL 60 s, **no content**:
   `{"t":"wake","p":"<pair_id>","r":"<reason>"}`.
-- **iOS (APNs):** `alert` push, `mutable-content: 1`, `apns-priority: 10`. The default displayed content is generic and is sent as a `loc-key` (a catalog key of the `push` group, 0.12.4) so the iPhone translates it itself; the `hl` field carries the envelope encrypted with `K_push` for I-NSE to decrypt and replace the content. Total payload ≤ 4 KB.
+- **iOS (APNs):** `alert` push, `mutable-content: 1`, `apns-priority: 10`. The default displayed content is generic and is sent as a `loc-key` (a catalog key of the `push` group, 0.12.4) so the iPhone translates it itself; the `hl` field carries the envelope encrypted with `K_push` for I-NSE to decrypt and replace the content. `hl` is standard base64 with padding of the UTF-8 envelope JSON, the same string as `env_b64` of `POST /v1/push` (CONN-04 API 2), ≤ 3,000 characters of base64. Total payload ≤ 4 KB.
 - The Mac does not register for push; when it wakes up, M-APP reconnects and syncs from its cursors.
 
 ## 0.5 Message frames
@@ -383,7 +395,7 @@ capability`) and adds `session`, `camera` for the session handshake and Phase 5.
 | `sms` | `sync` | C→S | Yes (with data) | `/v1/ctl` | SMS-01 |
 | `sms` | `history` | C→S | Yes (with data) | `/v1/ctl` | SMS-03 |
 | `sms` | `new` | S→C | — | `/v1/ctl` | SMS-02 |
-| `sms` | `send` | C→S | Yes | `/v1/ctl` | SMS-04 |
+| `sms` | `send` | C→S | Yes (with data) | `/v1/ctl` | SMS-04 |
 | `sms` | `status` | S→C | — | `/v1/ctl` | SMS-04 |
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
@@ -461,7 +473,7 @@ Examples in the function groups may quote only the relevant part.
 | op | Direction | Data | Function |
 |----|-------|---------|-----------|
 | `presence` | R→device | `{pair_id, peer_device_id, online}`; sent for every pair right after connecting, then on every change | CONN-03 |
-| `error` | R→device | `{code, message, to?}` | CONN-03 |
+| `error` | R→device | `{code, message, to?}`; `code` ∈ {`NOT_PAIRED`, `NOT_CONNECTED`, `PAYLOAD_TOO_LARGE`, `RATE_LIMITED`, `BAD_REQUEST`} (CONN-03 API 5; meanings as in 0.8.1 and 0.8.2) | CONN-03 |
 | `rv_join` | Device→R | `{rv_id}` — joins the pairing rendezvous | PAIR-01 |
 | `rv_joined` | R→device | `{rv_id, peer_present}` | PAIR-01 |
 | `rv_msg` | Both ways | `{rv_id, env}` — carries `pair` envelopes through the rendezvous | PAIR-01 |
@@ -999,8 +1011,8 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
 | Field | Rule |
 |--------|---------|
 | `key` | Lowercase `[a-z0-9_]`, 2–5 segments joined by dots; the first segment is the group: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. A key does not change when its wording is edited; a change of meaning creates a new key. Keys stay unique after `.` is turned into `_` (Android resource names) |
-| `en`, `vi` | A string; or a CLDR plural object: `en` has `one` and `other`, `vi` only has `other`; a plural string takes exactly one argument, named `count`. Never empty; every key has every language in `languages` |
-| `args` | Parameters `{name}` with `type` ∈ `string`, `int`, `double`. Every translation uses exactly the same set of parameters, in any order within the sentence (the generator converts them to positional parameters). Dates, times and numbers are formatted before they are passed in (0.12.3) |
+| `en`, `vi` | A string; or a CLDR plural object: `en` has `one` and `other`, `vi` only has `other`; a plural string takes exactly one argument, named `count`. The generators pass `count` as an integer, so it is printed without digit grouping ("1500 messages", not "1,500 messages"); plural texts must read well that way. Never empty; every key has every language in `languages` |
+| `args` | Parameters `{name}` with `type` ∈ `string`, `int`, `double`. Every translation uses exactly the same set of parameters, in any order within the sentence (the generator converts them to positional parameters). Dates, times and numbers are formatted before they are passed in (0.12.3), except the `count` of a plural string (row `en`, `vi`) |
 | `comment` | Required: where the string appears and its length limit, if any — context for translators |
 | `platforms` | Subset of `android`, `macos`, `ios` |
 | `specs` | IDs of the leaf functions (or `0.x` sections) that specify the string |

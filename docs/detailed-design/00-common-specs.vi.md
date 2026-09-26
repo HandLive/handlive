@@ -148,12 +148,25 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
   - WS binary frame: `[0x48 0x52]` ("HR") ‖ `ver` (1) ‖ `op` (1, `0x01` = chuyển tiếp) ‖ `device_id`
     đích/nguồn (16 byte) ‖ khung nhị phân HL nguyên vẹn.
   - Tin điều khiển của relay: WS text frame `{"op":"<tên>", ...}` (0.7.3).
+- Relay xử lý lớp bọc `to`/`from` và khung `HR` như sau (cũng ở CONN-03 API 6; điểm hẹn ghép nối
+  giữ quy tắc riêng, PAIR-01 API 7):
+  - Relay chỉ kiểm lớp bọc (object JSON có `to` là một `device_id` và `env` là object) hoặc header
+    `HR` 20 byte (magic, `ver` = `0x01`, `op` = `0x01`, `device_id`), và phải có khung theo sau.
+    Relay không phân tích, không kiểm envelope hay khung HL bên trong. Thiết bị nhận mới kiểm các
+    phần đó (0.5.1, 0.5.2).
+  - Lớp bọc hoặc khung `HR` sai định dạng → op `error` của relay với `BAD_REQUEST`. `to` (hoặc
+    `device_id` của `HR`) không phải đối phương của người gửi trong một cặp đã đăng ký, chưa thu hồi
+    → `NOT_PAIRED`.
+  - `from` do thiết bị gửi lên bị bỏ qua (0.5.1 quy tắc 6). Relay tự đặt `from` là `device_id` của
+    người gửi và phát lại `env` nguyên từng byte, không tuần tự hóa lại:
+    `{"from":"<device_id>","env":<env gốc>}`. Với khung `HR`, relay thay `device_id` đích bằng
+    `device_id` nguồn và chuyển khung HL đi nguyên vẹn.
 
 ### 0.4.4 Push (P2)
 
 - **Android (FCM):** data message ưu tiên cao, TTL 60 s, **không chứa nội dung**:
   `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
-- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung, gửi bằng `loc-key` (khóa catalog nhóm `push`, 0.12.4) để iPhone tự dịch; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. Tổng payload ≤ 4 KB.
+- **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung, gửi bằng `loc-key` (khóa catalog nhóm `push`, 0.12.4) để iPhone tự dịch; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. `hl` là base64 chuẩn có padding của JSON envelope dạng UTF-8, cùng chuỗi với `env_b64` của `POST /v1/push` (CONN-04 API 2), dài ≤ 3 000 ký tự base64. Tổng payload ≤ 4 KB.
 - Mac không đăng ký push; khi thức dậy, M-APP kết nối lại và đồng bộ theo con trỏ.
 
 ## 0.5 Khung tin
@@ -375,7 +388,7 @@ capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
 | `sms` | `sync` | C→S | Có (kèm dữ liệu) | `/v1/ctl` | SMS-01 |
 | `sms` | `history` | C→S | Có (kèm dữ liệu) | `/v1/ctl` | SMS-03 |
 | `sms` | `new` | S→C | — | `/v1/ctl` | SMS-02 |
-| `sms` | `send` | C→S | Có | `/v1/ctl` | SMS-04 |
+| `sms` | `send` | C→S | Có (kèm dữ liệu) | `/v1/ctl` | SMS-04 |
 | `sms` | `status` | S→C | — | `/v1/ctl` | SMS-04 |
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
@@ -451,7 +464,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | op | Chiều | Dữ liệu | Chức năng |
 |----|-------|---------|-----------|
 | `presence` | R→thiết bị | `{pair_id, peer_device_id, online}`; gửi cho mọi cặp ngay sau khi kết nối, sau đó khi thay đổi | CONN-03 |
-| `error` | R→thiết bị | `{code, message, to?}` | CONN-03 |
+| `error` | R→thiết bị | `{code, message, to?}`; `code` ∈ {`NOT_PAIRED`, `NOT_CONNECTED`, `PAYLOAD_TOO_LARGE`, `RATE_LIMITED`, `BAD_REQUEST`} (CONN-03 API 5; nghĩa như ở 0.8.1 và 0.8.2) | CONN-03 |
 | `rv_join` | Thiết bị→R | `{rv_id}` — tham gia điểm hẹn ghép nối | PAIR-01 |
 | `rv_joined` | R→thiết bị | `{rv_id, peer_present}` | PAIR-01 |
 | `rv_msg` | Hai chiều | `{rv_id, env}` — chuyển envelope `pair` qua điểm hẹn | PAIR-01 |
@@ -988,8 +1001,8 @@ thị. Schema: `shared/strings/ui-strings.schema.json`.
 | Trường | Quy tắc |
 |--------|---------|
 | `key` | Chữ thường `[a-z0-9_]`, 2–5 đoạn nối bằng dấu chấm; đoạn đầu là nhóm: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. Khóa không đổi khi sửa câu chữ; đổi nghĩa thì tạo khóa mới. Sau khi đổi `.` thành `_` (tên tài nguyên Android) khóa vẫn duy nhất |
-| `en`, `vi` | Chuỗi; hoặc object số nhiều theo CLDR: `en` có `one` và `other`, `vi` chỉ có `other`; chuỗi số nhiều có đúng một tham số, tên `count`. Không rỗng; mỗi khóa có đủ mọi ngôn ngữ trong `languages` |
-| `args` | Tham số `{tên}` với `type` ∈ `string`, `int`, `double`. Mọi bản dịch dùng đúng tập tham số, thứ tự trong câu tự do (bộ sinh đổi sang tham số có vị trí). Ngày, giờ, số được định dạng trước khi truyền vào (0.12.3) |
+| `en`, `vi` | Chuỗi; hoặc object số nhiều theo CLDR: `en` có `one` và `other`, `vi` chỉ có `other`; chuỗi số nhiều có đúng một tham số, tên `count`. Bộ sinh truyền `count` dạng số nguyên nên số hiện không có dấu ngăn nghìn ("1500 tin", không phải "1.500 tin"). Câu số nhiều phải đọc ổn khi không có dấu ngăn nghìn. Không rỗng; mỗi khóa có đủ mọi ngôn ngữ trong `languages` |
+| `args` | Tham số `{tên}` với `type` ∈ `string`, `int`, `double`. Mọi bản dịch dùng đúng tập tham số, thứ tự trong câu tự do (bộ sinh đổi sang tham số có vị trí). Ngày, giờ, số được định dạng trước khi truyền vào (0.12.3), trừ `count` của chuỗi số nhiều (dòng `en`, `vi`) |
 | `comment` | Bắt buộc: chuỗi xuất hiện ở đâu, giới hạn độ dài nếu có — ngữ cảnh cho người dịch |
 | `platforms` | Tập con của `android`, `macos`, `ios` |
 | `specs` | Mã chức năng lá (hoặc mục `0.x`) đặc tả chuỗi |
