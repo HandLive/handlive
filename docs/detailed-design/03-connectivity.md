@@ -803,13 +803,16 @@ flowchart TB
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Yes | `apns_sandbox` for development builds |
 | `token` | string(4096) | Yes | FCM registration token, or the APNs device token in lowercase hex (the relay stores APNs tokens lowercase) |
-| `topic` | string(255) | With APNs | Bundle id of I-APP; only with `apns` or `apns_sandbox`: senders never send it with `fcm`, and the relay ignores it there (0.5.1 rule 6) |
+| `topic` | string(255) | With APNs | Bundle id of I-APP; only with `apns` or `apns_sandbox`, and it must equal the relay's configured topic (`RELAY_APNS_TOPIC`); senders never send it with `fcm`, and the relay ignores it there (0.5.1 rule 6) |
 
-- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` (`topic` missing with APNs, an APNs token that is not hex, provider does
-  not match the platform; a Mac never registers a token).
+- **Response:** 204 with no body. Errors: 400 `BAD_REQUEST` in the relay error format (0.8.2): `topic` missing with APNs or other than
+  `RELAY_APNS_TOPIC`, an APNs token that is not hex, provider does not match the platform (a Mac never
+  registers a token).
 - **Example:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
 - **Business logic:** The provider must match `platform` (android ↔ fcm; ios/ipados ↔ apns*; never
-  macos); the old token is overwritten; APNs tokens are stored lowercase.
+  macos); the old token is overwritten; APNs tokens are stored lowercase. The relay accepts only the
+  APNs `topic` equal to `RELAY_APNS_TOPIC` (the bundle id of I-APP, set in the relay's environment);
+  any other topic → 400.
 
 #### API 2 — `POST /v1/push`
 

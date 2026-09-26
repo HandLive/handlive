@@ -793,13 +793,15 @@ flowchart TB
 |--------|------|----------|-------|
 | `provider` | enum{fcm\| apns\| apns_sandbox} | Có | `apns_sandbox` cho bản build phát triển |
 | `token` | string(4096) | Có | FCM registration token, hoặc APNs device token dạng hex chữ thường (relay lưu APNs token ở dạng chữ thường) |
-| `topic` | string(255) | Với APNs | Bundle id của I-APP; chỉ đi với `apns` hoặc `apns_sandbox`: bên gửi không gửi kèm `fcm`, relay bỏ qua nếu có (0.5.1 quy tắc 6) |
+| `topic` | string(255) | Với APNs | Bundle id của I-APP; chỉ đi với `apns` hoặc `apns_sandbox` và phải bằng topic relay đã cấu hình (`RELAY_APNS_TOPIC`); bên gửi không gửi kèm `fcm`, relay bỏ qua nếu có (0.5.1 quy tắc 6) |
 
-- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` (thiếu `topic` với APNs, APNs token không phải hex, provider không khớp
-  nền tảng; Mac không bao giờ đăng ký token).
+- **Response:** 204 không body. Lỗi: 400 `BAD_REQUEST` theo định dạng lỗi của relay (0.8.2): thiếu `topic` với APNs hoặc
+  `topic` khác `RELAY_APNS_TOPIC`, APNs token không phải hex, provider không khớp nền tảng (Mac không
+  bao giờ đăng ký token).
 - **Ví dụ:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
 - **Logic nghiệp vụ:** Provider phải khớp `platform` (android ↔ fcm; ios/ipados ↔ apns*; macos không
-  có); ghi đè token cũ; APNs token lưu ở dạng chữ thường.
+  có); ghi đè token cũ; APNs token lưu ở dạng chữ thường. Relay chỉ nhận `topic` APNs bằng
+  `RELAY_APNS_TOPIC` (bundle id của I-APP, đặt trong biến môi trường của relay); topic khác → 400.
 
 #### API 2 — `POST /v1/push`
 
