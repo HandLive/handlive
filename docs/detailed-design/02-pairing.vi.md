@@ -294,7 +294,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |----|--------|------|-------|
 | `rv_joined` | `rv_id` | b64u |  |
 | `rv_joined` | `peer_present` | bool | Đã có đủ hai thành viên |
-| `error` | `code` | string | `BAD_REQUEST` khi điểm hẹn đã đủ 2 thành viên; `NOT_CONNECTED` khi gửi `rv_msg` mà điểm hẹn không còn thành viên nào khác |
+| `error` | `code` | string | `BAD_REQUEST` khi điểm hẹn đã đủ 2 thành viên, hoặc khi gửi `rv_msg` tới điểm hẹn mà người gửi không ở trong; `NOT_CONNECTED` khi gửi `rv_msg` mà điểm hẹn không còn thành viên nào khác |
 
 - **Ví dụ:**
 
@@ -312,7 +312,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
   4. Envelope `pair/hello` có `mode = "pin"` qua điểm hẹn bị relay chặn và Android cũng từ chối (PIN
      chỉ trong LAN). Để chặn, relay đọc payload `pair` chưa mã hóa (giải b64). Đây là chỗ duy nhất
      relay xem bên trong envelope (0.4.3).
-  5. `rv_msg` khi điểm hẹn không còn thành viên nào khác → `error NOT_CONNECTED`. Relay không phân
+  5. `rv_msg` khi điểm hẹn không còn thành viên nào khác → `error NOT_CONNECTED`. `rv_msg` tới điểm hẹn
+     mà người gửi không ở trong (chưa từng tham gia, hoặc đã hết hạn) → `error BAD_REQUEST`. Relay không phân
      biệt được `rv_id` đã hết hạn với `rv_id` mới, nên `rv_join` tạo lại điểm hẹn với
      `peer_present = false`. Thiết bị bỏ cuộc khi bước 7 hết thời gian chờ (E3).
 

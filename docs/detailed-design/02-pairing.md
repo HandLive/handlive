@@ -303,7 +303,7 @@ Authentication strings shared by the APIs below:
 |----|--------|------|-------|
 | `rv_joined` | `rv_id` | b64u |  |
 | `rv_joined` | `peer_present` | bool | Both members are present |
-| `error` | `code` | string | `BAD_REQUEST` when the rendezvous already has 2 members; `NOT_CONNECTED` for an `rv_msg` while no other member is in the rendezvous |
+| `error` | `code` | string | `BAD_REQUEST` when the rendezvous already has 2 members, or for an `rv_msg` to a rendezvous the sender is not in; `NOT_CONNECTED` for an `rv_msg` while no other member is in the rendezvous |
 
 - **Example:**
 
@@ -321,7 +321,8 @@ Authentication strings shared by the APIs below:
   4. A `pair/hello` envelope with `mode = "pin"` through the rendezvous is blocked by the relay and
      also rejected by Android (the PIN is LAN-only). To block it the relay decodes the unencrypted
      `pair` payload: the only place where it looks inside an envelope (0.4.3).
-  5. An `rv_msg` while no other member is in the rendezvous → `error NOT_CONNECTED`. An expired
+  5. An `rv_msg` while no other member is in the rendezvous → `error NOT_CONNECTED`; an `rv_msg` for a
+     rendezvous the sender is not in (never joined, or expired) → `error BAD_REQUEST`. An expired
      `rv_id` cannot be told apart from a new one: `rv_join` creates it again with
      `peer_present = false`, and the device gives up when step 7 times out (E3).
 

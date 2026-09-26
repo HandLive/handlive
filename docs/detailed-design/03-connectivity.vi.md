@@ -801,7 +801,9 @@ flowchart TB
 - **Ví dụ:** `{"provider":"apns","token":"4f1c2e…a9","topic":"app.handlive.ios"}`
 - **Logic nghiệp vụ:** Provider phải khớp `platform` (android ↔ fcm; ios/ipados ↔ apns*; macos không
   có); ghi đè token cũ; APNs token lưu ở dạng chữ thường. Relay chỉ nhận `topic` APNs bằng
-  `RELAY_APNS_TOPIC` (bundle id của I-APP, đặt trong biến môi trường của relay); topic khác → 400.
+  `RELAY_APNS_TOPIC` (bundle id của I-APP, đặt trong biến môi trường của relay); topic khác → 400. Khi
+  relay chưa cấu hình APNs thì không topic nào khớp: không lưu APNs token nào, và push sau đó tới thiết
+  bị này trả 409 `PUSH_TOKEN_MISSING` (API 2).
 
 #### API 2 — `POST /v1/push`
 
@@ -868,13 +870,14 @@ flowchart TB
 ```
 
 - **Response:** 200 (header `apns-id`); 410 `Unregistered` → xóa token và trả 409
-  `PUSH_TOKEN_MISSING` (E3); 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) và 403 → ghi lỗi cấu
-  hình, trả 502; 500/503 hoặc lỗi mạng → thử lại một lần sau 500 ms ngay trong yêu cầu, rồi 502;
-  429 → 502.
+  `PUSH_TOKEN_MISSING` (E3); 403 `ExpiredProviderToken` hoặc `InvalidProviderToken` → ký provider token
+  mới và thử thêm một lần, rồi 502; 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) và các 403 khác
+  → ghi lỗi cấu hình, trả 502; 500/503 hoặc lỗi mạng → thử lại một lần sau 500 ms ngay trong yêu cầu,
+  rồi 502; 429 → 502.
 - **Ví dụ:** như trên; với `reason = call_incoming`: `interruption-level` = `time-sensitive`,
   `thread-id` = `calls`.
 - **Logic nghiệp vụ:**
-  1. Khóa .p8 nằm ngoài repo; JWT nhà cung cấp làm mới mỗi 50 phút; tổng payload ≤ 4 KB; `aps` luôn có `sound: "default"`.
+  1. Khóa .p8 nằm ngoài repo; JWT nhà cung cấp làm mới mỗi 50 phút, và làm mới ngay sau `ExpiredProviderToken` hoặc `InvalidProviderToken`; tổng payload ≤ 4 KB; `aps` luôn có `sound: "default"`. Relay chưa cấu hình APNs thì không lưu APNs token nào (API 1), nên push cảnh báo tới iPhone/iPad trả 409 `PUSH_TOKEN_MISSING`.
   2. Nội dung mặc định (hiện khi I-NSE không giải mã được, ví dụ iPhone đang khóa) gửi bằng `aps.alert.loc-key` — relay không gửi câu chữ, iPhone tra khóa trong catalog của app theo ngôn ngữ của máy (0.12.4); không chứa số điện thoại hay nội dung. Khóa gộp theo `reason`:
 
 | `reason` | `aps.alert.loc-key` | Câu chữ (`vi`) | `interruption-level` | `apns-collapse-id` / `thread-id` |

@@ -812,7 +812,8 @@ flowchart TB
 - **Business logic:** The provider must match `platform` (android ↔ fcm; ios/ipados ↔ apns*; never
   macos); the old token is overwritten; APNs tokens are stored lowercase. The relay accepts only the
   APNs `topic` equal to `RELAY_APNS_TOPIC` (the bundle id of I-APP, set in the relay's environment);
-  any other topic → 400.
+  any other topic → 400. When APNs is not configured on the relay no topic matches: no APNs token is
+  stored, and a later push to that device answers 409 `PUSH_TOKEN_MISSING` (API 2).
 
 #### API 2 — `POST /v1/push`
 
@@ -881,13 +882,14 @@ flowchart TB
 ```
 
 - **Response:** 200 (header `apns-id`); 410 `Unregistered` → delete the token and answer 409
-  `PUSH_TOKEN_MISSING` (E3); 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) and 403 → log a
-  configuration error and answer 502; 500/503 or a network error → one retry after 500 ms inside the
-  request, then 502; 429 → 502.
+  `PUSH_TOKEN_MISSING` (E3); 403 `ExpiredProviderToken` or `InvalidProviderToken` → sign a new provider
+  token and try once more, then 502; 400 (`BadDeviceToken`, `DeviceTokenNotForTopic`…) and any other 403
+  → log a configuration error and answer 502; 500/503 or a network error → one retry after 500 ms inside
+  the request, then 502; 429 → 502.
 - **Example:** as above; with `reason = call_incoming`: `interruption-level` = `time-sensitive`,
   `thread-id` = `calls`.
 - **Business logic:**
-  1. The .p8 key lives outside the repo; the provider JWT is refreshed every 50 minutes; total payload ≤ 4 KB; `aps` always carries `sound: "default"`.
+  1. The .p8 key lives outside the repo; the provider JWT is refreshed every 50 minutes, and at once after `ExpiredProviderToken` or `InvalidProviderToken`; total payload ≤ 4 KB; `aps` always carries `sound: "default"`. Without an APNs configuration the relay stores no APNs token (API 1), so an alert push to an iPhone/iPad answers 409 `PUSH_TOKEN_MISSING`.
   2. The default content (shown when I-NSE cannot decrypt, e.g. while the iPhone is locked) is sent as `aps.alert.loc-key` — the relay sends no wording, the iPhone looks the key up in the app's catalog in the device language (0.12.4); it contains no phone number and no content. Keys by `reason`:
 
 | `reason` | `aps.alert.loc-key` | Text (`en`) | `interruption-level` | `apns-collapse-id` / `thread-id` |
