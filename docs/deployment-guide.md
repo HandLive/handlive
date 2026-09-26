@@ -61,6 +61,11 @@ English | [Tiếng Việt](deployment-guide.vi.md)
   `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`); development builds register sandbox tokens.
 - **App Review:** answer App Privacy from `docs/privacy.md`, and explain in the review notes that the app
   works with the user's own Android phone running HandLive; attach a video of pairing and of an SMS.
+- **Device name:** on iOS 16 and later the phone sees "iPhone" or "iPad" as the device name unless Apple grants
+  the user-assigned device name entitlement (`com.apple.developer.device-information.user-assigned-device-name`);
+  request it before the release (PAIR-01 field 3).
+- **App icon:** the App Store needs an app icon, and the design system has no logo yet
+  (`docs/design-system/1-foundations/11-thuong-hieu.md`), so a logo and an icon must exist before submission.
 
 ## Cloud relay (Rust)
 
@@ -100,6 +105,9 @@ GitHub App token with Contents: read on the five repositories) at the organizati
 repositories `github.token` is enough.
 Changes to `shared/` or the docs do not trigger platform CI by themselves — run it by hand with `workflow_dispatch`. Each workflow takes the same-named branch of `handlive-shared` and of the hub when it exists (for example `feat/phase-01-clipboard` in every repository), otherwise `main`. Turn on
 branch protection that requires the matching check on `main` of every repository.
+
+handlive-apple downloads SQLCipher's XCFramework with `ThirdParty/SQLCipher/fetch.sh`, which checks its SHA-256;
+the framework is not committed. Run the script once after cloning; CI runs it and allows 90 minutes for the job.
 
 ## USB boost (optional)
 

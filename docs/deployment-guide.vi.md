@@ -29,6 +29,8 @@ Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 tr�
 - **Capability (tài khoản Apple Developer và entitlement).** Cần Push Notifications (`aps-environment`), App Groups, Keychain Sharing và Communication Notifications (`com.apple.developer.usernotifications.communication`). Capability cuối dùng cho thông báo `INSendMessageIntent` của SMS-02. App khai báo `INSendMessageIntent` trong `NSUserActivityTypes`. Chuỗi mục đích mạng cục bộ (`NSLocalNetworkUsageDescription`, `NSBonjourServices` = `_handlive._tcp`) lấy từ catalog chuỗi (khóa `infoplist.*`, 0.12).
 - **Khóa APNs.** Tạo một khóa `.p8` trong tài khoản Apple Developer, mục Keys, dịch vụ Apple Push Notifications. Khóa chỉ nằm trên máy chủ relay (`RELAY_APNS_KEY_PATH`, `RELAY_APNS_KEY_ID`, `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`). Bản build phát triển đăng ký token sandbox.
 - **App Review.** Trả lời App Privacy theo `docs/privacy.md`. Ghi chú cho người duyệt rằng app chạy cùng điện thoại Android của chính người dùng có cài HandLive. Kèm video ghép nối và nhận SMS.
+- **Tên thiết bị.** Từ iOS 16, điện thoại chỉ thấy tên "iPhone" hoặc "iPad", trừ khi Apple cấp entitlement tên thiết bị do người dùng đặt (`com.apple.developer.device-information.user-assigned-device-name`). Xin entitlement này trước khi phát hành (PAIR-01 trường 3).
+- **Biểu tượng app.** App Store cần biểu tượng app. Design system chưa có logo (`docs/design-system/1-foundations/11-thuong-hieu.md`), nên cần làm logo và biểu tượng trước khi nộp.
 
 ## Cloud relay (Rust)
 
@@ -56,6 +58,8 @@ Mỗi workflow dựng lại bố cục workspace bằng `actions/checkout`. Hub 
 Kho private: tạo secret `HANDLIVE_REPOS_TOKEN` ở cấp organization. Token là fine-grained PAT hoặc token GitHub App, quyền Contents: read trên năm kho. Kho public thì `github.token` đủ.
 
 Sửa `shared/` hoặc tài liệu không tự kích hoạt CI nền tảng. Chạy tay bằng `workflow_dispatch`. Mỗi workflow lấy nhánh trùng tên của `handlive-shared` và hub nếu có, ví dụ `feat/phase-01-clipboard` ở mọi kho. Không có nhánh đó thì dùng `main`. Bật branch protection. Nhánh `main` mỗi kho phải qua check tương ứng.
+
+handlive-apple tải XCFramework của SQLCipher bằng `ThirdParty/SQLCipher/fetch.sh`, có kiểm SHA-256. Framework không được commit. Chạy script này một lần sau khi clone. CI tự chạy script và cho job tối đa 90 phút.
 
 ## Tăng tốc USB (tùy chọn)
 
