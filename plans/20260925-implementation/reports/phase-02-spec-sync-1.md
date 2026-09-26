@@ -76,6 +76,24 @@ No new UI text in batch 2.
 | C4 | 03 · CONN-04 API 1 (`topic` row, errors, logic) | Only the APNs `topic` equal to `RELAY_APNS_TOPIC` (I-APP bundle id, relay environment) is accepted; any other → 400 in the relay error format (0.8.2) |
 | C5 | design system (en + vi) | 1-foundations/09-viet-noi-dung: exception note after the Numbers table (plural counts have no grouping, 0.12.1), same sentence in the English section, sync row now "Đã tải 1500 tin" (Downloaded 1500 messages), airplane mode gloss in lowercase. 2-patterns/05-phan-hoi-va-tai: "Waiting for phone" (2 places, SMS status), "Delete All HandLive Data", "Downloaded 1500 messages" / "Đã tải 1500 tin", empty states with the SMS-03 E1 and CLIP-04 field 10 sentences, vi SET-02 E5 final period. components/Alert: the SET-02 field 28 buttons. components/PasteCard: hint under the Paste button, empty-state sentence, and the not-connected state of CLIP-04 E5 (disabled Paste button, "Not connected to the phone") instead of the CLIP-01 queued-send toast |
 
+## Batch 4 — decisions applied
+
+Source: `phase-02-shared-sync-1.md` (spec points 2, 3 and 5); addendum from the "Notes" of the R2.2 follow-up.
+
+| # | Where | Change |
+|---|---|---|
+| D1 | 03 · CONN-04 API 2, `collapse_key` row (the only place that said "printable ASCII"; API 4 only names the header) | "1–64 visible ASCII characters (0x21–0x7E, no spaces), because it becomes the `apns-collapse-id` HTTP/2 header" |
+| D2 | 03 · CONN-04 step 5b; 05 · SMS-02 API 2 logic 3; 05 · SMS-01 `thread` object, `snippet` row | The cut rule of Android `PushEnvelopeBuilder` and `shared/tools/vectors/push_sms_truncation.py` (both read): a body over 1,000 code points keeps its first 999 + "…"; while `env_b64` is over 3,000 characters the body becomes the longest shorter cut that fits (fewer code points each step, ending "…"), down to "…" alone; only then `thread.snippet` is cut the same way; if nothing fits, no alert push is sent and SMS-01 catches up. `snippet` itself = the newest body's first 160 code points without "…" (as Android `SmsObjects` builds it). Same wording in both languages (deviation 15) |
+| D3 | 00 · 0.11 status paragraph; 02 · PAIR-01 field 6; 01 · SET-03 E1, E5, step 5 | The six texts quoted exactly as the catalog has them, en in `X.md`, vi in `X.vi.md`: `status.connected_internet_to` and `status.connected_usb_to` (with `status.connected_wifi_to` for the set) in 0.11; `pairing.pin_instructions` under the six digits on Mac/iOS (PAIR-01 field 6); `setup.keys_failed` with "Try Again" (SET-03 E1), `setup.login_item_approval_mac` with "Open System Settings" (E5), `setup.applications_drag_hint` (step 5, E2). `check_strings.py --docs` → 0 warnings |
+| D4 (addendum) | 02 · PAIR-01 API 7, response table `error` row + logic 5 | An `rv_msg` for a rendezvous the sender is not in (never joined, or expired) → `error BAD_REQUEST`; `NOT_CONNECTED` stays for "no other member" |
+| D5 (addendum) | 03 · CONN-04 API 4, Response + logic 1 | 403 `ExpiredProviderToken` / `InvalidProviderToken` → the relay signs a new provider token and tries once more, then 502; other 403 reasons and 400 stay configuration errors (502) |
+| APNs not configured (addendum) | 03 · CONN-04 API 1 logic, API 4 logic 1 | Without an APNs configuration no topic matches (`PUT` → 400), no APNs token is stored, and a later push to that device answers 409 `PUSH_TOKEN_MISSING` — checked in `relay/crates/relay-server/src/routes/devices.rs` (read-only) |
+
+No catalog text looked wrong against the spec: the Android names it cites ("Add Device" / "Thêm thiết bị", "Enter PIN"
+/ "Nhập mã PIN") and the System Settings paths match PAIR-01, PAIR-02 and SET-03. No catalog change, no new UI text.
+Note for the gate G1 real-device checks (not a change): macOS 15 shows the login items pane as "Login Items &
+Extensions"; the spec and `setup.login_item_approval_mac` say "Login Items" (the macOS 13–14 name).
+
 ## Deviations and interpretations (closest correct change)
 
 1. **24 (SMS-01 E6/E7):** text applied to E7 only. E6 is a provider read error on the phone; "…on this device" would be false.
@@ -110,6 +128,11 @@ No new UI text in batch 2.
     is kept), the PasteCard not-connected state (CLIP-04 E5, API 4 logic 1: no queued resend on iPhone), and the
     SMS-03 E1 empty-state sentence. MessageBubble `preview.html` is left as is: it is an HTML preview, and showing a
     two-part counter needs the multi-part `{limit}` rule (question 1).
+15. **D2 (batch 4), snippet step:** the brief says "only then cut `thread.snippet` to 160 code points without '…'".
+    That is how SMS-01 builds the snippet, and it is now written in the SMS-01 `snippet` row. In the push, though, the
+    Android code (`fitSnippet`) and the vector "crowded group conversation" (snippet 160 → 89 = 88 + "…") shorten the
+    snippet like the body: the longest cut that fits, ending with "…". Step 5b and SMS-02 API 2 logic 3 say "cut the
+    same way", following the code and the vectors as D2 asks.
 
 ## Commits (hub `main`)
 
@@ -133,12 +156,39 @@ No new UI text in batch 2.
 | 73deeae | docs(spec): accept only the relay's configured APNs topic in CONN-04 API 1 (batch 3) |
 | 279b0e4 | docs(spec): show no unread count in SMS-05 step 8 (batch 3) |
 | 32af250 | docs(design-system): align counts, empty states, delete wording and the PasteCard with the leaf specs (batch 3) |
+| 83a2577 | docs(spec): pin the push collapse key characters and the exact SMS cut rule (batch 4: D1, D2) |
+| 0978671 | docs(spec): quote the catalog texts that 0.11, PAIR-01 and SET-03 only described (batch 4: D3) |
+| 8868120 | docs(spec): record the relay's rendezvous and APNs provider-token answers (batch 4 addendum: D4, D5, APNs not configured) |
 
 All signed off (Hồ Xuân Dũng <me@hxd.vn>), no AI trailer; `.githooks/check-commits.sh origin/main..HEAD` → "commit sạch:
-đã kiểm 14 commit" (batches 1–2) and "đã kiểm 4 commit" (batch 3); `git pull --rebase` (up to date both times),
-`git push origin main` → `0d88586..340e1fe`, then `340e1fe..32af250`.
+đã kiểm 14 commit" (batches 1–2), "đã kiểm 4 commit" (batch 3), "đã kiểm 2 commit" and "đã kiểm 1 commit" (batch 4);
+`git push origin main` → `0d88586..340e1fe`, `340e1fe..32af250`, `7bf7f25..0978671`, then `0978671..8868120` (the
+coordinator's and other agents' hub commits in between were already on `main`). For the last push `git pull --rebase`
+refused to run because other agents had uncommitted files in the shared working tree; the push was a fast-forward, so
+nothing was missing. Two later local commits of another agent (fd4bb81, dd852c7) were left for that agent to push.
 
 ## Checks (final state, real output)
+
+After batch 4 and its addendum (hub at 8868120; `shared/` at b07271f, the head of `phase-02-shared-sync-1.md`; same
+output after 0978671 and after 8868120):
+
+```text
+$ python3 tools/docs/validate_design_docs.py | tail -1
+files=16 leaves=66 problems=0
+$ python3 tools/docs/check_bilingual_docs.py | tail -1
+pairs=67 missing=0 problems=0 warnings=0
+$ cd shared && tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -3
+  en: 304 of 304 texts found in 50 English docs
+  vi: 304 of 304 texts found in 50 Vietnamese docs
+== 304 strings, 0 errors, 0 warnings
+$ tools/.venv/bin/python tools/schemas/check_schemas.py      (exit 0)
+  … enum khớp bảng spec: 16 · ví dụ 01–08: 191 · envelope trong env_b64/hl: 31 · mẫu dương: 69 · mẫu âm: 157
+  · tin trong test vector: 52
+  XANH: mọi kiểm tra đạt
+```
+
+The two batch-2 schema failures are gone (the shared agent's `push.schema.json` accepts `thread-id` `sms`), and
+`--docs` is at 0 warnings after D3. History of the earlier states below.
 
 After batch 3 (hub at 32af250; the local `shared/` checkout is at 335018c, which added 4 catalog strings meanwhile):
 
@@ -167,6 +217,10 @@ $ tools/.venv/bin/python tools/strings/check_strings.py --docs | tail -1
   example "Huỷ Ghép Nối" in 09-viet-noi-dung.vi.md (unchanged, already in `HEAD`).
 
 ## New or changed UI texts for the catalog
+
+Status after batch 4: the shared agent has added every proposed key below and the metadata changes on existing keys
+(handlive-shared ac85789 and 2dd4a46, `phase-02-shared-sync-1.md` §1); the catalog has 304 strings and all of them are
+quoted in the specs. Batch 4 adds no text and proposes no catalog change.
 
 Already added by the shared agent (handlive-shared 335018c, texts identical to the spec — nothing to do):
 
@@ -226,9 +280,8 @@ design system with texts already listed above.
 
 ## Follow-ups for other agents
 
-- **Shared:** `push.schema.json` `thread-id` → `^(sms|calls)$` (fixes the 2 FAILs); `push-envelope.json` vectors:
-  `apns_payload.thread-id` → `sms`, `push_request.collapse_key` `sms:sms:12847` → `sms:12847` (+ build/verify scripts);
-  `relay-rest#push-request`: `ttl_s` max 86,400, `collapse_key` printable ASCII; catalog per the table above.
+- **Shared:** done in `phase-02-shared-sync-1.md` (schemas, vectors with the SMS cut cases, catalog). Batch 4 writes
+  its two proposals into the spec: `collapse_key` 0x21–0x7E (D1) and the cut rule (D2).
 - **Relay:** `Reason::default_ttl_s` for `call_incoming` 60 → 30 (CONN-04 API 2 now 30); rest of batches 2–3 document
   the current relay behaviour (including the `RELAY_APNS_TOPIC` check, C4).
 - **Android:** SMS push `collapse_key` = `message_key`; code-point cut loop of step 5b; `push_outbox` owned by A2.2.
@@ -239,12 +292,11 @@ design system with texts already listed above.
 
 ## Unresolved questions
 
-The four questions of batches 1–2 were answered by C1–C4 and are applied.
+None. The four questions of batches 1–2 were answered by C1–C4; the multi-part `{limit}` question of batch 3 was
+settled by the coordinator in hub 427d911 (`{limit}` = capacity of the current number of parts) and the MessageBubble
+preview updated in 298544d; the two shared-sync questions (visible ASCII `collapse_key`, the SMS cut reading) are D1
+and D2.
 
-1. SMS-04 field 3 defines `{limit}` only for one part ("0/160", "120/160 · 1 message"). What does `{limit}` show once
-   the text needs several parts: the capacity of the current number of parts (for example "96/134 · 2 messages" for
-   UCS-2, 2 × 67), or something else? M2.1 and I2.1 need it for the counter; MessageBubble `preview.html` waits for it.
-
-Status: DONE_WITH_CONCERNS
-Summary: All 37 batch-1, 15 batch-2 and 5 batch-3 decisions are applied in both languages in 18 signed-off hub commits, pushed (0d88586..32af250); both doc checkers print problems=0, --docs drops from 16 to 12 warnings with none new, and the catalog table lists 16 keys still to add, the 4 the shared agent has already added, and the changes needed on existing keys.
-Concerns/Blockers: check_schemas.py (and ci-shared) fails on the CONN-04 API 4 example ("thread-id":"sms", decision A1) until the shared agent widens push.schema.json and the push vectors — expected; batch 3 deviation 13 (Mac E3 says "missed calls", matching SET-03 E3 and the existing catalog text) and the open multi-part {limit} question need a glance.
+Status: DONE
+Summary: All decisions of batches 1–4 (37 + 15 + 5 + 3, plus the batch-4 addendum D4, D5 and the APNs note) are applied in both languages in 21 signed-off hub commits, pushed (0d88586..8868120); both doc checkers print problems=0, check_strings --docs is at 0 warnings (304/304 texts quoted) and check_schemas prints XANH.
+Concerns/Blockers: none; deviations 13 (Mac E3 "missed calls") and 15 (the push cuts the snippet like the body, per the code and vectors) are worth a glance.
