@@ -251,3 +251,28 @@ BUILD SUCCESSFUL in 49s
 JVM tests after the follow-up: 500, 0 failures (core/transport 61: `RelayPeerMuxTest` 8 with the new server-end,
 idle, peer-bye and new-hello cases; feature/relay 31: `RelayConnectorTest` 11, `RelayRegistrarTest` 8; app 28 with
 the E7 text at 200 %). CI `ci-android` green on `eaf9395` (run 36228377927).
+
+## Follow-up 2 (hub spec batch 7, shared `3cb90b8`, 312 strings)
+
+SET-02 field 28 asks a question on every platform. The confirmation action sheets of fields 26–27 now read
+`settings.remove_from_server_title` ("Remove This Device from the Server?") / `settings.delete_all_data_title` ("Delete
+All HandLive Data?") as their title, the `settings.*_warning` text of field 29 as the message, and
+`settings.remove_from_server_confirm` / `settings.delete_all_confirm` (red) next to `common.cancel`; the E7 alert is
+unchanged ("Delete" / "Cancel"). `HLActionSheet` now marks its title as a heading for TalkBack, as `HLAlert` does (this
+also applies to the Unpair sheet). The two sheets and the E7 alert joined the screen catalog, so they are checked at
+200 % text in English and Vietnamese and for a TalkBack heading. Shared was pulled to `3cb90b8`; the resources are
+regenerated at build time.
+
+| Hash | Subject |
+|------|---------|
+| e7f747a | feat(android): read the action sheet title as a heading for TalkBack |
+| dbbd859 | feat(android): ask the SET-02 field 28 question as the confirmation title |
+| a5f8644 | test(android): fit and announce the field 28 sheets and the E7 alert |
+
+```text
+$ ./gradlew check --continue            # JDK 21, a5f8644 with shared 3cb90b8
+BUILD SUCCESSFUL in 15s
+715 actionable tasks: 64 executed, 651 up-to-date
+```
+
+CI `ci-android` green on `a5f8644` (run 36236564856).
