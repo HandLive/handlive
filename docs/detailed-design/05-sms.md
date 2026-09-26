@@ -48,7 +48,7 @@ N/A — no approved wireframe yet.
 | 4 | Last sync | timestamp | Output | `sync_cursor.updated_at` | Settings → Messages; shown as relative time ("5 minutes ago") |
 | 5 | "Resync All SMS" button | action | Input | — | Settings → Messages; disabled when there is no session to the phone |
 | 6 | Resync confirmation | enum{Resync\| Cancel} | Input | — | "Delete messages saved on \<device> and download them again from the phone? Messages waiting to be sent are kept." |
-| 7 | Error message, instructions | string | Output | Empty | Content per E1, E2, E6, E7.<br>E2: "Missing SMS permission on the phone" with a "View Instructions" button, which opens an alert titled "Grant SMS Permission on Your Phone" with the message "On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS." and a single "OK" button |
+| 7 | Error message, instructions | string | Output | Empty | Content per E1, E2, E6, E7.<br>E2: "Missing SMS permission on the phone" with a "View Instructions" button ("View Instructions…" on the Mac, where it opens an alert), which opens an alert titled "Grant SMS Permission on Your Phone" with the message "On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS." and a single "OK" button |
 | 8 | Contacts permission hint | string | Output | Hidden | "Allow HandLive to read contacts on the phone to show names" when `permissions_missing` contains `READ_CONTACTS` (E3) |
 
 ### 5.1.4 Business flow

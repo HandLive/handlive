@@ -48,7 +48,7 @@ N/A — chưa có wireframe được duyệt.
 | 4 | Lần đồng bộ cuối | timestamp | Output | `sync_cursor.updated_at` | Cài đặt → Tin nhắn; hiển thị tương đối ("5 phút trước") |
 | 5 | Nút "Đồng bộ lại toàn bộ SMS" | action | Input | — | Cài đặt → Tin nhắn; vô hiệu khi không có phiên tới điện thoại |
 | 6 | Xác nhận đồng bộ lại | enum{Đồng bộ lại\| Hủy} | Input | — | "Xóa tin nhắn đã lưu trên <thiết bị> và tải lại từ điện thoại? Tin đang chờ gửi được giữ lại." |
-| 7 | Thông báo lỗi, hướng dẫn | string | Output | Rỗng | Nội dung theo E1, E2, E6, E7.<br>E2: "Thiếu quyền SMS trên điện thoại" kèm nút "Xem hướng dẫn", nút này mở hộp thoại tiêu đề "Cấp quyền SMS trên điện thoại" với nội dung "Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Tin nhắn SMS, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép SMS." và một nút "OK" |
+| 7 | Thông báo lỗi, hướng dẫn | string | Output | Rỗng | Nội dung theo E1, E2, E6, E7.<br>E2: "Thiếu quyền SMS trên điện thoại" kèm nút "Xem hướng dẫn" (trên Mac là "Xem hướng dẫn…" vì nút mở hộp thoại), nút này mở hộp thoại tiêu đề "Cấp quyền SMS trên điện thoại" với nội dung "Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Tin nhắn SMS, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép SMS." và một nút "OK" |
 | 8 | Gợi ý cấp quyền danh bạ | string | Output | Ẩn | "Cho phép HandLive đọc danh bạ trên điện thoại để hiện tên" khi `permissions_missing` có `READ_CONTACTS` (E3) |
 
 ### 5.1.4 Luồng nghiệp vụ
