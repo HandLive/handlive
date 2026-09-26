@@ -47,7 +47,6 @@ https://developer.apple.com/design/human-interface-guidelines/designing-for-ipho
 |---|---|---|
 | Ghép nối (`PairingCard`) | large | "Hủy" ở đầu toolbar; ghép xong tự đóng |
 | Tin nhắn mới | Chỉ large (khung soạn) | "Hủy" ở đầu toolbar; gửi bằng nút gửi trong ô soạn |
-| Hướng dẫn cấp quyền trên điện thoại (PAIR-02 trường 9) | medium và large, có grabber | Nút đóng `xmark` ở đầu toolbar |
 
 - Theo HIG cập nhật 24/3/2026: sheet một màn đặt "Hủy" ở đầu, "Xong" ở cuối toolbar; "Xong" luôn đi
   cùng "Hủy" hoặc "Quay lại"; không bao giờ đủ cả ba. Nhiều bước: bước đầu "Hủy" và "Xong" (chưa

@@ -465,7 +465,7 @@ N/A — chưa có wireframe được duyệt.
 | 6 | Lần kết nối cuối | timestamp | Output | `last_seen_at` | Nhãn "Kết nối gần nhất"; hiển thị tương đối ("2 phút trước") |
 | 7 | Phiên bản ứng dụng đối phương | string | Output | Từ `capability.app_version` | Nhãn "Phiên bản ứng dụng"; cảnh báo nếu khác phiên bản giao thức |
 | 8 | Tính năng hiệu lực | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Giao của hai capability | Mỗi mục kèm lý do nếu không hiệu lực ("Tắt trên Mac", "Thiếu quyền SMS trên điện thoại")<br>Nhãn "Tính năng" |
-| 9 | Quyền còn thiếu trên điện thoại | array\<string> | Output | `permissions_missing` | Chỉ trên Mac/iOS; nhấn để xem hướng dẫn |
+| 9 | Quyền còn thiếu trên điện thoại | array\<string> | Output | `permissions_missing` | Chỉ trên Mac/iOS; nhấn để xem hướng dẫn. Với quyền SMS (`READ_SMS`, `SEND_SMS`), thao tác này mở hộp thoại của SMS-01 trường 7 ("Cấp quyền SMS trên điện thoại", nội dung của nó và "OK"); các quyền khác có hướng dẫn theo phase của chúng |
 | 10 | Mã an toàn | string(8) | Output | 8 hex đầu (chữ thường) SHA-256(`attestation`) | Giống nhau trên hai thiết bị của cùng cặp; có sau khi ghép nối xong (phụ thuộc `pair_id`, `created_at` của `pair/confirm`), hiện ở kết quả ghép nối và chi tiết thiết bị |
 | 11 | Nút "Thêm thiết bị" | action | Input | — | Mở PAIR-01; ẩn trên Mac/iOS khi đã có cặp<br>Danh sách trống trên Android: "Chưa có thiết bị nào" · "Ghép nối Mac, iPhone hoặc iPad để dùng chung bảng nhớ tạm với điện thoại này." |
 | 12 | Nút "Hủy ghép nối" | action | Input | — | Mở PAIR-03 |

@@ -88,7 +88,7 @@ reason sits under the row title in `text-orange`; the switch is disabled but sta
 | Cause | Text | Action |
 |---|---|---|
 | Off on the other device | "Off on Lan's Pixel 8" | — |
-| Permission missing on the phone | "Missing SMS permission on the phone" | "View Instructions" (Mac, iPhone), "Grant Permission" (Android) |
+| Permission missing on the phone | "Missing SMS permission on the phone" | "View Instructions" (Mac, iPhone: the SMS-01 field 7 alert), "Grant Permission" (Android) |
 | Relay off on the other side | "Internet connection is off on the phone" | — |
 | Auto-send off on the phone | "Auto-send is off on the phone — use the Send Clipboard button on the phone" | — |
 | Camera while connected over the internet | "Requires the same Wi-Fi network or a USB cable" | — |

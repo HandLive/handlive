@@ -49,7 +49,6 @@ https://developer.apple.com/design/human-interface-guidelines/designing-for-ipho
 |---|---|---|
 | Pairing (`PairingCard`) | large | "Cancel" at the leading end of the toolbar; closes itself once paired |
 | New message | large only (compose frame) | "Cancel" at the leading end of the toolbar; sent with the send button in the compose field |
-| Instructions for granting permissions on the phone (PAIR-02 field 9) | medium and large, with a grabber | A close button `xmark` at the leading end of the toolbar |
 
 - Per the HIG update of March 24, 2026: a single-screen sheet puts "Cancel" at the leading end and
   "Done" at the trailing end of the toolbar; "Done" always comes with "Cancel" or "Back"; never all

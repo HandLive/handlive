@@ -475,7 +475,7 @@ N/A — no approved wireframe yet.
 | 6 | Last connected | timestamp | Output | `last_seen_at` | Label "Last Connected"; shown as relative time ("2 minutes ago") |
 | 7 | Peer app version | string | Output | From `capability.app_version` | Label "App Version"; warning if the protocol version differs |
 | 8 | Active features | array<enum{clipboard\| sms\| call\| call_audio\| camera}> | Output | Intersection of the two capabilities | Each item carries a reason when it is inactive ("Off on Mac", "Missing SMS permission on the phone")<br>Label "Features" |
-| 9 | Permissions missing on the phone | array\<string> | Output | `permissions_missing` | Mac/iOS only; select to see instructions |
+| 9 | Permissions missing on the phone | array\<string> | Output | `permissions_missing` | Mac/iOS only; select to see instructions. For an SMS permission (`READ_SMS`, `SEND_SMS`) this opens the SMS-01 field 7 alert ("Grant SMS Permission on Your Phone", its message and "OK"); the other permissions get their instructions with their phases |
 | 10 | Security Code | string(8) | Output | First 8 lowercase hex characters of SHA-256(`attestation`) | Identical on both devices of the same pair; exists once pairing finishes (it depends on the `pair_id` and `created_at` of `pair/confirm`), shown on the pairing result and in the device details |
 | 11 | "Add Device" button | action | Input | — | Opens PAIR-01; hidden on Mac/iOS when a pair already exists<br>Empty list on Android: "No Devices Yet" · "Pair a Mac, iPhone, or iPad to share the clipboard with this phone." |
 | 12 | "Unpair" button | action | Input | — | Opens PAIR-03 |

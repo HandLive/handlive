@@ -83,7 +83,7 @@ màu `text-orange`; switch vô hiệu nhưng vẫn thấy.
 | Nguyên nhân | Chữ | Hành động |
 |---|---|---|
 | Tắt ở thiết bị kia | "Tắt trên Pixel 8 của Lan" | — |
-| Thiếu quyền trên điện thoại | "Thiếu quyền SMS trên điện thoại" | "Xem hướng dẫn" (Mac, iPhone), "Cấp quyền" (Android) |
+| Thiếu quyền trên điện thoại | "Thiếu quyền SMS trên điện thoại" | "Xem hướng dẫn" (Mac, iPhone: hộp thoại của SMS-01 trường 7), "Cấp quyền" (Android) |
 | Relay tắt ở phía kia | "Kết nối qua Internet đang tắt trên điện thoại" | — |
 | Tự gửi tắt trên điện thoại | "Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại" | — |
 | Camera khi đang qua Internet | "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" | — |
