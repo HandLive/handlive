@@ -374,7 +374,8 @@ Content-Type: application/json
      PAIR-02 API 1 logic 3), nên thiết bị đăng ký với relay sau cùng sẽ hoàn tất việc đăng ký cặp,
      thiết bị kia nhận 200 ở lần gọi kế tiếp. Mã 404 đó cũng dùng khi relay không nhận ra chính người
      gọi: thiết bị tự đăng ký lại một lần (`POST /v1/devices`, CONN-03 API 1) rồi gọi lại; 404 lần thứ
-     hai nghĩa là đối phương chưa đăng ký → lần gọi kế tiếp cho cặp đó chờ 24 h.
+     hai nghĩa là đối phương chưa đăng ký → lần gọi kế tiếp cho cặp đó chờ 24 h. Mọi mã 4xx khác cũng
+     chờ 24 h trước lần gọi kế tiếp.
 
 #### Query
 

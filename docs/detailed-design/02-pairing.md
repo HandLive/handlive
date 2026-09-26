@@ -385,7 +385,7 @@ Content-Type: application/json
      completes the pair registration, and the other one gets 200 on its next call. The same 404
      covers an unknown caller: the device registers itself again once (`POST /v1/devices`, CONN-03
      API 1) and repeats the call; a second 404 means the peer is not registered yet → the next call
-     for that pair waits 24 h.
+     for that pair waits 24 h. Any other 4xx answer also waits 24 h before the next call.
 
 #### Query
 
