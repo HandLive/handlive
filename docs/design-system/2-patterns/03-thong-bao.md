@@ -87,7 +87,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 
 - Intentional deviation: the iPhone reports errors from actions taken on a notification with a local
   notification, because the app isn't open: "Couldn't send the decline command. The call is still
-  ringing on the phone." (CALL-02 E8), "Couldn't send. Open HandLive to try again." (SMS-04 E8).
+  ringing on the phone." (CALL-02 E8), "Not sent yet. Open HandLive to try again." (SMS-04 E8).
 - Synced with the detailed design (September 25, 2026): SMS-02 API 4 has `HL_SMS_REPLY` and
   `HL_SMS_MARK_READ` ("Mark as Read", only on this device, per SMS-05).
 - Synced with the detailed design (September 25, 2026): CALL-01 API 6 (I-NSE) and API 7 (Mac) use

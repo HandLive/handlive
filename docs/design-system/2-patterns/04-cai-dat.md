@@ -41,11 +41,11 @@ https://developer.apple.com/design/human-interface-guidelines/toggles
 | General `gearshape` | Switch "Show HandLive in Menu Bar" (when off, the app has a Dock icon) · switch "Open HandLive at Login" (`SMAppService`) · switch "Internet Connection" (`relay.enabled`) · button "Remove Device from Server…" · destructive button "Delete All HandLive Data…" |
 | Devices `candybarphone` | The phone's `DeviceRow` with "Details…" and "Unpair…"; if there's none yet, "Add Phone…" (PAIR-02) |
 | Clipboard `doc.on.clipboard` | Switch "Sync Clipboard" (`feature.clipboard`) › checkboxes "Sync Images" (`clip.send_images`), "Block Sensitive Content" (`clip.block_sensitive`) · pop-up "Auto-Clear Received Clipboard": Off, After 1 Minute, After 5 Minutes (`clip.auto_clear_s`), caption "Clears only content received from other devices, and only if you haven't copied anything new." · macOS 15.4+: a "Paste from Other Apps" row with "Open System Settings" (CLIP-02 fields 2–3) |
-| Messages `message` | Switch "SMS Messages" (`feature.sms`) › checkbox "New SMS Notifications" (`sms.notify`) › checkbox "Show Content in Notifications" (`sms.preview`) · "Last synced: 5 minutes ago" and the button "Resync All SMS…" · caption "Marking messages as read on this device doesn't change their status on the phone." |
+| Messages `message` | Switch "SMS Messages" (`feature.sms`) › checkbox "New SMS Notifications" (`sms.notify`) › checkbox "Show Content in Notifications" (`sms.preview`) · "Last synced: 5 minutes ago" and the button "Resync All SMS…" · caption "Marking as read on this device doesn't change the status on the phone." |
 | Calls `phone` | Switch "Calls" (`feature.call`) › checkboxes "Call Notifications" (`call.notify`), "Ring on Mac" (`call.ringtone`) · the "Quick Replies" list, up to 6 templates (`call.quick_replies`) · switch "Take Calls on Mac" (`feature.call_audio`) › pop-up "Phone for Bluetooth" (`call_audio.phone_bt_address`), checkbox "Wi-Fi Fallback (Requires Shizuku)" (`call_audio.allow_opus_fallback`), the AUDIO-01 step 12 checklist |
 | Camera `web.camera` | Switch "Use Phone as Webcam" (`feature.camera`) › the CAM-01 checklist with "Install Microphone Driver" · pop-up "Default Camera": Front Camera, Back Camera (`cam.default_camera`) · pop-up "Default Quality": Automatic, 480p, 720p, 1080p (`cam.default_quality`) · checkbox "Automatic USB Boost" (`cam.usb_boost`) · button "Show USB Debugging Guide Again" (`cam.usb_wizard_dismissed`) · button "Remove Virtual Camera and Microphone…" |
 
-Confirmation for "Resync All SMS…": "Delete the messages stored on Lan's MacBook and load them again from
+Confirmation for "Resync All SMS…": "Delete messages saved on Lan's MacBook and download them again from
 the phone? Messages waiting to be sent are kept." with "Cancel" and "Resync" (SMS-01 field 6).
 
 ## iOS and iPadOS: the Settings tab
@@ -98,8 +98,7 @@ reason sits under the row title in `text-orange`; the switch is disabled but sta
   Shizuku". Still to sync: AUDIO-01 step 1 names the pane "Call Audio" (design system: the Calls pane);
   "Switch to USB When Plugged In" (field 19) should follow CAM-04: "Automatic USB Boost".
 - Synced with the detailed design (September 25, 2026): the `mac.menu_bar_extra` key (SET-02 field 31,
-  0.9.5). Still to sync: the confirmation button "Delete" (field 28) becomes a specific verb ("Remove
-  from Server", "Delete All"), paired with "Cancel".
+  0.9.5).
 
 ## Dos and don'ts
 

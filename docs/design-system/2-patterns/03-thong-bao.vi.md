@@ -86,7 +86,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 
 - Lệch có chủ đích: iPhone báo lỗi của hành động làm từ thông báo bằng thông báo cục bộ, vì app
   không mở: "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại." (CALL-02 E8),
-  "Chưa gửi được, mở HandLive để thử lại" (SMS-04 E8).
+  "Chưa gửi được, mở HandLive để thử lại." (SMS-04 E8).
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): SMS-02 API 4 có `HL_SMS_REPLY` và
   `HL_SMS_MARK_READ` ("Đánh dấu đã đọc", chỉ trên máy này theo SMS-05).
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 6 (I-NSE) và API 7 (Mac) dùng

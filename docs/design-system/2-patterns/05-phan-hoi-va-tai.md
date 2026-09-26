@@ -41,7 +41,7 @@ blaming the user.
 
 | Error | Where it shows | Text | Action |
 |---|---|---|---|
-| SMS failed to send (SMS-04 E7) | Under the bubble | "Not sent · The phone is in Airplane Mode" | "Try Again" |
+| SMS failed to send (SMS-04 E7) | Under the bubble | "Not sent · The phone is in airplane mode" | "Try Again" |
 | Loading older messages without a session (SMS-03 E2) | Banner at the top of the conversation | "Connect the phone to load older messages" | Loads automatically on reconnection |
 | A call command didn't get through (CALL-02 E5) | In `CallPanel` | "Couldn't send the command to the phone" | The panel returns to its previous state |
 | Actions available only over Bluetooth (CALL-03 E2) | In `CallPanel`, in place of the three hidden buttons | "Connect to the phone over Bluetooth to hold, use the keypad, or mute" | — |
@@ -57,7 +57,7 @@ blaming the user.
   All HandLive Data" (wording from SET-02 field 29), "Resync All SMS" (SMS-01 field 6), "Remove Virtual
   Camera and Microphone" (CAM-01 A1), turning off a feature that's running (SET-02 E9).
 - Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
-  Start the Connection Service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Remove
+  Start the Connection Service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Delete
   from this device anyway?" (SET-02 E7).
 - Mac: "Cancel" on the left, the action on the right as the default button, not red, because the user
   chose it deliberately (decision 12); Esc or ⌘. means Cancel. iPhone, Android: an action sheet, with

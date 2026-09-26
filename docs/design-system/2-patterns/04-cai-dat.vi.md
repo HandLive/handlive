@@ -93,8 +93,7 @@ màu `text-orange`; switch vô hiệu nhưng vẫn thấy.
   Còn cần đồng bộ: AUDIO-01 bước 1 ghi pane "Âm thanh cuộc gọi" (design system: pane Cuộc gọi); "Tự
   chuyển USB khi cắm cáp" (trường 19) theo CAM-04: "Tự tăng tốc qua USB".
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): khóa `mac.menu_bar_extra` (SET-02 trường 31,
-  0.9.5). Còn cần đồng bộ: nút xác nhận "Xóa" (trường 28) đổi thành động từ cụ thể ("Xóa khỏi máy
-  chủ", "Xóa toàn bộ"), đi cùng "Hủy".
+  0.9.5).
 
 ## Nên và không nên
 
