@@ -74,7 +74,7 @@ cho người dùng.
 - Dữ liệu đã đồng bộ vẫn xem được. Việc cần điện thoại thì xếp hàng ("Đang chờ điện thoại") hoặc mờ
   kèm lý do: nút Dán vô hiệu với "Chưa kết nối với điện thoại" (CLIP-04 trường 4).
 - `CallPanel` mất phiên: "Mất kết nối với điện thoại" (CALL-03 E6).
-- "Cần ghép nối lại" (cặp bị thu hồi) là `status-error` vì người dùng phải làm gì đó: kèm "Ghép điện
+- "Cần ghép nối lại" (cặp bị thu hồi) là `status-error` vì người dùng phải làm gì đó: kèm "Thêm điện
   thoại…".
 
 ## Tải và tiến trình
