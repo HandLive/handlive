@@ -50,7 +50,7 @@ cho người dùng.
 | Ghép nối sai xác thực (PAIR-01 E4) | Trong sheet ghép nối | "Ghép nối không an toàn, thử lại" | Mã QR mới |
 | Máy chủ không phản hồi (SET-02 E5) | Dưới nút vừa dùng | "Không kết nối được máy chủ, hãy thử lại sau." | — |
 
-## Alert: chỉ hai việc
+## Alert: chỉ ba việc
 
 - Xác nhận hành động không hoàn tác: "Hủy ghép nối" (PAIR-03), "Xóa thiết bị khỏi máy chủ", "Xóa
   toàn bộ dữ liệu HandLive" (câu SET-02 trường 29), "Đồng bộ lại toàn bộ SMS" (SMS-01 trường 6), "Gỡ
@@ -58,6 +58,8 @@ cho người dùng.
 - Lỗi không tự phục hồi: tạo khóa thất bại (SET-03 E1, SET-01 E9); "Không khởi động được dịch vụ kết
   nối" với "Thử lại" (SET-01 E2); "Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?" (SET-02
   E7).
+- Hướng dẫn mà người dùng bấm nút để xem: "Xem hướng dẫn" (SMS-01 trường 7) mở một alert gồm tiêu đề,
+  nội dung và một nút "OK".
 - Mac: "Hủy" bên trái, hành động bên phải là nút mặc định, không tô đỏ vì người dùng chủ động chọn
   (quyết định 12); Esc hoặc ⌘. là Hủy. iPhone, Android: action sheet, hành động phá hủy màu đỏ ở
   trên, "Hủy" dưới cùng.

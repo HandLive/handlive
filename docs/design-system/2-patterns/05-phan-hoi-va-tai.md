@@ -51,7 +51,7 @@ blaming the user.
 | Pairing failed authentication (PAIR-01 E4) | In the pairing sheet | "Pairing isn't secure — try again" | A new QR code |
 | Server not responding (SET-02 E5) | Under the button just used | "Couldn't connect to the server. Try again later." | — |
 
-## Alerts: only two jobs
+## Alerts: only three jobs
 
 - Confirming an action that can't be undone: "Unpair" (PAIR-03), "Remove Device from Server", "Delete
   All HandLive Data" (wording from SET-02 field 29), "Resync All SMS" (SMS-01 field 6), "Remove Virtual
@@ -59,6 +59,8 @@ blaming the user.
 - Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
   Start the Connection Service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Delete
   from this device anyway?" (SET-02 E7).
+- Instructions the user asked for with a button: "View Instructions" (SMS-01 field 7) opens an alert
+  with a title, a message and a single "OK".
 - Mac: "Cancel" on the left, the action on the right as the default button, not red, because the user
   chose it deliberately (decision 12); Esc or ⌘. means Cancel. iPhone, Android: an action sheet, with
   the destructive action in red at the top and "Cancel" at the bottom.
