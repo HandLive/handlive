@@ -2,7 +2,7 @@ English | [Tiếng Việt](README.vi.md)
 
 # HandLive
 
-> This is the documentation hub of HandLive. An Android phone is the hub: it brings the clipboard, SMS, calls with live audio, and its camera and microphone to macOS. iPhone and iPad receive the clipboard, SMS and call details.
+> HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android. An Android device stays in sync with a Mac, iPhone and iPad, and those Apple devices sync back. This repository is the documentation hub.
 >
 > Design motto: *"WebSocket for data, Bluetooth for voice."*
 
@@ -10,7 +10,7 @@ English | [Tiếng Việt](README.vi.md)
 
 ## What HandLive solves
 
-An experience close to Microsoft Phone Link and Apple Continuity, but **across ecosystems**. Android users take calls, text, sync the clipboard, and use the phone's camera and microphone right on their Mac. End-to-end encryption (E2E) is always on and cannot be turned off.
+HandLive brings features that belong to one ecosystem, such as Apple Handoff and Continuity, onto Android. An Android device syncs its clipboard, SMS, calls, camera and microphone with a Mac. iPhone and iPad sync the clipboard, SMS and call details. Apple devices sync back to Android. End-to-end encryption (E2E) stays on. Users cannot turn it off.
 
 | Feature | macOS | iOS/iPadOS |
 |---------|:-----:|:----------:|
@@ -50,7 +50,7 @@ HandLive/                # hub repository "handlive"
 ├── CLAUDE.md            # Instructions for Claude Code (read first)
 ├── README.md            # this file; README.vi.md is the Vietnamese version
 ├── docs/                # Project docs (see docs/codebase-summary.md)
-│   ├── detailed-design/ # Detailed design: the contract for all code
+│   ├── detailed-design/ # Detailed design: the specification for all code
 │   └── design-system/   # Design system (source copy of the artifact)
 ├── plans/               # Architecture, research, implementation plan + reports/
 ├── tools/docs/          # validate_design_docs.py, check_bilingual_docs.py, apple_diacritics.py, build_design_html.py

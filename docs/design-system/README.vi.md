@@ -1,12 +1,8 @@
 [English](README.md) | Tiếng Việt
 
-HandLive nối điện thoại Android với Mac, iPhone và iPad: bảng nhớ tạm, tin nhắn, cuộc gọi và camera
-đi qua một liên kết mã hóa đầu-cuối. Design system này dựng theo
-**Human Interface Guidelines (HIG) của Apple** cho cả ba nền tảng. Trên Mac, iPhone và iPad,
-HandLive dùng control, font San Francisco, SF Symbols và vật liệu Liquid Glass của hệ thống. Trên
-Android, app dựng lại cùng ngôn ngữ đó bằng Jetpack Compose — như cách Apple làm Apple Music cho
-Android — và để nguyên những phần do Android quản lý: thông báo, hộp thoại xin quyền, ô Cài đặt
-nhanh, cử chỉ quay lại.
+HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Máy Android đồng bộ với Mac, iPhone và iPad. Máy Apple đồng bộ ngược lại. Liên kết luôn mã hóa đầu-cuối.
+
+Design system dựng theo **Human Interface Guidelines (HIG)** trên Apple, cho cả ba nền tảng. Trên Mac, iPhone và iPad, HandLive dùng control, font San Francisco, SF Symbols và vật liệu Liquid Glass sẵn trên hệ thống. Trên Android, app dựng lại cùng ngôn ngữ đó bằng Jetpack Compose, theo cách Apple làm Apple Music cho Android. App để nguyên các phần Android quản lý: thông báo, hộp thoại xin quyền, ô Cài đặt nhanh, cử chỉ quay lại.
 
 Tài liệu bám HIG bản 24/9/2026 (Liquid Glass, macOS 27, iOS và iPadOS 27). App hỗ trợ từ macOS 13 và
 iOS 16: control hệ thống tự hiển thị đúng từng phiên bản; thành phần tự dựng có cách hiển thị riêng

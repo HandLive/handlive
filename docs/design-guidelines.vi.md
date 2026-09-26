@@ -2,31 +2,19 @@
 
 # HandLive — Design Guidelines
 
-> UX & bảo mật nguyên tắc. Chi tiết security: `docs/system-architecture.md` §6, plan gốc §6.
+> HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Máy Android đồng bộ với thiết bị Apple, và chiều ngược lại cũng vậy. Mục này ghi nguyên tắc trải nghiệm và bảo mật. Chi tiết bảo mật: `docs/system-architecture.vi.md` §6, plan gốc §6.
 
 ## Nguyên tắc UX
 
-- **Zero-config, không dây là mặc định.** User mass-market phải dùng được ngay sau khi ghép cặp QR,
-  không cần ADB/USB/terminal. Mọi thứ cần setup kỹ thuật (Shizuku, USB debugging) là "boost" tùy
-  chọn có wizard hướng dẫn từng bước.
-- **Feature độc lập, degrade duyên dáng.** Một feature hỏng không làm hỏng feature khác. Khi
-  transport chính fail → tự fallback (HFP→Opus/WS, LAN→cloud relay) và *thông báo* user thay vì im
-  lặng chết.
-- **Ghép cặp qua QR code**, không phải PIN 6 số (256-bit entropy vs ~20-bit; xác thực out-of-band
-  qua camera). PIN chỉ là fallback.
-- **iOS là công dân hạng hai có chủ đích** — đừng cố nhồi call audio; đặt kỳ vọng rõ trong UI
-  (clipboard + SMS + call metadata).
-- **macOS call UI** là floating `NSPanel` (level `.floating`) — CallKit không có trên macOS native.
+- **Mặc định không cấu hình, không dây.** Người dùng phổ thông dùng được ngay sau khi ghép cặp QR. Không cần ADB, USB hay terminal. Shizuku và USB debugging chỉ là lối tăng tốc, có wizard hướng dẫn từng bước.
+- **Mỗi tính năng đứng riêng.** Một tính năng hỏng không kéo theo tính năng khác. Khi kênh chính lỗi, hệ thống tự chuyển đường dự phòng: HFP sang Opus/WS, mạng nội bộ sang cloud relay. Hệ thống báo cho người dùng, không im lặng.
+- **Ghép cặp qua mã QR.** Không dùng PIN 6 số làm đường chính. QR có 256 bit entropy. PIN khoảng 20 bit, chỉ là dự phòng. Camera xác thực ngoài băng.
+- **iOS có phạm vi hẹp, có chủ đích.** Không đưa âm thanh cuộc gọi lên iOS. Giao diện nói rõ: clipboard, SMS và thông tin cuộc gọi.
+- **Giao diện cuộc gọi trên macOS** là `NSPanel` nổi (level `.floating`). macOS native không có CallKit.
 
 ## Design system giao diện
 
-- Nguồn: artifact "HandLive Design System" — https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT (bản
-  sao trong `docs/design-system/`, token ở `shared/design-tokens/tokens.json`). Theo
-  **Apple Human Interface Guidelines** (bản 24/09/2026, Liquid Glass) cho **mọi nền tảng**: Mac,
-  iPhone, iPad dùng control, font San Francisco, SF Symbols và vật liệu của hệ thống; Android dựng
-  lại cùng ngôn ngữ bằng Compose (font Inter, Material Symbols Rounded) và giữ nguyên phần do
-  Android quản lý (thông báo, hộp thoại quyền, ô Cài đặt nhanh, cử chỉ quay lại). Giấy phép Apple
-  không cho dùng SF Pro, SF Symbols, UI Kit trên Android.
+- Nguồn: artifact "HandLive Design System", https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT. Bản sao nằm trong `docs/design-system/`. Token nằm ở `shared/design-tokens/tokens.json`. Theo **Apple Human Interface Guidelines** (bản 24/09/2026, Liquid Glass) cho mọi nền tảng. Mac, iPhone và iPad dùng control, font San Francisco, SF Symbols và vật liệu sẵn trên hệ thống. Android dựng lại cùng ngôn ngữ bằng Compose (font Inter, Material Symbols Rounded). Android giữ nguyên phần hệ thống quản lý: thông báo, hộp thoại quyền, ô Cài đặt nhanh, cử chỉ quay lại. Giấy phép Apple không cho dùng SF Pro, SF Symbols và UI Kit trên Android.
 - Màu thương hiệu theo phong thủy mệnh Sơn Đầu Hỏa: đỏ son, đỏ than, cam lửa cho nhận diện; xanh lá
   (Mộc sinh Hỏa) là AccentColor; không dùng đen, xanh dương cho thương hiệu. Bốn giao diện Sáng, Tối
   và hai bản tương phản cao; mọi cặp chữ–nền ≥ 4.5:1.
@@ -34,24 +22,18 @@
   `plans/20260924-apple-hig-design-system/`. Câu chữ giao diện: `docs/detailed-design/README.md`
   §3.5.
 
-## Nguyên tắc bảo mật (không đàm phán)
+## Nguyên tắc bảo mật
 
-- **E2E không thể tắt.** Không có option "gửi không mã hóa". Nhất quán toàn hệ thống.
-- **Audio.** Đường Opus/WS mã hóa hai lớp (TLS + E2E XChaCha20). Đường HFP chỉ có mã hóa liên kết
-  Bluetooth vì ứng dụng không chạm được khung SCO của cuộc gọi di động (plan §13 D11); rủi ro
-  KNOB/BIAS phải được công bố khi người dùng bật nghe gọi trên Mac.
-- **Cloud relay zero-knowledge.** Server không bao giờ có key, không decrypt, không log payload.
-- **Key hardware-backed** khi khả dụng (StrongBox / Secure Enclave). Stolen device → cần
-  biometric/passcode + remote unpair.
-- **Clipboard nhạy cảm:** detect pattern (thẻ tín dụng, password-manager) → không sync, chỉ notify.
-  Auto-clear receiver sau 60s.
+- **Mã hóa đầu-cuối luôn bật.** Không có lựa chọn gửi không mã hóa. Quy tắc này áp dụng toàn hệ thống.
+- **Âm thanh.** Đường Opus/WS mã hóa hai lớp: TLS và E2E XChaCha20. Đường HFP chỉ có mã hóa liên kết Bluetooth. Ứng dụng không chạm khung SCO của cuộc gọi di động (plan §13 D11). Khi người dùng bật nghe gọi trên Mac, giao diện công bố rủi ro KNOB/BIAS.
+- **Cloud relay không đọc nội dung.** Máy chủ không giữ khóa, không giải mã, không ghi payload vào log.
+- **Khóa nằm trên phần cứng** khi máy có StrongBox hoặc Secure Enclave. Máy mất thì cần sinh trắc hoặc mã khóa màn hình, rồi hủy ghép từ xa.
+- **Clipboard nhạy cảm.** Hệ thống nhận dạng thẻ tín dụng và nội dung từ trình quản lý mật khẩu. Hệ thống không đồng bộ nội dung đó, chỉ báo. Bên nhận tự xóa sau 60 giây.
 
-## Legal / privacy
+## Pháp lý và quyền riêng tư
 
-- Call audio relay: **disclosure trước khi bật** (dialog + log consent timestamp). Two-party-consent
-  states (CA/FL/IL) yêu cầu "all parties aware". Không ghi âm.
-- Relay giữa các thiết bị của *cùng một user* (như Continuity/Phone Link) → rủi ro pháp lý thấp hơn
-  relay bên thứ ba.
+- Âm thanh cuộc gọi: **công bố trước khi bật**. Hộp thoại hiện ra. Hệ thống ghi thời điểm người dùng đồng ý. Một số bang (CA, FL, IL) yêu cầu mọi bên trong cuộc gọi đều biết. Không ghi âm.
+- Relay chỉ nối các thiết bị của cùng một người, như Continuity và Phone Link. Rủi ro pháp lý thấp hơn relay cho bên thứ ba.
 
 ## Performance targets
 

@@ -4,7 +4,7 @@ English | [Tiếng Việt](project-roadmap.vi.md)
 
 > Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`.
 
-Build **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase.
+HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase.
 
 ## Phase 1. Clipboard sync (MVP)
 

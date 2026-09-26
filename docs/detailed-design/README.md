@@ -1,6 +1,8 @@
 English | [Tiếng Việt](README.vi.md)
 
-# HandLive — Detailed design documentation
+# HandLive: Detailed design documentation
+
+HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android. This document is the specification Android, Mac, iPhone, iPad and the relay implement against.
 
 | Item | Content |
 |-----|----------|

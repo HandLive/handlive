@@ -6,7 +6,9 @@
 
 ## 1. Vấn đề
 
-Người dùng Android không có sự liền mạch giữa điện thoại và máy tính như Apple Continuity, hay như Microsoft Phone Link giữa Android và Windows. HandLive lấp chỗ trống đó cho **Android với macOS và iOS**. Trọng tâm là ba luồng còn thiếu: âm thanh cuộc gọi, camera và mic, đồng bộ dữ liệu ngay lúc phát sinh. Mọi luồng đều mã hóa đầu-cuối.
+HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Máy Android đồng bộ với Mac, iPhone và iPad. Máy Apple đồng bộ ngược lại với Android.
+
+Người dùng Android thiếu các tính năng gắn với một hệ sinh thái, như Continuity trên Apple hay Phone Link giữa Android và Windows. Phạm vi hiện tại gồm âm thanh cuộc gọi, camera và mic, cùng đồng bộ dữ liệu ngay lúc phát sinh. Mọi luồng đều mã hóa đầu-cuối.
 
 ## 2. Mục tiêu
 
@@ -14,12 +16,12 @@ Người dùng Android không có sự liền mạch giữa điện thoại và 
 - Nhận và gửi SMS từ macOS và iOS.
 - Nhận cuộc gọi, điều khiển, rồi **nghe và nói** ngay trên macOS.
 - Dùng camera và mic Android như thiết bị ảo trong Zoom, Meet, FaceTime, OBS.
-- Mã hóa đầu-cuối luôn bật. Không máy chủ nào đọc được nội dung.
+- Mã hóa đầu-cuối luôn bật. Máy chủ không đọc nội dung.
 
 ## 3. Ngoài phạm vi
 
 - Không chuyển âm thanh cuộc gọi lên iOS. Apple không mở API HFP phía tai nghe. iOS chỉ có clipboard, SMS và thông tin cuộc gọi.
-- Không ghi âm cuộc gọi. Hệ thống chỉ chuyển âm thanh lúc đang gọi, không lưu.
+- Không ghi âm cuộc gọi. Hệ thống chỉ chuyển âm thanh lúc đang gọi. Hệ thống không lưu âm thanh.
 - Không phát nhạc chất lượng cao qua HFP. Kênh này là mono, 8 hoặc 16 kHz.
 
 ## 4. Người dùng

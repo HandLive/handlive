@@ -2,7 +2,7 @@ English | [Tiếng Việt](design-guidelines.vi.md)
 
 # HandLive — Design Guidelines
 
-> UX & security principles. Security details: `docs/system-architecture.md` §6, original plan §6.
+> HandLive brings ecosystem-native features, such as Apple Handoff, to Android, so Android devices stay in sync with Apple devices and the other way around. This document states the experience and security principles. Security details: `docs/system-architecture.md` §6, original plan §6.
 
 ## UX principles
 

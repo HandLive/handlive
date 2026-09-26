@@ -1,8 +1,10 @@
 English | [Tiếng Việt](privacy.vi.md)
 
-# HandLive and Your Privacy
+# HandLive and your privacy
 
-HandLive connects your Android phone to your Mac, iPhone and iPad. This page explains what data HandLive handles, where it goes and what you control. It covers every HandLive app and the HandLive relay server. The apps link here from their welcome screen (detailed design SET-01 field 1).
+HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android. An Android device stays in sync with a Mac, iPhone and iPad, and those Apple devices sync back.
+
+This page explains what data HandLive handles, where that data goes, and what the user controls. It covers every HandLive app and the relay. The apps link here from the welcome screen (detailed design SET-01 field 1).
 
 ## In short
 

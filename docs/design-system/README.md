@@ -1,12 +1,8 @@
 English | [Tiếng Việt](README.vi.md)
 
-HandLive connects an Android phone to a Mac, iPhone, and iPad: the clipboard, messages, calls, and
-camera travel over an end-to-end encrypted link. This design system follows **Apple's Human Interface
-Guidelines (HIG)** on all three platforms. On Mac, iPhone, and iPad, HandLive uses the system's
-controls, the San Francisco font, SF Symbols, and the Liquid Glass material. On Android, the app
-rebuilds the same design language in Jetpack Compose — the way Apple built Apple Music for Android —
-and leaves the parts Android owns as they are: notifications, permission dialogs, Quick Settings
-tiles, the back gesture.
+HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android, so an Android device stays in sync with a Mac, iPhone and iPad, and those Apple devices sync back. The link stays end-to-end encrypted.
+
+This design system follows **Apple's Human Interface Guidelines (HIG)** on all three platforms. On Mac, iPhone, and iPad, HandLive uses the system controls, the San Francisco font, SF Symbols, and the Liquid Glass material. On Android, the app rebuilds the same design language in Jetpack Compose, the way Apple built Apple Music for Android. The app leaves the parts Android owns as they are: notifications, permission dialogs, Quick Settings tiles, the back gesture.
 
 These documents follow the HIG as of September 24, 2026 (Liquid Glass, macOS 27, iOS and iPadOS 27).
 The app supports macOS 13 and iOS 16 and later: system controls render correctly on each version on

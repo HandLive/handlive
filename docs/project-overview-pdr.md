@@ -6,7 +6,9 @@ English | [Tiếng Việt](project-overview-pdr.vi.md)
 
 ## 1. Problem
 
-Android users do not get the seamless phone-to-computer experience of Apple Continuity, or of Microsoft Phone Link between Android and Windows. HandLive fills that gap for **Android with macOS and iOS**. The focus is on three missing flows: call audio, camera and mic, and syncing data the moment it appears. Every flow is end-to-end encrypted.
+HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android. An Android device stays in sync with a Mac, iPhone and iPad, and those Apple devices sync back.
+
+Android users lack features that stay inside one ecosystem, such as Apple Continuity or Phone Link between Android and Windows. The current scope covers call audio, camera and microphone, and syncing data the moment it appears. Every flow is end-to-end encrypted.
 
 ## 2. Goals
 

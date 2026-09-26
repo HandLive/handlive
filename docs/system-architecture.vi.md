@@ -2,9 +2,9 @@
 
 # HandLive — System Architecture
 
-> **Nguồn chân lý:** `plans/20260924-definitive-architecture/plan.md` (đọc §13 D9–D12 trước). File
-> này là bản tóm tắt điều hướng; khi có xung đột, plan gốc thắng. Thiết kế chi tiết từng chức năng:
-> `docs/detailed-design/`.
+> HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Máy Android đồng bộ với thiết bị Apple, và chiều ngược lại cũng vậy.
+>
+> **Nguồn chân lý:** `plans/20260924-definitive-architecture/plan.md` (đọc §13 D9–D12 trước). File này là bản tóm tắt điều hướng. Khi có xung đột, plan gốc thắng. Thiết kế chi tiết từng chức năng: `docs/detailed-design/`.
 
 ## 1. Triết lý
 

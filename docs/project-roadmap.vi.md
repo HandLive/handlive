@@ -4,7 +4,7 @@
 
 > Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`.
 
-Xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng của phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau.
+HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau.
 
 ## Phase 1. Đồng bộ clipboard (MVP)
 

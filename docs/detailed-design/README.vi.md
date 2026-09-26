@@ -1,6 +1,8 @@
 [English](README.md) | Tiếng Việt
 
-# HandLive — Tài liệu thiết kế chi tiết
+# HandLive: Tài liệu thiết kế chi tiết
+
+HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Tài liệu này ghi đặc tả để Android, Mac, iPhone, iPad và relay thực thi cùng một hành vi.
 
 | Mục | Nội dung |
 |-----|----------|

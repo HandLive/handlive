@@ -2,9 +2,9 @@ English | [Tiếng Việt](system-architecture.vi.md)
 
 # HandLive — System Architecture
 
-> **Source of truth:** `plans/20260924-definitive-architecture/plan.md` (read §13 D9–D12 first). This
-> file is a navigation summary; when the two conflict, the original plan wins. Detailed design of each
-> function: `docs/detailed-design/`.
+> HandLive is an open source project. It brings ecosystem-native features, such as Apple Handoff, to Android, so Android devices stay in sync with Apple devices and the other way around.
+>
+> **Source of truth:** `plans/20260924-definitive-architecture/plan.md` (read §13 D9–D12 first). This file is a navigation summary. When the two conflict, the original plan wins. Detailed design of each function: `docs/detailed-design/`.
 
 ## 1. Philosophy
 
