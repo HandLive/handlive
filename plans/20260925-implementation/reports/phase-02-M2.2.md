@@ -129,8 +129,85 @@ the frames against `shared/test-vectors/relay-frame.json`; pins against the ISRG
   turning the internet connection back on; tombstone revocation after a network comes back.
 - Rendezvous pairing (QR with `rv`) with the phone on another network.
 
+## Follow-up (spec batches 6–7, shared 3cb90b8)
+
+- Strings regenerated from handlive-shared 3cb90b8 (312 keys) and checked with `--check`.
+- Mac: the Remove from Server and Delete All alerts are titled as questions (`settings.remove_from_server_title`,
+  `settings.delete_all_data_title`), with the `settings.*_warning` message and the `settings.*_confirm` + Cancel
+  buttons (SET-02 field 28). The menu bar icon's VoiceOver label is the connection status followed by "3 unread
+  conversations" (`a11y.unread_conversations`, SMS-02 field 6).
+- Mac, SMS-01 E2 / field 7: "Missing SMS permission on the phone" comes with "View Instructions", which opens the
+  alert "Grant SMS Permission on Your Phone" with the steps and a single OK (`sms.permission_instructions_*`,
+  `common.ok`) — in Settings › Messages, in the Messages list's sync banner and above a conversation whose older
+  messages can't load for that reason (SMS-03 E5). The shared `SmsPhoneProblem` and `SmsPermissions` (READ_SMS and
+  SEND_SMS, short or full name) decide it for Mac and iOS.
+- Mac, PAIR-02: the Details… sheet lists Clipboard and SMS Messages with their reasons (field 8) and the permissions
+  missing on the phone (field 9): a missing READ_SMS/SEND_SMS with View Instructions, the contacts hint, and "Missing
+  permission on the phone" for the rest.
+
+### Commits (handlive-apple, all pushed)
+
+| Hash | Subject |
+|------|---------|
+| 83af63f | feat(apple): regenerate the String Catalogs from handlive-shared 3cb90b8 |
+| 71ad86f | feat(apple): name the phone permissions SMS depends on |
+| 4024242 | test(apple): test the SMS permission names |
+| d2b4c1a | feat(apple): open the SMS permission instructions from View Instructions |
+| 42d2c8d | test(apple): test the reasons SMS does not work with the phone |
+| eeca3b4 | feat(apple): read the unread conversations after the menu bar status and explain a missing SMS permission |
+| b12167c | feat(apple): title the Remove from Server and Delete All alerts as questions |
+| 0188247 | feat(apple): list SMS and the missing permissions in the Mac device details |
+| 061a0ac | feat(ios): explain a missing SMS permission in Settings > Messages |
+| 79c471a | feat(ios): open the phone's details from Settings > Phone |
+| a0490e8 | feat(ios): title the Remove from Server and Delete All confirmations as questions |
+| bb2a6d3 | feat(ios): label the unread badge, the limits screen and the banner's close button |
+
+### Checks (real output)
+
+Local (Command Line Tools; `HL_SWIFT_TESTING_PACKAGE=1`, SwiftUI packages with `SDKROOT=…/MacOSX26.sdk`,
+HLTransport with `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1`):
+
+```
+generate-strings.py            → Wrote 11 files from the catalog
+generate-strings.py --check    → OK: 11 files match ui-strings.json
+HLProtocol      ✔ Test run with 51 tests in 11 suites passed after 0.022 seconds.
+HLCrypto        ✔ Test run with 46 tests in 12 suites passed after 7.203 seconds.
+HLTransport     ✔ Test run with 94 tests in 17 suites passed after 7.249 seconds.
+HLDesignSystem  ✔ Test run with 24 tests in 7 suites passed after 0.116 seconds.
+HLLocalization  ✔ Test run with 9 tests in 3 suites passed after 0.172 seconds.   (incl. the hard-coded text scan)
+HLAppCore       ✔ Test run with 49 tests in 12 suites passed after 2.260 seconds.
+HLSMS           ✔ Test run with 25 tests in 5 suites passed after 0.414 seconds.
+                ✔ Test run with 10 tests in 2 suites passed after 0.014 seconds.
+HLSMSUI         ✔ Test run with 10 tests in 2 suites passed after 0.162 seconds.
+HLMacUI         ✔ Test run with 32 tests in 6 suites passed after 1.692 seconds.
+HLiOSUI         ✔ Test run with 12 tests in 2 suites passed after 1.080 seconds.
+swiftlint lint --strict → Done linting! Found 0 violations, 0 serious in 302 files.
+Mac Catalyst build of HLiOSUI (iOS views) → EXIT 0; type-check of the iOS app and extension sources → no errors
+```
+
+CI run 36237651507 on bb2a6d3: **success** — the same test counts under Xcode 26.3 (HLSMS 10 + 25, HLSMSUI 10,
+HLMacUI 32, HLiOSUI 12), "Done linting! Found 0 violations, 0 serious in 302 files.", `Build app macOS` and
+`Build app iOS + Notification Service Extension (simulator, unsigned)` both `** BUILD SUCCEEDED **`.
+
+### Batch 6 decisions F3–F6 re-checked against the code
+
+- F3: `IOSAppModel.live()` opens `SmsDatabase.defaultURL(bundleIdentifier:)` (Application Support of the app, not
+  the App Group); the extension only reads the keychain group and the App Group settings. Matches SET-03 step 2.
+- F4: `ConnectionStateMachine` has `WaitingPeer → Discovering` (`lanAvailable`), `Connected(relay) → WaitingPeer`
+  and `Handshaking(relay) → WaitingPeer` (`peerOffline`), as the 0.11 diagram now shows; nothing else differs.
+- F5: `SmsDatabase` creates no `REFERENCES`/`FOREIGN KEY`; unpairing calls `SmsStore.deletePair`; Delete All removes
+  the file.
+- F6: the iPhone/iPad model takes `UIDevice.current.name`, fitted to 64 characters, for `pair/hello` and the QR code.
+
+### Deviation
+
+- On the Mac, "View Instructions" opens an alert but has no ellipsis: the catalog has only `common.view_instructions`,
+  and the design system names the button without one. Proposal: accept, or add a Mac `…_ellipsis` key.
+
 Status: DONE_WITH_CONCERNS
 Summary: The Mac reaches the phone through the relay (REST, pins, `/v1/relay`, rendezvous pairing, wake pushes,
-LAN upgrade) and Settings has the relay switch, Remove from Server and Delete All with their alerts; the batch 5
-relay rules are in; tests green locally.
-Concerns/Blockers: not run against a real relay yet (host and backup pin not configured); proposals 1, 3, 4.
+LAN upgrade) and Settings has the relay switch, Remove from Server and Delete All with question-titled alerts; the
+batch 5 relay rules and the batch 6–7 follow-up (View Instructions, device details, unread label) are in; CI green on
+bb2a6d3.
+Concerns/Blockers: not run against a real relay yet (host and backup pin not configured, proposal 1); proposals 3 and 4
+were decided in spec batches 6–7 and applied.

@@ -127,8 +127,86 @@ swiftlint lint --strict → no violations; hard-coded text scan (now also iOS/) 
 - Setup: notification and local network prompts and their guides; pairing by QR over the LAN and through the relay
   rendezvous; background → foreground reconnect within 3 s and the clip replay of QC7.
 
+## Follow-up (spec batches 6–7, shared 3cb90b8)
+
+- Strings regenerated from handlive-shared 3cb90b8 (312 keys) and checked with `--check`.
+- The Messages tab badge is a `Text` whose VoiceOver label is "3 unread conversations" (`a11y.unread_conversations`,
+  SMS-02 field 6); none at 0.
+- Setup: the limits screen is titled "How HandLive Works on iPhone and iPad" (`setup.ios_limits_title`, SET-03 field
+  11). The suggestion banner's `xmark` reads "Close" (`common.close`, CLIP-04 field 3).
+- Settings › Data: the confirmation dialogs are titled as questions (`settings.remove_from_server_title`,
+  `settings.delete_all_data_title`), message `settings.*_warning`, buttons `settings.*_confirm` + Cancel (SET-02
+  field 28).
+- SMS-01 E2 / field 7: Settings › Messages shows "Missing SMS permission on the phone" with "View Instructions" (the
+  alert "Grant SMS Permission on Your Phone", the steps, OK); the shared Messages list and conversation show the same
+  (see M2.2).
+- PAIR-02: the Phone row is now a `DeviceRow` that opens the phone's details — status, Clipboard and SMS Messages with
+  their reasons (field 8), the missing permissions (field 9: selecting a missing READ_SMS/SEND_SMS opens the SMS
+  alert; contacts hint; general reason for the rest), the Security Code (field 10) and Unpair with its confirmation in
+  the last group (field 12). Unpair is no longer on the row itself (DeviceRow README).
+
+### Commits (handlive-apple, all pushed)
+
+| Hash | Subject |
+|------|---------|
+| 83af63f | feat(apple): regenerate the String Catalogs from handlive-shared 3cb90b8 |
+| 71ad86f | feat(apple): name the phone permissions SMS depends on |
+| 4024242 | test(apple): test the SMS permission names |
+| d2b4c1a | feat(apple): open the SMS permission instructions from View Instructions |
+| 42d2c8d | test(apple): test the reasons SMS does not work with the phone |
+| eeca3b4 | feat(apple): read the unread conversations after the menu bar status and explain a missing SMS permission |
+| b12167c | feat(apple): title the Remove from Server and Delete All alerts as questions |
+| 0188247 | feat(apple): list SMS and the missing permissions in the Mac device details |
+| 061a0ac | feat(ios): explain a missing SMS permission in Settings > Messages |
+| 79c471a | feat(ios): open the phone's details from Settings > Phone |
+| a0490e8 | feat(ios): title the Remove from Server and Delete All confirmations as questions |
+| bb2a6d3 | feat(ios): label the unread badge, the limits screen and the banner's close button |
+
+### Checks (real output)
+
+Local (Command Line Tools; `HL_SWIFT_TESTING_PACKAGE=1`, SwiftUI packages with `SDKROOT=…/MacOSX26.sdk`,
+HLTransport with `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1`):
+
+```
+generate-strings.py            → Wrote 11 files from the catalog
+generate-strings.py --check    → OK: 11 files match ui-strings.json
+HLProtocol      ✔ Test run with 51 tests in 11 suites passed after 0.022 seconds.
+HLCrypto        ✔ Test run with 46 tests in 12 suites passed after 7.203 seconds.
+HLTransport     ✔ Test run with 94 tests in 17 suites passed after 7.249 seconds.
+HLDesignSystem  ✔ Test run with 24 tests in 7 suites passed after 0.116 seconds.
+HLLocalization  ✔ Test run with 9 tests in 3 suites passed after 0.172 seconds.   (incl. the hard-coded text scan)
+HLAppCore       ✔ Test run with 49 tests in 12 suites passed after 2.260 seconds.
+HLSMS           ✔ Test run with 25 tests in 5 suites passed after 0.414 seconds.
+                ✔ Test run with 10 tests in 2 suites passed after 0.014 seconds.
+HLSMSUI         ✔ Test run with 10 tests in 2 suites passed after 0.162 seconds.
+HLMacUI         ✔ Test run with 32 tests in 6 suites passed after 1.692 seconds.
+HLiOSUI         ✔ Test run with 12 tests in 2 suites passed after 1.080 seconds.
+swiftlint lint --strict → Done linting! Found 0 violations, 0 serious in 302 files.
+Mac Catalyst build of HLiOSUI (iOS views) → EXIT 0; type-check of the iOS app and extension sources → no errors
+```
+
+CI run 36237651507 on bb2a6d3: **success** — the same test counts under Xcode 26.3 (HLSMS 10 + 25, HLSMSUI 10,
+HLMacUI 32, HLiOSUI 12), "Done linting! Found 0 violations, 0 serious in 302 files.", `Build app macOS` and
+`Build app iOS + Notification Service Extension (simulator, unsigned)` both `** BUILD SUCCEEDED **`.
+
+### Batch 6 decisions F3–F6 re-checked against the code
+
+- F3: `IOSAppModel.live()` opens `SmsDatabase.defaultURL(bundleIdentifier:)` (Application Support of the app, not
+  the App Group); the extension only reads the keychain group and the App Group settings. Matches SET-03 step 2.
+- F4: `ConnectionStateMachine` has `WaitingPeer → Discovering` (`lanAvailable`), `Connected(relay) → WaitingPeer`
+  and `Handshaking(relay) → WaitingPeer` (`peerOffline`), as the 0.11 diagram now shows; nothing else differs.
+- F5: `SmsDatabase` creates no `REFERENCES`/`FOREIGN KEY`; unpairing calls `SmsStore.deletePair`; Delete All removes
+  the file.
+- F6: the iPhone/iPad model takes `UIDevice.current.name`, fitted to 64 characters, for `pair/hello` and the QR code.
+
+### Pending manual checks added
+
+- VoiceOver on a device: the Messages tab reads the badge as "… unread conversations" (the label rides on the badge
+  `Text`; UIKit's tab bar has to carry it over); the phone details screen and the SMS alert.
+
 Status: DONE_WITH_CONCERNS
-Summary: The iPhone/iPad app exists (setup, pairing, Clipboard with PasteButton, Messages split view, Settings) over a
-tested model and the shared packages, type-checked for Mac Catalyst and built by CI for the simulator.
-Concerns/Blockers: never run on a device or simulator here (Command Line Tools only); deviations 1, 3 and catalog
-proposal 5 need the owner.
+Summary: The iPhone/iPad app exists (setup, pairing, Clipboard with PasteButton, Messages split view, Settings, the
+phone's details) over a tested model and the shared packages, type-checked for Mac Catalyst and built by CI for the
+simulator; the batch 6–7 follow-up is in and CI is green on bb2a6d3.
+Concerns/Blockers: never run on a device or simulator here (Command Line Tools only); deviations 1, 3 and proposal 5
+were decided in spec batches 6–7 and applied.
