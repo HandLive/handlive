@@ -117,7 +117,7 @@ flowchart TB
 | `thread_id` | int64 | Có | `thread_id` của Telephony provider (0.2) |
 | `addresses` | array\<e164> | Có | Từ `recipient_ids` của hội thoại qua `canonical-addresses`, chuẩn hóa E.164 theo quốc gia của SIM mặc định; chuỗi không chuẩn hóa được (tổng đài ngắn, tên người gửi như `VIETTEL`) giữ nguyên |
 | `display_name` | string \| null | Có | Tên liên hệ từ `PhoneLookup`; nhiều địa chỉ → các tên nối bằng `", "`; `null` khi thiếu `READ_CONTACTS` hoặc số không có trong danh bạ |
-| `snippet` | string(160) | Có | `body` của tin SMS mới nhất trong hội thoại, cắt 160 ký tự |
+| `snippet` | string(160) | Có | `body` của tin SMS mới nhất trong hội thoại, lấy 160 code point đầu, không thêm "…" |
 | `last_ts` | timestamp | Có | `date` của tin SMS mới nhất trong hội thoại |
 | `unread_count` | int32 | Có | Số tin inbox có `read = 0` (chỉ tính SMS) |
 
@@ -479,10 +479,11 @@ Content-Type: application/json
      `features.sms.notify = true`, tin có `box = inbox`.
   2. Nội dung APNs mặc định (hiện khi I-NSE không giải mã được) là không đặt tiêu đề (hệ thống hiện
      tên app), nội dung "Tin nhắn SMS mới"; không chứa số điện thoại hay nội dung tin.
-  3. Payload APNs ≤ 4 KB (0.4.4): Android cắt `message.body` còn tối đa 1 000 ký tự tại ranh giới
-     code point, kết thúc bằng "…". Nếu `env_b64` vẫn dài hơn 3 000 ký tự thì rút gọn tiếp
-     `message.body`, rồi `thread.snippet`, tại ranh giới code point, mỗi lần kết thúc bằng "…"
-     (CONN-04 bước 5b). Nội dung đầy đủ đến qua SMS-01 khi I-APP kết nối.
+  3. Payload APNs ≤ 4 KB (0.4.4), quy tắc cắt của CONN-04 bước 5b: `message.body` dài hơn 1 000 code
+     point còn 999 code point đầu và "…". Khi `env_b64` còn dài hơn 3 000 ký tự, `message.body` thành
+     đoạn cắt ngắn hơn dài nhất vừa khít (mỗi bước ít code point hơn, kết thúc bằng "…"), có thể chỉ
+     còn "…". Chỉ khi đó `thread.snippet` mới bị cắt theo cùng cách. Không vừa được thì không gửi push
+     cảnh báo. Nội dung đầy đủ đến qua SMS-01 khi I-APP kết nối.
   4. Push lỗi tạm thời → ghi `push_outbox` (0.9.1), thử lại theo CONN-04; quá hạn thì bỏ.
   5. Mac không bao giờ nhận push (0.4.4).
 

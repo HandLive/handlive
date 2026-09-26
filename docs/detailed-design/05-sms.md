@@ -117,7 +117,7 @@ The `thread` object:
 | `thread_id` | int64 | Yes | The Telephony provider's `thread_id` (0.2) |
 | `addresses` | array\<e164> | Yes | From the conversation's `recipient_ids` via `canonical-addresses`, normalized to E.164 using the country of the default SIM; strings that cannot be normalized (short codes, sender names such as `VIETTEL`) are kept as they are |
 | `display_name` | string \| null | Yes | Contact name from `PhoneLookup`; several addresses → the names joined with `", "`; `null` when `READ_CONTACTS` is missing or the number is not in the contacts |
-| `snippet` | string(160) | Yes | `body` of the newest SMS message in the conversation, cut to 160 characters |
+| `snippet` | string(160) | Yes | `body` of the newest SMS message in the conversation, cut to its first 160 code points, without "…" |
 | `last_ts` | timestamp | Yes | `date` of the newest SMS message in the conversation |
 | `unread_count` | int32 | Yes | Number of inbox messages with `read = 0` (SMS only) |
 
@@ -485,10 +485,11 @@ Content-Type: application/json
      `features.sms.notify = true`, and the message has `box = inbox`.
   2. The default APNs content (shown when I-NSE cannot decrypt) has no title (the system shows the
      app name) and the body "New SMS message"; it contains no phone number or message content.
-  3. APNs payload ≤ 4 KB (0.4.4): Android cuts `message.body` to at most 1,000 characters at a
-     code-point boundary, ending with "…"; while `env_b64` is still over 3,000 characters, it
-     shortens `message.body` and then `thread.snippet` further at code-point boundaries, each ending
-     with "…" (CONN-04 step 5b); the full content arrives through SMS-01 when I-APP connects.
+  3. APNs payload ≤ 4 KB (0.4.4), cut rule of CONN-04 step 5b: a `message.body` over 1,000 code
+     points becomes its first 999 code points + "…". While `env_b64` is over 3,000 characters,
+     `message.body` becomes the longest shorter cut that fits (fewer code points each step, ending with
+     "…"), down to "…" alone; only then `thread.snippet` is cut the same way. If nothing fits, no alert
+     push is sent. The full content arrives through SMS-01 when I-APP connects.
   4. Temporary push error → write to `push_outbox` (0.9.1), retry per CONN-04; drop it once expired.
   5. A Mac never receives pushes (0.4.4).
 

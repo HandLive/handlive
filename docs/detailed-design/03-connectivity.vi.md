@@ -763,7 +763,7 @@ flowchart TB
 | 3 | Hệ thống | M-APP / I-APP hoặc A-SVC | Phát sinh sự kiện cần thiết bị đích xử lý mà đích không có phiên (LAN hoặc relay): client cần điện thoại (CONN-03 bước 7, gửi SMS); điện thoại có `sms/new`, `call_event/state` (ringing), `call_event/log_new` (missed) cho iPhone/iPad. | Mac đích → không push, chờ đồng bộ. |
 | 4 | Hệ thống | như trên | Chọn `wake` (đích là Android) hoặc `alert` (đích là iOS/iPadOS). |  |
 | 5a | Hệ thống | M-APP / I-APP | Tạo yêu cầu `wake` với lý do (`user_open`, `sms_send`, `call_action`). | Tối đa 1 wake/5 phút cho cùng lý do. |
-| 5b | Hệ thống | A-SVC | Dựng envelope như khi gửi qua phiên (ví dụ `sms/new`) nhưng mã hóa bằng `K_push`; `env_b64` là base64 chuẩn có padding của JSON envelope dạng UTF-8.<br>SMS: cắt `message.body` còn tối đa 1 000 ký tự tại ranh giới code point, kết thúc bằng "…". Nếu `env_b64` vẫn dài hơn 3 000 ký tự thì rút gọn tiếp `message.body`, rồi `thread.snippet`, tại ranh giới code point, mỗi lần kết thúc bằng "…". Nội dung đầy đủ đến qua SMS-01.<br>`collapse_key` = chính `message_key` với SMS (ví dụ `sms:12847`, vì `message_key` đã có dạng `sms:<_id>`), `call:<call_id>` với cuộc gọi (cuộc gọi nhỡ không biết `call_id`: `calllog:<entry_id>`, CALL-04 API 5). | Relay lỗi → E2, ghi `push_outbox` (hạn: 30 s cho cuộc gọi đến, 24 h cho SMS và cuộc gọi nhỡ). |
+| 5b | Hệ thống | A-SVC | Dựng envelope như khi gửi qua phiên (ví dụ `sms/new`) nhưng mã hóa bằng `K_push`; `env_b64` là base64 chuẩn có padding của JSON envelope dạng UTF-8.<br>SMS: `message.body` dài hơn 1 000 code point còn 999 code point đầu và "…". Khi `env_b64` còn dài hơn 3 000 ký tự, `message.body` thành đoạn cắt ngắn hơn dài nhất vừa khít (mỗi bước ít code point hơn, kết thúc bằng "…"), có thể chỉ còn "…". Chỉ khi đó `thread.snippet` (160 code point, không có "…", SMS-01) mới bị cắt theo cùng cách. Không vừa được thì không gửi push cảnh báo; tin vẫn đến qua SMS-01.<br>`collapse_key` = chính `message_key` với SMS (ví dụ `sms:12847`, vì `message_key` đã có dạng `sms:<_id>`), `call:<call_id>` với cuộc gọi (cuộc gọi nhỡ không biết `call_id`: `calllog:<entry_id>`, CALL-04 API 5). | Relay lỗi → E2, ghi `push_outbox` (hạn: 30 s cho cuộc gọi đến, 24 h cho SMS và cuộc gọi nhỡ). |
 | 6 | Hệ thống | → R-API | `POST /v1/push`. |  |
 | 7 | Hệ thống | R-API, R-DB | Kiểm người gửi và đích cùng một cặp hiệu lực, đích có token, rate limit. | E1, E3, E4. |
 | 8 | Hệ thống | R-API → PUSH | FCM HTTP v1 (Android) hoặc APNs HTTP/2 (iOS). Token hỏng → xóa khỏi `devices` (E3). |  |
@@ -816,7 +816,7 @@ flowchart TB
 | `kind` | enum{wake\| alert} | Có | `wake` chỉ tới Android; `alert` chỉ tới iOS/iPadOS |
 | `reason` | enum{user_open\| sms_send\| call_action\| sms_new\| call_incoming\| call_missed} | Có |  |
 | `env_b64` | b64 | Với `alert` | Base64 chuẩn có padding của JSON envelope dạng UTF-8, mã hóa bằng `K_push` (bước 5b), cùng chuỗi với `hl` của APNs; ≤ 3 000 ký tự base64 |
-| `collapse_key` | string(64) | Không | ASCII in được (thành header `apns-collapse-id`); FCM wake luôn dùng `wake` (API 3) |
+| `collapse_key` | string(64) | Không | 1–64 ký tự ASCII nhìn thấy được (0x21–0x7E, không có dấu cách), vì nó thành header HTTP/2 `apns-collapse-id`; FCM wake luôn dùng `wake` (API 3) |
 | `ttl_s` | int32 | Không | 0–86 400; mặc định 60 (wake), 30 (call_incoming, giá trị CALL-01 API 4 gửi), 86 400 (sms_new, call_missed); FCM giới hạn ở 60 s (0.4.4) |
 
 - **Response:** 202 `{"accepted":true}`. Lỗi: 400 `BAD_REQUEST` (body sai, `kind` và `reason` không
