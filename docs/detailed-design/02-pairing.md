@@ -16,7 +16,7 @@ English | [Tiếng Việt](02-pairing.vi.md)
 | Actors | Primary: User (owns both devices). System: A-UI, A-SVC, M-APP or I-APP, R-API and R-KV (rendezvous, pair registration). |
 | Preconditions | 1.<br>Android has completed SET-01 (with the camera permission for scanning the QR code) and A-SVC is running.<br>2.<br>Mac/iOS has completed SET-03 (local network permission).<br>3.<br>Both devices are on the same LAN; or (from P2) both have internet access and `relay.enabled = true`.<br>4.<br>Mac/iOS has no active pair yet.<br>5.<br>Android has fewer than 8 active pairs. |
 | Postconditions | **Success:** both sides have a `paired_device` record with the same `pair_id`; `PRK` is in the key store; Mac/iOS pins `peer_tls_sha256`; the pair is registered with the relay if the relay is enabled (or marked as waiting for registration); CONN-01 starts automatically.<br>**Failure:** neither side stores anything; the `pairing_secret` or the PIN is wiped from memory. |
-| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID`); after 3 failed attempts Mac/iOS generates a new PIN.<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background.<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN. |
+| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID`); after 3 failed attempts Mac/iOS generates a new PIN.<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background (API 8 logic 6).<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN. |
 | Special requirements | **Security:** `pairing_secret` is 256 bits, lives only 120 s, never leaves the device except through the QR code and is never logged; HMAC comparison is constant-time; the relay never sees `pairing_secret` and is not used for the PIN.<br>The PIN is the fallback path: an active attacker in the middle at the exact moment of pairing could guess the PIN offline — mitigated by Argon2id (t=3, m=64 MiB, p=4), a limit of 3 attempts and allowing it on the LAN only.<br>**Performance:** from scanning to "Paired" ≤ 5 s on the LAN, ≤ 8 s through the relay.<br>**Usability:** the QR code has enough contrast in both light and dark appearance; the instructions are readable with VoiceOver/TalkBack; QR recognition runs entirely on the device (bundled ML Kit). |
 
 ### 2.1.2 Screens
@@ -350,7 +350,7 @@ Authentication strings shared by the APIs below:
 | 200 | Same as above | Already exists with identical data (repeated call) |
 | 400 `BAD_REQUEST` | error | Invalid body, or `device_a` is not an Android device or `device_b` is not a Mac, iPhone or iPad |
 | 403 `NOT_PAIRED` | error | The caller is neither `device_a` nor `device_b` |
-| 404 `DEVICE_NOT_FOUND` | error | One side has not registered its device yet (a device locked out by operations counts as not registered, 0.6.4) → retry later |
+| 404 `DEVICE_NOT_FOUND` | error | The caller or the peer is not registered with the relay, one code for both (a device locked out by operations counts as not registered, 0.6.4) → logic 6 |
 | 409 `PAIR_EXISTS` | error | `pair_id` already exists with different data |
 | 401 `SIGNATURE_INVALID` | error | One of the two signatures is invalid |
 
@@ -370,7 +370,8 @@ Content-Type: application/json
 ```
 
 - **Business logic:**
-  1. The JWT's `sub` must be `device_a` or `device_b`.
+  1. Either device of the pair may call: the JWT's `sub` must be `device_a` or `device_b`,
+     otherwise 403.
   2. Both devices must exist and not be locked out (`revoked_at` empty), otherwise 404; `device_a`
      must be `android` and `device_b` `macos`, `ios` or `ipados`, otherwise 400; `ik_sig_pub` is taken
      from `devices`.
@@ -379,6 +380,12 @@ Content-Type: application/json
   4. Idempotent write: insert if absent; if present, compare `attestation` — identical → 200,
      different → 409.
   5. Success → the device sets `relay_registered = 1`.
+  6. Retry: a device that has `relay_registered = 0` for the pair calls again whenever a network is
+     available (E8, PAIR-02 API 1 logic 3), so the device that registers with the relay last
+     completes the pair registration, and the other one gets 200 on its next call. The same 404
+     covers an unknown caller: the device registers itself again once (`POST /v1/devices`, CONN-03
+     API 1) and repeats the call; a second 404 means the peer is not registered yet → the next call
+     for that pair waits 24 h.
 
 #### Query
 
@@ -550,9 +557,9 @@ already received in CONN-01 and SET-02; no new call is made.
   3. A pair that exists on the device but **not** on the relay (as opposed to one that has
      `revoked_at`) is not treated as revoked. If `relay_registered = 1`, the peer has removed itself
      from the relay ("Remove Device from Server", SET-02) → set `relay_registered = 0`, keep the pair
-     and use LAN/USB only. Every pair with `relay_registered = 0` retries `POST /v1/pairs` (PAIR-01
-     API 8) when a network is available; a 404 `DEVICE_NOT_FOUND` response (the peer has not
-     registered again yet) → retry after 24 h.
+     and use LAN/USB only. Every pair with `relay_registered = 0` retries `POST /v1/pairs` when a
+     network is available, on both devices, with the 404 rule of PAIR-01 API 8 logic 6 (register
+     itself again once, then wait 24 h); the peer completes the registration when it registers again.
 
 #### Query
 

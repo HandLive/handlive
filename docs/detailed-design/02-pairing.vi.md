@@ -16,7 +16,7 @@
 | Tác nhân | Chính: Người dùng (sở hữu cả hai thiết bị). Hệ thống: A-UI, A-SVC, M-APP hoặc I-APP, R-API và R-KV (điểm hẹn, đăng ký cặp). |
 | Điều kiện trước | 1.<br>Android đã hoàn tất SET-01 (có quyền camera để quét QR) và A-SVC đang chạy.<br>2.<br>Mac/iOS đã hoàn tất SET-03 (quyền mạng cục bộ).<br>3.<br>Hai thiết bị cùng LAN; hoặc (từ P2) cả hai có Internet và `relay.enabled = true`.<br>4.<br>Mac/iOS chưa có cặp hiệu lực nào.<br>5.<br>Android có ít hơn 8 cặp hiệu lực. |
 | Điều kiện sau | **Thành công:** hai bên có bản ghi `paired_device` cùng `pair_id`; `PRK` nằm trong kho khóa; Mac/iOS ghim `peer_tls_sha256`; cặp được đăng ký lên relay nếu relay bật (hoặc đánh dấu chờ đăng ký); CONN-01 tự chạy.<br>**Thất bại:** không bên nào lưu gì; `pairing_secret` hoặc PIN bị hủy khỏi bộ nhớ. |
-| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới.<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền.<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
+| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới.<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
 | Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), giới hạn 3 lần và chỉ cho phép trong LAN.<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
 
 ### 2.1.2 Màn hình
@@ -341,7 +341,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 | 200 | như trên | Đã tồn tại với dữ liệu giống hệt (gọi lặp) |
 | 400 `BAD_REQUEST` | lỗi | Body sai, hoặc `device_a` không phải thiết bị Android hay `device_b` không phải Mac, iPhone, iPad |
 | 403 `NOT_PAIRED` | lỗi | Người gọi không phải `device_a` hoặc `device_b` |
-| 404 `DEVICE_NOT_FOUND` | lỗi | Một bên chưa đăng ký thiết bị (thiết bị bị vận hành khóa cũng tính là chưa đăng ký, 0.6.4) → thử lại sau |
+| 404 `DEVICE_NOT_FOUND` | lỗi | Người gọi hoặc đối phương chưa đăng ký với relay, một mã cho cả hai (thiết bị bị vận hành khóa cũng tính là chưa đăng ký, 0.6.4) → logic 6 |
 | 409 `PAIR_EXISTS` | lỗi | `pair_id` đã có với dữ liệu khác |
 | 401 `SIGNATURE_INVALID` | lỗi | Một trong hai chữ ký sai |
 
@@ -361,7 +361,8 @@ Content-Type: application/json
 ```
 
 - **Logic nghiệp vụ:**
-  1. `sub` của JWT phải là `device_a` hoặc `device_b`.
+  1. Thiết bị nào trong cặp cũng được gọi: `sub` của JWT phải là `device_a` hoặc `device_b`, không
+     thì 403.
   2. Hai thiết bị phải tồn tại và không bị khóa (`revoked_at` rỗng), không thì 404; `device_a` phải là
      `android`, `device_b` là `macos`, `ios` hoặc `ipados`, không thì 400; lấy `ik_sig_pub` từ
      `devices`.
@@ -369,6 +370,11 @@ Content-Type: application/json
      công khai; kiểm `sig_a`, `sig_b`.
   4. Ghi idempotent: chèn nếu chưa có; nếu đã có thì so `attestation` — giống → 200, khác → 409.
   5. Thành công → thiết bị đặt `relay_registered = 1`.
+  6. Thử lại: thiết bị nào có `relay_registered = 0` với cặp đó sẽ gọi lại mỗi khi có mạng (E8,
+     PAIR-02 API 1 logic 3), nên thiết bị đăng ký với relay sau cùng sẽ hoàn tất việc đăng ký cặp,
+     thiết bị kia nhận 200 ở lần gọi kế tiếp. Mã 404 đó cũng dùng khi relay không nhận ra chính người
+     gọi: thiết bị tự đăng ký lại một lần (`POST /v1/devices`, CONN-03 API 1) rồi gọi lại; 404 lần thứ
+     hai nghĩa là đối phương chưa đăng ký → lần gọi kế tiếp cho cặp đó chờ 24 h.
 
 #### Query
 
@@ -540,8 +546,9 @@ CONN-01 và SET-02, không phát sinh lời gọi mới.
   3. Cặp có trên thiết bị nhưng **không có** trên relay (khác với có `revoked_at`) không bị coi là
      thu hồi. Nếu `relay_registered = 1` thì đối phương đã tự gỡ khỏi relay ("Xóa thiết bị khỏi máy
      chủ", SET-02) → đặt `relay_registered = 0`, giữ cặp và chỉ dùng LAN/USB. Mọi cặp
-     `relay_registered = 0` được thử lại `POST /v1/pairs` (PAIR-01 API 8) khi có mạng; nhận 404
-     `DEVICE_NOT_FOUND` (đối phương chưa đăng ký lại) thì thử lại sau 24 h.
+     `relay_registered = 0` được thử lại `POST /v1/pairs` khi có mạng, trên cả hai thiết bị, theo quy
+     tắc 404 của PAIR-01 API 8 logic 6 (tự đăng ký lại một lần, rồi chờ 24 h); đối phương hoàn tất
+     việc đăng ký khi nó đăng ký lại.
 
 #### Query
 
