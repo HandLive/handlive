@@ -13,12 +13,12 @@ push). Reports: `plans/20260925-implementation/reports/phase-01-*.md`, merge rec
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
-spec under `docs/detailed-design/` and the documentation tools under `tools/docs/`. Phase 0 code
+spec under `docs/detailed-design/` and the documentation tools under `tools/docs/`. The code
 lives in four repositories checked out **inside this directory** and git-ignored here: `android/`
 (handlive-android), `apple/` (handlive-apple), `relay/` (handlive-relay) and `shared/`
 (handlive-shared: test vectors, JSON schemas, design tokens and their tools).
 `tools/workspace.sh clone <group-url>` checks them out and `tools/workspace.sh status` shows all
-five; layout and test commands: `docs/codebase-summary.md`. No user-facing feature exists yet. The
+five; layout and test commands: `docs/codebase-summary.md`. Nothing is released yet. The
 implementation plan with per-phase task cards for coding agents is
 `plans/20260925-implementation/plan.md` (see the hand-off section below); the UI design system is
 mirrored in `docs/design-system/`. Everything below describes the *decided* design that future code
