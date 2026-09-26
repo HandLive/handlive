@@ -19,8 +19,9 @@ LAN; wake the iPhone with push; an iOS app with clipboard, messages and settings
 
 ## Requirements and measurable criteria
 
-- New-SMS notification on the Mac < 500 ms after the phone receives the message (LAN); a reply
-  confirmed as "Sent" < 2 s.
+- New-SMS notification on the Mac < 500 ms after the phone receives the message (LAN), measured from
+  the first `ContentObserver.onChange` of the batch and judged at the 95th percentile; a reply
+  confirmed as "Sent" < 2 s, a time that includes the carrier's radio time.
 - Zero-knowledge relay: no decryption, no payload logging; session data is deleted automatically after
   30 days.
 - Locked iPhone: notifications show only generic content (C3), sent as a `loc-key` so the iPhone
@@ -32,7 +33,7 @@ LAN; wake the iPhone with push; an iOS app with clipboard, messages and settings
 
 | Code | Task | Outputs | Acceptance criteria |
 |------|------|---------|---------------------|
-| S2.1 [shared] | UI string catalog for Phase 2 (0.12, C20): every user-facing string of SMS-01…05, CONN-03, CONN-04 (the `push.*` `loc-key` table of API 4), CLIP-04, PAIR-01 over the relay, PAIR-03 flow B, SET-02 fields 7–9, 21, 24–30, SET-03 (iOS); the iOS purpose strings; the Android `sms` notification channel | `shared/strings/ui-strings.json` | `check_strings.py` and `--docs` clean; `en` and `vi` match the leaf specs; lands before any Phase 2 UI code |
+| S2.1 [shared] | UI string catalog for Phase 2 (0.12, C20): every user-facing string of SMS-01…05, CONN-03, CONN-04 (the `push.*` `loc-key` table of API 4), CLIP-04, PAIR-01 over the relay, PAIR-03 flow B, SET-02 fields 7–9, 21, 24–30, SET-03 (iOS); the iOS purpose strings | `shared/strings/ui-strings.json` | `check_strings.py` and `--docs` clean; `en` and `vi` match the leaf specs; lands before any Phase 2 UI code |
 | S2.2 [shared] | JSON Schemas: the `sms` ops `sync`, `history`, `new`, `send`, `status`, `read_changed` with their ack data; the relay routing wrapper and control messages (0.4.3, 0.7.3); the relay REST bodies and error body (0.7.4, 0.8.2); the push bodies (`POST /v1/push`, FCM data, APNs payload; 0.4.4, CONN-04) | `shared/schemas/` | `check_schemas.py` green, including every JSON example of the Phase 2 leaf specs |
 | S2.3 [shared] | Test vectors: `K_push` derivation and an envelope encrypted with `K_push` (CONN-04 API 4, decrypted by I-NSE); the `HR` binary routing frame (0.4.3) | `shared/test-vectors/` | `verify_vectors.py` 0 errors, `generate_vectors.py --check` 0 mismatches; the Android, Apple and relay tests load them |
 | R2.1 [relay] | REST: device registration, pairs, revocation, `DELETE /v1/devices/me` (C16), push token; WS `/v1/relay` with the `to`/`from` wrapper, Redis presence, forwarding between instances via pub/sub (C5); rate limiting; 30-day data deletion | `relay/crates/relay-server` | Integration tests with two fake clients; `cargo clippy` clean; no payload in the logs |
@@ -69,5 +70,7 @@ LAN; wake the iPhone with push; an iOS app with clipboard, messages and settings
 
 - Play Store rejects SMS → Plan B: a Notification Listener reads SMS notifications (no sending),
   F-Droid/APK distribution; recorded in deployment-guide.
-- APNs payload limit of 4 KB → the SMS text is cut to 1,000 characters in the push, and arrives in
-  full after SMS-01.
+- APNs payload limit of 4 KB → in the push, `message.body` is cut to at most 1,000 characters at a
+  code-point boundary; while `env_b64` is still over 3,000 characters, `message.body` and then
+  `thread.snippet` are shortened further, each ending with "…" (CONN-04 step 5b); the full text
+  arrives after SMS-01.

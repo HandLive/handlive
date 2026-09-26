@@ -19,8 +19,9 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 
 ## Yêu cầu và tiêu chí đo
 
-- Thông báo SMS mới trên Mac < 500 ms từ lúc điện thoại nhận (LAN); trả lời có xác nhận "Đã gửi" < 2
-  s.
+- Thông báo SMS mới trên Mac < 500 ms từ lúc điện thoại nhận (LAN), đo từ `ContentObserver.onChange`
+  đầu tiên của lượt gộp và xét ở phân vị 95; trả lời có xác nhận "Đã gửi" < 2 s, thời gian này tính
+  cả thời gian nhà mạng gửi tin.
 - Relay zero-knowledge: không giải mã, không log payload; dữ liệu phiên tự xóa sau 30 ngày.
 - iPhone đang khóa: thông báo chỉ hiện nội dung chung (C3), gửi bằng `loc-key` để iPhone tự dịch
   (0.12.4).
@@ -31,7 +32,7 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 
 | Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
 |----|------|--------|--------------------|
-| S2.1 [shared] | Catalog chuỗi giao diện cho Phase 2 (0.12, C20): mọi chuỗi người dùng thấy của SMS-01…05, CONN-03, CONN-04 (bảng `loc-key` nhóm `push.*` ở API 4), CLIP-04, PAIR-01 qua relay, PAIR-03 luồng B, SET-02 trường 7–9, 21, 24–30, SET-03 (iOS); chuỗi mục đích xin quyền của iOS; kênh thông báo `sms` của Android | `shared/strings/ui-strings.json` | `check_strings.py` và `--docs` sạch; `en` và `vi` khớp đặc tả lá; vào trước mọi mã giao diện Phase 2 |
+| S2.1 [shared] | Catalog chuỗi giao diện cho Phase 2 (0.12, C20): mọi chuỗi người dùng thấy của SMS-01…05, CONN-03, CONN-04 (bảng `loc-key` nhóm `push.*` ở API 4), CLIP-04, PAIR-01 qua relay, PAIR-03 luồng B, SET-02 trường 7–9, 21, 24–30, SET-03 (iOS); chuỗi mục đích xin quyền của iOS | `shared/strings/ui-strings.json` | `check_strings.py` và `--docs` sạch; `en` và `vi` khớp đặc tả lá; vào trước mọi mã giao diện Phase 2 |
 | S2.2 [shared] | JSON Schema: các op `sms` `sync`, `history`, `new`, `send`, `status`, `read_changed` kèm dữ liệu ack; lớp bọc định tuyến và thông điệp điều khiển của relay (0.4.3, 0.7.3); thân REST relay và thân lỗi (0.7.4, 0.8.2); thân push (`POST /v1/push`, dữ liệu FCM, payload APNs; 0.4.4, CONN-04) | `shared/schemas/` | `check_schemas.py` xanh, gồm mọi ví dụ JSON của các đặc tả lá Phase 2 |
 | S2.3 [shared] | Test vector: dẫn xuất `K_push` và một envelope mã hóa bằng `K_push` (CONN-04 API 4, I-NSE giải mã); khung nhị phân định tuyến `HR` (0.4.3) | `shared/test-vectors/` | `verify_vectors.py` 0 lỗi, `generate_vectors.py --check` 0 lệch; test của Android, Apple và relay nạp các file này |
 | R2.1 [relay] | REST: đăng ký thiết bị, cặp, thu hồi, `DELETE /v1/devices/me` (C16), push token; WS `/v1/relay` với lớp bọc `to`/`from`, presence Redis, chuyển tiếp giữa instance qua pub/sub (C5); rate limit; xóa dữ liệu 30 ngày | `relay/crates/relay-server` | Test tích hợp với hai client giả; `cargo clippy` sạch; không có payload trong log |
@@ -67,4 +68,6 @@ thức iPhone bằng push; app iOS có bảng nhớ tạm, tin nhắn, cài đ�
 
 - Play Store từ chối SMS → Plan B: Notification Listener đọc thông báo SMS (mất gửi), phân phối
   F-Droid/APK; ghi trong deployment-guide.
-- APNs payload 4 KB → nội dung SMS cắt 1 000 ký tự trong push, đầy đủ sau SMS-01.
+- APNs payload 4 KB → trong push, `message.body` cắt còn tối đa 1 000 ký tự tại ranh giới code point.
+  Nếu `env_b64` vẫn dài hơn 3 000 ký tự thì rút gọn tiếp `message.body`, rồi `thread.snippet`, mỗi
+  lần kết thúc bằng "…" (CONN-04 bước 5b). Nội dung đầy đủ đến sau SMS-01.
