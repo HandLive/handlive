@@ -577,8 +577,9 @@ Với `revoke_pairs=true`, relay báo cho điện thoại đang online:
      (nhận lặp thì bỏ qua).
   4. `revoke_pairs=false`: không báo ai. Đối phương giữ cặp; lần gọi `GET /v1/pairs` kế tiếp thấy
      cặp không còn trên relay và chuyển sang chỉ dùng LAN (PAIR-02 API 1, logic 3).
-  5. Đóng kết nối `/v1/relay` của thiết bị (lệnh đóng nội bộ qua `dev:<device_id>`, mã 1000); xóa
-     `presence:<device_id>`, `chal:<device_id>`.
+  5. Xóa `presence:<device_id>` và `chal:<device_id>` trước, rồi đóng kết nối `/v1/relay` của thiết bị
+     (lệnh đóng nội bộ qua `dev:<device_id>`, mã 1000). Presence đã bị xóa nên đối phương không nhận
+     `presence` offline. Với `revoke_pairs=false`, kết nối relay của đối phương chỉ bỏ cặp đó (C16).
   6. JWT cũ còn hạn (≤ 15 phút) không dùng tiếp được: endpoint dùng JWT kiểm `devices` còn dòng của
      `sub`, không còn → 404 `DEVICE_NOT_FOUND`; `/v1/relay` từ chối nâng cấp. Muốn dùng relay lại
      phải `POST /v1/devices` (tạo dòng mới).
@@ -697,8 +698,8 @@ SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>"      # mỗi đ
 EXPIRE   revoked_notice:<peer_device_id> 2592000                       # 30 ngày
 EXISTS   presence:<peer_device_id>
 PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
+DEL      presence:<device_id> chal:<device_id>                          # trước: đối phương không nhận presence offline
 PUBLISH  dev:<device_id> <lệnh đóng kết nối nội bộ>
-DEL      presence:<device_id> chal:<device_id>
 # [Thiết kế] Redis, khi một thiết bị kết nối relay (bổ sung CONN-03 API 4)
 SMEMBERS revoked_notice:<device_id>
 ```

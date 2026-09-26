@@ -592,8 +592,10 @@ With `revoke_pairs=true`, the relay notifies the phone, which is online:
   4. `revoke_pairs=false`: nobody is notified. Peers keep the pair; their next `GET /v1/pairs` call
      sees that the pair is no longer on the relay and switches to using the LAN only (PAIR-02 API 1,
      logic 3).
-  5. Close the device's `/v1/relay` connection (an internal close command through `dev:<device_id>`,
-     code 1000); delete `presence:<device_id>`, `chal:<device_id>`.
+  5. Delete `presence:<device_id>` and `chal:<device_id>` first, then close the device's `/v1/relay`
+     connection (an internal close command through `dev:<device_id>`, code 1000). Presence is already
+     gone, so the peers get no `presence` offline message; with `revoke_pairs=false` their relay
+     connections simply drop the pair (C16).
   6. An old JWT that is still valid (≤ 15 minutes) can no longer be used: the endpoints that use a
      JWT check that `devices` still has a row for `sub`; none → 404 `DEVICE_NOT_FOUND`; `/v1/relay`
      refuses the upgrade. To use the relay again the device must call `POST /v1/devices` (which
@@ -721,8 +723,8 @@ SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>"      # each pee
 EXPIRE   revoked_notice:<peer_device_id> 2592000                       # 30 days
 EXISTS   presence:<peer_device_id>
 PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
+DEL      presence:<device_id> chal:<device_id>                          # first: peers get no presence offline
 PUBLISH  dev:<device_id> <internal close-connection command>
-DEL      presence:<device_id> chal:<device_id>
 # [Design] Redis, when a device connects to the relay (addition to CONN-03 API 4)
 SMEMBERS revoked_notice:<device_id>
 ```
