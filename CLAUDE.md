@@ -34,10 +34,10 @@ project owner in Vietnamese with diacritics.
 
 ## What HandLive is
 
-A multi-platform system that turns an Android phone into a hub whose clipboard, SMS, calls
-(including live **call audio**), and camera/mic are relayed to macOS (full features) and iOS/iPadOS
-(clipboard + SMS + call metadata only, no audio). Comparable to Microsoft Phone Link / Apple
-Continuity, but cross-ecosystem.
+An open source project (Apache-2.0) that brings ecosystem-native features, such as Apple Handoff and
+Continuity, to Android. An Android device stays in sync with a Mac (clipboard, SMS, calls including
+live **call audio**, camera/mic) and with iPhone/iPad (clipboard + SMS + call metadata only, no
+audio), and those Apple devices sync back to Android. End-to-end encryption is always on.
 
 Design tagline: **"WebSocket for data, Bluetooth for voice."**
 
