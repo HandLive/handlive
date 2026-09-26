@@ -408,7 +408,9 @@ khác nên vẫn mở, và không mã đóng nào (4409, 4410, 4411, …) đến
 gửi `session/bye` trước khi kết thúc một phiên qua relay: `revoked`, `replaced` hoặc `update` như đã
 định nghĩa, `shutdown` cho mọi trường hợp kết thúc khác (thoát, ngủ, background, tắt relay, và các
 trường hợp đóng một phiên LAN đã thiết lập bằng 4400, 4410, 4411 hoặc 4500). Bên nhận kết thúc phiên
-khi nhận `session/bye`: `replaced` tính như 4409 (E7), lý do khác tính như 1000.
+khi nhận `session/bye`: `replaced` tính như 4409 (E7), lý do khác tính như 1000. Ngoại lệ duy nhất:
+khi đối phương mở phiên mới bằng `session/hello` qua relay, thiết bị kết thúc phiên cũ ngay mà không
+gửi `session/bye`. Đối phương đã bỏ khóa cũ nên không mở được tin đó.
 
 #### Query
 

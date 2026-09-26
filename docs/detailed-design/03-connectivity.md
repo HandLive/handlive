@@ -413,7 +413,10 @@ the other sessions and stays open, so no close code (4409, 4410, 4411, …) reac
 therefore always sends `session/bye` before it ends a relayed session: `revoked`, `replaced` or
 `update` as defined, `shutdown` for every other end (quit, sleep, background, relay switched off, and
 the ends that close an established LAN session with 4400, 4410, 4411 or 4500). The receiver ends the
-session when `session/bye` arrives: `replaced` counts as 4409 (E7), any other reason as 1000.
+session when `session/bye` arrives: `replaced` counts as 4409 (E7), any other reason as 1000. One
+exception: when the peer opens a new session with `session/hello` over the relay, the device ends the
+old relayed session at once without `session/bye`, because the peer has already dropped the old keys
+and could not open it.
 
 #### Query
 
