@@ -862,7 +862,7 @@ SET-02 function manages these keys.
 | `clip.seen_change_count` | int64 | `0` | iOS (internal) | The `UIPasteboard.changeCount` already seen, so that sending is only suggested when there is new content |
 | `sms.notify` | bool | `true` | Mac, iOS | New SMS notifications |
 | `sms.preview` | bool | `true` | Mac, iOS | Show the content in notifications |
-| `sms.peer_can_send` | map\<pair_id, bool> | empty | iOS (internal) | I-APP's copy of each pair's latest `features.sms.can_send`, rewritten whenever that capability changes; I-NSE reads it to decide the "Message" action of a missed call (CALL-04 API 4); no entry → no "Message" action |
+| `sms.peer_can_send` | map\<pair_id, bool> | empty | iOS (internal) | I-APP's copy of each pair's latest `features.sms.can_send` with SMS in effect at both ends: `true` only when both hold; rewritten whenever the capability or SMS on either side changes; I-NSE reads it to decide the "Message" action of a missed call (CALL-04 API 4); no entry → no "Message" action |
 | `call.notify` | bool | `true` | Mac, iOS | Call notifications |
 | `call.ringtone` | bool | `true` | Mac | Play a ringtone for incoming calls (respects Focus) |
 | `call.quick_replies` | array\<string> | 2 default templates | Mac | Quick replies when declining, at most 6 templates × 160 characters |

@@ -853,7 +853,7 @@ SET-02 quản lý các khóa này.
 | `clip.seen_change_count` | int64 | `0` | iOS (nội bộ) | `UIPasteboard.changeCount` đã xem, để chỉ gợi ý gửi khi có nội dung mới |
 | `sms.notify` | bool | `true` | Mac, iOS | Thông báo SMS mới |
 | `sms.preview` | bool | `true` | Mac, iOS | Hiện nội dung trong thông báo |
-| `sms.peer_can_send` | map\<pair_id, bool> | rỗng | iOS (nội bộ) | Bản sao `features.sms.can_send` mới nhất của từng cặp do I-APP giữ, ghi lại mỗi khi capability này đổi; I-NSE đọc nó để quyết định nút "Nhắn tin" của cuộc gọi nhỡ (CALL-04 API 4); không có mục → không có nút "Nhắn tin" |
+| `sms.peer_can_send` | map\<pair_id, bool> | rỗng | iOS (nội bộ) | Bản sao `features.sms.can_send` mới nhất của từng cặp do I-APP giữ, tính cả việc SMS hiệu lực ở hai đầu: chỉ `true` khi cả hai điều này đúng; ghi lại mỗi khi capability này hoặc SMS ở một trong hai phía đổi; I-NSE đọc nó để quyết định nút "Nhắn tin" của cuộc gọi nhỡ (CALL-04 API 4); không có mục → không có nút "Nhắn tin" |
 | `call.notify` | bool | `true` | Mac, iOS | Thông báo cuộc gọi |
 | `call.ringtone` | bool | `true` | Mac | Phát chuông khi có cuộc gọi đến (tôn trọng chế độ Tập trung) |
 | `call.quick_replies` | array\<string> | 2 mẫu mặc định | Mac | Tin trả lời nhanh khi từ chối, tối đa 6 mẫu × 160 ký tự |
