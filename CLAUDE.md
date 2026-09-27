@@ -40,6 +40,42 @@ same commit (`tools/docs/check_bilingual_docs.py`). Agent reports under `plans/*
 English only; plans and reports dated before 2026-09-25 stay Vietnamese as an archive. Talk to the
 project owner in Vietnamese with diacritics.
 
+## Next steps (handoff of 2026-09-28 — start here)
+
+1. **Finish the Phase 3 merge in handlive-android.** The session's permission settings refused the push.
+   - Run the five commands in `plans/20260925-implementation/reports/phase-03-merge.md`: they merge
+     `feat/phase-03-calls`, head `cf567c8`, which is green and has no conflicts.
+   - Wait for Android CI on `main`.
+   - Then remove "Android merge commit pending" from this file, `README*.md`, `docs/codebase-summary*.md` and
+     `plans/20260925-implementation/plan*.md`.
+2. **Phase 4, gate G4: the HFP spike.** It needs the owner's hardware.
+   - Run `apple/Tools/HFPSpike` from branch `feat/phase-04-call-audio`, following the runbook
+     `apple/Tools/HFPSpike/README.md`.
+   - Hardware: an Android phone with a SIM, paired to the Mac over Bluetooth, and a real call.
+   - Fill in `reports/phase-04-spike-d1.md`. G4 also asks for runs on macOS 26 and on macOS 13 or 14.
+   - Decide whether HFP or Opus/WS is the primary path (update AUDIO-02 and plan D1) before any other Phase 4 card.
+3. **Rerun the end-to-end checks on a quiet host** with `shared/tools/e2e`.
+   - Use an emulator that is not paired with the Mac test app, and pull `android/` before building the APK.
+   - Rerun:
+     - the PIN pairing fixes (android `0cd3a61`…`c0d2d51`);
+     - the capability after a late permission grant (`9415777`);
+     - the feature list after the first pairing (`cf567c8`, harness `88da57a`);
+     - the 4408 check on API 29.
+4. **Spec proposals waiting for a decision** (details in `phase-03-merge.md`):
+   - the Devices empty state names only the clipboard (PAIR-02 field 11);
+   - a reason sentence for "Keep HandLive Running" (SET-01 fields 7–9);
+   - a grace period before the call panel's "connection lost" (CALL-03 E6);
+   - resetting the reconnect backoff only after a stable session;
+   - the bench start point for withheld callers.
+5. **Before the first release:**
+   - gates G1 and G2, and the Phase 2 and Phase 3 checks on real devices;
+   - the owner inputs listed in `phase-02-merge.md`: relay host and pins, APNs key, Firebase, app ids, logo and icon.
+6. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
+   Mac app.
+   - How to rebuild the bridge and the debug build: `build/dev-bridge/README.md` (this machine only, git-ignored).
+   - The host is overloaded (`fileproviderd`, Synology Drive, Spotlight) and freezes the emulator for seconds, so
+     timing results from this machine do not count.
+
 ## What HandLive is
 
 An open source project (Apache-2.0) that brings ecosystem-native features, such as Apple Handoff and
