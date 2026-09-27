@@ -24,6 +24,9 @@ thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Gi
 
 | Mã | Việc | Đầu ra | Tiêu chí chấp nhận |
 |----|------|--------|--------------------|
+| S3.1 [shared] | Catalog chuỗi giao diện Phase 3 (0.12, C20): mọi chuỗi người dùng thấy của CALL-01…04 (`CallPanel` trên Mac, thông báo liên lạc và các hành động của nó, banner iOS và `HL_CALL_INCOMING`, thông báo cuộc gọi nhỡ, mục Cuộc gọi trong cửa sổ Tin nhắn, tab Cuộc gọi trên iOS), SET-01 phần B cho quyền cuộc gọi, SET-02 trường 10–12 và pane Cuộc gọi trên Mac, các mẫu `call.quick_replies` mặc định, chữ của các lỗi `CALL_*`; đối chiếu các khóa `push.call_*` và `infoplist.focus_status_usage` đã có | `shared/strings/ui-strings.json` | `check_strings.py` và `--docs` sạch; `en` và `vi` khớp đặc tả lá; xong trước mọi mã giao diện Phase 3 |
+| S3.2 [shared] | JSON Schema: các op `call_event` `state`, `action` (kèm ack), `log_sync` (kèm dữ liệu ack) và `log_new`, cùng đối tượng dùng chung `entry` (CALL-04) | `shared/schemas/` | `check_schemas.py` xanh, kể cả mọi ví dụ JSON trong `06-call-control.md` |
+| S3.3 [shared] | Vector kiểm thử: envelope `call_event/state` mã hóa bằng `K_push` cho push `call_incoming` và `call_missed` (I-NSE giải mã), kèm collapse key `call:<call_id>` | `shared/test-vectors/` | `verify_vectors.py` 0 lỗi, `generate_vectors.py --check` 0 lệch; test Android và Apple nạp các vector này |
 | A3.1 [android] | `TelephonyCallback`/`PhoneStateListener` + broadcast `PHONE_STATE`, ngữ cảnh `call_id`, tra tên `PhoneLookup` (cache LRU), `controls` theo quyền, `call_event/state` cho từng phiên (CALL-01); `acceptRingingCall`/`endCall` (CALL-02, CALL-03 E2 `CALL_HFP_REQUIRED`); nhật ký `CallLog` (CALL-04) | `android/feature/call` | Số đến sau lượt `RINGING` đầu vẫn gửi lại (E10); hai SIM có nhãn; test giả lập Telephony |
 | A3.2 [android] | Push `call_incoming` và `call_missed` qua relay cho iPhone (CALL-01 bước 5, CALL-04 API 5); mở relay chờ lệnh từ chối | `android/feature/call` | Push trong < 300 ms sau khi có số |
 | M3.1 [macOS] | `CallPanel`: `NSPanel` non-activating nổi trên mọi Space, trạng thái đổ chuông/đang gọi/kết thúc, phím Return/⌘⌫/Esc, chuông `NSSound` theo `call.ringtone`, `INFocusStatusCenter` (`NSFocusStatusUsageDescription`), VoiceOver | `apple/macOS/HandLive` | Panel < 300 ms sau `RINGING`; Tập trung bật → không panel, không chuông |
@@ -31,6 +34,21 @@ thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Gi
 | M3.3 [macOS] | Từ chối kèm tin nhắn (mẫu `call.quick_replies`, CALL-02 API 5), mục Cuộc gọi trong thanh bên cửa sổ Tin nhắn (CALL-04), cài đặt pane Cuộc gọi, mục cuộc gọi trong menu thanh menu khi "Bỏ qua" | app | Chuỗi và vị trí nút theo `CallPanel` README |
 | I3.1 [iOS] | Thông báo cuộc gọi đến: I-NSE dựng `INStartCallIntent`, danh mục `HL_CALL_INCOMING` với "Từ chối" (CALL-02 B), banner trong app khi đang mở; tab Cuộc gọi với nhật ký và cuộc gọi nhỡ | `apple/iOS` | Từ chối từ thông báo tới điện thoại < 2 s qua relay; máy khóa hiện nội dung chung |
 | T3.1 [test] | Bench trễ `RINGING → panel` và `answer → OFFHOOK`; kịch bản cuộc gọi chờ (E9), hai SIM, Tập trung bật | `tools/bench/`, `reports/` | Đạt mục tiêu trên Pixel và Samsung |
+
+## Nhánh và thứ tự làm
+
+- Nhánh `feat/phase-03-calls` ở handlive-shared, handlive-android và handlive-apple, tạo từ `main` sau khi
+  gộp Phase 2 (27/09/2026). handlive-relay không cần sửa: push proxy đã gửi `call_incoming` ở mức
+  time-sensitive và `call_missed`, cả hai trong luồng `calls`. Hub và `HandLive/.github` vẫn làm trên
+  `main`.
+- Mỗi kho một agent, chạy song song: shared (S3.1 → S3.2 → S3.3 → T3.1), Android (A3.1 → A3.2), Apple
+  (model `call_event` và kho dữ liệu cuộc gọi trong các package trước, rồi M3.1 → M3.2 → M3.3 → I3.1).
+  S3.1 làm trước vì mọi thẻ giao diện chờ chuỗi của nó; trong lúc chờ, agent nền tảng làm phần không có
+  giao diện.
+- Chủ dự án cho bắt đầu Phase 3 ngày 27/09/2026 khi cổng G1, cổng G2 và việc kiểm Phase 2 trên máy thật vẫn
+  còn mở (quyết định I3 của plan).
+- App Mac, app iOS và Notification Service Extension chỉ build trên CI (runner macOS có Xcode); máy phát
+  triển chỉ có Command Line Tools.
 
 ## Kiểm thử
 
