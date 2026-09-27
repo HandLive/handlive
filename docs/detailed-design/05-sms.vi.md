@@ -527,7 +527,7 @@ Content-Type: application/json
 | `subtitle` | Trường 3, rỗng nếu chỉ có 1 SIM |
 | `body` | Trường 2 |
 | `threadIdentifier` | `sms:<pair_id>:<thread_id>` — gom thông báo theo hội thoại; với push, I-NSE đặt sau khi giải mã (`thread-id` của APNs là nhóm chung `sms`, CONN-04 API 4) |
-| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi", chữ gợi ý trong ô nhập "Tin nhắn SMS") và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại); hội thoại nhiều người dùng `HL_SMS_GROUP` (logic 2) |
+| `categoryIdentifier` | `HL_SMS`, có hành động `HL_SMS_REPLY` (`UNTextInputNotificationAction`, tiêu đề "Trả lời", nút "Gửi", chữ gợi ý trong ô nhập "Tin nhắn SMS", tùy chọn `.authenticationRequired`: máy đang khóa không đọc được `PRK`, C3) và `HL_SMS_MARK_READ` (`UNNotificationAction`, tiêu đề "Đánh dấu đã đọc", không `.foreground`: đặt `local_read_ts` trên máy này theo SMS-05 và gỡ thông báo của hội thoại); hội thoại nhiều người dùng `HL_SMS_GROUP` (logic 2) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — dùng cho trả lời nhanh (SMS-04) và gỡ thông báo (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
 
@@ -1273,8 +1273,10 @@ flowchart TB
 - **Logic nghiệp vụ:**
   1. Lọc theo `userInfo` thay vì định danh, vì thông báo do I-NSE hiển thị có định danh do hệ thống
      đặt (I-NSE ghi `pair_id`, `thread_id`, `ts` vào `userInfo` khi giải mã được).
-  2. Thông báo chung chung (SMS-02 E4) không có `userInfo`: I-APP gỡ chúng sau khi hoàn tất SMS-01,
-     vì tin đã có trong ứng dụng.
+  2. Thông báo chung chung (SMS-02 E4) không có các khóa trên, chỉ có `p` và `hl` của push. Sau khi
+     hoàn tất SMS-01, I-APP chỉ gỡ các thông báo chung của SMS, vì tin đã có trong ứng dụng. Bộ lọc
+     kiểm `type` của envelope trong `hl` (`sms`), vì cuộc gọi cũng push thông báo chung (CALL-01 E6,
+     CALL-04 E9).
   3. Tính lại huy hiệu sau khi gỡ.
 
 #### Query

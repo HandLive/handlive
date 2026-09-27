@@ -537,7 +537,7 @@ Content-Type: application/json
 | `subtitle` | Field 3, empty if there is only 1 SIM |
 | `body` | Field 2 |
 | `threadIdentifier` | `sms:<pair_id>:<thread_id>` — groups notifications by conversation; for a push, I-NSE sets it after decrypting (the APNs `thread-id` is the generic `sms`, CONN-04 API 4) |
-| `categoryIdentifier` | `HL_SMS`, with the actions `HL_SMS_REPLY` (`UNTextInputNotificationAction`, title "Reply", button "Send", text field placeholder "SMS Message") and `HL_SMS_MARK_READ` (`UNNotificationAction`, title "Mark as Read", not `.foreground`: sets `local_read_ts` on this device per SMS-05 and removes the conversation's notifications); a group conversation uses `HL_SMS_GROUP` (logic 2) |
+| `categoryIdentifier` | `HL_SMS`, with the actions `HL_SMS_REPLY` (`UNTextInputNotificationAction`, title "Reply", button "Send", text field placeholder "SMS Message", option `.authenticationRequired`: a locked device cannot read `PRK`, C3) and `HL_SMS_MARK_READ` (`UNNotificationAction`, title "Mark as Read", not `.foreground`: sets `local_read_ts` on this device per SMS-05 and removes the conversation's notifications); a group conversation uses `HL_SMS_GROUP` (logic 2) |
 | `userInfo` | `{pair_id, thread_id, message_key, ts, address, sub_id}` — used for quick reply (SMS-04) and for removing notifications (SMS-05) |
 | `sound` | `UNNotificationSound.default` |
 
@@ -1300,8 +1300,10 @@ flowchart TB
   1. Filter by `userInfo` rather than by identifier, because notifications shown by I-NSE have
      identifiers set by the system (I-NSE writes `pair_id`, `thread_id`, `ts` into `userInfo` when it
      can decrypt).
-  2. Generic notifications (SMS-02 E4) have no `userInfo`: I-APP removes them after SMS-01 completes,
-     because the messages are then in the app.
+  2. Generic notifications (SMS-02 E4) have none of these keys, only the push's `p` and `hl`: after
+     SMS-01 completes, I-APP removes the generic SMS notifications only, because the messages are then
+     in the app. The filter checks the `type` of the envelope in `hl` (`sms`), because calls push
+     generic notifications too (CALL-01 E6, CALL-04 E9).
   3. Recompute the badge after removing.
 
 #### Query
