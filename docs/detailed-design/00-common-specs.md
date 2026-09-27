@@ -639,7 +639,8 @@ CREATE TABLE push_outbox (
   collapse_key      TEXT,
   attempts          INTEGER NOT NULL DEFAULT 0,
   next_attempt_at   INTEGER NOT NULL,
-  expires_at        INTEGER NOT NULL
+  expires_at        INTEGER NOT NULL,
+  reason            TEXT    NOT NULL DEFAULT 'sms_new'   -- the push reason (CONN-04 API 2): call_incoming and call_missed share call:<call_id>, so a retry needs it; Room schema version 3 adds it
 );
 ```
 
@@ -910,7 +911,7 @@ SET-02 function manages these keys.
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Coalesces the `onChange` calls of the SMS provider |
 | `CALLLOG_SYNC_WINDOW` | 90 days, at most 500 entries |  |
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 minutes / 60 s |  |
-| `RELAY_IDLE_DISCONNECT` | 5 minutes | Android leaves the relay after this long without a relayed session, a rendezvous or traffic (CONN-03 step 2) |
+| `RELAY_IDLE_DISCONNECT` | 5 minutes | Android leaves the relay after this long without a relayed session, a rendezvous, a ringing call or traffic (CONN-03 step 2) |
 | `RELAY_RATE_LIMIT` | REST 60/minute, push 30/minute, 2 MiB/s per pair and direction |  |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2.5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
