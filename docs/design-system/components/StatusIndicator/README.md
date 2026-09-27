@@ -34,7 +34,7 @@ connection is lost.
 
 The Mac menu bar menu (the first row), the top of the Messages window when the connection is lost,
 `DeviceRow` rows, the Devices screen on Android and iPhone, and the call panel when the session is lost
-("Disconnected from the phone").
+("Lost connection to the phone").
 
 ## Dos and don'ts
 

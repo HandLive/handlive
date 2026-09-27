@@ -44,7 +44,7 @@ blaming the user.
 | SMS failed to send (SMS-04 E7) | Under the bubble | "Not sent · The phone is in airplane mode" | "Try Again" |
 | Loading older messages without a session (SMS-03 E2) | Banner at the top of the conversation | "Connect the phone to load older messages" | Loads automatically on reconnection |
 | A call command didn't get through (CALL-02 E5) | In `CallPanel` | "Couldn't send the command to the phone" | The panel returns to its previous state |
-| Actions available only over Bluetooth (CALL-03 E2) | In `CallPanel`, in place of the three hidden buttons | "Connect to the phone over Bluetooth to hold, use the keypad, or mute" | — |
+| Actions available only over Bluetooth (CALL-03 E2) | In `CallPanel`, in place of the three hidden buttons | "Connect to the phone via Bluetooth to hold, use the keypad, or mute" | — |
 | Copied content too large (CLIP-01 E5) | Mac: the `MenuBarMenu` status line; Android: a toast | "Content is too large to send (up to 1 MB of text)" | — |
 | The phone couldn't write it (CLIP-02 E8) | Mac: the `MenuBarMenu` status line | "Couldn't update the clipboard on the phone" | — |
 | Camera while connected over the internet (CAM-02 E1) | Camera preview, `MenuBarMenu` | "Requires the same Wi-Fi network or a USB cable" | — |
@@ -75,7 +75,7 @@ blaming the user.
   "Reconnect Now" (CONN-02 fields 3–4).
 - Synced data stays viewable. Tasks that need the phone are queued ("Waiting for phone") or dimmed with
   a reason: the Paste button is disabled with "Not connected to the phone" (CLIP-04 field 4).
-- `CallPanel` losing its session: "Disconnected from the phone" (CALL-03 E6).
+- `CallPanel` losing its session: "Lost connection to the phone" (CALL-03 E6).
 - "Needs to be paired again" (the pairing was revoked) is `status-error` because the user has to do something:
   it comes with "Add Phone…".
 

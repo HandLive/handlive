@@ -85,7 +85,7 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 ## Điểm lệch
 
 - Lệch có chủ đích: iPhone báo lỗi của hành động làm từ thông báo bằng thông báo cục bộ, vì app
-  không mở: "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại." (CALL-02 E8),
+  không mở: "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại." (CALL-02 E8, trường 11),
   "Chưa gửi được, mở HandLive để thử lại." (SMS-04 E8).
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): SMS-02 API 4 có `HL_SMS_REPLY` và
   `HL_SMS_MARK_READ` ("Đánh dấu đã đọc", chỉ trên máy này theo SMS-05).

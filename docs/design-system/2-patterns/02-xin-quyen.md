@@ -35,7 +35,7 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-
 | Background activity | Android | Initial setup | "So your Mac and iPhone can always reach this phone, HandLive needs to run in the background without being stopped by the system." | The battery optimization exemption dialog |
 | Camera (QR scanning) | Android | Tapping "Scan QR Code" | Proposed: "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad." | `CAMERA`; if denied, use "Enter PIN" |
 | SMS | Android | The feature card after the first pairing, or when "SMS Messages" is turned on | "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
-| Calls | Android | Like SMS, when "Calls" is turned on | Proposed: "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
+| Calls | Android | Like SMS, when "Calls" is turned on | Title "See Calls on Your Mac and iPhone", body "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts." (SET-01 field 12) | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
 | Auto-sending the clipboard | Android | Turning on "Auto-Send on Copy" | `ConsentSheet` (CLIP-01 field 2) | The service in Settings › Accessibility |
 | Bluetooth, microphone | macOS | Turning on "Take Calls on Mac", right after `ConsentSheet` | "Connect to Your Phone over Bluetooth" | `NSBluetoothAlwaysUsageDescription`: "HandLive connects to your phone over Bluetooth so you can listen and talk during calls on this Mac." · `NSMicrophoneUsageDescription`: "HandLive uses the microphone so you can talk during calls transferred from your phone." |
 | Nearby devices | Android 12+ | Turning on "Take Calls on Mac" on the phone | Proposed: "To move call audio to your Mac, HandLive needs to connect to the Mac over Bluetooth." | `BLUETOOTH_CONNECT` (granted at install time on Android 10–11) |
@@ -95,6 +95,8 @@ Nothing is preselected. When the disclosure's content changes, bump the text ver
 - Synced with the detailed design (September 25, 2026): CALL-01 API 5 and SET-03 declare
   `NSFocusStatusUsageDescription`. Still to sync: the Android sentences marked "Proposed" go into
   SET-01 API 2.
+- Synced with the detailed design (September 27, 2026): the Calls primer, with the title "See Calls on
+  Your Mac and iPhone", is adopted in SET-01 field 12.
 - Synced with the detailed design (September 25, 2026): SET-03 step 7 only says that incoming calls
   use the time-sensitive level "so they arrive in time"; the Mac respects Focus (decision 10).
 - Synced with the detailed design (September 25, 2026): the detailed design writes "Quyền riêng tư &

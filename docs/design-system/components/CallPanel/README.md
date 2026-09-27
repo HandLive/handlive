@@ -16,16 +16,16 @@ when a Focus is on and the panel isn't shown.
 
 | State | Content | Controls |
 |-----------|---------|-----------|
-| Ringing | Avatar, name or number ("No Caller ID", "Unknown Caller"), "Incoming call · SIM 1" (the SIM label when there are two SIMs) | Decline (`call-decline-fill`, left) · Answer (`call-accept-fill`, right); text buttons "Decline with Message…", "Ignore" |
+| Ringing | The title "Incoming Call", avatar, name or number ("No Caller ID", "Unknown Caller"), the SIM label ("SIM 1", when the phone has more than one SIM and the ringing SIM is known) | Decline (`call-decline-fill`, left) · Answer (`call-accept-fill`, right); text buttons "Decline with Message…", "Ignore" |
 | Ringing, with Take Calls on Mac turned on | Same as above | Answer splits into "Answer on Phone" and "Answer on Mac" |
-| In a call | "In call · 02:15" (`timer`), "Audio: Phone" or "Audio: Mac" | "Switch to Mac" / "Switch to Phone"; End (red) |
+| In a call | "On call" and the timer "02:15" (`timer`), "Audio: Phone" or "Audio: Mac" | "Switch to Mac" / "Switch to Phone"; End (red) |
 | In a call, with the Mac connected to the phone over Bluetooth | Same as above | Adds Mute, Hold / Resume, Keypad (toggle buttons, not switches) |
-| Call waiting | A lower line: the name or number of the waiting caller | Over Bluetooth: "Decline Waiting Call", "End & Answer", "Hold & Answer"; without it: "Handle it on the phone or connect Bluetooth" |
+| Call waiting | A lower line: the name or number of the waiting caller | Over Bluetooth: "Decline Waiting Call", "End & Answer", "Hold & Answer"; without it: "Handle it on the phone or connect via Bluetooth" |
 
 Mute, Hold, and Keypad are only available over Bluetooth HFP. When the Mac isn't connected, **hide**
-these three buttons and replace them with the line "Connect to the phone over Bluetooth to hold, use
+these three buttons and replace them with the line "Connect to the phone via Bluetooth to hold, use
 the keypad, or mute" (CALL-03 E2). Errors show right in the panel: "The phone couldn't perform this
-action", "Disconnected from the phone".
+action", "Lost connection to the phone" (CALL-03 E6).
 
 ## Behavior
 
@@ -35,10 +35,10 @@ action", "Disconnected from the phone".
   Mac, without declining).
 - A Focus is on → no panel, no ringing; the notification is time-sensitive so the system decides based
   on the caller; the call is still in `MenuBarMenu`. The Focus status can't be read (missing
-  permission) → show the panel without ringing. This deviates from CALL-01 E4.
+  permission) → show the panel without ringing; the notification stays passive (CALL-01 E4, field 15).
 - The panel closes when the call ends; it never closes on a timer.
-- Round icon-only buttons must have an accessibility label and a tooltip ("Mute the microphone on the
-  Mac").
+- Round icon-only buttons must have an accessibility label and a tooltip: Answer "Answer the call",
+  Decline "Decline the call", End "End the call", Mute "Mute the microphone on the Mac".
 
 ## Dos and don'ts
 

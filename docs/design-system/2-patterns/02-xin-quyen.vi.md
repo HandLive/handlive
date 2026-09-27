@@ -31,7 +31,7 @@ https://developer.apple.com/design/human-interface-guidelines/privacy#Pre-alert-
 | Chạy nền | Android | Thiết lập ban đầu | "Để Mac và iPhone luôn tới được điện thoại, HandLive cần chạy nền mà không bị hệ thống ngắt." | Hộp thoại miễn tối ưu pin |
 | Camera (quét QR) | Android | Chạm "Quét mã QR" | Đề xuất: "HandLive dùng camera để quét mã QR trên Mac, iPhone hoặc iPad." | `CAMERA`; từ chối thì dùng "Nhập mã PIN" |
 | SMS | Android | Thẻ tính năng sau lần ghép đầu, hoặc khi bật "Tin nhắn SMS" | "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM." | `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` |
-| Cuộc gọi | Android | Như SMS, khi bật "Cuộc gọi" | Đề xuất: "Để báo cuộc gọi đến và cho bạn trả lời, từ chối trên Mac, HandLive cần đọc trạng thái điện thoại, nhật ký cuộc gọi và danh bạ." | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
+| Cuộc gọi | Android | Như SMS, khi bật "Cuộc gọi" | Tiêu đề "Xem cuộc gọi trên Mac và iPhone", nội dung "Để báo cuộc gọi đến và cho bạn trả lời, từ chối trên Mac, HandLive cần đọc trạng thái điện thoại, nhật ký cuộc gọi và danh bạ." (SET-01 trường 12) | `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` |
 | Tự gửi bảng nhớ tạm | Android | Bật "Tự gửi khi sao chép" | `ConsentSheet` (CLIP-01 trường 2) | Dịch vụ trong Cài đặt › Hỗ trợ tiếp cận |
 | Bluetooth, micro | macOS | Bật "Nghe gọi trên Mac", ngay sau `ConsentSheet` | "Kết nối Bluetooth với điện thoại" | `NSBluetoothAlwaysUsageDescription`: "HandLive kết nối Bluetooth với điện thoại của bạn để nghe và nói cuộc gọi trên Mac." · `NSMicrophoneUsageDescription`: "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại." |
 | Thiết bị ở gần | Android 12+ | Bật "Nghe gọi trên Mac" trên điện thoại | Đề xuất: "Để chuyển âm thanh cuộc gọi sang Mac, HandLive cần kết nối Bluetooth với Mac." | `BLUETOOTH_CONNECT` (Android 10–11 cấp lúc cài) |
@@ -89,6 +89,8 @@ Không chọn sẵn. Đổi nội dung công bố thì tăng phiên bản văn b
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): CALL-01 API 5 và SET-03 khai
   `NSFocusStatusUsageDescription`. Còn cần đồng bộ: các câu ghi "Đề xuất" cho Android đưa vào SET-01
   API 2.
+- Đã đồng bộ với tài liệu chi tiết (27/09/2026): primer Cuộc gọi, tiêu đề "Xem cuộc gọi trên Mac và
+  iPhone", đã đưa vào SET-01 trường 12.
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): SET-03 bước 7 chỉ nói cuộc gọi đến dùng mức nhạy
   cảm thời gian "để đến kịp lúc"; Mac tôn trọng Tập trung (quyết định 10).
 - Đã đồng bộ với tài liệu chi tiết (25/09/2026): tài liệu chi tiết viết "Quyền riêng tư & Bảo mật"
