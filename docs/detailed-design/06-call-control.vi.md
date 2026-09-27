@@ -36,8 +36,8 @@
 | Tác nhân | Chính: Người dùng (thấy cuộc gọi, chọn thao tác), Người gọi (tạo cuộc gọi). Hệ thống: A-CALL, A-SVC, A-AUD (trạng thái HFP, nơi phát âm thanh), OS (Telephony, Contacts provider), M-APP, I-APP, I-NSE, R-API, PUSH (APNs). |
 | Điều kiện trước | 1.<br>Cặp hiệu lực (PAIR-01).<br>2.<br>Cuộc gọi hiệu lực với cặp; A-SVC đang chạy và A-CALL đã đăng ký listener (SET-01 đã xin `READ_PHONE_STATE`, `READ_CALL_LOG`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS`).<br>3.<br>Để nhận ngay: client có phiên `/v1/ctl` (CONN-01 hoặc CONN-03); iPhone/iPad không có phiên nhận qua push khi đã đăng ký push (CONN-04), `relay.enabled = true` và `features.call.notify = true`.<br>4. iOS: người dùng đã cho phép thông báo, gồm thông báo nhạy cảm thời gian (SET-03). |
 | Điều kiện sau | Client đang kết nối hiển thị cuộc gọi theo `call.notify` trong ≤ 300 ms (LAN); iPhone/iPad treo nền có thông báo (nội dung đầy đủ khi máy đang mở khóa).<br>Giao diện luôn khớp `state` mới nhất: `offhook` → Mac chuyển sang panel đang gọi (CALL-03), iOS đóng banner; `idle` → đóng panel, dừng chuông, gỡ thông báo cuộc gọi đến (cuộc gọi nhỡ do CALL-04 thông báo).<br>Ngữ cảnh cuộc gọi trên Android tồn tại tới `IDLE`, sau đó nằm thêm 60 s trong danh sách "vừa kết thúc" để ghép với nhật ký (CALL-04).<br>Không ghi dữ liệu bền nào. |
-| Ngoại lệ | E1 — Cuộc gọi không hiệu lực (tắt ở một phía, thiếu `READ_PHONE_STATE`): không gửi gì; PAIR-02 hiển thị lý do.<br>E2 — Thiếu `READ_CALL_LOG`: `number = null`, `presentation = unknown` → hiển thị "Không rõ số" kèm gợi ý cấp quyền; thiếu `READ_CONTACTS`: `display_name = null` → hiển thị số.<br>E3 — `call.notify = false` trên client: Mac không mở panel, không đổ chuông, chỉ hiện cuộc gọi trong menu của biểu tượng menu bar; iOS không hiện banner; Android không push cho iPhone/iPad đó.<br>E4 — Mac đang bật chế độ Tập trung (`isFocused = true`): không hiện panel, không đổ chuông; thông báo liên lạc mức time-sensitive (API 7) để hệ thống quyết định theo người gọi và cài đặt Tập trung; cuộc gọi vẫn nằm trong menu của biểu tượng thanh menu.<br>Chưa được phép đọc trạng thái Tập trung → hiện panel, không đổ chuông.<br>E5 — Không push được (relay tắt, chưa có token, APNs lỗi): xử lý theo CONN-04 (`push_outbox` hạn 30 s); push `call_incoming` đang xếp hàng bị bỏ khi cuộc gọi hết đổ chuông, để lần gửi lại muộn không thay được thông báo cuộc gọi nhỡ dùng chung collapse key (API 4 logic 5); cuộc gọi nhỡ sẽ đến qua CALL-04.<br>E6 — iPhone đang khóa khi push tới: I-NSE không đọc được khóa (C3) → nội dung chung "Cuộc gọi đến trên điện thoại", không có nút "Từ chối".<br>E7 — Push tới trễ (quá 60 s sau `started_at`): I-NSE hiển thị "Cuộc gọi đến lúc <giờ>", không gắn nút.<br>E8 — A-SVC khởi động khi đang có cuộc gọi, hoặc client kết nối giữa chừng: A-CALL dựng ngữ cảnh từ trạng thái hiện tại (`direction = unknown` nếu đang `OFFHOOK`) và gửi `state` ngay sau khi phiên trao đổi capability.<br>E9 — Cuộc gọi chờ (`RINGING` khi đang `OFFHOOK`): `waiting = true`, chỉ hiển thị thông tin; xử lý cần HFP (CALL-03).<br>E10 — Số đến sau lượt `RINGING` đầu (broadcast đến hai lần, thứ tự không cố định): A-CALL gửi lại `state` cùng `call_id` khi có số và tên. |
-| Yêu cầu đặc biệt | **Hiệu năng:** `state` tới client < 200 ms trong LAN kể từ callback của hệ điều hành (tra tên ≤ 30 ms nhờ cache LRU); panel Mac hiện ≤ 300 ms sau `RINGING`; qua relay ≤ 1 s khi phiên sẵn có, ≤ 3 s khi điện thoại phải mở relay; push iOS phụ thuộc APNs.<br>**Nền tảng:** panel Mac không lấy focus của ứng dụng đang dùng (non-activating), hiện trên mọi Space kể cả ứng dụng toàn màn hình — lệch có chủ đích so với HIG (panel thường ẩn khi ứng dụng không active), bù lại luôn đi kèm thông báo liên lạc; Mac cần capability Communication Notifications, `NSUserActivityTypes` chứa `INStartCallIntent`, entitlement `com.apple.developer.focus-status` và `NSFocusStatusUsageDescription`; I-APP cần entitlement Time Sensitive Notifications (`com.apple.developer.usernotifications.time-sensitive`); không PushKit/CallKit (C7).<br>**Riêng tư:** relay và APNs chỉ thấy `reason = call_incoming` và nội dung chung; số, tên nằm trong envelope mã hóa bằng `K_push`; không log số, tên.<br>**Tuân thủ:** `READ_CALL_LOG` thuộc ngoại lệ "Cross-device synchronization or transfer of SMS or calls" của Google Play, cần Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` là quyền runtime (SET-01).<br>**Truy cập:** VoiceOver đọc "Cuộc gọi đến từ <tên hoặc số>" khi panel hoặc banner xuất hiện. |
+| Ngoại lệ | E1 — Cuộc gọi không hiệu lực (tắt ở một phía, thiếu `READ_PHONE_STATE`): không gửi gì; PAIR-02 hiển thị lý do.<br>E2 — Thiếu `READ_CALL_LOG`: `number = null`, `presentation = unknown` → hiển thị "Không rõ số" kèm gợi ý cấp quyền; thiếu `READ_CONTACTS`: `display_name = null` → hiển thị số.<br>E3 — `call.notify = false` trên client: Mac không mở panel, không đổ chuông, chỉ hiện cuộc gọi trong menu của biểu tượng menu bar; iOS không hiện banner; Android không push cho iPhone/iPad đó.<br>E4 — Mac đang bật chế độ Tập trung (`isFocused = true`): không hiện panel, không đổ chuông; thông báo liên lạc mức time-sensitive (API 7) để hệ thống quyết định theo người gọi và cài đặt Tập trung; cuộc gọi vẫn nằm trong menu của biểu tượng thanh menu. Cuộc gọi được trả lời từ thông báo đó thì mở panel đang gọi; các panel đang gọi khác vẫn ẩn khi Tập trung bật.<br>Chưa được phép đọc trạng thái Tập trung → hiện panel, không đổ chuông.<br>E5 — Không push được (relay tắt, chưa có token, APNs lỗi): xử lý theo CONN-04 (`push_outbox` hạn 30 s); push `call_incoming` đang xếp hàng bị bỏ khi cuộc gọi hết đổ chuông, để lần gửi lại muộn không thay được thông báo cuộc gọi nhỡ dùng chung collapse key (API 4 logic 5); cuộc gọi nhỡ sẽ đến qua CALL-04.<br>E6 — iPhone đang khóa khi push tới: I-NSE không đọc được khóa (C3) → nội dung chung "Cuộc gọi đến trên điện thoại", không có nút "Từ chối".<br>E7 — Push tới trễ (quá 60 s sau `started_at`): I-NSE hiển thị "Cuộc gọi đến lúc <giờ>", không gắn nút, ở mức `interruptionLevel = .active` thay cho time-sensitive.<br>E8 — A-SVC khởi động khi đang có cuộc gọi, hoặc client kết nối giữa chừng: A-CALL dựng ngữ cảnh từ trạng thái hiện tại (`direction = unknown` nếu đang `OFFHOOK`) và gửi `state` ngay sau khi phiên trao đổi capability.<br>E9 — Cuộc gọi chờ (`RINGING` khi đang `OFFHOOK`): `waiting = true`, chỉ hiển thị thông tin; xử lý cần HFP (CALL-03).<br>E10 — Số đến sau lượt `RINGING` đầu (broadcast đến hai lần, thứ tự không cố định): A-CALL gửi lại `state` cùng `call_id` khi có số và tên. |
+| Yêu cầu đặc biệt | **Hiệu năng:** `state` tới client < 200 ms trong LAN kể từ callback của hệ điều hành (tra tên ≤ 30 ms nhờ cache LRU); panel Mac hiện ≤ 300 ms sau `RINGING`; qua relay ≤ 1 s khi phiên sẵn có, ≤ 3 s khi điện thoại phải mở relay; push iOS phụ thuộc APNs.<br>**Nền tảng:** panel Mac không lấy focus của ứng dụng đang dùng (non-activating), hiện trên mọi Space kể cả ứng dụng toàn màn hình — lệch có chủ đích so với HIG (panel thường ẩn khi ứng dụng không active), bù lại luôn đi kèm thông báo liên lạc; Mac cần capability Communication Notifications (`com.apple.developer.usernotifications.communication`, capability này cũng cho M-APP đọc trạng thái Tập trung bằng `INFocusStatusCenter`, kèm quyền của người dùng và `NSFocusStatusUsageDescription`), `NSUserActivityTypes` chứa `INStartCallIntent`, và entitlement Time Sensitive Notifications (`com.apple.developer.usernotifications.time-sensitive`): thiếu entitlement này, thông báo `.timeSensitive` trên macOS đến ở mức active và không vượt qua chế độ Tập trung; I-APP cần cùng entitlement Time Sensitive Notifications; không PushKit/CallKit (C7).<br>**Riêng tư:** relay và APNs chỉ thấy `reason = call_incoming` và nội dung chung; số, tên nằm trong envelope mã hóa bằng `K_push`; không log số, tên.<br>**Tuân thủ:** `READ_CALL_LOG` thuộc ngoại lệ "Cross-device synchronization or transfer of SMS or calls" của Google Play, cần Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` là quyền runtime (SET-01).<br>**Truy cập:** VoiceOver đọc "Cuộc gọi đến từ <tên hoặc số>" khi panel hoặc banner xuất hiện. |
 
 ### 6.1.2 Màn hình
 
@@ -57,11 +57,11 @@ N/A — chưa có wireframe được duyệt.
 | 8 | Nút "Từ chối kèm tin nhắn…" | action | Input | Ẩn | Chỉ Mac; khi `controls.reject = true`, `number` khác `null`, SMS hiệu lực và `features.sms.can_send = true` → CALL-02 |
 | 9 | Nút "Bỏ qua" | action | Input | — | Chỉ Mac: đóng panel và tắt chuông trên Mac; cuộc gọi vẫn đổ chuông trên điện thoại, vẫn nằm trong menu của biểu tượng menu bar |
 | 10 | Chuông trên Mac | âm thanh | Output | Tắt | Phát lặp khi panel hiện, `call.notify = true`, `call.ringtone = true` và Focus không bật; dừng khi `state` đổi, khi bấm trường 6, 7, 8, 9, hoặc sau 60 s |
-| 11 | Thông báo iOS | string | Output | Không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" | I-NSE thay tiêu đề bằng trường 2 (hoặc 3), nội dung "Cuộc gọi đến" kèm nhãn SIM; gắn nút "Từ chối" |
+| 11 | Thông báo iOS | string | Output | Không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" | I-NSE thay tiêu đề bằng trường 2 (hoặc 3), nội dung "Cuộc gọi đến" kèm nhãn SIM; gắn nút "Từ chối" khi `controls.reject = true` |
 | 12 | Gợi ý cấp quyền | string | Output | Ẩn | "Cho phép HandLive đọc nhật ký cuộc gọi trên điện thoại để hiện số gọi đến" khi `permissions_missing` có `READ_CALL_LOG` (E2) |
 | 13 | Tùy chọn "Thông báo cuộc gọi" | bool | Input/Output | `call.notify` = `true` | Cài đặt → Cuộc gọi (SET-02), Mac và iOS |
 | 14 | Tùy chọn "Đổ chuông trên Mac" | bool | Input/Output | `call.ringtone` = `true` | Cài đặt → Cuộc gọi, chỉ Mac; khóa ở 0.9.5 |
-| 15 | Thông báo liên lạc trên Mac | string | Output | Tiêu đề: trường 2 (hoặc 3); nội dung "Cuộc gọi đến" kèm nhãn SIM | `INStartCallIntent` (API 7): mức passive khi panel đang hiện (chỉ vào Trung tâm thông báo, không banner, không âm), time-sensitive khi Tập trung bật; chưa đọc được trạng thái Tập trung → panel hiện, không đổ chuông, thông báo ở mức passive như khi Tập trung tắt (E4); nút "Trả lời", "Từ chối"; gỡ khi `state` khác `ringing` |
+| 15 | Thông báo liên lạc trên Mac | string | Output | Tiêu đề: trường 2 (hoặc 3); nội dung "Cuộc gọi đến" kèm nhãn SIM | `INStartCallIntent` (API 7): mức passive khi panel đang hiện (chỉ vào Trung tâm thông báo, không banner, không âm), time-sensitive khi Tập trung bật; chưa đọc được trạng thái Tập trung → panel hiện, không đổ chuông, thông báo ở mức passive như khi Tập trung tắt (E4); nút "Trả lời", "Từ chối" chỉ khi `controls.answer` và `controls.reject` đều `true` (API 7); gỡ khi `state` khác `ringing` |
 
 ### 6.1.4 Luồng nghiệp vụ
 
@@ -106,7 +106,7 @@ flowchart TB
 | 6 | Hệ thống | M-APP / I-APP | Kiểm `call.notify`. | Không → E3 (X2). |
 | 7 | Hệ thống | M-APP | Đọc trạng thái Tập trung (API 5). Không bật: hiện panel với trường 1–9, gửi thông báo liên lạc mức passive (trường 15, API 7), phát chuông (trường 10) nếu `call.ringtone = true`. Đang bật: không panel, không chuông, thông báo liên lạc mức time-sensitive. | E4. |
 | 8 | Hệ thống | I-APP | Ứng dụng ở foreground: banner trong ứng dụng với trường 1–5, 7 (API 6); không đổ chuông vì điện thoại đang đổ chuông. |  |
-| 9 | Hệ thống | I-NSE, OS | Nhận push (API 6). Máy đang mở khóa: giải mã, đặt tiêu đề và nội dung (trường 11), danh mục `HL_CALL_INCOMING` có nút "Từ chối", `userInfo`. Máy đang khóa hoặc giải mã lỗi: giữ nội dung chung. | E6, E7. |
+| 9 | Hệ thống | I-NSE, OS | Nhận push (API 6). Máy đang mở khóa: giải mã, đặt tiêu đề và nội dung (trường 11), danh mục `HL_CALL_INCOMING` có nút "Từ chối" khi `controls.reject = true`, `userInfo`. Máy đang khóa hoặc giải mã lỗi: giữ nội dung chung. | E6, E7. |
 | 10 | Người dùng | M-APP / I-APP | Thấy người gọi; chọn "Trả lời", "Từ chối", "Từ chối kèm tin nhắn…" (CALL-02), "Bỏ qua", hoặc không làm gì. |  |
 | 11 | Hệ thống | A-CALL, A-SVC | Mọi thay đổi (có số hoặc tên, `OFFHOOK`, `IDLE`, `waiting`, `hfp_connected`, `audio_on`) → gửi `state` mới cùng `call_id` tới các phiên. `IDLE`: đặt `ended_at`, `end_reason`, chuyển ngữ cảnh vào danh sách "vừa kết thúc" (giữ 60 s). |  |
 | 12 | Hệ thống | M-APP / I-APP | `ringing` → cập nhật các trường; `offhook` → Mac chuyển panel sang chế độ đang gọi (CALL-03) và gỡ thông báo liên lạc, iOS đóng banner và gỡ thông báo cuộc gọi đến; `idle` → đóng panel, dừng chuông, gỡ thông báo cuộc gọi đến. | Cuộc gọi nhỡ: CALL-04. |
@@ -344,7 +344,7 @@ Content-Type: application/json
 - **URL:** N/A
 - **Method:** `NSPanel` (AppKit) với `styleMask` có `.nonactivatingPanel`, `level = .floating`,
   `collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`, `hidesOnDeactivate = false`,
-  hiển thị bằng `orderFrontRegardless()`. Chuông: `NSSound` phát lặp tệp chuông trong bundle. Focus:
+  hiển thị bằng `orderFrontRegardless()`. Chuông: `NSSound` phát lặp một âm tự tổng hợp hoặc âm của chính dự án (HandLive tự tổng hợp một tiếng chuông nhẹ hai nốt, nên không kèm âm thanh của bên thứ ba). Focus:
   `INFocusStatusCenter.default.focusStatus.isFocused`. Trợ năng:
   `NSAccessibility.post(element:notification:userInfo:)` với `.announcementRequested`.
 - **Request (dữ liệu hiển thị):** trường 1–10 lấy từ `state` mới nhất.
@@ -358,8 +358,9 @@ Content-Type: application/json
      không lấy focus: người dùng đang gõ trong ứng dụng khác không bị gián đoạn.
   2. Chuông chỉ phát khi `call.notify = true`, `call.ringtone = true` và `isFocused = false`; dừng
      khi `state` khác `ringing`, khi bấm nút, hoặc sau 60 s; âm lượng theo âm lượng hệ thống.
-  3. Đọc trạng thái Focus cần capability "Focus Status" của Xcode (entitlement
-     `com.apple.developer.focus-status`) và người dùng cho phép; M-APP xin quyền này khi người dùng
+  3. Đọc trạng thái Focus cần capability Communication Notifications
+     (`com.apple.developer.usernotifications.communication`; Apple không có entitlement riêng cho
+     trạng thái Tập trung) và người dùng cho phép; M-APP xin quyền này khi người dùng
      bật "Đổ chuông trên Mac" (trường 14); Info.plist có `NSFocusStatusUsageDescription` ("HandLive
      đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung.").
      Chưa được phép (`INFocusStatusCenter.default.authorizationStatus` khác `.authorized`) →
@@ -394,8 +395,8 @@ Content-Type: application/json
 | `title` | Trường 2, hoặc trường 3 khi không có tên |
 | `body` | "Cuộc gọi đến", thêm " · <nhãn SIM>" khi có |
 | `threadIdentifier` | `calls` (relay đặt `thread-id`) |
-| `categoryIdentifier` | `HL_CALL_INCOMING` |
-| `interruptionLevel` | `.timeSensitive` (từ `interruption-level` của APNs) |
+| `categoryIdentifier` | `HL_CALL_INCOMING` chỉ khi `controls.reject = true` (trường 7); ngược lại không đặt |
+| `interruptionLevel` | `.timeSensitive` (từ `interruption-level` của APNs); `.active` với push tới trễ (E7) |
 | `userInfo` | `{pair_id, call_id, started_at}` — dùng cho hành động "Từ chối" (CALL-02 B2) |
 
 - **Response:** chạm "Từ chối" → CALL-02 (B1–B3); chạm vào thông báo → mở I-APP (kết nối, hiện
@@ -409,14 +410,18 @@ Content-Type: application/json
 - **Logic nghiệp vụ:**
   1. I-NSE giải mã theo CONN-04 bước 9b; envelope `call_event/state` có `state = ringing` → nội dung
      cuộc gọi đến. Máy khóa hoặc giải mã lỗi → giữ nội dung chung, không đặt danh mục (E6).
-  2. `now − started_at > 60 s` → nội dung "Cuộc gọi đến lúc <giờ>", không đặt danh mục (E7).
+  2. `now − started_at > 60 s` → nội dung "Cuộc gọi đến lúc <giờ>", không đặt danh mục,
+     `interruptionLevel = .active` (E7).
   3. Foreground (`willPresent`): đã có banner cho cùng `call_id` → không trình bày thông báo hệ
      thống; chưa có phiên → hiện banner từ nội dung đã giải mã, đồng thời kết nối (CONN-01 hoặc
      CONN-03).
   4. Điện thoại không push khi cuộc gọi được nghe hoặc bị từ chối, nên I-APP tự gỡ thông báo
      (`removeDeliveredNotifications(withIdentifiers:)`): khi nhận `state` khác `ringing` của
-     `call_id` đó, và mỗi lần vào foreground với mọi thông báo `HL_CALL_INCOMING` có `started_at` cũ
-     hơn 60 s. Push cuộc gọi nhỡ cùng `collapse_key` tự thay thế thông báo (CALL-04).
+     `call_id` đó, và mỗi lần vào foreground với mọi thông báo cuộc gọi đến có `started_at` cũ hơn
+     60 s. Việc này gồm cả thông báo chung đăng khi máy đang khóa (E6). Các thông báo đó không có
+     `started_at`: I-APP nhận ra chúng qua loại `call_event` của envelope, mở bằng `K_push` rồi dùng
+     `started_at`; envelope bị từ chối vì cũ hơn 24 h thì xét theo `ts` của envelope. Push cuộc gọi nhỡ
+     cùng `collapse_key` tự thay thế thông báo (CALL-04).
 
 #### API 7 — Thông báo liên lạc trên Mac
 
@@ -434,12 +439,14 @@ Content-Type: application/json
 | `INPerson` | `displayName` = trường 2, hoặc trường 3 khi không có tên; `personHandle` = số E.164 (`.phoneNumber`) để hệ thống lọc theo người gọi trong chế độ Tập trung |
 | `body` | "Cuộc gọi đến", thêm " · <nhãn SIM>" khi có |
 | `threadIdentifier` | `calls` |
-| `categoryIdentifier` | `HL_CALL_INCOMING_MAC`: hành động "Trả lời" (`HL_CALL_ANSWER`), "Từ chối" (`HL_CALL_REJECT`, `.destructive`); `hiddenPreviewsBodyPlaceholder` "Cuộc gọi đến" |
+| `categoryIdentifier` | `HL_CALL_INCOMING_MAC` chỉ khi `controls.answer` và `controls.reject` đều `true`: hành động "Trả lời" (`HL_CALL_ANSWER`), "Từ chối" (`HL_CALL_REJECT`, `.destructive`); `hiddenPreviewsBodyPlaceholder` "Cuộc gọi đến". Ngược lại không đặt danh mục; panel đưa ra các thao tác mà `controls` cho phép |
 | `interruptionLevel` | `.passive` khi panel đang hiện; `.timeSensitive` khi chế độ Tập trung bật và không có panel |
+| `sound` | `.default` với bản `.timeSensitive` (Tập trung bật); không có âm với `.passive` |
 | `identifier` | `call_id` — một thông báo cho một cuộc gọi; gửi lại cùng `identifier` để cập nhật |
 | `userInfo` | `{pair_id, call_id, started_at}` |
 
-- **Response:** "Trả lời" → CALL-02 (`answer`) và mở panel ở chế độ đang gọi; "Từ chối" → CALL-02
+- **Response:** "Trả lời" → CALL-02 (`answer`) và mở panel ở chế độ đang gọi, kể cả khi Tập trung bật
+  (các panel đang gọi khác vẫn ẩn khi Tập trung bật, E4); "Từ chối" → CALL-02
   (`reject`); bấm vào thông báo → đưa panel ra trước (mở panel nếu Tập trung đã tắt).
 - **Ví dụ:** cuộc gọi ở ví dụ API 1 khi panel đang hiện → thông báo
   `identifier = "0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90"`, `interruptionLevel = .passive`: nằm trong
@@ -571,7 +578,7 @@ flowchart TB
 | 10 | Người dùng | M-APP / I-APP | Mac: thấy panel đang gọi (CALL-03) với `audio_on`, hoặc panel đóng sau khi từ chối; tin trả lời nằm trong hội thoại (SMS-04). iOS: banner đóng. |  |
 | B1 | Người dùng | I-APP (thông báo) | iOS: chạm "Từ chối" trên thông báo cuộc gọi đến (CALL-01 API 6); hệ thống yêu cầu mở khóa (`.authenticationRequired`). | Thông báo không có nút → E10. |
 | B2 | Hệ thống | I-APP | Hệ thống đánh thức I-APP ở nền (API 6).<br>I-APP xin thời gian chạy nền, đọc `pair_id`, `call_id` trong `userInfo`, kết nối CONN-01 (LAN) hoặc CONN-03 (relay — điện thoại thường đã mở relay sau push, CALL-01 API 4; chưa online thì gửi wake `call_action` theo CONN-04), rồi làm bước 4 với `reject`. |  |
-| B3 | Hệ thống | I-APP | `ack` thành công, `CALL_NOT_FOUND` hoặc `CALL_ACTION_NOT_ALLOWED` → gỡ thông báo, kết thúc tác vụ nền. Không kết nối được hoặc quá 15 s → đăng trường 11, kết thúc tác vụ nền. | E8. |
+| B3 | Hệ thống | I-APP | `ack` thành công, `CALL_NOT_FOUND` hoặc `CALL_ACTION_NOT_ALLOWED` (mọi `reason`, kể cả `system`: điện thoại không còn cho từ chối cuộc gọi) → gỡ thông báo, kết thúc tác vụ nền. Lỗi khác (`PERMISSION_MISSING`, `FEATURE_DISABLED`, `INTERNAL`), không kết nối được hoặc quá 15 s → đăng trường 11, kết thúc tác vụ nền. | E8. |
 
 ### 6.2.5 Đặc tả API/service
 
@@ -851,7 +858,7 @@ flowchart TB
 
 | Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
 |------|----------|-----------|-------|--------------------|
-| 1 | Hệ thống | M-APP | Nhận `state = offhook` (sau CALL-02, hoặc cuộc gọi bắt đầu trên điện thoại khi `call.notify = true`): panel chuyển sang chế độ đang gọi (trường 1–4), bật đồng hồ; nút theo `controls` và kết nối HFP của M-HFP. | E8. |
+| 1 | Hệ thống | M-APP | Nhận `state = offhook` (sau CALL-02, hoặc cuộc gọi bắt đầu trên điện thoại khi `call.notify = true`): panel chuyển sang chế độ đang gọi (trường 1–4), bật đồng hồ; nút theo `controls` và kết nối HFP của M-HFP. | E8. Khi Tập trung bật, panel vẫn ẩn trừ khi cuộc gọi được trả lời từ thông báo trên Mac (CALL-01 E4). |
 | 2 | Người dùng | M-APP | Chọn thao tác: "Kết thúc", "Giữ máy"/"Tiếp tục", bấm phím DTMF, "Tắt tiếng", hoặc một nút xử lý cuộc gọi chờ. | Cuộc gọi chờ → E7. |
 | 3 | Hệ thống | M-APP | M-HFP đang có kết nối HFP mức dịch vụ tới điện thoại → bước 4; ngược lại → bước 5. |  |
 | 4 | Hệ thống | M-HFP | Gửi lệnh HFP (API 3) và chờ `OK` tối đa 2 s: Kết thúc → `AT+CHUP`; Giữ máy/Tiếp tục → `AT+CHLD=2`; phím DTMF → `AT+VTS=<phím>`; cuộc gọi chờ → `AT+CHLD=0`, `1` hoặc `2`. Tắt tiếng không có lệnh AT: M-HFP ngừng đưa micro Mac vào kênh SCO (gửi khung im lặng). | `ERROR` hoặc quá hạn → E3 (X2). |
@@ -1231,7 +1238,9 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
   (M-APP; I-APP khi đang chạy); I-NSE thay nội dung push trong
   `UNNotificationServiceExtension.didReceive(_:withContentHandler:)`. Danh mục `HL_CALL_MISSED` đăng
   ký lúc khởi động bằng `setNotificationCategories(_:)`, gồm `UNTextInputNotificationAction`
-  `HL_CALL_SMS` (tiêu đề "Nhắn tin", nút "Gửi") và `hiddenPreviewsBodyPlaceholder` "Cuộc gọi nhỡ" (nội dung hệ thống hiện khi bản xem trước bị tắt).
+  `HL_CALL_SMS` (tiêu đề "Nhắn tin", nút "Gửi", tùy chọn `.authenticationRequired`: máy đang khóa
+  không đọc được `PRK`, C3) và `hiddenPreviewsBodyPlaceholder` "Cuộc gọi nhỡ" (nội dung hệ thống hiện
+  khi bản xem trước bị tắt).
 - **Request (nội dung thông báo):**
 
 | Thuộc tính | Giá trị |
@@ -1240,7 +1249,7 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
 | `title` | Tên, số ở định dạng quốc gia, "Số ẩn" khi người gọi ẩn số, hoặc "Không rõ số" ở luồng A (`presentation = unknown`, CALL-01 trường 3) |
 | `body` | "Cuộc gọi nhỡ · <giờ>", thêm " · <nhãn SIM>" khi có |
 | `threadIdentifier` | `calls:<pair_id>` (push: `calls` do relay đặt) |
-| `categoryIdentifier` | `HL_CALL_MISSED` khi có số và `features.sms.can_send = true` (I-NSE đọc bản sao của I-APP, logic 2); ngược lại không đặt (E10) |
+| `categoryIdentifier` | `HL_CALL_MISSED` khi có số, SMS hiệu lực và `features.sms.can_send = true` (I-NSE đọc bản sao của I-APP, logic 2); ngược lại không đặt (E10) |
 | `userInfo` | `{pair_id, entry_id, call_id, number, sub_id}` — cho "Nhắn tin" và đánh dấu `seen`; luôn có đủ các khóa; `entry_id` là `null` ở luồng A, `call_id` là `null` khi không ghép được cuộc gọi (API 2 logic 2), `number` và `sub_id` có thể là `null`; ít nhất một trong `entry_id` và `call_id` khác `null` |
 | `sound` | `UNNotificationSound.default` |
 
@@ -1255,14 +1264,17 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
 
 - **Logic nghiệp vụ:**
   1. Nguồn thông báo theo API 2, logic 3; mỗi cuộc gọi nhỡ tối đa một thông báo trên mỗi client; mục
-     đến qua `log_sync` không tạo thông báo.
+     đến qua `log_sync` không tạo thông báo. I-APP ở foreground vẫn đăng thông báo này, chỉ hiện trong
+     Trung tâm thông báo (`willPresent` → `.list`), vì ứng dụng đang mở không hiện banner (design
+     system, 02-ios-ipados).
   2. I-NSE: envelope `call_event/log_new` có `entry.type = missed`, hoặc `call_event/state` có
      `end_reason = missed` (luồng A) → dựng nội dung như bảng; máy khóa hoặc giải mã lỗi → nội dung
      chung "Cuộc gọi nhỡ trên điện thoại", không đặt danh mục (E9). I-NSE không ghi cơ sở dữ liệu
      (0.9.3); mục vào `call_log_entry` ở lần `log_sync` sau. I-NSE cũng không mở cơ sở dữ liệu, nên
      đọc một bản sao để đặt `categoryIdentifier`. I-APP giữ `features.sms.can_send` mới nhất của từng
-     cặp trong `UserDefaults` của App Group (`sms.peer_can_send`, 0.9.5) và ghi lại mỗi khi capability này đổi (như `sms.preview`
-     được giữ cho extension). I-NSE chỉ đặt `HL_CALL_MISSED` khi bản sao là `true` và biết số. Không
+     cặp, tính cả việc SMS hiệu lực ở hai đầu (chỉ `true` khi đó), trong `UserDefaults` của App Group
+     (`sms.peer_can_send`, 0.9.5) và ghi lại mỗi khi capability này hoặc SMS ở một trong hai phía đổi
+     (như `sms.preview` được giữ cho extension). I-NSE chỉ đặt `HL_CALL_MISSED` khi bản sao là `true` và biết số. Không
      có bản sao thì không có nút "Nhắn tin".
   3. Gỡ thông báo khi mục được xem (bước 12) bằng `removeDeliveredNotifications(withIdentifiers:)`;
      mở danh sách cuộc gọi gỡ mọi thông báo cuộc gọi nhỡ của cặp.
@@ -1270,7 +1282,8 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
      sau khi bỏ khoảng trắng → bỏ qua.
   5. Mac: cuộc gọi nhỡ cũng hiện trong các mục gần đây của menu biểu tượng thanh menu
      (`MenuBarMenu`), với người gọi như `title` và nội dung `body` "Cuộc gọi nhỡ · <giờ>" (thêm
-     " · <nhãn SIM>" khi có).
+     " · <nhãn SIM>" khi có). Menu giữ ba cuộc gọi nhỡ gần nhất và dọn chúng khi danh sách cuộc gọi
+     được mở.
 
 #### API 5 — `POST /v1/push` (`call_missed`)
 
