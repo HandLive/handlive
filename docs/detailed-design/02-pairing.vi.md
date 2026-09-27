@@ -16,7 +16,7 @@
 | Tác nhân | Chính: Người dùng (sở hữu cả hai thiết bị). Hệ thống: A-UI, A-SVC, M-APP hoặc I-APP, R-API và R-KV (điểm hẹn, đăng ký cặp). |
 | Điều kiện trước | 1.<br>Android đã hoàn tất SET-01 (có quyền camera để quét QR) và A-SVC đang chạy.<br>2.<br>Mac/iOS đã hoàn tất SET-03 (quyền mạng cục bộ).<br>3.<br>Hai thiết bị cùng LAN; hoặc (từ P2) cả hai có Internet và `relay.enabled = true`.<br>4.<br>Mac/iOS chưa có cặp hiệu lực nào.<br>5.<br>Android có ít hơn 8 cặp hiệu lực. |
 | Điều kiện sau | **Thành công:** hai bên có bản ghi `paired_device` cùng `pair_id`; `PRK` nằm trong kho khóa; Mac/iOS ghim `peer_tls_sha256`; cặp được đăng ký lên relay nếu relay bật (hoặc đánh dấu chờ đăng ký); CONN-01 tự chạy.<br>**Thất bại:** không bên nào lưu gì; `pairing_secret` hoặc PIN bị hủy khỏi bộ nhớ. |
-| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới.<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
+| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone." Ở luồng PIN (A3–A4), cửa sổ đã đóng sau 120 s mà chưa ghép được: Android báo "Mã PIN đã hết hạn. Lấy mã PIN mới trên Mac hoặc iPhone rồi thử lại."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới.<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
 | Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), giới hạn 3 lần và chỉ cho phép trong LAN.<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
 
 ### 2.1.2 Màn hình
@@ -87,7 +87,7 @@ flowchart TB
 | A1 | Người dùng | M-APP / I-APP | Luồng PIN: chọn "Không quét được? Dùng mã PIN". | Chỉ LAN. |
 | A2 | Hệ thống | M-APP / I-APP | Sinh PIN 6 số (CSPRNG, phân bố đều), hiển thị 120 s; duyệt mDNS tìm instance có `pm = 1`. |  |
 | A3 | Người dùng | A-UI | Chọn "Nhập mã PIN", nhập 6 số, xác nhận ghép nối. |  |
-| A4 | Hệ thống | A-SVC | Mở cửa sổ ghép nối với TXT `pm = 1`. Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11. |  |
+| A4 | Hệ thống | A-SVC | Khi PIN đã được xác nhận mới mở cửa sổ ghép nối với TXT `pm = 1` (không mở sớm hơn). Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11. | Sau `PIN_INVALID`, cửa sổ vẫn mở và ô PIN hiện lại: client kết nối trước khi PIN mới được xác nhận sẽ chờ PIN (chưa có `pair/offer`), ô PIN vẫn nhập được; "Đang ghép nối…" (`verifying`) bắt đầu khi PIN được xác nhận. |
 | A5 | Hệ thống | M-APP / I-APP | Kiểm `mac` của offer bằng PIN của mình. Sai → `pair/error PIN_INVALID` kèm số lần còn lại; lần thứ 3 sai → hủy PIN, sinh PIN mới (E7). Đúng → tiếp bước 10–12. |  |
 
 ### 2.1.5 Đặc tả API/service
@@ -169,7 +169,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
      khi cửa sổ mở ở chế độ PIN và kết nối đến từ LAN (không qua relay).
   3. Kiểm `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); sai → `AUTH_FAILED`.
   4. Một cửa sổ ghép nối chỉ phục vụ một client: kết nối thứ hai trong cùng cửa sổ →
-     `PAIRING_CLOSED`.
+     `PAIRING_CLOSED`. Chỉ kết nối đó bị từ chối: cửa sổ, bộ đếm giờ và client đang giữ cửa
+     sổ vẫn tiếp tục.
 
 #### API 3 — `WS pair/offer`
 

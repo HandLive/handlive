@@ -520,7 +520,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `NOT_CONNECTED` | General | No session to the target device | Wait for a connection or queue |
 | `INTERNAL` | General | Unexpected error | Retry once, then report the error |
 | `QR_INVALID` | Pairing | Wrong QR format or version | Scan again |
-| `PAIRING_CLOSED` | Pairing | The 120 s window has ended or the Mac has refreshed the QR | Scan the new QR |
+| `PAIRING_CLOSED` | Pairing | The 120 s window has ended or the Mac has refreshed the QR | Scan the new QR (PIN flow: get a new PIN) |
 | `PIN_INVALID` | Pairing | Wrong PIN (at most 3 attempts) | Enter it again; after 3 attempts the Mac generates a new PIN |
 | `AUTH_FAILED` | Session | Wrong HMAC or signature | No automatic retry |
 | `PAIR_UNKNOWN` | Session | No matching pair | Delete the local pair, ask to pair again |

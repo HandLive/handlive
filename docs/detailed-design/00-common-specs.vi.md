@@ -511,7 +511,7 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `NOT_CONNECTED` | Chung | Không có phiên tới thiết bị đích | Chờ kết nối hoặc xếp hàng |
 | `INTERNAL` | Chung | Lỗi không mong đợi | Thử lại 1 lần, rồi báo lỗi |
 | `QR_INVALID` | Ghép nối | QR sai định dạng hoặc phiên bản | Quét lại |
-| `PAIRING_CLOSED` | Ghép nối | Hết cửa sổ 120 s hoặc Mac đã làm mới QR | Quét QR mới |
+| `PAIRING_CLOSED` | Ghép nối | Hết cửa sổ 120 s hoặc Mac đã làm mới QR | Quét QR mới (luồng PIN: lấy mã PIN mới) |
 | `PIN_INVALID` | Ghép nối | PIN sai (tối đa 3 lần) | Nhập lại; quá 3 lần Mac sinh PIN mới |
 | `AUTH_FAILED` | Phiên | HMAC hoặc chữ ký sai | Không thử lại tự động |
 | `PAIR_UNKNOWN` | Phiên | Không có cặp tương ứng | Xóa cặp cục bộ, yêu cầu ghép nối lại |
