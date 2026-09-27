@@ -2,7 +2,7 @@ English | [Tiếng Việt](README.vi.md)
 
 # Screenshots
 
-Screens of the HandLive apps as of 2026-09-27 (Phase 3 in progress, android `e495907`, apple `2edd00c`). Every screen exists in English and Vietnamese: files end in `.en.png` or `.vi.png`. All names, numbers and devices are fictional (+1 201 555 01xx, "E2E Test Mac").
+Screens of the HandLive apps as of 2026-09-27 (Phase 3 in progress, android `e495907`, apple `2edd00c`; iPhone Messages list and New Message on both platforms: apple `2fd87b3`). Every screen exists in English and Vietnamese: files end in `.en.png` or `.vi.png`. All names, numbers and devices are fictional (+1 201 555 01xx, "E2E Test Mac").
 
 ## Android
 
@@ -29,6 +29,8 @@ Real `HLiOSUI` views in a harness app on the iOS 27 Simulator, with sample data 
 | First run: what HandLive does and how it protects your data. | Pair with the Android phone by QR code, or use a PIN. | Paste to send; the last clip from the phone is ready to copy. | Read and reply to the phone's SMS messages. |
 | <img src="ios/05-calls.en.png" alt="The phone's call log, missed calls in red." width="200"> | <img src="ios/06-incoming-call-banner.en.png" alt="An incoming call shows a banner with Decline." width="200"> | <img src="ios/07-settings.en.png" alt="Turn each feature on or off separately." width="200"> | <img src="ios/08-phone-details.en.png" alt="The paired phone: connection, features, Security Code, Unpair." width="200"> |
 | The phone's call log, missed calls in red. | An incoming call shows a banner with Decline. | Turn each feature on or off separately. | The paired phone: connection, features, Security Code, Unpair. |
+| <img src="ios/10-messages-list.en.png" alt="The conversation list with the All / Unread filter; unread conversations have a dot." width="200"> | <img src="ios/11-new-message.en.png" alt="New Message: type the phone number after To:." width="200"> |  |  |
+| The conversation list with the All / Unread filter; unread conversations have a dot. | New Message: type the phone number after To:. |  |  |
 
 ## Mac
 
@@ -40,6 +42,8 @@ Real `HLMacUI` windows and views in a harness app on macOS 27, with sample data;
 | First run: Open at Login and the menu bar icon. | Scan the QR code with HandLive on the Android phone, or use a PIN. |
 | <img src="macos/03-messages-window.en.png" alt="SMS conversations and the call log in one window." width="400"> | <img src="macos/04-incoming-call-panel.en.png" alt="Floating panel for an incoming call: Answer, Decline or Ignore." width="400"> |
 | SMS conversations and the call log in one window. | Floating panel for an incoming call: Answer, Decline or Ignore. |
+| <img src="macos/05-new-message.en.png" alt="New Message in the Messages window." width="400"> |  |
+| New Message in the Messages window. |  |
 
 ## Dark Mode and iPad
 
@@ -50,8 +54,6 @@ Real `HLMacUI` windows and views in a harness app on macOS 27, with sample data;
 
 ## Known issues seen while capturing
 
-- iPhone Messages list on iOS 27: the large title is hidden under a blurred bar and the search field overlaps the All/Unread filter when pulled down (`MessagesSplitView`: `safeAreaInset` together with `.searchable`). Left out.
-- New Message on iPhone and Mac: the recipient field shows "To:" twice (label plus placeholder). Left out.
 - Android pairing: when the Mac connects while the PIN is still being typed, the phone switches to Pairing… and the PIN can no longer be entered (PAIR-01 A3–A4).
 
 To refresh: rerun the same flows on the next build and replace files with the same names.

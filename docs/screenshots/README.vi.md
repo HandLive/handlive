@@ -2,7 +2,7 @@
 
 # Ảnh màn hình
 
-Các màn hình của ứng dụng HandLive tính đến 27/09/2026 (Phase 3 đang làm, android `e495907`, apple `2edd00c`). Mỗi màn có bản tiếng Anh và tiếng Việt: tên file kết thúc bằng `.en.png` hoặc `.vi.png`. Mọi tên, số điện thoại và thiết bị đều là giả (+1 201 555 01xx, "E2E Test Mac").
+Các màn hình của ứng dụng HandLive tính đến 27/09/2026 (Phase 3 đang làm, android `e495907`, apple `2edd00c`; danh sách Tin nhắn trên iPhone và Tin nhắn mới trên cả hai nền tảng: apple `2fd87b3`). Mỗi màn có bản tiếng Anh và tiếng Việt: tên file kết thúc bằng `.en.png` hoặc `.vi.png`. Mọi tên, số điện thoại và thiết bị đều là giả (+1 201 555 01xx, "E2E Test Mac").
 
 ## Android
 
@@ -29,6 +29,8 @@ View `HLiOSUI` thật trong một app dựng riêng để chụp, chạy trên i
 | Lần chạy đầu: HandLive làm gì và bảo vệ dữ liệu ra sao. | Ghép nối với điện thoại Android bằng mã QR hoặc mã PIN. | Chạm Dán để gửi; nội dung mới nhất từ điện thoại sẵn sàng để sao chép. | Đọc và trả lời tin nhắn SMS của điện thoại. |
 | <img src="ios/05-calls.vi.png" alt="Nhật ký cuộc gọi của điện thoại, cuộc gọi nhỡ màu đỏ." width="200"> | <img src="ios/06-incoming-call-banner.vi.png" alt="Cuộc gọi đến hiện biểu ngữ kèm nút Từ chối." width="200"> | <img src="ios/07-settings.vi.png" alt="Bật hoặc tắt riêng từng tính năng." width="200"> | <img src="ios/08-phone-details.vi.png" alt="Điện thoại đã ghép nối: kết nối, tính năng, mã an toàn, hủy ghép nối." width="200"> |
 | Nhật ký cuộc gọi của điện thoại, cuộc gọi nhỡ màu đỏ. | Cuộc gọi đến hiện biểu ngữ kèm nút Từ chối. | Bật hoặc tắt riêng từng tính năng. | Điện thoại đã ghép nối: kết nối, tính năng, mã an toàn, hủy ghép nối. |
+| <img src="ios/10-messages-list.vi.png" alt="Danh sách hội thoại với bộ lọc Tất cả / Chưa đọc; hội thoại chưa đọc có dấu chấm." width="200"> | <img src="ios/11-new-message.vi.png" alt="Tin nhắn mới: gõ số điện thoại sau Đến:." width="200"> |  |  |
+| Danh sách hội thoại với bộ lọc Tất cả / Chưa đọc; hội thoại chưa đọc có dấu chấm. | Tin nhắn mới: gõ số điện thoại sau Đến:. |  |  |
 
 ## Mac
 
@@ -40,6 +42,8 @@ Cửa sổ và view `HLMacUI` thật trong một app dựng riêng trên macOS 2
 | Lần chạy đầu: mở khi đăng nhập và biểu tượng trên thanh menu. | Quét mã QR bằng HandLive trên điện thoại Android, hoặc dùng mã PIN. |
 | <img src="macos/03-messages-window.vi.png" alt="Hội thoại SMS và nhật ký cuộc gọi trong một cửa sổ." width="400"> | <img src="macos/04-incoming-call-panel.vi.png" alt="Bảng nổi khi có cuộc gọi đến: Trả lời, Từ chối hoặc Bỏ qua." width="400"> |
 | Hội thoại SMS và nhật ký cuộc gọi trong một cửa sổ. | Bảng nổi khi có cuộc gọi đến: Trả lời, Từ chối hoặc Bỏ qua. |
+| <img src="macos/05-new-message.vi.png" alt="Tin nhắn mới trong cửa sổ Tin nhắn." width="400"> |  |
+| Tin nhắn mới trong cửa sổ Tin nhắn. |  |
 
 ## Chế độ tối và iPad
 
@@ -50,8 +54,6 @@ Cửa sổ và view `HLMacUI` thật trong một app dựng riêng trên macOS 2
 
 ## Lỗi giao diện thấy khi chụp
 
-- Danh sách Tin nhắn trên iPhone với iOS 27: tiêu đề lớn bị che dưới thanh mờ, kéo xuống thì ô tìm kiếm đè lên bộ lọc Tất cả/Chưa đọc (`MessagesSplitView`: `safeAreaInset` cùng `.searchable`). Chưa đưa vào.
-- Tin nhắn mới trên iPhone và Mac: ô người nhận hiện "Đến:" hai lần (nhãn cộng placeholder). Chưa đưa vào.
 - Ghép nối trên Android: nếu Mac kết nối khi người dùng còn đang gõ PIN, điện thoại chuyển sang Đang ghép nối… và không gõ PIN được nữa (PAIR-01 A3–A4).
 
 Cập nhật: chạy lại cùng các bước trên bản build mới và thay file cùng tên.
