@@ -150,6 +150,36 @@ second copy; answered at + 100 ms → no push, ringing ended at + 100 ms; a wait
 - FCM `call_action` wake on a `gms` build with Firebase settings (the phone joins the relay, the iPhone declines).
 - The outbox with a flaky network: a 429/502 during ringing, then the call ends (queued incoming dropped).
 
+## Follow-up: settled number
+
+Coordinator decision after spec sync 2: the `call_changed` line whose applied event settles the caller's number
+carries `settled=true`, because the < 300 ms push time starts there (CALL-01 API 4 logic 2).
+
+| Hash | Subject (handlive-android, `feat/phase-03-calls`, pushed) |
+|------|---------|
+| 355c81a | feat(android): mark the call change that settles the caller's number in the benchmark |
+| 5f67db2 | test(android): check where the benchmark marks the caller's number as settled |
+
+- `CallPushes.settles()` uses the condition that releases the `call_incoming` push (number known or withheld, or
+  no `READ_CALL_LOG`) for a ringing incoming call that is not waiting, once per `call_id`. `CallEvents` passes it to
+  `CallTrace.changed`, and `CallBenchTrace` writes `settled=true` after `number` and before `sub`, in the order of the
+  `shared/tools/bench/README.md` row. No other line gets the field, and the end of the 300 ms wait writes no line.
+- The three cases write it: the broadcast with the number (also the key with an empty value), the second ringing
+  copy without the key while `READ_CALL_LOG` is granted, and `RINGING` itself without `READ_CALL_LOG`.
+- Interpretations (please confirm):
+  1. A number copy that came before `RINGING` (held, CALL-01 API 3 logic 4) is applied with `RINGING`. The `RINGING`
+     line (`trigger=listener`) then carries `settled=true`, and the push leaves at that moment.
+  2. A number that comes after the 300 ms wait, while the call still rings, marks its own line once, although the
+     push already left. `call_latency.py` then starts at the end of the wait. A number set after the ringing (the
+     `OFFHOOK` copy of an answered call) and a waiting call's number never get the field.
+- Tests: `CallBenchTraceTest` has 9 tests instead of 3: the three cases, the held copy, the end of the wait with a
+  late number, and waiting, outgoing and answered calls that never get the field. A mutation that marks every
+  change of a settled call fails `withoutTheCallLogPermissionRingingItselfSettlesTheNumber`.
+- `./gradlew check` → BUILD SUCCESSFUL (777 tasks); feature/call 88 tests, 0 failures. CI `ci-android` run 36299946454:
+  success (3m50s). The shared `call_latency.py` (ac621ca) read a synthetic log in the phone's line format with all four
+  cases: `incoming push n=4 median=120.0 p95=120.0 max=120.0 target < 300 → PASS` (each push answered 120 ms after it
+  left).
+
 Status: DONE_WITH_CONCERNS
 Summary: call_incoming and call_missed pushes to iPhone and iPad pairs without a session, their push_outbox retries (handlive.db version 3 with a reason column), the relay held open while a call rings and the call_action wake are implemented; the five call push vectors are rebuilt byte for byte, the push timing is tested on a virtual clock, and CI is green.
-Concerns/Blockers: No real relay, APNs or FCM was reachable: the push target (number → 202 in < 300 ms), the collapse-key replacement on iOS and the FCM call_action wake are pending on devices. push_outbox.reason and the dropped queued call_incoming (deviations 1 and 2) need a spec update.
+Concerns/Blockers: No real relay, APNs or FCM was reachable: the push target (number → 202 in < 300 ms), the collapse-key replacement on iOS and the FCM call_action wake are pending on devices. Deviations 1–6 are in the specs since spec sync 2 (hub 476764e).
