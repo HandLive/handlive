@@ -182,6 +182,44 @@ Tests on aa689d6: `check_schemas.py` XANH (121 positives, 235 negatives), vector
 393 strings and 0 warnings, bench 68/68, relay load 10/10, commit check clean (29 commits). CI `ci-shared` run
 36304374286 on aa689d6 passed (both jobs).
 
+## Follow-up: Focus sound
+
+Spec sync 3 (hub main 13df812 and later): CALL-01 API 7 gives the Mac Focus variant `sound = .default`, since the
+time-sensitive level alone is silent on macOS; `.passive` has none. API 6 (iPhone/iPad) has no `sound` row: the push
+already carries `sound: "default"` (CONN-04 API 4).
+
+- **Schema.** `call-notification.schema.json` `$defs/incoming` gains `sound` (const `default`) and one rule: `sound`
+  requires `interruptionLevel = timeSensitive`, the Mac identity (`identifier` or category), and a category, if any,
+  of `HL_CALL_INCOMING_MAC` (never the iPhone one). `sound` stays optional: Apple's JSON form
+  (`CallNotificationContent.json`) emits a sound for missed calls only, so requiring it now would turn
+  `CallNotificationTests` red. Making it required on the Mac time-sensitive variant is a one-line change once M-APP's
+  JSON form emits it.
+- **Samples.** New positive: Mac during a Focus with `HL_CALL_INCOMING_MAC` and `sound`. The button-less Mac Focus
+  sample now carries its `sound`. Six new negatives, each rejected by the sound rule: a sound on a passive Mac
+  notification, on iPhone content with its category, on iPhone content without actions, on a late push, a sound
+  with no level, and another sound name. Positives 121 → 122, negatives 235 → 241.
+- **Checker.** `call_spec_checks.py`:
+  - Levels: the union of the levels the API 6 and API 7 `interruptionLevel` rows name must equal the schema enum
+    exactly (was: each named level is a schema value).
+  - Sound: each `sound` row is read clause by clause into (sound, level) pairs. API 7 must give the schema's sound at
+    the level its sound rule requires (`[("default", "timeSensitive")]`); API 6 must give none.
+  - Call table checks 27 → 28 (the two per-table level checks became one exact check, plus two sound checks).
+  - Mutation test (scratch script) — each fails as intended: a `critical` schema level; `passive` removed; the sound
+    rule moved to `passive`; a `sound` row added to API 6; `.active` dropped from API 6. The first and last pass the
+    old subset check.
+- **Docs.** `schemas/README` and `tools/schemas/README` (EN + VI).
+- **Apple shapes.** The seven incoming shapes of `CallNotificationTests` still validate: they carry no `sound` today.
+
+Commits (handlive-shared, `feat/phase-03-calls`, under the lock, on top of aa689d6):
+
+- **e6c6a83** "feat(shared): allow the default sound on a Mac call notification during a Focus"
+- **5f930f3** "test(shared): match the incoming-call levels and sound with the call spec tables"
+- **fcf709d** "docs: describe the sound of a Mac call notification during a Focus"
+
+Tests on fcf709d: `check_schemas.py` XANH (122 positives, 241 negatives, 44 spec-table checks; 43 on e6c6a83 alone),
+vectors 0 lỗi / 0 lệch, strings 96/96, `--docs` 393 strings and 0 warnings, bench 68/68, relay load 10/10, commit
+check clean (32 commits). CI `ci-shared` run 36304951058 on fcf709d passed (both jobs).
+
 ## Pending manual checks
 
 - None for the schemas themselves. The platform agents' tests should validate their emitted `call_event` messages
