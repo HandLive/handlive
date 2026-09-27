@@ -399,7 +399,7 @@ capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
 | `call_event` | `action` | C→S | Có | `/v1/ctl` | CALL-02, CALL-03 (qua WS chỉ `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` đi bằng lệnh HFP — gửi qua WS nhận `CALL_HFP_REQUIRED`) |
-| `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 |
+| `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 (các trường định nghĩa ở AUDIO-02 API 3, `07-call-audio.md`; client Phase 3 không đọc tin này) |
 | `call_event` | `log_sync` | C→S | Có (kèm dữ liệu) | `/v1/ctl` | CALL-04 |
 | `call_event` | `log_new` | S→C | — | `/v1/ctl` | CALL-04 |
 | `call_audio` | `open` | C→S | Có | `/v1/ctl` | AUDIO-04 |

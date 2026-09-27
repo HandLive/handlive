@@ -405,7 +405,7 @@ capability`) and adds `session`, `camera` for the session handshake and Phase 5.
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
 | `call_event` | `action` | C→S | Yes | `/v1/ctl` | CALL-02, CALL-03 (over WS only `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` go through HFP commands — sent over WS they get `CALL_HFP_REQUIRED`) |
-| `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 |
+| `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 (fields defined in AUDIO-02 API 3, `07-call-audio.md`; Phase 3 clients do not read it) |
 | `call_event` | `log_sync` | C→S | Yes (with data) | `/v1/ctl` | CALL-04 |
 | `call_event` | `log_new` | S→C | — | `/v1/ctl` | CALL-04 |
 | `call_audio` | `open` | C→S | Yes | `/v1/ctl` | AUDIO-04 |
