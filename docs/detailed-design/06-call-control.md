@@ -1271,8 +1271,8 @@ Incremental sync:
      failed → generic content "Missed call on your phone", no category (E9). I-NSE never writes to the
      database (0.9.3); the entry reaches `call_log_entry` with the next `log_sync`. I-NSE never opens
      the database either, so for `categoryIdentifier` it reads a copy: I-APP keeps each pair's latest
-     `features.sms.can_send` in the App Group `UserDefaults` and rewrites it whenever that capability
-     changes (as `sms.preview` is kept for the extension); I-NSE sets `HL_CALL_MISSED` only when that
+     `features.sms.can_send` in the App Group `UserDefaults` (`sms.peer_can_send`, 0.9.5) and rewrites it
+     whenever that capability changes (as `sms.preview` is kept for the extension); I-NSE sets `HL_CALL_MISSED` only when that
      copy is `true` and the number is known; no copy → no "Message" action.
   3. Remove the notification when the entry is viewed (step 12) with
      `removeDeliveredNotifications(withIdentifiers:)`; opening the call list removes every missed-call

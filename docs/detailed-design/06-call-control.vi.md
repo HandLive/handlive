@@ -1240,7 +1240,7 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
      chung "Cuộc gọi nhỡ trên điện thoại", không đặt danh mục (E9). I-NSE không ghi cơ sở dữ liệu
      (0.9.3); mục vào `call_log_entry` ở lần `log_sync` sau. I-NSE cũng không mở cơ sở dữ liệu, nên
      đọc một bản sao để đặt `categoryIdentifier`. I-APP giữ `features.sms.can_send` mới nhất của từng
-     cặp trong `UserDefaults` của App Group và ghi lại mỗi khi capability này đổi (như `sms.preview`
+     cặp trong `UserDefaults` của App Group (`sms.peer_can_send`, 0.9.5) và ghi lại mỗi khi capability này đổi (như `sms.preview`
      được giữ cho extension). I-NSE chỉ đặt `HL_CALL_MISSED` khi bản sao là `true` và biết số. Không
      có bản sao thì không có nút "Nhắn tin".
   3. Gỡ thông báo khi mục được xem (bước 12) bằng `removeDeliveredNotifications(withIdentifiers:)`;
