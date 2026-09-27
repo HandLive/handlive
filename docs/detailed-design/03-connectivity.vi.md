@@ -735,7 +735,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Quyền thông báo (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | Hệ thống hỏi ở SET-03; hiển thị hướng dẫn nếu `denied` |
-| 2 | Tiêu đề thông báo | string | Output | "HandLive" | I-NSE thay bằng tên người gửi hoặc "Cuộc gọi đến" |
+| 2 | Tiêu đề thông báo | string | Output | "HandLive" | I-NSE thay bằng tên hoặc số của người gửi hay người gọi (chi tiết với cuộc gọi: CALL-01 API 6, CALL-04 API 4) |
 | 3 | Nội dung thông báo | string | Output | "Có thông báo mới từ điện thoại" | I-NSE thay bằng nội dung đã giải mã (tôn trọng `sms.preview`) |
 | 4 | Nhóm thông báo | string | Output | — | `thread-id` của APNs = `sms` hoặc `calls` (relay không thấy hội thoại); sau khi giải mã, I-NSE gom SMS theo hội thoại bằng `threadIdentifier` (SMS-02 API 4) |
 
@@ -779,7 +779,7 @@ flowchart TB
 | 7 | Hệ thống | R-API, R-DB | Kiểm người gửi và đích cùng một cặp hiệu lực, đích có token, rate limit. | E1, E3, E4. |
 | 8 | Hệ thống | R-API → PUSH | FCM HTTP v1 (Android) hoặc APNs HTTP/2 (iOS). Token hỏng → xóa khỏi `devices` (E3). |  |
 | 9a | Hệ thống | A-SVC | `onMessageReceived` với `t = wake`: khởi động/giữ A-SVC (ngoại lệ khởi chạy foreground service từ FCM ưu tiên cao), chạy CONN-03, chờ client bắt tay; rảnh 5 phút thì ngắt relay. | E6. |
-| 9b | Hệ thống | I-NSE | Đọc `p` (pair_id) và `hl`; lấy `PRK` từ Keychain nhóm dùng chung, dẫn xuất `K_push`, giải mã; kiểm `ts` ≤ 24 h và `id` chưa xử lý; dựng tiêu đề/nội dung theo loại tin, với SMS thì đặt `threadIdentifier` theo hội thoại (SMS-02 API 4); gọi `contentHandler`. | E5, E7. |
+| 9b | Hệ thống | I-NSE | Đọc `p` (pair_id) và `hl`; lấy `PRK` từ Keychain nhóm dùng chung, dẫn xuất `K_push`, giải mã; kiểm `ts` ≤ 24 h và `id` chưa xử lý; dựng tiêu đề/nội dung theo loại tin, với SMS thì đặt `threadIdentifier` theo hội thoại (SMS-02 API 4); với cuộc gọi nhỡ thì chỉ đặt danh mục `HL_CALL_MISSED` (nút "Nhắn tin") khi biết số và bản sao `features.sms.can_send` mà I-APP giữ cho cặp đó trong `UserDefaults` của App Group là `true` (không có bản sao thì không có "Nhắn tin"; CALL-04 API 4); gọi `contentHandler`. | E5, E7. |
 | 10 | Người dùng | I-APP / hệ điều hành | Thấy thông báo; chạm vào mở I-APP (CONN-01, đồng bộ). Phía client chờ: thấy "Đã kết nối qua Internet". |  |
 
 ### 3.4.5 Đặc tả API/service

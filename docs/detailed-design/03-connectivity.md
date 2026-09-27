@@ -746,7 +746,7 @@ N/A — no approved wireframe yet.
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Notification permission (iOS) | enum{allowed\| denied\| not_determined} | Input/Output | `not_determined` | The system asks during SET-03; guidance is shown if `denied` |
-| 2 | Notification title | string | Output | "HandLive" | I-NSE replaces it with the sender's name or "Incoming Call" |
+| 2 | Notification title | string | Output | "HandLive" | I-NSE replaces it with the sender's or caller's name or number (details for calls: CALL-01 API 6, CALL-04 API 4) |
 | 3 | Notification content | string | Output | "New notification from your phone" | I-NSE replaces it with the decrypted content (respects `sms.preview`) |
 | 4 | Notification group | string | Output | — | APNs `thread-id` = `sms` or `calls` (the relay cannot see the conversation); after decrypting, I-NSE groups an SMS by conversation with `threadIdentifier` (SMS-02 API 4) |
 
@@ -790,7 +790,7 @@ flowchart TB
 | 7 | System | R-API, R-DB | Checks that the sender and the target are in the same valid pair, that the target has a token, and the rate limit. | E1, E3, E4. |
 | 8 | System | R-API → PUSH | FCM HTTP v1 (Android) or APNs HTTP/2 (iOS). Broken token → delete it from `devices` (E3). |  |
 | 9a | System | A-SVC | `onMessageReceived` with `t = wake`: starts/keeps A-SVC (the foreground service start exemption for high-priority FCM), runs CONN-03, waits for the client's handshake; after 5 idle minutes it disconnects from the relay. | E6. |
-| 9b | System | I-NSE | Reads `p` (pair_id) and `hl`; takes `PRK` from the shared Keychain group, derives `K_push`, decrypts; checks `ts` ≤ 24 h and that `id` has not been processed; builds the title/content by message type and, for an SMS, sets `threadIdentifier` to its conversation (SMS-02 API 4); calls `contentHandler`. | E5, E7. |
+| 9b | System | I-NSE | Reads `p` (pair_id) and `hl`; takes `PRK` from the shared Keychain group, derives `K_push`, decrypts; checks `ts` ≤ 24 h and that `id` has not been processed; builds the title/content by message type and, for an SMS, sets `threadIdentifier` to its conversation (SMS-02 API 4); for a missed call, sets the `HL_CALL_MISSED` category ("Message") only when the number is known and the copy of `features.sms.can_send` that I-APP keeps for that pair in the App Group `UserDefaults` is `true` (no copy → no "Message" action; CALL-04 API 4); calls `contentHandler`. | E5, E7. |
 | 10 | User | I-APP / operating system | Sees the notification; tapping it opens I-APP (CONN-01, sync). On the waiting client: sees "Connected over the internet". |  |
 
 ### 3.4.5 API/service specification
