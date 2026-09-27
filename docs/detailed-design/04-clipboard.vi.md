@@ -519,7 +519,7 @@ UserDefaults.standard.integer(forKey: "clip.auto_clear_s")        # bước 10: 
 | Tác nhân | Chính: Người dùng. Hệ thống: M-APP, OS (`NSPasteboard`, `ClipboardManager`), A-SVC, A-CLIP (`ClipboardModule`), I-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1.<br>M-APP đang chạy, có cặp hiệu lực và `feature.clipboard = true` trên Mac.<br>2.<br>Phiên `/v1/ctl` với điện thoại đang mở và clipboard hiệu lực (QC1); nếu không, clip được giữ để phát lại (QC7).<br>3. macOS 15.4+: quyền "Dán từ ứng dụng khác" của HandLive đang ở mặc định hoặc "Luôn cho phép". |
 | Điều kiện sau | **Thành công:** clipboard Android chứa văn bản (kèm `EXTRA_IS_SENSITIVE` nếu `sensitive`); Android đã ghi dấu vết QC4, hẹn CLIP-05, chuyển tiếp tới client khác đang kết nối; Mac nhận `ack` `applied` và đánh dấu clip đã được xác nhận.<br>**Không gửi:** clipboard Android giữ nguyên; người dùng thấy lý do với E2, E4, E5, E7, E8. |
-| Ngoại lệ | E1 — `changeCount` đổi do chính HandLive ghi (bằng giá trị đã nhớ, hoặc mục đầu có kiểu `app.handlive.clip-id`), hoặc trùng SHA-256 clip vừa nhận trong 5 s (QC4): bỏ qua. Ở đường tự động, thay đổi có SHA-256 của clip Mac đã gửi, khi clip đó còn chờ `ack` hoặc trong 5 s sau `applied`, là bản dội từ công cụ clipboard khác (QC4): cũng bỏ qua.<br>E2 — macOS 15.4+ với `accessBehavior` là `.ask` hoặc `.alwaysDeny`: không tự đọc; hiện hướng dẫn mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác và chọn "Luôn cho phép" (Apple không có API xin quyền này); với `.ask` vẫn gửi được bằng mục menu "Gửi bảng nhớ tạm sang điện thoại" (hệ thống hỏi người dùng).<br>E3 — Nội dung không phải văn bản: ảnh → CLIP-03; URL tệp (`public.file-url`, ví dụ sao chép tệp trong Finder) hoặc kiểu khác → bỏ qua, chỉ log `CLIP_UNSUPPORTED_MIME`.<br>E4 — Nội dung nhạy cảm (QC3): chặn, thông báo có "Vẫn gửi".<br>E5 — Văn bản > 1 MiB: `CLIP_TOO_LARGE`, báo tại chỗ (trường 7).<br>E6 — Chưa kết nối điện thoại: giữ làm clip tại chỗ mới nhất, phát lại nếu kết nối lại trong 120 s (QC7); mục menu báo "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút".<br>E7 — Android xung đột (QC8): `ack` `ignored`/`conflict` kèm `clipboard/conflict` → Mac hiện thông báo có "Gửi lại".<br>E8 — Android ghi lỗi (`setPrimaryClip` ném ngoại lệ): `ack` `INTERNAL` → dòng trạng thái trong menu của biểu tượng thanh menu "Không ghi được bảng nhớ tạm trên điện thoại".<br>E9 — Không có `ack` trong 10 s: coi như chưa nhận, phát lại khi có phiên mới nếu còn trong 120 s (QC7). |
+| Ngoại lệ | E1 — `changeCount` đổi do chính HandLive ghi (bằng giá trị đã nhớ, hoặc mục đầu có kiểu `app.handlive.clip-id`), hoặc trùng SHA-256 clip vừa nhận trong 5 s (QC4): bỏ qua. Ở đường tự động, thay đổi có SHA-256 của clip Mac đã gửi, khi clip đó còn chờ `ack` hoặc trong 5 s sau `applied`, là bản dội từ công cụ clipboard khác (QC4): cũng bỏ qua.<br>E2 — macOS 15.4+ với `accessBehavior` là `.ask` hoặc `.alwaysDeny`: không tự đọc; hiện hướng dẫn mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác và chọn "Luôn cho phép" (Apple không có API xin quyền này); với `.ask` vẫn gửi được bằng mục menu "Gửi bảng nhớ tạm sang điện thoại" (hệ thống hỏi người dùng).<br>E3 — Không có văn bản để gửi: ảnh, hoặc tệp ảnh sao chép trong Finder → CLIP-03; chuỗi rỗng, URL tệp khác (`public.file-url`, ví dụ sao chép tài liệu trong Finder) hoặc kiểu khác → bỏ qua, chỉ log `CLIP_UNSUPPORTED_MIME`; đường thủ công hiện "Bảng nhớ tạm trống hoặc không phải văn bản".<br>E4 — Nội dung nhạy cảm (QC3): chặn, thông báo có "Vẫn gửi".<br>E5 — Văn bản > 1 MiB: `CLIP_TOO_LARGE`, báo tại chỗ (trường 7).<br>E6 — Chưa kết nối điện thoại: giữ làm clip tại chỗ mới nhất, phát lại nếu kết nối lại trong 120 s (QC7); mục menu báo "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút".<br>E7 — Android xung đột (QC8): `ack` `ignored`/`conflict` kèm `clipboard/conflict` → Mac hiện thông báo có "Gửi lại".<br>E8 — Android ghi lỗi (`setPrimaryClip` ném ngoại lệ): `ack` `INTERNAL` → dòng trạng thái trong menu của biểu tượng thanh menu "Không ghi được bảng nhớ tạm trên điện thoại".<br>E9 — Không có `ack` trong 10 s: coi như chưa nhận, phát lại khi có phiên mới nếu còn trong 120 s (QC7). |
 | Yêu cầu đặc biệt | **Hiệu năng:** phát hiện ≤ 500 ms do hỏi vòng, phần còn lại theo QC9; đọc `changeCount` rất nhẹ, không đọc nội dung khi `changeCount` không đổi.<br>Hỏi vòng chạy khi có cặp và `feature.clipboard = true` (kể cả lúc mất kết nối, để giữ clip mới nhất theo QC7); dừng khi Mac ngủ, kiểm lại một lần khi thức dậy.<br>**Riêng tư:** chỉ đọc nội dung khi `changeCount` đổi và clipboard hiệu lực; tuân thủ C10; không log nội dung (QC2).<br>**Android:** ghi clipboard không cần focus; Android 13+ hệ thống hiện overlay xem trước (che nội dung khi có `EXTRA_IS_SENSITIVE`) — hành vi mong đợi. |
 
 ### 4.2.2 Màn hình
@@ -587,7 +587,7 @@ flowchart TB
 | 2 | Hệ thống | M-APP | Bộ hẹn giờ 500 ms đọc `NSPasteboard.general.changeCount` (API 1); không đổi → chờ lượt sau. |  |
 | 3 | Hệ thống | M-APP | Bỏ nếu `changeCount` bằng giá trị ghi của HandLive hoặc mục đầu có kiểu `app.handlive.clip-id`. | E1. |
 | 4 | Hệ thống | M-APP | macOS 15.4+: đọc `accessBehavior`; `.ask` hoặc `.alwaysDeny` → không đọc, hiện trường 2, 3 (một lần mỗi lần M-APP khởi động). | E2. |
-| 5 | Hệ thống | M-APP | Xét kiểu của mục đầu theo thứ tự ưu tiên của ứng dụng nguồn: văn bản → đọc `string(forType: .string)`; ảnh → CLIP-03; URL tệp hoặc kiểu khác → bỏ. Tính SHA-256, kiểm QC4 (trùng clip vừa nhận trong 5 s → bỏ). | E1, E3. |
+| 5 | Hệ thống | M-APP | Xét kiểu của mục đầu theo thứ tự ưu tiên của ứng dụng nguồn: văn bản → đọc `string(forType: .string)` (chuỗi rỗng → bỏ); ảnh, hoặc URL tệp mà tệp là ảnh → CLIP-03; URL tệp khác hoặc kiểu khác → bỏ. Tính SHA-256, kiểm QC4 (trùng clip vừa nhận trong 5 s → bỏ). | E1, E3. |
 | 6 | Hệ thống | M-APP | Kiểm nhạy cảm QC3 (kiểu `org.nspasteboard.*`, số thẻ qua Luhn). | Nhạy cảm → E4, hiện trường 5, 6. |
 | 7 | Người dùng | M-APP (thông báo) | Chọn "Vẫn gửi" → tiếp tục với `sensitive = true`. | Không chọn trong 120 s → bỏ nội dung. |
 | 8 | Hệ thống | M-APP | Kiểm QC5: > 1 MiB → E5; plaintext > `CLIP_INLINE_MAX` → gửi theo chunk (CLIP-03). Sinh `clip_id`, ghi làm clip tại chỗ mới nhất (QC7). | E5. |
@@ -621,7 +621,7 @@ flowchart TB
 | Chu kỳ | `CLIP_POLL_MAC` = 500 ms, leeway 50 ms, trên hàng đợi nền |
 | Kiểu văn bản | `public.utf8-plain-text` (`.string`) |
 | Kiểu ảnh (CLIP-03) | `public.png`, `public.jpeg`, `public.tiff` |
-| Kiểu bỏ qua | `public.file-url` (`.fileURL`) và mọi kiểu khác |
+| Kiểu bỏ qua | `public.file-url` (`.fileURL`) của tệp không phải ảnh, và mọi kiểu khác |
 | Kiểu nhạy cảm (QC3) | `org.nspasteboard.ConcealedType`, `org.nspasteboard.TransientType`, `org.nspasteboard.AutoGeneratedType` |
 
 - **Response:** `changeCount` (Int); `accessBehavior` ∈ {`.default`, `.ask`, `.alwaysAllow`,
@@ -640,10 +640,13 @@ if #available(macOS 15.4, *), [.ask, .alwaysDeny].contains(pb.accessBehavior) {
 }
 guard let item = pb.pasteboardItems?.first else { return }
 if item.types.contains(NSPasteboard.PasteboardType("app.handlive.clip-id")) { return } // E1
-switch firstKnownKind(item.types) {                     // thứ tự ưu tiên của ứng dụng nguồn
-case .text:  if let text = item.string(forType: .string) { clipSender.sendLocalText(text, types: item.types) }
+switch firstKnownKind(item.types) {                     // URL tệp trước, rồi thứ tự ưu tiên của ứng dụng nguồn
+case .imageFile(let url): imageSender.sendLocalImageFile(url)                        // CLIP-03 API 2
+case .text:  if let text = item.string(forType: .string), !text.isEmpty {            // rỗng → E3
+                 clipSender.sendLocalText(text, types: item.types)
+             }
 case .image: imageSender.sendLocalImage(item)                                        // CLIP-03
-default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3
+default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3: tệp khác, kiểu khác
 }
 ```
 
@@ -654,8 +657,10 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
      mục menu trường 4; `.alwaysDeny` → không đọc. Trường 2 cập nhật khi M-APP khởi động và khi mở
      Cài đặt → Bảng nhớ tạm.
   3. Chọn loại theo kiểu đầu tiên của mục đầu thuộc nhóm văn bản hoặc ảnh (`NSPasteboardItem.types`
-     theo thứ tự ứng dụng nguồn ưu tiên). Mục có `public.file-url` được coi là sao chép tệp và bỏ cả
-     mục (không gửi tên tệp).
+     theo thứ tự ứng dụng nguồn ưu tiên). Mục có `public.file-url` là sao chép tệp: tệp có kiểu (theo
+     phần mở rộng) thuộc `public.image` là ảnh được sao chép (CLIP-03 API 2); tệp khác thì bỏ cả mục
+     (không gửi tên tệp). Sao chép nhiều tệp cùng lúc: chỉ tính tệp đầu. Chuỗi rỗng coi như không sao
+     chép gì (E3).
   4. Hỏi vòng chỉ chạy khi có cặp và `feature.clipboard = true`; tạm dừng khi Mac ngủ
      (`NSWorkspace.willSleepNotification`), kiểm một lần khi thức dậy (`didWakeNotification`).
   5. Văn bản đọc được: tính SHA-256, kiểm QC4, QC3, QC5 rồi gửi API 2; không log nội dung.
@@ -782,7 +787,7 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # bước 10: h�
 | Mục | Nội dung |
 |-----|----------|
 | Tên | CLIP-03 — Đồng bộ ảnh clipboard giữa Android và Mac |
-| Mô tả | Đồng bộ ảnh đã sao chép theo hai chiều.<br>Nguồn: Android — item của `ClipData` là URI có MIME `image/*`, mở bằng `ContentResolver` ngay trong `ClipboardReadActivity` (đường tự động hoặc thủ công của CLIP-01); Mac — mục clipboard có `public.png`, `public.jpeg` hoặc `public.tiff` (phát hiện như CLIP-02).<br>PNG, JPEG giữ nguyên; định dạng khác (TIFF, HEIC, WebP, GIF…) chuyển sang PNG; ảnh sau chuẩn hóa > `CLIP_MAX_IMAGE` (10 MiB) bị chặn.<br>Truyền: `clipboard/push` kèm `transfer`, rồi các `clipboard/chunk` 64 KiB theo thứ tự (plaintext nhị phân, 0.5.1); bên nhận ghi tệp tạm, kiểm SHA-256, rồi ghi clipboard — Android bằng URI của `FileProvider` (`ClipData.newUri`), Mac bằng `setData`.<br>Cơ chế chunk dùng chung cho văn bản lớn hơn `CLIP_INLINE_MAX` (QC5) và ảnh của iPhone/iPad (CLIP-04). |
+| Mô tả | Đồng bộ ảnh đã sao chép theo hai chiều.<br>Nguồn: Android — item của `ClipData` là URI có MIME `image/*`, mở bằng `ContentResolver` ngay trong `ClipboardReadActivity` (đường tự động hoặc thủ công của CLIP-01); Mac — mục clipboard có `public.png`, `public.jpeg` hoặc `public.tiff`, hoặc tệp ảnh sao chép trong Finder (đọc từ tệp; phát hiện như CLIP-02).<br>PNG, JPEG giữ nguyên; định dạng khác (TIFF, HEIC, WebP, GIF…) chuyển sang PNG; ảnh sau chuẩn hóa > `CLIP_MAX_IMAGE` (10 MiB) bị chặn.<br>Truyền: `clipboard/push` kèm `transfer`, rồi các `clipboard/chunk` 64 KiB theo thứ tự (plaintext nhị phân, 0.5.1); bên nhận ghi tệp tạm, kiểm SHA-256, rồi ghi clipboard — Android bằng URI của `FileProvider` (`ClipData.newUri`), Mac bằng `setData`.<br>Cơ chế chunk dùng chung cho văn bản lớn hơn `CLIP_INLINE_MAX` (QC5) và ảnh của iPhone/iPad (CLIP-04). |
 | Tác nhân | Chính: Người dùng. Hệ thống: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1.<br>Clipboard hiệu lực và ảnh được phép theo QC1 (`clip.send_images = true` ở bên gửi, `mimes` của bên nhận có MIME ảnh).<br>2.<br>Android: ảnh được đọc qua đường tự động hoặc thủ công của CLIP-01 (đích Chia sẻ chỉ nhận văn bản).<br>Mac: hỏi vòng CLIP-02 đang chạy và được phép đọc (C10).<br>3.<br>Bên nhận còn chỗ cho tệp tạm. |
 | Điều kiện sau | **Thành công:** clipboard bên nhận chứa ảnh (Android: URI `content://` của HandLive trỏ tới tệp trong `cache/clip/`; Mac: dữ liệu PNG hoặc JPEG); bên nhận đã ghi dấu vết QC4, hẹn CLIP-05; tệp tạm của lần truyền đã xóa (Android giữ tệp của clip đang nằm trên clipboard); Android chuyển tiếp tới client khác (QC6).<br>**Thất bại hoặc hủy:** không bên nào đổi clipboard; tệp tạm bị xóa. |
@@ -916,7 +921,8 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
   từ `CGImageSourceCopyPropertiesAtIndex` (`kCGImagePropertyPixelWidth`,
   `kCGImagePropertyPixelHeight`).
 - **Request:** thứ tự chọn kiểu: `public.png` → `public.jpeg` → `public.tiff` → kiểu ảnh khác (ví dụ
-  `public.heic`).
+  `public.heic`). Tệp ảnh sao chép trong Finder: tệp tại `public.file-url` của mục, kiểu lấy theo phần
+  mở rộng.
 - **Response:** `Data` của ảnh; sau chuẩn hóa là PNG hoặc JPEG.
 - **Ví dụ:**
 
@@ -935,6 +941,9 @@ else { log(code: "CLIP_UNSUPPORTED_MIME") }                              // E3
   2. Ảnh chụp màn hình vào clipboard thường có cả PNG và TIFF → dùng PNG, không chuyển đổi.
   3. TIFF và kiểu khác → PNG; chuyển đổi chạy trên hàng đợi nền.
   4. QC3 với ảnh chỉ xét các kiểu `org.nspasteboard.*` trên cùng mục.
+  5. Tệp ảnh sao chép trong Finder chỉ được đọc (trên hàng đợi nền) khi không quá `CLIP_MAX_IMAGE`
+     (lớn hơn → E2), rồi chuẩn hóa như dữ liệu clipboard. macOS có thể hỏi một lần quyền truy cập thư
+     mục chứa tệp (Màn hình nền, Tài liệu, Tải về); bị từ chối hoặc không đọc được → E3.
 
 #### API 3 — `WS clipboard/push` kèm `transfer`
 

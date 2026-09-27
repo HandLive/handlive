@@ -531,7 +531,7 @@ UserDefaults.standard.integer(forKey: "clip.auto_clear_s")        # step 10: sch
 | Actors | Primary: User. System: M-APP, OS (`NSPasteboard`, `ClipboardManager`), A-SVC, A-CLIP (`ClipboardModule`), I-APP (receives the forwarded copy). |
 | Preconditions | 1.<br>M-APP is running, has a valid pair and `feature.clipboard = true` on the Mac.<br>2.<br>A `/v1/ctl` session with the phone is open and clipboard is active (QC1); otherwise the clip is kept for replay (QC7).<br>3. macOS 15.4+: HandLive's "Paste from Other Apps" permission is at the default or "Always Allow". |
 | Postconditions | **Success:** the Android clipboard holds the text (with `EXTRA_IS_SENSITIVE` if `sensitive`); Android has recorded the QC4 trace, scheduled CLIP-05 and forwarded it to the other connected clients; the Mac receives `ack` `applied` and marks the clip as acknowledged.<br>**Not sent:** the Android clipboard stays unchanged; the user sees the reason for E2, E4, E5, E7, E8. |
-| Exceptions | E1 — `changeCount` changed because of HandLive's own write (equal to the remembered value, or the first item has the `app.handlive.clip-id` type), or the SHA-256 matches the clip received within the last 5 s (QC4): skipped. On the automatic path, a change with the SHA-256 of the clip the Mac sent, while that clip waits for its `ack` or within 5 s after `applied`, is an echo from another clipboard tool (QC4): skipped as well.<br>E2 — macOS 15.4+ with `accessBehavior` `.ask` or `.alwaysDeny`: no automatic reading; show guidance to open System Settings › Privacy & Security › Paste from Other Apps and choose "Always Allow" (Apple has no API to request this permission); with `.ask` the menu item "Send Clipboard to Phone" still works (the system asks the user).<br>E3 — The content is not text: image → CLIP-03; file URL (`public.file-url`, for example a file copied in Finder) or another type → skipped, only `CLIP_UNSUPPORTED_MIME` is logged.<br>E4 — Sensitive content (QC3): blocked, notification with "Send Anyway".<br>E5 — Text > 1 MiB: `CLIP_TOO_LARGE`, reported in place (field 7).<br>E6 — Phone not connected: kept as the latest local clip, replayed if the connection comes back within 120 s (QC7); the menu item shows "Not connected — will send if reconnected within 2 minutes".<br>E7 — Conflict on Android (QC8): `ack` `ignored`/`conflict` with `clipboard/conflict` → the Mac shows a notification with "Send Again".<br>E8 — Android fails to write (`setPrimaryClip` throws): `ack` `INTERNAL` → status line in the menu of the menu bar icon "Couldn't update the clipboard on the phone".<br>E9 — No `ack` within 10 s: treated as not received, replayed when a new session starts if still within 120 s (QC7). |
+| Exceptions | E1 — `changeCount` changed because of HandLive's own write (equal to the remembered value, or the first item has the `app.handlive.clip-id` type), or the SHA-256 matches the clip received within the last 5 s (QC4): skipped. On the automatic path, a change with the SHA-256 of the clip the Mac sent, while that clip waits for its `ack` or within 5 s after `applied`, is an echo from another clipboard tool (QC4): skipped as well.<br>E2 — macOS 15.4+ with `accessBehavior` `.ask` or `.alwaysDeny`: no automatic reading; show guidance to open System Settings › Privacy & Security › Paste from Other Apps and choose "Always Allow" (Apple has no API to request this permission); with `.ask` the menu item "Send Clipboard to Phone" still works (the system asks the user).<br>E3 — Nothing to send as text: an image, or an image file copied in Finder → CLIP-03; an empty string, another file URL (`public.file-url`, for example a document copied in Finder) or another type → skipped, only `CLIP_UNSUPPORTED_MIME` is logged; the manual path shows "The clipboard is empty or doesn't contain text".<br>E4 — Sensitive content (QC3): blocked, notification with "Send Anyway".<br>E5 — Text > 1 MiB: `CLIP_TOO_LARGE`, reported in place (field 7).<br>E6 — Phone not connected: kept as the latest local clip, replayed if the connection comes back within 120 s (QC7); the menu item shows "Not connected — will send if reconnected within 2 minutes".<br>E7 — Conflict on Android (QC8): `ack` `ignored`/`conflict` with `clipboard/conflict` → the Mac shows a notification with "Send Again".<br>E8 — Android fails to write (`setPrimaryClip` throws): `ack` `INTERNAL` → status line in the menu of the menu bar icon "Couldn't update the clipboard on the phone".<br>E9 — No `ack` within 10 s: treated as not received, replayed when a new session starts if still within 120 s (QC7). |
 | Special requirements | **Performance:** detection ≤ 500 ms because of polling, the rest per QC9; reading `changeCount` is very cheap, and the content is not read while `changeCount` is unchanged.<br>Polling runs while there is a pair and `feature.clipboard = true` (also while disconnected, to keep the latest clip per QC7); it stops while the Mac sleeps and checks once on wake.<br>**Privacy:** the content is read only when `changeCount` changes and clipboard is active; complies with C10; content is never logged (QC2).<br>**Android:** writing the clipboard needs no focus; on Android 13+ the system shows a preview overlay (content hidden when `EXTRA_IS_SENSITIVE` is set) — expected behavior. |
 
 ### 4.2.2 Screens
@@ -599,7 +599,7 @@ flowchart TB
 | 2 | System | M-APP | A 500 ms timer reads `NSPasteboard.general.changeCount` (API 1); unchanged → wait for the next round. |  |
 | 3 | System | M-APP | Skip if `changeCount` equals HandLive's write value or the first item has the `app.handlive.clip-id` type. | E1. |
 | 4 | System | M-APP | macOS 15.4+: read `accessBehavior`; `.ask` or `.alwaysDeny` → do not read, show fields 2, 3 (once per M-APP launch). | E2. |
-| 5 | System | M-APP | Look at the first item's types in the source app's order of preference: text → read `string(forType: .string)`; image → CLIP-03; file URL or another type → skip. Compute the SHA-256, check QC4 (same as the clip received within 5 s → skip). | E1, E3. |
+| 5 | System | M-APP | Look at the first item's types in the source app's order of preference: text → read `string(forType: .string)` (an empty string → skip); image, or a file URL whose file is an image → CLIP-03; another file URL or another type → skip. Compute the SHA-256, check QC4 (same as the clip received within 5 s → skip). | E1, E3. |
 | 6 | System | M-APP | QC3 sensitive content check (`org.nspasteboard.*` types, card number via Luhn). | Sensitive → E4, show fields 5, 6. |
 | 7 | User | M-APP (notification) | Choose "Send Anyway" → continue with `sensitive = true`. | No choice within 120 s → the content is discarded. |
 | 8 | System | M-APP | QC5 check: > 1 MiB → E5; plaintext > `CLIP_INLINE_MAX` → send in chunks (CLIP-03). Generate `clip_id`, store it as the latest local clip (QC7). | E5. |
@@ -633,7 +633,7 @@ flowchart TB
 | Interval | `CLIP_POLL_MAC` = 500 ms, leeway 50 ms, on a background queue |
 | Text type | `public.utf8-plain-text` (`.string`) |
 | Image types (CLIP-03) | `public.png`, `public.jpeg`, `public.tiff` |
-| Ignored types | `public.file-url` (`.fileURL`) and every other type |
+| Ignored types | `public.file-url` (`.fileURL`) of a file that is not an image, and every other type |
 | Sensitive types (QC3) | `org.nspasteboard.ConcealedType`, `org.nspasteboard.TransientType`, `org.nspasteboard.AutoGeneratedType` |
 
 - **Response:** `changeCount` (Int); `accessBehavior` ∈ {`.default`, `.ask`, `.alwaysAllow`,
@@ -652,10 +652,13 @@ if #available(macOS 15.4, *), [.ask, .alwaysDeny].contains(pb.accessBehavior) {
 }
 guard let item = pb.pasteboardItems?.first else { return }
 if item.types.contains(NSPasteboard.PasteboardType("app.handlive.clip-id")) { return } // E1
-switch firstKnownKind(item.types) {                     // in the source app's order of preference
-case .text:  if let text = item.string(forType: .string) { clipSender.sendLocalText(text, types: item.types) }
+switch firstKnownKind(item.types) {                     // a file URL first, then the source app's order of preference
+case .imageFile(let url): imageSender.sendLocalImageFile(url)                        // CLIP-03 API 2
+case .text:  if let text = item.string(forType: .string), !text.isEmpty {            // empty → E3
+                 clipSender.sendLocalText(text, types: item.types)
+             }
 case .image: imageSender.sendLocalImage(item)                                        // CLIP-03
-default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3
+default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3: another file, other types
 }
 ```
 
@@ -667,8 +670,10 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
      launches and when Settings → Clipboard is opened.
   3. Pick the kind from the first type of the first item that belongs to the text or image group
      (`NSPasteboardItem.types` are in the source app's order of preference). An item with
-     `public.file-url` is treated as a copied file and the whole item is skipped (the file name is not
-     sent).
+     `public.file-url` is a copied file: when the file's type (from its extension) conforms to
+     `public.image`, the file is the copied image (CLIP-03 API 2); any other file skips the whole item
+     (the file name is not sent). Several files copied together: only the first counts. An empty string
+     counts as nothing copied (E3).
   4. Polling runs only while there is a pair and `feature.clipboard = true`; it pauses while the Mac
      sleeps (`NSWorkspace.willSleepNotification`) and checks once on wake (`didWakeNotification`).
   5. Text read: compute the SHA-256, check QC4, QC3, QC5, then send API 2; the content is never logged.
@@ -798,7 +803,7 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # step 10: schedu
 | Item | Content |
 |-----|----------|
 | Name | CLIP-03 — Sync clipboard images between Android and Mac |
-| Description | Syncs copied images in both directions.<br>Source: Android — a `ClipData` item that is a URI with MIME `image/*`, opened with `ContentResolver` right inside `ClipboardReadActivity` (the automatic or manual path of CLIP-01); Mac — a clipboard item with `public.png`, `public.jpeg` or `public.tiff` (detected as in CLIP-02).<br>PNG and JPEG are kept as they are; other formats (TIFF, HEIC, WebP, GIF…) are converted to PNG; an image larger than `CLIP_MAX_IMAGE` (10 MiB) after normalization is blocked.<br>Transfer: `clipboard/push` with `transfer`, then 64 KiB `clipboard/chunk` messages in order (binary plaintext, 0.5.1); the receiver writes a temporary file, checks the SHA-256, then writes the clipboard — Android through a `FileProvider` URI (`ClipData.newUri`), the Mac with `setData`.<br>The chunk mechanism is shared by text larger than `CLIP_INLINE_MAX` (QC5) and by iPhone/iPad images (CLIP-04). |
+| Description | Syncs copied images in both directions.<br>Source: Android — a `ClipData` item that is a URI with MIME `image/*`, opened with `ContentResolver` right inside `ClipboardReadActivity` (the automatic or manual path of CLIP-01); Mac — a clipboard item with `public.png`, `public.jpeg` or `public.tiff`, or an image file copied in Finder (read from the file; detected as in CLIP-02).<br>PNG and JPEG are kept as they are; other formats (TIFF, HEIC, WebP, GIF…) are converted to PNG; an image larger than `CLIP_MAX_IMAGE` (10 MiB) after normalization is blocked.<br>Transfer: `clipboard/push` with `transfer`, then 64 KiB `clipboard/chunk` messages in order (binary plaintext, 0.5.1); the receiver writes a temporary file, checks the SHA-256, then writes the clipboard — Android through a `FileProvider` URI (`ClipData.newUri`), the Mac with `setData`.<br>The chunk mechanism is shared by text larger than `CLIP_INLINE_MAX` (QC5) and by iPhone/iPad images (CLIP-04). |
 | Actors | Primary: User. System: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (receives the forwarded copy). |
 | Preconditions | 1.<br>Clipboard is active and images are allowed per QC1 (`clip.send_images = true` on the sender, the receiver's `mimes` include the image MIME type).<br>2.<br>Android: the image is read through the automatic or manual path of CLIP-01 (the Share target accepts only text).<br>Mac: CLIP-02 polling is running and reading is allowed (C10).<br>3.<br>The receiver has room for the temporary file. |
 | Postconditions | **Success:** the receiver's clipboard holds the image (Android: a HandLive `content://` URI pointing to a file in `cache/clip/`; Mac: PNG or JPEG data); the receiver has recorded the QC4 trace and scheduled CLIP-05; the transfer's temporary file has been deleted (Android keeps the file of the clip currently on the clipboard); Android forwards the clip to the other clients (QC6).<br>**Failure or cancellation:** no side changes its clipboard; the temporary files are deleted. |
@@ -933,7 +938,8 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
   from `CGImageSourceCopyPropertiesAtIndex` (`kCGImagePropertyPixelWidth`,
   `kCGImagePropertyPixelHeight`).
 - **Request:** type selection order: `public.png` → `public.jpeg` → `public.tiff` → other image types
-  (for example `public.heic`).
+  (for example `public.heic`). An image file copied in Finder: the file at the item's `public.file-url`,
+  its type taken from the extension.
 - **Response:** the image `Data`; PNG or JPEG after normalization.
 - **Example:**
 
@@ -952,6 +958,9 @@ else { log(code: "CLIP_UNSUPPORTED_MIME") }                              // E3
   2. A screenshot copied to the clipboard usually has both PNG and TIFF → use the PNG, no conversion.
   3. TIFF and other types → PNG; the conversion runs on a background queue.
   4. For images, QC3 looks only at the `org.nspasteboard.*` types on the same item.
+  5. An image file copied in Finder is read on a background queue only when it is at most
+     `CLIP_MAX_IMAGE` (larger → E2), then normalized like clipboard data. macOS may ask once for access to
+     the folder that holds it (Desktop, Documents, Downloads); refused or unreadable → E3.
 
 #### API 3 — `WS clipboard/push` with `transfer`
 
