@@ -36,7 +36,7 @@
 | Tác nhân | Chính: Người dùng (thấy cuộc gọi, chọn thao tác), Người gọi (tạo cuộc gọi). Hệ thống: A-CALL, A-SVC, A-AUD (trạng thái HFP, nơi phát âm thanh), OS (Telephony, Contacts provider), M-APP, I-APP, I-NSE, R-API, PUSH (APNs). |
 | Điều kiện trước | 1.<br>Cặp hiệu lực (PAIR-01).<br>2.<br>Cuộc gọi hiệu lực với cặp; A-SVC đang chạy và A-CALL đã đăng ký listener (SET-01 đã xin `READ_PHONE_STATE`, `READ_CALL_LOG`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS`).<br>3.<br>Để nhận ngay: client có phiên `/v1/ctl` (CONN-01 hoặc CONN-03); iPhone/iPad không có phiên nhận qua push khi đã đăng ký push (CONN-04), `relay.enabled = true` và `features.call.notify = true`.<br>4. iOS: người dùng đã cho phép thông báo, gồm thông báo nhạy cảm thời gian (SET-03). |
 | Điều kiện sau | Client đang kết nối hiển thị cuộc gọi theo `call.notify` trong ≤ 300 ms (LAN); iPhone/iPad treo nền có thông báo (nội dung đầy đủ khi máy đang mở khóa).<br>Giao diện luôn khớp `state` mới nhất: `offhook` → Mac chuyển sang panel đang gọi (CALL-03), iOS đóng banner; `idle` → đóng panel, dừng chuông, gỡ thông báo cuộc gọi đến (cuộc gọi nhỡ do CALL-04 thông báo).<br>Ngữ cảnh cuộc gọi trên Android tồn tại tới `IDLE`, sau đó nằm thêm 60 s trong danh sách "vừa kết thúc" để ghép với nhật ký (CALL-04).<br>Không ghi dữ liệu bền nào. |
-| Ngoại lệ | E1 — Cuộc gọi không hiệu lực (tắt ở một phía, thiếu `READ_PHONE_STATE`): không gửi gì; PAIR-02 hiển thị lý do.<br>E2 — Thiếu `READ_CALL_LOG`: `number = null`, `presentation = unknown` → hiển thị "Không rõ số" kèm gợi ý cấp quyền; thiếu `READ_CONTACTS`: `display_name = null` → hiển thị số.<br>E3 — `call.notify = false` trên client: Mac không mở panel, không đổ chuông, chỉ hiện cuộc gọi trong menu của biểu tượng menu bar; iOS không hiện banner; Android không push cho iPhone/iPad đó.<br>E4 — Mac đang bật chế độ Tập trung (`isFocused = true`): không hiện panel, không đổ chuông; thông báo liên lạc mức time-sensitive (API 7) để hệ thống quyết định theo người gọi và cài đặt Tập trung; cuộc gọi vẫn nằm trong menu của biểu tượng thanh menu.<br>Chưa được phép đọc trạng thái Tập trung → hiện panel, không đổ chuông.<br>E5 — Không push được (relay tắt, chưa có token, APNs lỗi): xử lý theo CONN-04 (`push_outbox` hạn 30 s); cuộc gọi nhỡ sẽ đến qua CALL-04.<br>E6 — iPhone đang khóa khi push tới: I-NSE không đọc được khóa (C3) → nội dung chung "Cuộc gọi đến trên điện thoại", không có nút "Từ chối".<br>E7 — Push tới trễ (quá 60 s sau `started_at`): I-NSE hiển thị "Cuộc gọi đến lúc <giờ>", không gắn nút.<br>E8 — A-SVC khởi động khi đang có cuộc gọi, hoặc client kết nối giữa chừng: A-CALL dựng ngữ cảnh từ trạng thái hiện tại (`direction = unknown` nếu đang `OFFHOOK`) và gửi `state` ngay sau khi phiên trao đổi capability.<br>E9 — Cuộc gọi chờ (`RINGING` khi đang `OFFHOOK`): `waiting = true`, chỉ hiển thị thông tin; xử lý cần HFP (CALL-03).<br>E10 — Số đến sau lượt `RINGING` đầu (broadcast đến hai lần, thứ tự không cố định): A-CALL gửi lại `state` cùng `call_id` khi có số và tên. |
+| Ngoại lệ | E1 — Cuộc gọi không hiệu lực (tắt ở một phía, thiếu `READ_PHONE_STATE`): không gửi gì; PAIR-02 hiển thị lý do.<br>E2 — Thiếu `READ_CALL_LOG`: `number = null`, `presentation = unknown` → hiển thị "Không rõ số" kèm gợi ý cấp quyền; thiếu `READ_CONTACTS`: `display_name = null` → hiển thị số.<br>E3 — `call.notify = false` trên client: Mac không mở panel, không đổ chuông, chỉ hiện cuộc gọi trong menu của biểu tượng menu bar; iOS không hiện banner; Android không push cho iPhone/iPad đó.<br>E4 — Mac đang bật chế độ Tập trung (`isFocused = true`): không hiện panel, không đổ chuông; thông báo liên lạc mức time-sensitive (API 7) để hệ thống quyết định theo người gọi và cài đặt Tập trung; cuộc gọi vẫn nằm trong menu của biểu tượng thanh menu.<br>Chưa được phép đọc trạng thái Tập trung → hiện panel, không đổ chuông.<br>E5 — Không push được (relay tắt, chưa có token, APNs lỗi): xử lý theo CONN-04 (`push_outbox` hạn 30 s); push `call_incoming` đang xếp hàng bị bỏ khi cuộc gọi hết đổ chuông, để lần gửi lại muộn không thay được thông báo cuộc gọi nhỡ dùng chung collapse key (API 4 logic 5); cuộc gọi nhỡ sẽ đến qua CALL-04.<br>E6 — iPhone đang khóa khi push tới: I-NSE không đọc được khóa (C3) → nội dung chung "Cuộc gọi đến trên điện thoại", không có nút "Từ chối".<br>E7 — Push tới trễ (quá 60 s sau `started_at`): I-NSE hiển thị "Cuộc gọi đến lúc <giờ>", không gắn nút.<br>E8 — A-SVC khởi động khi đang có cuộc gọi, hoặc client kết nối giữa chừng: A-CALL dựng ngữ cảnh từ trạng thái hiện tại (`direction = unknown` nếu đang `OFFHOOK`) và gửi `state` ngay sau khi phiên trao đổi capability.<br>E9 — Cuộc gọi chờ (`RINGING` khi đang `OFFHOOK`): `waiting = true`, chỉ hiển thị thông tin; xử lý cần HFP (CALL-03).<br>E10 — Số đến sau lượt `RINGING` đầu (broadcast đến hai lần, thứ tự không cố định): A-CALL gửi lại `state` cùng `call_id` khi có số và tên. |
 | Yêu cầu đặc biệt | **Hiệu năng:** `state` tới client < 200 ms trong LAN kể từ callback của hệ điều hành (tra tên ≤ 30 ms nhờ cache LRU); panel Mac hiện ≤ 300 ms sau `RINGING`; qua relay ≤ 1 s khi phiên sẵn có, ≤ 3 s khi điện thoại phải mở relay; push iOS phụ thuộc APNs.<br>**Nền tảng:** panel Mac không lấy focus của ứng dụng đang dùng (non-activating), hiện trên mọi Space kể cả ứng dụng toàn màn hình — lệch có chủ đích so với HIG (panel thường ẩn khi ứng dụng không active), bù lại luôn đi kèm thông báo liên lạc; Mac cần capability Communication Notifications, `NSUserActivityTypes` chứa `INStartCallIntent`, entitlement `com.apple.developer.focus-status` và `NSFocusStatusUsageDescription`; I-APP cần entitlement Time Sensitive Notifications (`com.apple.developer.usernotifications.time-sensitive`); không PushKit/CallKit (C7).<br>**Riêng tư:** relay và APNs chỉ thấy `reason = call_incoming` và nội dung chung; số, tên nằm trong envelope mã hóa bằng `K_push`; không log số, tên.<br>**Tuân thủ:** `READ_CALL_LOG` thuộc ngoại lệ "Cross-device synchronization or transfer of SMS or calls" của Google Play, cần Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` là quyền runtime (SET-01).<br>**Truy cập:** VoiceOver đọc "Cuộc gọi đến từ <tên hoặc số>" khi panel hoặc banner xuất hiện. |
 
 ### 6.1.2 Màn hình
@@ -102,7 +102,7 @@ flowchart TB
 | 2 | Hệ thống | A-CALL, A-SVC | Kiểm `feature.call` và `READ_PHONE_STATE` trên Android; với từng phiên, kiểm capability của client (`features.call.enabled`). | Không → E1. |
 | 3 | Hệ thống | A-CALL, OS | Tạo ngữ cảnh: `call_id` (UUIDv7), `direction = incoming`, `state = ringing`, `started_at`.<br>Gán `sub_id`, `sim_label` từ listener theo SIM (nếu xác định được).<br>Lấy số từ broadcast kèm số, chuẩn hóa E.164; tra tên bằng `PhoneLookup` (Query); tính `presentation` và `controls` theo API 1. | Số đến sau → E10. Thiếu quyền → E2. |
 | 4 | Hệ thống | A-SVC | Dựng `call_event/state` riêng cho từng phiên (các trường `controls`, `hfp_connected`, `audio_on` tính theo client nhận) và gửi. Client không ở LAN mà đang chờ trên relay: A-SVC mở relay (CONN-03); client bắt tay lại và nhận `state` ngay sau khi trao đổi capability. | E8. |
-| 5 | Hệ thống | A-SVC, R-API, PUSH | Với mỗi cặp iOS/iPadOS không có phiên, `relay_registered = 1`, capability gần nhất có `features.call.enabled = true` và `features.call.notify = true`: chờ có số (tối đa 300 ms sau `RINGING`), dựng envelope `call_event/state` mã hóa bằng `K_push`, gọi `POST /v1/push` (API 4).<br>Sau đó mở relay nếu chưa có, để lệnh "Từ chối" từ iOS tới nhanh (CALL-02 B2). | Lỗi → E5. Không push cho cuộc gọi chờ. |
+| 5 | Hệ thống | A-SVC, R-API, PUSH | Với mỗi cặp iOS/iPadOS không có phiên, `relay_registered = 1`, capability gần nhất có `features.call.enabled = true` và `features.call.notify = true`: chờ có số (tối đa 300 ms sau `RINGING`; không chờ khi thiếu `READ_CALL_LOG`), dựng envelope `call_event/state` mã hóa bằng `K_push`, gọi `POST /v1/push` (API 4).<br>Từ lúc `RINGING`, khi một cặp đã đăng ký relay chưa có phiên, A-SVC mở relay nếu chưa có và giữ suốt lúc cuộc gọi đổ chuông (CONN-03 bước 2), để lệnh "Từ chối" từ iOS tới nhanh (CALL-02 B2) và Mac đang chờ trên relay nhận được cuộc gọi (bước 4). | Lỗi → E5. Không push cho cuộc gọi chờ. |
 | 6 | Hệ thống | M-APP / I-APP | Kiểm `call.notify`. | Không → E3 (X2). |
 | 7 | Hệ thống | M-APP | Đọc trạng thái Tập trung (API 5). Không bật: hiện panel với trường 1–9, gửi thông báo liên lạc mức passive (trường 15, API 7), phát chuông (trường 10) nếu `call.ringtone = true`. Đang bật: không panel, không chuông, thông báo liên lạc mức time-sensitive. | E4. |
 | 8 | Hệ thống | I-APP | Ứng dụng ở foreground: banner trong ứng dụng với trường 1–5, 7 (API 6); không đổ chuông vì điện thoại đang đổ chuông. |  |
@@ -249,8 +249,10 @@ flowchart TB
 - **Logic nghiệp vụ:**
   1. Callback chạy trên executor một luồng của A-CALL; xử lý tuần tự.
   2. Khi đăng ký, hệ thống báo ngay trạng thái hiện tại → dựng ngữ cảnh cho E8.
-  3. `sub_id` chỉ được gán khi đúng một listener theo SIM báo cùng trạng thái trong vòng 500 ms
-     quanh callback mặc định; nhiều SIM cùng báo hoặc máy không báo theo SIM → `null`.
+  3. `sub_id` lấy từ SIM có lượt chuyển trạng thái tạo ra ngữ cảnh (`IDLE → RINGING` hoặc
+     `IDLE → OFFHOOK`): chỉ được gán khi đúng một listener theo SIM báo trạng thái đó trong vòng
+     500 ms quanh callback mặc định; nhiều SIM cùng báo hoặc máy không báo theo SIM → `null`. Không
+     theo dõi SIM của cuộc gọi chờ.
   4. Mất `READ_PHONE_STATE` (`SecurityException` hoặc người dùng thu hồi quyền) → gỡ listener, gửi
      `capability/update` với `permissions_missing`; cuộc gọi hết hiệu lực (E1). `feature.call`
      chuyển `false` → gỡ mọi listener, receiver và observer của nhóm.
@@ -273,10 +275,15 @@ flowchart TB
   1. Ứng dụng có đủ hai quyền nhận broadcast **hai lần** cho mỗi lần đổi trạng thái (một bản có
      `EXTRA_INCOMING_NUMBER`, một bản không), thứ tự không cố định. A-CALL chỉ lấy số từ bản có khóa
      `EXTRA_INCOMING_NUMBER` (`intent.hasExtra(...)`) và ghép với ngữ cảnh theo `EXTRA_STATE`.
-  2. Bản `RINGING` khi ngữ cảnh đang `OFFHOOK` → gán `waiting_number`; ngược lại gán `number`. Tên
-     tra theo số vừa có (Query).
-  3. Có khóa nhưng giá trị rỗng → `presentation = restricted`. Thiếu `READ_CALL_LOG` → chỉ nhận bản
-     không số → `number = null`, `presentation = unknown` (E2).
+  2. Bản `RINGING` khi ngữ cảnh đang `OFFHOOK` → gán `waiting_number`; ngược lại gán `number`. Số
+     của bản `OFFHOOK` chỉ được dùng cho ngữ cảnh `incoming` chưa nhận được bản đổ chuông nào. Ngữ
+     cảnh `outgoing` và `unknown` giữ `number = null`, kể cả khi bản đó mang số đã gọi (số của cuộc
+     gọi đi tới Mac qua nhật ký cuộc gọi, CALL-04). Tên tra theo số vừa có (Query).
+  3. Có khóa nhưng giá trị rỗng → `presentation = restricted`. AOSP chỉ thêm `EXTRA_INCOMING_NUMBER`
+     khi số không rỗng. Vì vậy người gọi ẩn số cũng được nhận ra khi hai bản `RINGING` đều không có
+     khóa trong lúc có `READ_CALL_LOG` → `presentation = restricted`, và push `call_incoming` đi ngay
+     lúc đó (API 4 logic 2); cần kiểm trên máy thật. Thiếu `READ_CALL_LOG` → chỉ nhận bản không số →
+     `number = null`, `presentation = unknown` (E2).
   4. Broadcast không đổi trạng thái ngữ cảnh (nguồn trạng thái là API 2). Bản có số tới trước
      callback của API 2 được giữ tạm tối đa 2 s để gán khi ngữ cảnh được tạo.
 
@@ -314,15 +321,23 @@ Content-Type: application/json
   1. Chỉ push khi đủ điều kiện ở bước 5; mỗi `call_id` tối đa một push `call_incoming`; cuộc gọi chờ
      không push.
   2. Chờ có số tối đa 300 ms sau `RINGING` để push mang đủ số và tên (push không sửa được sau khi
-     gửi); quá hạn thì gửi với `number = null`. Mục tiêu push (< 300 ms) tính từ broadcast mang số,
-     hoặc từ `RINGING` + 300 ms khi không có số, tới khi relay trả 202; khoảng này gồm cả lượt gọi
-     REST tới relay.
+     gửi); quá hạn thì gửi với `number = null`. Push đi ngay khi số đã rõ: bản mang số đã tới, hoặc
+     đã biết người gọi ẩn số (API 3 logic 3). Thiếu `READ_CALL_LOG` thì không thể có số (E2), nên push
+     đi ngay, không chờ 300 ms. Mục tiêu push (< 300 ms) tính từ thời điểm đó (broadcast làm rõ số,
+     `RINGING` khi thiếu `READ_CALL_LOG`, hoặc `RINGING` + 300 ms khi không có số) tới khi relay trả
+     202; khoảng này gồm cả lượt gọi REST tới relay.
   3. Relay đặt `interruption-level = time-sensitive`, `thread-id = calls` và nội dung mặc định:
      không đặt tiêu đề (hệ thống hiện tên app), nội dung "Cuộc gọi đến trên điện thoại" (CONN-04 API
      4); nội dung thật chỉ nằm trong envelope.
-  4. Sau khi push, A-SVC mở kết nối relay (CONN-03) nếu chưa có và giữ ít nhất tới khi cuộc gọi hết
-     đổ chuông, sau đó theo `RELAY_IDLE_DISCONNECT`; nhờ vậy I-APP từ chối từ thông báo thường không
-     cần wake push.
+  4. Từ lúc `RINGING`, không chỉ sau khi push, khi một cặp đã đăng ký relay chưa có phiên, A-SVC mở
+     kết nối relay nếu chưa có và giữ suốt lúc cuộc gọi đổ chuông (CONN-03 bước 2), sau đó theo
+     `RELAY_IDLE_DISCONNECT`. Nhờ vậy I-APP từ chối từ thông báo thường không cần wake push, và Mac
+     đang chờ trên relay cũng nhận được cuộc gọi (bước 4).
+  5. **Gửi lại** (E5): push `call_incoming` gửi lại vẫn giữ `ttl_s = 30`, kể cả khi hạn 30 s của
+     hàng đợi chỉ còn ít hơn. Khi cuộc gọi hết đổ chuông, A-SVC xóa push `call_incoming` đang xếp
+     hàng của cuộc gọi đó khỏi `push_outbox` (Query), để lần gửi lại muộn không thay được thông báo
+     cuộc gọi nhỡ dùng chung `collapse_key`. Thông báo cuộc gọi đến còn lại sau khi hết đổ chuông do
+     iOS tự gỡ (API 6 logic 4).
 
 #### API 5 — Panel cuộc gọi trên Mac
 
@@ -459,6 +474,10 @@ WHERE pair_id = :pair_id AND revoked_at IS NULL;
 SELECT pair_id, peer_device_id, features_json
 FROM paired_device
 WHERE revoked_at IS NULL AND relay_registered = 1 AND peer_platform IN ('ios', 'ipados');
+
+-- [Thiết kế] Android, API 4 logic 5: cuộc gọi hết đổ chuông → bỏ push call_incoming đang xếp hàng
+DELETE FROM push_outbox
+WHERE collapse_key = :collapse_key AND reason = 'call_incoming';   -- :collapse_key = 'call:<call_id>'
 
 -- [Thiết kế] Mac/iOS, bước 6: capability gần nhất của điện thoại (features.call, permissions_missing)
 SELECT features_json
@@ -1075,7 +1094,7 @@ flowchart TB
 |--------|------|----------|-------|
 | `entry_id` | int64 | Có | `CallLog.Calls._ID` (0.2) |
 | `number` | e164 \| null | Có | Cột `NUMBER`, chuẩn hóa như CALL-01; rỗng hoặc `NUMBER_PRESENTATION` khác `PRESENTATION_ALLOWED` → `null` |
-| `display_name` | string \| null | Có | Tên từ `PhoneLookup` (có `READ_CONTACTS`); không có → cột `CACHED_NAME`; rỗng → `null` |
+| `display_name` | string \| null | Có | Tên từ `PhoneLookup` (có `READ_CONTACTS`); thiếu `READ_CONTACTS`, hoặc `PhoneLookup` không tìm thấy → cột `CACHED_NAME`; rỗng → `null` |
 | `type` | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Có | Cột `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; giá trị khác → bỏ mục |
 | `ts` | timestamp | Có | Cột `DATE` (lúc cuộc gọi bắt đầu) |
 | `duration_s` | int32 | Có | Cột `DURATION` (giây) |
@@ -1132,7 +1151,9 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
   3. **Lần đầu** (không có con trỏ, hoặc `reset`): `since = now − 90 ngày`; đọc `_ID` theo `_ID`
      giảm dần với `DATE >= since`, tối đa 500 dòng; `start` = `_ID` nhỏ nhất đọc được; trang đầu gồm
      các mục `_ID >= start` theo `_ID` tăng dần; các trang sau dùng con trỏ như đồng bộ bù. Nhật ký
-     rỗng → `entries = []`, con trỏ `{"v":1,"id":0}`.
+     rỗng → `entries = []`, con trỏ `{"v":1,"id":0}`. Không có mục nào trong 90 ngày nhưng có mục cũ
+     hơn → `entries = []`, con trỏ `{"v":1,"id":<_ID lớn nhất hiện có>}`, nên các lần đồng bộ sau chỉ
+     trả mục mới.
   4. Mỗi trang đọc `limit + 1` dòng để biết `has_more`; con trỏ trả về = `_ID` của dòng cuối trong
      trang (kể cả dòng bị bỏ vì `TYPE` lạ); trang rỗng giữ nguyên con trỏ.
   5. **E5:** con trỏ sai định dạng, khác `v`, hoặc `id` lớn hơn `_ID` lớn nhất hiện có → xử lý như
@@ -1140,7 +1161,7 @@ Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.per
      được phản ánh sang client.
   6. Kích thước: Android dừng trang khi plaintext đạt 180 KiB (như `SMS_PAGE_MAX_BYTES`) để envelope
      < 256 KiB (0.5.1 quy tắc 4).
-  7. Tên tra theo từng số, cache LRU 200 mục trong phạm vi một lần đồng bộ; Android không lưu tên
+  7. Tên tra theo từng số, cache LRU 200 mục trong phạm vi một trang (một `ack`); Android không lưu tên
      xuống đĩa. Mục thư thoại có thể bị provider ẩn với ứng dụng không có quyền thư thoại; khi đó
      không xuất hiện.
   8. Client: mỗi trang một giao dịch (mục và con trỏ), nên dừng giữa chừng không mất tiến độ;

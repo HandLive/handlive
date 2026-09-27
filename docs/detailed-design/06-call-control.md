@@ -38,7 +38,7 @@ English | [Tiếng Việt](06-call-control.vi.md)
 | Actors | Primary: User (sees the call, chooses an action), Caller (places the call). System: A-CALL, A-SVC, A-AUD (HFP state, audio location), OS (Telephony, Contacts provider), M-APP, I-APP, I-NSE, R-API, PUSH (APNs). |
 | Preconditions | 1.<br>A valid pair (PAIR-01).<br>2.<br>Calls are in effect for the pair; A-SVC is running and A-CALL has registered its listeners (SET-01 has requested `READ_PHONE_STATE`, `READ_CALL_LOG`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS`).<br>3.<br>For immediate delivery: the client has a `/v1/ctl` session (CONN-01 or CONN-03); an iPhone/iPad without a session receives it via push once it has registered for push (CONN-04), `relay.enabled = true` and `features.call.notify = true`.<br>4. iOS: the user has allowed notifications, including time-sensitive notifications (SET-03). |
 | Postconditions | Connected clients show the call according to `call.notify` within ≤ 300 ms (LAN); a suspended iPhone/iPad has a notification (full content while the device is unlocked).<br>The UI always matches the latest `state`: `offhook` → the Mac switches to the in-call panel (CALL-03), iOS closes the banner; `idle` → close the panel, stop the ringtone, remove the incoming-call notification (missed calls are notified by CALL-04).<br>The call context on Android lives until `IDLE`, then stays another 60 s in the "recently ended" list so it can be matched with the call log (CALL-04).<br>No persistent data is written. |
-| Exceptions | E1 — Calls not in effect (turned off on one side, `READ_PHONE_STATE` missing): nothing is sent; PAIR-02 shows the reason.<br>E2 — `READ_CALL_LOG` missing: `number = null`, `presentation = unknown` → show "Unknown Caller" with a hint to grant the permission; `READ_CONTACTS` missing: `display_name = null` → show the number.<br>E3 — `call.notify = false` on the client: the Mac opens no panel and does not ring, it only shows the call in the menu of the menu bar icon; iOS shows no banner; Android sends no push to that iPhone/iPad.<br>E4 — Focus is active on the Mac (`isFocused = true`): no panel, no ringing; a time-sensitive communication notification (API 7) lets the system decide based on the caller and the Focus settings; the call still appears in the menu of the menu bar icon.<br>Not yet allowed to read the Focus status → show the panel, no ringing.<br>E5 — Push not possible (relay off, no token yet, APNs error): handled per CONN-04 (`push_outbox` with a 30 s expiry); the missed call will arrive through CALL-04.<br>E6 — The iPhone is locked when the push arrives: I-NSE cannot read the key (C3) → generic content "Incoming call on your phone", no "Decline" button.<br>E7 — The push arrives late (more than 60 s after `started_at`): I-NSE shows "Incoming call at \<time>", with no button.<br>E8 — A-SVC starts during a call, or a client connects midway: A-CALL builds the context from the current state (`direction = unknown` if `OFFHOOK`) and sends `state` right after the session exchanges capabilities.<br>E9 — Call waiting (`RINGING` while `OFFHOOK`): `waiting = true`, information only; handling it needs HFP (CALL-03).<br>E10 — The number arrives after the first `RINGING` (the broadcast arrives twice, in no fixed order): A-CALL re-sends `state` with the same `call_id` once the number and name are known. |
+| Exceptions | E1 — Calls not in effect (turned off on one side, `READ_PHONE_STATE` missing): nothing is sent; PAIR-02 shows the reason.<br>E2 — `READ_CALL_LOG` missing: `number = null`, `presentation = unknown` → show "Unknown Caller" with a hint to grant the permission; `READ_CONTACTS` missing: `display_name = null` → show the number.<br>E3 — `call.notify = false` on the client: the Mac opens no panel and does not ring, it only shows the call in the menu of the menu bar icon; iOS shows no banner; Android sends no push to that iPhone/iPad.<br>E4 — Focus is active on the Mac (`isFocused = true`): no panel, no ringing; a time-sensitive communication notification (API 7) lets the system decide based on the caller and the Focus settings; the call still appears in the menu of the menu bar icon.<br>Not yet allowed to read the Focus status → show the panel, no ringing.<br>E5 — Push not possible (relay off, no token yet, APNs error): handled per CONN-04 (`push_outbox` with a 30 s expiry); a queued `call_incoming` is dropped when the call stops ringing, so a late retry cannot replace the missed-call notification that shares its collapse key (API 4 logic 5); the missed call will arrive through CALL-04.<br>E6 — The iPhone is locked when the push arrives: I-NSE cannot read the key (C3) → generic content "Incoming call on your phone", no "Decline" button.<br>E7 — The push arrives late (more than 60 s after `started_at`): I-NSE shows "Incoming call at \<time>", with no button.<br>E8 — A-SVC starts during a call, or a client connects midway: A-CALL builds the context from the current state (`direction = unknown` if `OFFHOOK`) and sends `state` right after the session exchanges capabilities.<br>E9 — Call waiting (`RINGING` while `OFFHOOK`): `waiting = true`, information only; handling it needs HFP (CALL-03).<br>E10 — The number arrives after the first `RINGING` (the broadcast arrives twice, in no fixed order): A-CALL re-sends `state` with the same `call_id` once the number and name are known. |
 | Special requirements | **Performance:** `state` reaches the client in < 200 ms on the LAN, counted from the OS callback (name lookup ≤ 30 ms thanks to an LRU cache); the Mac panel appears ≤ 300 ms after `RINGING`; via the relay ≤ 1 s when a session exists, ≤ 3 s when the phone has to open the relay; iOS push depends on APNs.<br>**Platform:** the Mac panel does not take focus from the app in use (non-activating) and shows on every Space, including full-screen apps — a deliberate deviation from the HIG (panels normally hide while their app is inactive), offset by always pairing it with a communication notification; the Mac needs the Communication Notifications capability, `NSUserActivityTypes` containing `INStartCallIntent`, the `com.apple.developer.focus-status` entitlement and `NSFocusStatusUsageDescription`; I-APP needs the Time Sensitive Notifications entitlement (`com.apple.developer.usernotifications.time-sensitive`); no PushKit/CallKit (C7).<br>**Privacy:** the relay and APNs see only `reason = call_incoming` and generic content; the number and name travel inside the envelope encrypted with `K_push`; numbers and names are never logged.<br>**Compliance:** `READ_CALL_LOG` falls under Google Play's "Cross-device synchronization or transfer of SMS or calls" exception and needs the Permissions Declaration Form (`docs/deployment-guide.md`); `READ_PHONE_STATE`, `READ_CONTACTS`, `ANSWER_PHONE_CALLS` are runtime permissions (SET-01).<br>**Accessibility:** VoiceOver reads "Incoming call from \<name or number>" when the panel or banner appears. |
 
 ### 6.1.2 Screens
@@ -104,7 +104,7 @@ flowchart TB
 | 2 | System | A-CALL, A-SVC | Check `feature.call` and `READ_PHONE_STATE` on Android; for each session, check the client's capability (`features.call.enabled`). | No → E1. |
 | 3 | System | A-CALL, OS | Create the context: `call_id` (UUIDv7), `direction = incoming`, `state = ringing`, `started_at`.<br>Set `sub_id`, `sim_label` from the per-SIM listeners (if they can be determined).<br>Take the number from the broadcast that carries it, normalize it to E.164; look up the name with `PhoneLookup` (Query); compute `presentation` and `controls` per API 1. | Number arrives later → E10. Permission missing → E2. |
 | 4 | System | A-SVC | Build a separate `call_event/state` for each session (the `controls`, `hfp_connected`, `audio_on` fields are computed for the receiving client) and send it. A client that is not on the LAN but waits on the relay: A-SVC opens the relay (CONN-03); the client handshakes again and receives `state` right after the capability exchange. | E8. |
-| 5 | System | A-SVC, R-API, PUSH | For each iOS/iPadOS pair with no session, `relay_registered = 1` and a latest capability with `features.call.enabled = true` and `features.call.notify = true`: wait for the number (at most 300 ms after `RINGING`), build a `call_event/state` envelope encrypted with `K_push`, call `POST /v1/push` (API 4).<br>Then open the relay if it is not open yet, so that a "Decline" command from iOS arrives quickly (CALL-02 B2). | Error → E5. No push for a waiting call. |
+| 5 | System | A-SVC, R-API, PUSH | For each iOS/iPadOS pair with no session, `relay_registered = 1` and a latest capability with `features.call.enabled = true` and `features.call.notify = true`: wait for the number (at most 300 ms after `RINGING`; no wait without `READ_CALL_LOG`), build a `call_event/state` envelope encrypted with `K_push`, call `POST /v1/push` (API 4).<br>From `RINGING` on, while a relay-registered pair has no session, A-SVC opens the relay if it is not open yet and holds it for as long as the call rings (CONN-03 step 2), so that a "Decline" command from iOS arrives quickly (CALL-02 B2) and a Mac waiting on the relay gets the call (step 4). | Error → E5. No push for a waiting call. |
 | 6 | System | M-APP / I-APP | Check `call.notify`. | No → E3 (X2). |
 | 7 | System | M-APP | Read the Focus status (API 5). Off: show the panel with fields 1–9, post a passive communication notification (field 15, API 7), play the ringtone (field 10) if `call.ringtone = true`. On: no panel, no ringtone, a time-sensitive communication notification. | E4. |
 | 8 | System | I-APP | App in the foreground: in-app banner with fields 1–5, 7 (API 6); no ringing because the phone is already ringing. |  |
@@ -254,9 +254,10 @@ The `controls` object:
 - **Business logic:**
   1. Callbacks run on A-CALL's single-thread executor and are processed sequentially.
   2. On registration the system reports the current state right away → build the context for E8.
-  3. `sub_id` is set only when exactly one per-SIM listener reports the same state within 500 ms
-     around the default callback; several SIMs reporting, or a phone that does not report per SIM →
-     `null`.
+  3. `sub_id` comes from the SIM whose transition created the context (`IDLE → RINGING` or
+     `IDLE → OFFHOOK`): it is set only when exactly one per-SIM listener reports that state within
+     500 ms around the default callback; several SIMs reporting, or a phone that does not report per
+     SIM → `null`. A waiting call's SIM is not tracked.
   4. Losing `READ_PHONE_STATE` (`SecurityException` or the user revokes the permission) → remove the
      listeners, send `capability/update` with `permissions_missing`; calls are no longer in effect
      (E1). `feature.call` switched to `false` → remove every listener, receiver and observer of the
@@ -283,9 +284,16 @@ The `controls` object:
      from the copy that has the `EXTRA_INCOMING_NUMBER` key (`intent.hasExtra(...)`) and matches it
      to the context by `EXTRA_STATE`.
   2. A `RINGING` copy while the context is `OFFHOOK` → set `waiting_number`; otherwise set `number`.
-     The name is looked up for the number just received (Query).
-  3. Key present but value empty → `presentation = restricted`. `READ_CALL_LOG` missing → only the
-     copy without a number arrives → `number = null`, `presentation = unknown` (E2).
+     The number of an `OFFHOOK` copy is used only for an `incoming` context whose ringing copy never
+     came; `outgoing` and `unknown` contexts keep `number = null`, even if the copy carries the dialed
+     number (outgoing numbers reach the Mac through the call log, CALL-04). The name is looked up for
+     the number just received (Query).
+  3. Key present but value empty → `presentation = restricted`. AOSP adds `EXTRA_INCOMING_NUMBER`
+     only for a non-empty number, so a withheld caller is also recognized when two `RINGING` copies
+     arrive without the key while `READ_CALL_LOG` is granted → `presentation = restricted`, and the
+     `call_incoming` push leaves then (API 4 logic 2); to be checked on devices. `READ_CALL_LOG`
+     missing → only the copy without a number arrives → `number = null`, `presentation = unknown`
+     (E2).
   4. The broadcast never changes the context state (the state source is API 2). A copy with a number
      that arrives before the API 2 callback is held for up to 2 s and applied when the context is
      created.
@@ -324,15 +332,24 @@ Content-Type: application/json
   1. Push only when the conditions of step 5 hold; at most one `call_incoming` push per `call_id`; no
      push for a waiting call.
   2. Wait up to 300 ms after `RINGING` for the number, so the push carries the number and the name (a
-     push cannot be changed once sent); after that, send with `number = null`. The push target
-     (< 300 ms) runs from the broadcast that brought the number, or from `RINGING` + 300 ms when no
-     number came, to the relay's 202 response; it includes the relay REST round trip.
+     push cannot be changed once sent); after that, send with `number = null`. The push leaves as
+     soon as the number is settled: the copy with the number arrived, or the caller is known to
+     withhold it (API 3 logic 3). Without `READ_CALL_LOG` no number can come (E2), so the push leaves
+     at once, with no 300 ms wait. The push target (< 300 ms) runs from that moment (the broadcast
+     that settled the number, `RINGING` without `READ_CALL_LOG`, or `RINGING` + 300 ms when no number
+     came) to the relay's 202 response; it includes the relay REST round trip.
   3. The relay sets `interruption-level = time-sensitive`, `thread-id = calls` and the default
      content: no title (the system shows the app name), body "Incoming call on your phone" (CONN-04 API
      4); the real content is only inside the envelope.
-  4. After the push, A-SVC opens the relay connection (CONN-03) if it is not open yet and keeps it at
-     least until the call stops ringing, then follows `RELAY_IDLE_DISCONNECT`; this way I-APP usually
-     needs no wake push to decline from the notification.
+  4. From `RINGING` on, not only after the push, while a relay-registered pair has no session, A-SVC
+     opens the relay connection if it is not open yet and holds it for as long as the call rings
+     (CONN-03 step 2), then follows `RELAY_IDLE_DISCONNECT`; this way I-APP usually needs no wake push
+     to decline from the notification, and a Mac waiting on the relay gets the call too (step 4).
+  5. **Retries** (E5): a retried `call_incoming` keeps `ttl_s = 30`, even when less of its 30 s
+     outbox expiry remains. When the call stops ringing, A-SVC deletes the queued `call_incoming` of
+     that call from `push_outbox` (Query), so a late retry cannot replace the missed-call notification
+     that shares its `collapse_key`. An incoming-call notification that outlives the ring is removed
+     by iOS itself (API 6 logic 4).
 
 #### API 5 — Call panel on the Mac
 
@@ -476,6 +493,10 @@ WHERE pair_id = :pair_id AND revoked_at IS NULL;
 SELECT pair_id, peer_device_id, features_json
 FROM paired_device
 WHERE revoked_at IS NULL AND relay_registered = 1 AND peer_platform IN ('ios', 'ipados');
+
+-- [Design] Android, API 4 logic 5: the call stopped ringing → drop its queued call_incoming
+DELETE FROM push_outbox
+WHERE collapse_key = :collapse_key AND reason = 'call_incoming';   -- :collapse_key = 'call:<call_id>'
 
 -- [Design] Mac/iOS, step 6: the phone's latest capability (features.call, permissions_missing)
 SELECT features_json
@@ -1099,7 +1120,7 @@ flowchart TB
 |--------|------|----------|-------|
 | `entry_id` | int64 | Yes | `CallLog.Calls._ID` (0.2) |
 | `number` | e164 \| null | Yes | Column `NUMBER`, normalized as in CALL-01; empty, or `NUMBER_PRESENTATION` other than `PRESENTATION_ALLOWED` → `null` |
-| `display_name` | string \| null | Yes | Name from `PhoneLookup` (with `READ_CONTACTS`); otherwise → column `CACHED_NAME`; empty → `null` |
+| `display_name` | string \| null | Yes | Name from `PhoneLookup` (with `READ_CONTACTS`); without `READ_CONTACTS`, or when `PhoneLookup` finds nothing → column `CACHED_NAME`; empty → `null` |
 | `type` | enum{incoming\| outgoing\| missed\| rejected\| blocked\| voicemail} | Yes | Column `TYPE`: 1 → `incoming`, 2 → `outgoing`, 3 → `missed`, 4 → `voicemail`, 5 → `rejected`, 6 → `blocked`, 7 (`ANSWERED_EXTERNALLY_TYPE`) → `incoming`; any other value → the entry is skipped |
 | `ts` | timestamp | Yes | Column `DATE` (when the call started) |
 | `duration_s` | int32 | Yes | Column `DURATION` (seconds) |
@@ -1157,7 +1178,9 @@ Incremental sync:
   3. **First sync** (no cursor, or `reset`): `since = now − 90 days`; read `_ID`s in descending
      `_ID` order with `DATE >= since`, at most 500 rows; `start` = the smallest `_ID` read; the first
      page holds the entries with `_ID >= start` in ascending `_ID` order; the following pages use the
-     cursor as in an incremental sync. Empty call log → `entries = []`, cursor `{"v":1,"id":0}`.
+     cursor as in an incremental sync. Empty call log → `entries = []`, cursor `{"v":1,"id":0}`. No
+     entry within the 90 days but older entries exist → `entries = []`, cursor
+     `{"v":1,"id":<largest existing _ID>}`, so later syncs return only new entries.
   4. Each page reads `limit + 1` rows to know `has_more`; the returned cursor = the `_ID` of the last
      row in the page (including a row skipped for an unknown `TYPE`); an empty page keeps the cursor
      unchanged.
@@ -1166,7 +1189,7 @@ Incremental sync:
      deleting the newest entries is reflected on the client as well.
   6. Size: Android closes the page when the plaintext reaches 180 KiB (like `SMS_PAGE_MAX_BYTES`) so
      the envelope stays < 256 KiB (0.5.1 rule 4).
-  7. Names are looked up per number, with a 200-entry LRU cache scoped to one sync; Android never
+  7. Names are looked up per number, with a 200-entry LRU cache scoped to one page (one `ack`); Android never
      writes names to disk. The provider may hide voicemail entries from apps without the voicemail
      permission; in that case they do not appear.
   8. Client: one transaction per page (entries and cursor), so stopping midway loses no progress; a
