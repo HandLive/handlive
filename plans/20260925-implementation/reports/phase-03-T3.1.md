@@ -140,6 +140,44 @@ completed  success  docs: describe the call benchmark events and device scenario
 - Check on a real Mac that `call_panel_shown` is logged after `orderFrontRegardless()` returns, and on Android that
   `os` is taken on entry of the listener callback / broadcast receiver (not after the name lookup).
 
+## Follow-up: settled number
+
+Spec sync 2 (hub main 476764e, CALL-01 API 4 logic 2) moved the start of the < 300 ms incoming-push target to the
+moment the caller's number is settled. Under the old start (`number=known`, else `RINGING` + 300 ms), withheld
+callers and phones without `READ_CALL_LOG` gave negative or meaningless values.
+
+- **New optional field on `call_changed`: `settled=true`.** Android sets it on the line whose applied event settles
+  the number, in one of three cases:
+  - the broadcast that brings the number;
+  - the second ringing copy without the number key while `READ_CALL_LOG` is granted, which marks a withheld caller
+    (API 3 logic 3);
+  - `RINGING` itself when `READ_CALL_LOG` is missing.
+- **Timer.** `call_latency.py` starts the "incoming push" row at the first `call_changed settled=true` of the call and
+  falls back to `RINGING` + 300 ms when there is none. A `settled` line later than the 300 ms wait also falls back to
+  `RINGING` + 300 ms, because the push already left when the wait ended. `number` stays an optional,
+  informational field.
+- **Self-test.** Three new pushes in the synthetic logs:
+  - a withheld caller settled 40 ms after `RINGING`, push 180 ms later;
+  - a phone without `READ_CALL_LOG` settled at `RINGING`, push 150 ms later;
+  - a number that came only after the wait, push 120 ms after `RINGING` + 300 ms.
+
+  Run against the old timer, the first two give −80 ms and −150 ms and fail. **bench self-test: 68 passed, 0 failed.**
+- **README.** `README.md` and `README.vi.md` now have the `settled` field in the `call_changed` row, the new start in
+  the metrics table, and an example line:
+  `… ev=call_changed call=0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90 state=ringing waiting=false trigger=broadcast os=1727150400163.000 number=known settled=true sub=1`.
+
+Commits (handlive-shared, `feat/phase-03-calls`, under the lock):
+
+| Hash | Subject |
+|------|---------|
+| ae9bb73 | feat(shared): start the incoming push timer when the caller's number is settled |
+| 56983e3 | test(shared): time the incoming push of withheld callers and phones without the call log |
+| ac621ca | docs: describe the settled number field of the call benchmark |
+
+CI `ci-shared` run 36299692621 on ac621ca: success.
+
+**Android must emit** `settled=true` on the `call_changed` line of the event that settles the number, as listed above.
+
 Status: DONE_WITH_CONCERNS
-Summary: The HLBENCH/1 call events, call_latency.py with p95 against every CALL-01…04 target, the Focus rule check, a 23-check synthetic self-test in CI and the device scenarios are pushed on feat/phase-03-calls; bench self-test 65/65, CI green.
+Summary: The HLBENCH/1 call events, call_latency.py with p95 against every CALL-01…04 target, the Focus rule check, a synthetic self-test in CI and the device scenarios are pushed on feat/phase-03-calls; since the settled-number follow-up the incoming push is timed from the settled number; bench self-test 68/68, CI green.
 Concerns/Blockers: the real-device measurements (Pixel, Samsung) wait for the platform agents to emit the events; the answer and iPhone-decline targets need the spec wording of deviations 1–3.
