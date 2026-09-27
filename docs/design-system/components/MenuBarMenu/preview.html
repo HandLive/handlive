@@ -21,6 +21,8 @@
   .states .sym { font-size: 17px; color: var(--label); }
   .states .ico { display: inline-flex; align-items: center; gap: 3px; color: var(--label); font-weight: 600; }
   .dimsym { opacity: .45; }
+  .mi .two { display: flex; flex-direction: column; }
+  .mi .two .s { font-size: 11px; line-height: 14px; color: var(--secondary-label); }
 </style>
 </head>
 <body>
@@ -33,7 +35,7 @@
         <div class="mi status-row" role="menuitem" aria-disabled="true"><span class="sym fill">wifi</span><span>Đã kết nối qua Wi-Fi</span></div>
         <div class="msep"></div>
         <div class="mi sel" role="menuitem"><span class="sym">content_paste</span><span>Gửi bảng nhớ tạm sang điện thoại</span></div>
-        <div class="mi" role="menuitem"><span class="sym">chat_bubble</span><span>Tin nhắn</span><span class="sub">2 chưa đọc</span></div>
+        <div class="mi" role="menuitem"><span class="sym">chat_bubble</span><span>Tin nhắn</span><span class="sub">2</span></div>
         <div class="mi" role="menuitem"><span class="sym">videocam</span><span>Xem trước camera</span></div>
         <div class="msep"></div>
         <div class="mh">Camera · Đang phát qua Wi-Fi</div>
@@ -43,7 +45,7 @@
         <div class="mi" role="menuitem"><span class="check"></span><span>Dừng camera</span></div>
         <div class="msep"></div>
         <div class="mh">Gần đây</div>
-        <div class="mi" role="menuitem"><span class="sym">phone_missed</span><span>Cuộc gọi nhỡ · Nguyễn Văn A</span><span class="sub">14:01</span></div>
+        <div class="mi" role="menuitem"><span class="sym">phone_missed</span><span class="two"><span>Nguyễn Văn A</span><span class="s">Cuộc gọi nhỡ · 14:01</span></span></div>
         <div class="msep"></div>
         <div class="mi" role="menuitem"><span>Cài đặt…</span><span class="k">⌘,</span></div>
         <div class="mi" role="menuitem"><span>Thoát HandLive</span><span class="k">⌘Q</span></div>
