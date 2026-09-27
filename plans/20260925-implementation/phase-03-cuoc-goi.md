@@ -17,7 +17,8 @@ for Phase 4 (HFP).
 
 ## Requirements and measurable criteria
 
-- `call_event/state` reaches the Mac in < 200 ms on the LAN; answer < 500 ms end to end.
+- `call_event/state` reaches the Mac in < 200 ms on the LAN; answer < 500 ms at the 95th percentile, from
+  the click on the Mac until `state = offhook` is back on the Mac (CALL-02).
 - No ringing while the Focus status cannot be read; Focus on → communication notification only.
 - Never log phone numbers or names.
 
@@ -33,8 +34,8 @@ for Phase 4 (HFP).
 | M3.1 [macOS] | `CallPanel`: a non-activating `NSPanel` floating on every Space, ringing/in-call/ended states, Return/⌘⌫/Esc keys, `NSSound` ringtone per `call.ringtone`, `INFocusStatusCenter` (`NSFocusStatusUsageDescription`), VoiceOver | `apple/macOS/HandLive` | Panel < 300 ms after `RINGING`; Focus on → no panel, no ringtone |
 | M3.2 [macOS] | `INStartCallIntent` communication notification (CALL-01 API 7): passive while the panel shows, time-sensitive during Focus; "Answer" and "Decline" actions; removed when `state` changes; missed calls with "Message" (CALL-04 API 4) | app | Never two alert layers for one call; actions run without opening a window |
 | M3.3 [macOS] | Decline with a message (`call.quick_replies` templates, CALL-02 API 5), the Calls item in the Messages window sidebar (CALL-04), the Calls settings pane, the call item in the menu bar menu after "Ignore" | app | Strings and button positions per the `CallPanel` README |
-| I3.1 [iOS] | Incoming-call notification: I-NSE builds `INStartCallIntent`, category `HL_CALL_INCOMING` with "Decline" (CALL-02 B), an in-app banner while the app is open; a Calls tab with the call log and missed calls | `apple/iOS` | Decline from the notification reaches the phone in < 2 s via the relay; a locked device shows generic content |
-| T3.1 [test] | Bench the `RINGING → panel` and `answer → OFFHOOK` latency; scenarios: call waiting (E9), two SIMs, Focus on | `tools/bench/`, `reports/` | Targets met on Pixel and Samsung |
+| I3.1 [iOS] | Incoming-call notification: I-NSE builds `INStartCallIntent`, category `HL_CALL_INCOMING` with "Decline" (CALL-02 B), an in-app banner while the app is open; a Calls tab with the call log and missed calls | `apple/iOS` | Decline from the notification reaches the phone in < 2 s through the relay when the phone already opened the relay after the push; a locked device shows generic content |
+| T3.1 [test] | Bench the `RINGING → panel` latency and the answer latency: click → `state = offhook` back on the Mac (CALL-02, < 500 ms at the 95th percentile), with click → `OFFHOOK` on the phone also reported; scenarios: call waiting (E9), two SIMs, Focus on | `tools/bench/`, `reports/` | Targets met on Pixel and Samsung |
 
 ## Branch and work order
 

@@ -16,7 +16,8 @@ thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Gi
 
 ## Yêu cầu và tiêu chí đo
 
-- `call_event/state` tới Mac < 200 ms trong LAN; trả lời < 500 ms đầu-cuối.
+- `call_event/state` tới Mac < 200 ms trong LAN; trả lời < 500 ms ở phân vị 95, từ lúc bấm trên Mac tới
+  khi `state = offhook` về lại Mac (CALL-02).
 - Không đổ chuông khi chưa đọc được trạng thái Tập trung; Tập trung bật → chỉ thông báo liên lạc.
 - Không log số điện thoại, tên.
 
@@ -32,8 +33,8 @@ thúc qua Wi-Fi; nhật ký cuộc gọi và cuộc gọi nhỡ đồng bộ. Gi
 | M3.1 [macOS] | `CallPanel`: `NSPanel` non-activating nổi trên mọi Space, trạng thái đổ chuông/đang gọi/kết thúc, phím Return/⌘⌫/Esc, chuông `NSSound` theo `call.ringtone`, `INFocusStatusCenter` (`NSFocusStatusUsageDescription`), VoiceOver | `apple/macOS/HandLive` | Panel < 300 ms sau `RINGING`; Tập trung bật → không panel, không chuông |
 | M3.2 [macOS] | Thông báo liên lạc `INStartCallIntent` (CALL-01 API 7): passive khi có panel, time-sensitive khi Tập trung; hành động "Trả lời", "Từ chối"; gỡ khi `state` đổi; cuộc gọi nhỡ với "Nhắn tin" (CALL-04 API 4) | app | Không hiện hai lớp cho một cuộc gọi; hành động chạy không cần mở cửa sổ |
 | M3.3 [macOS] | Từ chối kèm tin nhắn (mẫu `call.quick_replies`, CALL-02 API 5), mục Cuộc gọi trong thanh bên cửa sổ Tin nhắn (CALL-04), cài đặt pane Cuộc gọi, mục cuộc gọi trong menu thanh menu khi "Bỏ qua" | app | Chuỗi và vị trí nút theo `CallPanel` README |
-| I3.1 [iOS] | Thông báo cuộc gọi đến: I-NSE dựng `INStartCallIntent`, danh mục `HL_CALL_INCOMING` với "Từ chối" (CALL-02 B), banner trong app khi đang mở; tab Cuộc gọi với nhật ký và cuộc gọi nhỡ | `apple/iOS` | Từ chối từ thông báo tới điện thoại < 2 s qua relay; máy khóa hiện nội dung chung |
-| T3.1 [test] | Bench trễ `RINGING → panel` và `answer → OFFHOOK`; kịch bản cuộc gọi chờ (E9), hai SIM, Tập trung bật | `tools/bench/`, `reports/` | Đạt mục tiêu trên Pixel và Samsung |
+| I3.1 [iOS] | Thông báo cuộc gọi đến: I-NSE dựng `INStartCallIntent`, danh mục `HL_CALL_INCOMING` với "Từ chối" (CALL-02 B), banner trong app khi đang mở; tab Cuộc gọi với nhật ký và cuộc gọi nhỡ | `apple/iOS` | Từ chối từ thông báo tới điện thoại < 2 s qua relay khi điện thoại đã mở relay sau push; máy khóa hiện nội dung chung |
+| T3.1 [test] | Bench trễ `RINGING → panel` và trễ trả lời: từ lúc bấm tới khi `state = offhook` về lại Mac (CALL-02, < 500 ms ở phân vị 95), kèm khoảng từ lúc bấm tới `OFFHOOK` trên điện thoại; kịch bản cuộc gọi chờ (E9), hai SIM, Tập trung bật | `tools/bench/`, `reports/` | Đạt mục tiêu trên Pixel và Samsung |
 
 ## Nhánh và thứ tự làm
 
