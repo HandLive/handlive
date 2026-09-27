@@ -49,7 +49,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Title | string | Output | "Incoming Call" | "Call Waiting" when `waiting = true` |
+| 1 | Title | string | Output | "Incoming Call" | "Call Waiting" when `waiting = true` (iPhone/iPad banner); the Mac shows a waiting call inside the in-call panel: status "Call waiting", the waiting caller and field 5 (CALL-03 field 3, E7) |
 | 2 | Caller name | string | Output | `display_name` | `null` → this line shows the number (field 3) |
 | 3 | Caller number | e164 | Output | `number` | National format; `presentation = restricted` → "No Caller ID"; `unknown` or `null` → "Unknown Caller" |
 | 4 | SIM label | string | Output | Hidden | `sim_label`, only when the phone has > 1 SIM and the ringing SIM is known |

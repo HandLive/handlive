@@ -47,7 +47,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Tiêu đề | string | Output | "Cuộc gọi đến" | "Cuộc gọi chờ" khi `waiting = true` |
+| 1 | Tiêu đề | string | Output | "Cuộc gọi đến" | "Cuộc gọi chờ" khi `waiting = true` (banner iPhone/iPad); Mac hiện cuộc gọi chờ ngay trong panel đang gọi: trạng thái "Có cuộc gọi chờ", người gọi đang chờ và trường 5 (CALL-03 trường 3, E7) |
 | 2 | Tên người gọi | string | Output | `display_name` | `null` → dòng này hiển thị số (trường 3) |
 | 3 | Số người gọi | e164 | Output | `number` | Định dạng quốc gia; `presentation = restricted` → "Số ẩn"; `unknown` hoặc `null` → "Không rõ số" |
 | 4 | Nhãn SIM | string | Output | Ẩn | `sim_label`, chỉ khi điện thoại có > 1 SIM và biết SIM đổ chuông |
