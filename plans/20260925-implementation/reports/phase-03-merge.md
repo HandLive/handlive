@@ -23,10 +23,10 @@ the workspace root, the same procedure:
 
 ```sh
 git -C android fetch origin
-git -C android worktree add --detach ../hl-merge-android origin/main
-git -C ../hl-merge-android merge --no-ff --signoff origin/feat/phase-03-calls -m "Merge branch 'feat/phase-03-calls'"
-git -C ../hl-merge-android push origin HEAD:main
-git -C android worktree remove ../hl-merge-android
+git -C android worktree add --detach /tmp/hl-merge-android origin/main
+git -C /tmp/hl-merge-android merge --no-ff --signoff origin/feat/phase-03-calls -m "Merge branch 'feat/phase-03-calls'"
+git -C /tmp/hl-merge-android push origin HEAD:main
+git -C android worktree remove /tmp/hl-merge-android
 ```
 
 Until then, Android's `main` is Phase 2 code while shared `main` already has the Phase 3 catalog and schemas; nothing
