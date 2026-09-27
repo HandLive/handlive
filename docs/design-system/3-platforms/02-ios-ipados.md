@@ -79,8 +79,8 @@ https://developer.apple.com/design/human-interface-guidelines/designing-for-ipho
   only "New SMS message" is shown.
 - Incoming call: a time-sensitive communication notification (`INStartCallIntent`) with only
   "Decline"; no PushKit or CallKit (C7); the iPhone can't answer on the phone's behalf.
-- When the app is open, there are no notifications: an incoming call shows an in-app banner (CALL-01
-  step 8). The app icon badge is the number of unread conversations.
+- When the app is open, there are no notification banners: an incoming call shows an in-app banner (CALL-01
+  step 8), and a missed call goes only to Notification Center (CALL-04 API 4). The app icon badge is the number of unread conversations.
 
 ## iPad
 

@@ -74,7 +74,7 @@ https://developer.apple.com/design/human-interface-guidelines/designing-for-ipho
   mới".
 - Cuộc gọi đến: thông báo liên lạc (`INStartCallIntent`) mức time-sensitive, chỉ có "Từ chối"; không
   dùng PushKit, CallKit (C7); iPhone không trả lời hộ được.
-- App đang mở thì không có thông báo: cuộc gọi đến hiện banner trong app (CALL-01 bước 8). Huy hiệu
+- App đang mở thì không hiện banner thông báo: cuộc gọi đến hiện banner trong app (CALL-01 bước 8), cuộc gọi nhỡ chỉ vào Trung tâm thông báo (CALL-04 API 4). Huy hiệu
   biểu tượng app là số hội thoại chưa đọc.
 
 ## iPad
