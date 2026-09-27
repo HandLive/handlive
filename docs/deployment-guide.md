@@ -21,16 +21,36 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 - **Gate G2 checklist (before the Phase 2 release):** in the Play Console, submit the Permissions Declaration
   Form for `READ_SMS` and `SEND_SMS` (`READ_CALL_LOG` joins in Phase 3). Attach a short video that shows the
   SMS permission primer (SET-01 part B), the system permission prompt, a new SMS appearing on the Mac and a
-  reply sent from the Mac. Give the published `docs/privacy.md` as the privacy policy URL and fill the Data
-  safety form from the same page. The project owner submits the forms and records the outcome here.
+  reply sent from the Mac; for Phase 3 the video also shows an incoming call on the Mac panel, answering and
+  declining it from the Mac, and a missed call. `READ_PHONE_STATE`, `READ_CONTACTS` and `ANSWER_PHONE_CALLS`
+  are runtime permissions and need no form. Give the published `docs/privacy.md` as the privacy policy URL
+  and fill the Data safety form from the same page. The project owner submits the forms and records the
+  outcome here.
 - Shizuku (optional) for the Opus/WS call-audio path — a wizard guides the installation; Shizuku must be
   restarted after every device boot (plan §13 D10).
+- **Call control per device (Phase 3):** `TelecomManager.acceptRingingCall()` and `endCall()` are
+  deprecated since API 29 and still work (C12), but an OEM build may block them; if so, answering and
+  ending wait for HFP (Phase 4). The Phase 3 risks ask to record each device model here.
+
+| Device model | Android version | `acceptRingingCall()` | `endCall()` |
+|---|---|---|---|
+| Pixel | — | Not tested yet | Not tested yet |
+| Samsung | — | Not tested yet | Not tested yet |
 
 ## macOS app
 
 - Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1); Developer ID signing for the
   app, the camera extension and the microphone driver; the app target sets
   `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
+- **Calls (Phase 3):** `macOS/HandLive.entitlements` also has the Communication Notifications capability
+  (`com.apple.developer.usernotifications.communication`: the call communication notifications, and
+  reading the Focus status with `INFocusStatusCenter`) and the Time Sensitive Notifications entitlement
+  (`com.apple.developer.usernotifications.time-sensitive`: without it a time-sensitive call notification
+  arrives as active and does not break through a Focus). `macOS/Info.plist` lists `INSendMessageIntent`
+  and `INStartCallIntent` in `NSUserActivityTypes` and carries `NSFocusStatusUsageDescription`, whose text
+  comes from the catalog key `infoplist.focus_status_usage` (next to `NSBonjourServices` = `_handlive._tcp`,
+  `NSLocalNetworkUsageDescription` and `NSMicrophoneUsageDescription`). Turn both capabilities on for the
+  App ID `app.handlive.mac` before signing.
 
 - **Virtual mic (AudioServerPlugin):** cannot be installed through the Mac App Store (the sandbox blocks
   `/Library/Audio/Plug-Ins/HAL/`). Distribution:
@@ -50,12 +70,24 @@ English | [Tiếng Việt](deployment-guide.vi.md)
   app. The App Group `group.app.handlive` is shared by the app and the extension and is also the Keychain
   access group of the service `app.handlive.keys` (0.6.1), so the extension can read `PRK` while the device
   is unlocked (C3).
-- **Capabilities (Apple Developer account and entitlements):** Push Notifications (`aps-environment`), App
-  Groups, Keychain Sharing, and Communication Notifications
-  (`com.apple.developer.usernotifications.communication`) for the `INSendMessageIntent` notifications of
-  SMS-02; the app lists `INSendMessageIntent` in `NSUserActivityTypes`. The local network purpose string
-  (`NSLocalNetworkUsageDescription`, `NSBonjourServices` = `_handlive._tcp`) comes from the string catalog
-  (`infoplist.*` keys, 0.12).
+- **Capabilities of the app (Apple Developer account and `iOS/HandLive.entitlements`):** Push Notifications
+  (`aps-environment`, `development` in the file; distribution signing uses production), App Groups
+  (`group.app.handlive`), Keychain Sharing (`$(AppIdentifierPrefix)app.handlive.ios`, `group.app.handlive`),
+  Communication Notifications (`com.apple.developer.usernotifications.communication`) for the communication
+  notifications of SMS-02 (`INSendMessageIntent`) and CALL-01 (`INStartCallIntent`), and Time Sensitive
+  Notifications (`com.apple.developer.usernotifications.time-sensitive`) for incoming calls. `iOS/Info.plist`
+  lists `INSendMessageIntent` and `INStartCallIntent` in `NSUserActivityTypes`. The local network purpose
+  string (`NSLocalNetworkUsageDescription`, `NSBonjourServices` = `_handlive._tcp`) comes from the string
+  catalog (`infoplist.*` keys, 0.12).
+- **Notification Service Extension (`app.handlive.ios.nse`, `iOS/NotificationService.entitlements`,
+  `iOS/NotificationService-Info.plist`):** App Groups and Keychain Sharing (`group.app.handlive`), the
+  Communication Notifications entitlement, and `IntentsSupported` = `INSendMessageIntent`,
+  `INStartCallIntent` in `NSExtension` › `NSExtensionAttributes` (extension point
+  `com.apple.usernotifications.service`). Phase 3 added the Communication Notifications entitlement and
+  `IntentsSupported` to the extension; the SMS communication notifications need them too, so a Phase 2 build
+  may not have shown SMS as communication notifications on a device. The App IDs `app.handlive.ios` and
+  `app.handlive.ios.nse` both need the Communication Notifications capability; the app also needs Time
+  Sensitive Notifications.
 - **APNs key:** create one `.p8` provider key in the Apple Developer account (Keys, Apple Push Notifications
   service). The key lives only on the relay server (`RELAY_APNS_KEY_PATH`, `RELAY_APNS_KEY_ID`,
   `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`); development builds register sandbox tokens.
