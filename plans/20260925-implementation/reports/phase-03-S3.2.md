@@ -132,6 +132,56 @@ CI `ci-shared` run 36295428294 on e38abbf: success.
 6. `entry_id` ≥ 1 (the provider's `_ID`); the empty-log cursor `{"v":1,"id":0}` only appears inside the opaque
    cursor, so it is not affected.
 
+## Follow-up: late push level
+
+Decision of spec sync 3: a late incoming-call push, shown more than 60 s after `started_at` (CALL-01 E7, API 6),
+uses `interruptionLevel = active`, not time-sensitive.
+
+Final state (after the correction below):
+
+- **Schema.** `call-notification.schema.json` `$defs/incoming` allows `active`. One rule ties it to the late case:
+  `active` means no category and no identifier of its own, because I-NSE rebuilds the late push on iPhone/iPad. The
+  late body (`call.incoming_late`) depends on the language, so the schema cannot check it and does not force a late
+  push to `active`. Content without a category is valid at every level: the platforms set a category only when the
+  notification offers its actions (Mac `HL_CALL_INCOMING_MAC` when `controls.answer` and `controls.reject` are both
+  true, I-NSE `HL_CALL_INCOMING` when `controls.reject` is true). The `incoming` and `categoryIdentifier`
+  descriptions say so.
+- **Samples.** Positives: a late push in English and in Vietnamese (`active`, no category), Mac without actions at
+  `passive` and at `timeSensitive` (`identifier` = `call_id`), iPhone without actions at `timeSensitive`. Negatives:
+  `active` on the Mac content (identifier), `active` with a category, a late push with the Mac identifier, an unknown
+  level. Positives 117 → 121, negatives 232 → 235.
+- **Checkers.** `doc_examples.py` recognizes incoming content without a category (no action offered, or a late push)
+  by its `calls` thread and the `started_at` of its `userInfo`, so such examples in the specs are validated.
+  `call_spec_checks.py` checks that every level the CALL-01 API 6 and API 7 `interruptionLevel` rows name
+  (`.passive`, `.timeSensitive`, and `.active` once the spec lists it) is a schema value: 2 more table checks
+  (25 → 27); removing `passive` from the schema makes it fail.
+- **Docs.** `schemas/README` and `tools/schemas/README` (EN + VI) describe when a category is set, the `active` rule
+  and the checker.
+
+### Correction: content without a category is not only the late push
+
+26cb74c shipped a second rule: content without a category must be `active`. The Apple agent reported that it
+conflicts with the decisions above (category only when actions exist; otherwise Mac stays `passive`/`timeSensitive`
+with `identifier` = `call_id`, iPhone stays `timeSensitive`). Apple's `CallNotificationTests` validate this content
+against the schema, so apple CI would turn red. 26cb74c was already pushed, so the fix is a new commit on top (no
+amend, no force-push): rule 2 removed, rule 1 kept; three button-less positives added; the two negatives only rule 2
+rejected ("late incoming notification without its level", "… time-sensitive") dropped. No body-based late rule was
+added (the body is language-dependent). Checked against the shapes of
+`apple/Packages/HLCalls/Tests/HLCallNotificationsTests/CallNotificationTests.swift` (rebuilt as JSON in a scratch
+script): with rule 2, the Mac decline-only, the Mac without controls and the iPhone without a button fail
+("'active' was expected"); without it, all seven incoming shapes are valid.
+
+Commits (handlive-shared, `feat/phase-03-calls`, under the lock):
+
+- **26cb74c** "feat(shared): allow the active level for a late incoming-call push" (added both rules)
+- **1cfdb66** "docs: describe the level of a late incoming-call push" (CI run 36304077375 passed)
+- **9631667** "fix(shared): let incoming-call content without actions have no category" (removes rule 2)
+- **aa689d6** "docs: describe incoming-call content without a category"
+
+Tests on aa689d6: `check_schemas.py` XANH (121 positives, 235 negatives), vectors 0 lỗi / 0 lệch, strings 96/96 with
+393 strings and 0 warnings, bench 68/68, relay load 10/10, commit check clean (29 commits). CI `ci-shared` run
+36304374286 on aa689d6 passed (both jobs).
+
 ## Pending manual checks
 
 - None for the schemas themselves. The platform agents' tests should validate their emitted `call_event` messages
