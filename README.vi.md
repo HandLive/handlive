@@ -6,7 +6,7 @@
 >
 > Phương châm: *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 
-**Trạng thái:** Phase 0 (khung, giao thức, mã hóa, token và CI), Phase 1 (đồng bộ clipboard giữa Android và Mac) và Phase 2 (SMS, ứng dụng iPhone và iPad, cloud relay và thông báo đẩy) đã gộp vào `main`. Phase 3 (thông tin và điều khiển cuộc gọi) đang làm. Cổng G1 (kiểm trên máy thật) và cổng G2 (Play Console) vẫn còn mở, nên chưa có bản phát hành. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
+**Trạng thái:** Phase 0 (khung, giao thức, mã hóa, token và CI), Phase 1 (đồng bộ clipboard giữa Android và Mac), Phase 2 (SMS, ứng dụng iPhone và iPad, cloud relay và thông báo đẩy) và Phase 3 (thông tin và điều khiển cuộc gọi) đã gộp vào `main`. Phần Android của Phase 3 còn chờ commit gộp. Phase 4 (nghe gọi trên Mac) bắt đầu bằng một spike Bluetooth rảnh tay. Spike này cần điện thoại thật. Cổng G1 (kiểm trên máy thật) và cổng G2 (Play Console) vẫn còn mở, nên chưa có bản phát hành. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
 
 ## HandLive giải quyết gì
 

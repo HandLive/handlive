@@ -3,17 +3,21 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 2 merged into main; Phase 3 in progress; gates G1 and G2 open
+## Project status: Phase 3 merged (Android merge commit pending); Phase 4 waits for the HFP spike; gates G1 and G2 open
 
-Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26) and Phase 2 (SMS,
-iOS app, relay, push; 2026-09-27) are merged into `main` of android, apple, shared and relay. The project
-owner merged both before their gates. Still open, and required before the first release: gate G1 (the
-`shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver, system setting
-names), gate G2 (Play Console) and the Phase 2 checks on real devices, a real relay, APNs and FCM
-(`plans/20260925-implementation/reports/phase-02-summary.md`). Phase 3 (call information and control) is in
-progress on `feat/phase-03-calls` in shared, android and apple (started 2026-09-27; relay needs no change).
-Reports: `plans/20260925-implementation/reports/phase-0N-*.md`, merge records `phase-01-merge.md` and
-`phase-02-merge.md`.
+Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26), Phase 2 (SMS, iOS
+app, relay, push; 2026-09-27) and Phase 3 (call information and control; 2026-09-28) are merged into `main`.
+Phase 3 is merged in shared and apple; the Android merge commit waits for the project owner, because a
+permission setting refused its push (`phase-03-merge.md` has the commands); relay had no Phase 3 change. The
+project owner merged each phase before its gates. Still open, and required before the first release: gate G1
+(the `shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver, system setting
+names), gate G2 (Play Console) and the Phase 2 and Phase 3 checks on real devices, a real relay, APNs and FCM
+(`plans/20260925-implementation/reports/phase-02-summary.md`, `phase-03-merge.md`). Phase 4 (taking calls on
+the Mac) opened on `feat/phase-04-call-audio` in apple with the gate G4 spike: the probe
+`apple/Tools/HFPSpike` is ready and needs a real phone paired over Bluetooth and a real call
+(`phase-04-spike-d1.md`); no other Phase 4 task card starts before G4. Reports:
+`plans/20260925-implementation/reports/phase-0N-*.md`, merge records `phase-01-merge.md`, `phase-02-merge.md`
+and `phase-03-merge.md`.
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
