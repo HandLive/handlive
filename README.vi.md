@@ -20,6 +20,20 @@ HandLive đưa các tính năng gắn với một hệ sinh thái, như Handoff 
 | **Âm thanh cuộc gọi** (nghe và nói trên máy) | ✅ | ❌ (Apple không mở API HFP phía tai nghe) |
 | Camera và mic ảo (Zoom, Meet, FaceTime, OBS) | ✅ | ❌ |
 
+## Ảnh màn hình
+
+| | | |
+|---|---|---|
+| <img src="docs/screenshots/android/04-devices-connected.vi.png" alt="Android: Mac đã ghép nối, kết nối qua Wi-Fi" width="220"> | <img src="docs/screenshots/ios/04-sms-conversation.vi.png" alt="iPhone: đọc và trả lời SMS của điện thoại" width="220"> | <img src="docs/screenshots/ios/05-calls.vi.png" alt="iPhone: nhật ký cuộc gọi của điện thoại" width="220"> |
+| Android: Mac đã ghép nối, kết nối qua Wi-Fi | iPhone: đọc và trả lời SMS của điện thoại | iPhone: nhật ký cuộc gọi của điện thoại |
+
+| | |
+|---|---|
+| <img src="docs/screenshots/macos/03-messages-window.vi.png" alt="Mac: SMS và nhật ký cuộc gọi trong một cửa sổ" width="420"> | <img src="docs/screenshots/macos/04-incoming-call-panel.vi.png" alt="Mac: bảng nổi khi có cuộc gọi đến" width="420"> |
+| Mac: SMS và nhật ký cuộc gọi trong một cửa sổ | Mac: bảng nổi khi có cuộc gọi đến |
+
+Toàn bộ màn hình của ba ứng dụng, bằng tiếng Anh và tiếng Việt, kèm cách chụp: [`docs/screenshots/README.vi.md`](docs/screenshots/README.vi.md).
+
 ## Kiến trúc tóm tắt
 
 - **WebSocket** chuyển mọi dữ liệu: clipboard, SMS, thông tin cuộc gọi, thông báo. Android chạy máy chủ Ktor. Các máy trong cùng mạng tìm nhau qua mDNS.
@@ -75,6 +89,7 @@ tools/workspace.sh status
 | [`docs/project-overview-pdr.md`](docs/project-overview-pdr.vi.md) | Sản phẩm là gì, mục tiêu, phạm vi, ràng buộc |
 | [`docs/system-architecture.md`](docs/system-architecture.vi.md) | Kiến trúc, kênh truyền, giao thức, bảo mật |
 | [`docs/project-roadmap.md`](docs/project-roadmap.vi.md) | Năm phase và ước lượng công sức |
+| [`docs/screenshots/README.vi.md`](docs/screenshots/README.vi.md) | Ảnh màn hình ứng dụng Android, iPhone, iPad và Mac |
 | [`docs/design-guidelines.md`](docs/design-guidelines.vi.md) | Nguyên tắc trải nghiệm và bảo mật |
 | [`docs/code-standards.md`](docs/code-standards.vi.md) | Quy ước code từng nền tảng |
 | [`docs/deployment-guide.md`](docs/deployment-guide.vi.md) | Đóng gói và phân phối (App Store, PKG, cloud relay) |

@@ -20,6 +20,20 @@ HandLive brings features that belong to one ecosystem, such as Apple Handoff and
 | **Call audio** (talk and listen on the computer) | ✅ | ❌ (Apple offers no hands-free-side HFP API) |
 | Virtual camera and microphone (Zoom, Meet, FaceTime, OBS) | ✅ | ❌ |
 
+## Screenshots
+
+| | | |
+|---|---|---|
+| <img src="docs/screenshots/android/04-devices-connected.en.png" alt="Android: the paired Mac, connected over Wi-Fi" width="220"> | <img src="docs/screenshots/ios/04-sms-conversation.en.png" alt="iPhone: read and reply to the phone's SMS" width="220"> | <img src="docs/screenshots/ios/05-calls.en.png" alt="iPhone: the phone's call log" width="220"> |
+| Android: the paired Mac, connected over Wi-Fi | iPhone: read and reply to the phone's SMS | iPhone: the phone's call log |
+
+| | |
+|---|---|
+| <img src="docs/screenshots/macos/03-messages-window.en.png" alt="Mac: SMS and the call log in one window" width="420"> | <img src="docs/screenshots/macos/04-incoming-call-panel.en.png" alt="Mac: floating panel for an incoming call" width="420"> |
+| Mac: SMS and the call log in one window | Mac: floating panel for an incoming call |
+
+Every screen of the three apps, in English and Vietnamese, with how each was captured: [`docs/screenshots/README.md`](docs/screenshots/README.md).
+
 ## Architecture at a glance
 
 - **WebSocket** carries all data: clipboard, SMS, call details, notifications. Android runs a Ktor server, and devices on the same network find each other over mDNS.
@@ -75,6 +89,7 @@ tools/workspace.sh status
 | [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) | What the product is: goals, scope, constraints |
 | [`docs/system-architecture.md`](docs/system-architecture.md) | Architecture, transports, protocol, security |
 | [`docs/project-roadmap.md`](docs/project-roadmap.md) | The five phases and effort estimates |
+| [`docs/screenshots/README.md`](docs/screenshots/README.md) | Screenshots of the Android, iPhone, iPad and Mac apps |
 | [`docs/design-guidelines.md`](docs/design-guidelines.md) | Experience and security principles |
 | [`docs/code-standards.md`](docs/code-standards.md) | Code conventions per platform |
 | [`docs/deployment-guide.md`](docs/deployment-guide.md) | Packaging and distribution (App Store, PKG, cloud relay) |
