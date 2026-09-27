@@ -26,7 +26,8 @@ of the operating system's interface.
 - A short title, no period, no "HandLive" (the system already shows the app's name). The body is a
   complete sentence that isn't cut short by hand.
 - At most four actions, each a short verb with an SF Symbol; no action that only opens the app.
-- Don't send notifications while the app is open in the foreground — update the interface instead. No
+- Don't show notification banners while the app is open in the foreground — update the interface instead;
+  a missed call still goes to Notification Center (CALL-04 API 4). No
   repeated notifications for the same thing; errors don't go out as notifications.
 - The app icon badge counts only unread messages.
 - Respect Focus: communication notifications let the system filter by sender or caller.

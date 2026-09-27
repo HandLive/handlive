@@ -72,10 +72,10 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 - Huy hiệu chỉ đếm việc chưa xem: số hội thoại chưa đọc trên biểu tượng app iOS, tab Tin nhắn và
   ngay sau biểu tượng thanh menu Mac; tab Cuộc gọi đếm cuộc gọi nhỡ chưa xem. Xem xong thì giảm
   ngay. Không vẽ huy hiệu giả.
-- App đang ở phía trước thì không gửi thông báo mà cập nhật giao diện: hội thoại đang mở không báo
-  tin của chính nó (SMS-02 bước 7); iPhone đang mở HandLive khi có cuộc gọi thì hiện banner trong
-  app (CALL-01 bước 8); iPhone nhận xung đột bảng nhớ tạm lúc đang mở app thì báo ngay trên thẻ gửi
-  (CLIP-04 E6).
+- App đang ở phía trước thì không hiện banner thông báo mà cập nhật giao diện: hội thoại đang mở
+  không báo tin của chính nó (SMS-02 bước 7); iPhone đang mở HandLive khi có cuộc gọi thì hiện banner
+  trong app (CALL-01 bước 8); iPhone nhận xung đột bảng nhớ tạm lúc đang mở app thì báo ngay trên thẻ
+  gửi (CLIP-04 E6). Cuộc gọi nhỡ vẫn vào Trung tâm thông báo, không hiện banner (CALL-04 API 4).
 - Câu chữ: tiêu đề ngắn, không dấu chấm, không chữ "HandLive"; nội dung là câu đầy đủ, không tự cắt;
   không lộ nội dung vừa sao chép. Tối đa 4 hành động, mỗi hành động là động từ ngắn; không có hành
   động chỉ để mở app.

@@ -26,7 +26,8 @@ kênh riêng — không dựng lại theo kiểu Apple, vì đó là giao diện
   hoàn chỉnh, không tự cắt.
 - Tối đa bốn hành động, mỗi hành động là động từ ngắn, có SF Symbol; không có hành động chỉ để mở
   app.
-- Không gửi thông báo khi app đang mở ở phía trước — cập nhật giao diện thay vào đó. Không thông báo
+- Không hiện banner thông báo khi app đang mở ở phía trước — cập nhật giao diện thay vào đó; cuộc gọi
+  nhỡ vẫn vào Trung tâm thông báo (CALL-04 API 4). Không thông báo
   lặp cho cùng một việc; lỗi không đi bằng thông báo.
 - Huy hiệu biểu tượng app chỉ đếm tin chưa đọc.
 - Tôn trọng Tập trung: thông báo liên lạc để hệ thống lọc theo người gửi hoặc người gọi.

@@ -73,10 +73,11 @@ https://developer.apple.com/design/human-interface-guidelines/managing-notificat
 - Badges count only things not yet seen: the number of unread conversations on the iOS app icon, on the
   Messages tab, and right after the Mac menu bar icon; the Calls tab counts unseen missed calls. They go
   down as soon as the items are seen. Don't draw fake badges.
-- When the app is in the foreground, don't send notifications; update the interface instead: an open
-  conversation doesn't notify about its own messages (SMS-02 step 7); an iPhone with HandLive open when
-  a call comes in shows an in-app banner (CALL-01 step 8); an iPhone that receives a clipboard conflict
-  while the app is open reports it right on the send card (CLIP-04 E6).
+- When the app is in the foreground, don't show notification banners; update the interface instead: an
+  open conversation doesn't notify about its own messages (SMS-02 step 7); an iPhone with HandLive open
+  when a call comes in shows an in-app banner (CALL-01 step 8); an iPhone that receives a clipboard
+  conflict while the app is open reports it right on the send card (CLIP-04 E6). A missed call still
+  goes to Notification Center, without a banner (CALL-04 API 4).
 - Wording: a short title, no period, no "HandLive"; the body is a complete sentence that isn't cut
   short by hand; never reveal what was just copied. At most 4 actions, each a short verb; no action
   that only opens the app.
