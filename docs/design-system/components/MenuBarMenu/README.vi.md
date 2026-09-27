@@ -28,7 +28,8 @@ lệnh ở giữa, Cài đặt và Thoát ở cuối.
    camera".
 4. **Camera** (khi đang phát): trạng thái, dấu kiểm "Micro điện thoại" và "Tạm dừng hình", menu con
    "Chất lượng" (Tự động, 480p, 720p, 1080p), "Đổi camera", "Dừng camera".
-5. **Gần đây:** tối đa ba mục (cuộc gọi nhỡ, tin mới); chọn mục mở đúng chỗ.
+5. **Gần đây:** ba mục gần nhất (cuộc gọi nhỡ, tin mới); chọn mục mở đúng chỗ; mở danh sách cuộc
+   gọi thì dọn các cuộc gọi nhỡ.
 6. "Cài đặt…" ⌘, · "Thoát HandLive" ⌘Q.
 
 Menu con sâu một cấp. Trong một nhóm, hoặc mọi mục có biểu tượng, hoặc không mục nào có. Mục chưa

@@ -30,7 +30,8 @@ trong panel: "Điện thoại không thực hiện được thao tác này", "M�
 - Rộng 340 pt, góc trên phải màn hình đang dùng, cách mép 16 pt; kéo được; vật liệu kính
   (`.hudWindow`/`.popover` trước macOS 26); góc `radius-panel`.
 - Phím: Return = Trả lời, ⌘⌫ = Từ chối, Esc = Bỏ qua (đóng panel, tắt chuông trên Mac, không từ
-  chối).
+  chối). Panel không bao giờ lấy focus, nên phím chỉ có tác dụng sau khi người dùng bấm vào panel. Khi
+  đó panel thành cửa sổ key mà không kích hoạt HandLive.
 - Tập trung đang bật → không hiện panel, không đổ chuông; thông báo time-sensitive để hệ thống quyết
   định theo người gọi; cuộc gọi vẫn có trong `MenuBarMenu`. Chưa đọc được trạng thái Tập trung
   (thiếu quyền) → hiện panel, không đổ chuông; thông báo vẫn ở mức passive (CALL-01 E4, trường 15).

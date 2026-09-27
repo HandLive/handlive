@@ -32,7 +32,8 @@ action", "Lost connection to the phone" (CALL-03 E6).
 - 340 pt wide, in the top-right corner of the active screen, 16 pt from the edges; draggable; glass
   material (`.hudWindow`/`.popover` before macOS 26); `radius-panel` corners.
 - Keys: Return = Answer, ⌘⌫ = Decline, Esc = Ignore (closes the panel and silences the ringing on the
-  Mac, without declining).
+  Mac, without declining). The panel never takes focus, so the keys work once the user clicks it: it
+  then becomes key without activating HandLive.
 - A Focus is on → no panel, no ringing; the notification is time-sensitive so the system decides based
   on the caller; the call is still in `MenuBarMenu`. The Focus status can't be read (missing
   permission) → show the panel without ringing; the notification stays passive (CALL-01 E4, field 15).

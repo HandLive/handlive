@@ -105,13 +105,14 @@ after the user clicks the panel.
 - The Mac doesn't receive push: local notifications through `UNUserNotificationCenter`; messages and
   calls are communication notifications (`INSendMessageIntent`, `INStartCallIntent`), which need the
   Communication Notifications capability and `NSUserActivityTypes` (Notifications section).
-- Focus: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, key
-  `NSFocusStatusUsageDescription`). When a Focus is on: no panel, no ringing; the call is still in
+- Focus: `INFocusStatusCenter` (the Communication Notifications capability,
+  `com.apple.developer.usernotifications.communication`, and the key `NSFocusStatusUsageDescription`;
+  Apple has no separate Focus status entitlement). When a Focus is on: no panel, no ringing; the call is still in
   `MenuBarMenu`. If the Focus status can't be read, the panel still appears but doesn't ring.
 - Never show two layers for one call: while `CallPanel` is showing, the call notification is sent at
   the passive level (into Notification Center, no banner, no sound); when the panel isn't shown
   (Focus), the notification is time-sensitive so the system decides based on the caller and the Focus
-  settings. Answering from the notification opens `CallPanel` in the in-call state.
+  settings; the Mac needs the Time Sensitive Notifications entitlement for that. Answering from the notification opens `CallPanel` in the in-call state.
 - Open at login: `SMAppService.mainApp.register()` / `unregister()`, always reading the state from
   `status`; with `.requiresApproval`, a button opens `SMAppService.openSystemSettingsLoginItems()`.
 - The Mac has no launch screen. On reopening, restore the window frame, the selected conversation, and

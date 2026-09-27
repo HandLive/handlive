@@ -103,13 +103,15 @@ người dùng bấm vào panel.
 - Mac không nhận push: thông báo cục bộ `UNUserNotificationCenter`; tin nhắn, cuộc gọi là thông báo
   liên lạc (`INSendMessageIntent`, `INStartCallIntent`), cần capability Communication Notifications
   và `NSUserActivityTypes` (mục Thông báo).
-- Tập trung: `INFocusStatusCenter` (entitlement `com.apple.developer.focus-status`, khóa
-  `NSFocusStatusUsageDescription`). Tập trung đang bật thì không panel, không chuông; cuộc gọi vẫn
+- Tập trung: `INFocusStatusCenter` (capability Communication Notifications,
+  `com.apple.developer.usernotifications.communication`, và khóa `NSFocusStatusUsageDescription`;
+  Apple không có entitlement riêng cho trạng thái Tập trung). Tập trung đang bật thì không panel, không chuông; cuộc gọi vẫn
   có trong `MenuBarMenu`. Chưa đọc được trạng thái Tập trung thì vẫn hiện panel nhưng không đổ
   chuông.
 - Không hiện hai lớp cho một cuộc gọi: khi `CallPanel` đang hiện, thông báo cuộc gọi gửi ở mức
   passive (vào Trung tâm thông báo, không banner, không âm); khi không hiện panel (Tập trung), thông
-  báo ở mức time-sensitive để hệ thống quyết định theo người gọi và cài đặt Tập trung. Trả lời từ
+  báo ở mức time-sensitive để hệ thống quyết định theo người gọi và cài đặt Tập trung; Mac cần
+  entitlement Time Sensitive Notifications cho việc này. Trả lời từ
   thông báo thì mở `CallPanel` ở trạng thái đang gọi.
 - Mở khi đăng nhập: `SMAppService.mainApp.register()` / `unregister()`, trạng thái luôn đọc từ
   `status`; `.requiresApproval` thì nút mở `SMAppService.openSystemSettingsLoginItems()`.

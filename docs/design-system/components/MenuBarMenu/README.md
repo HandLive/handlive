@@ -30,7 +30,8 @@ menu bar.
    Preview".
 4. **Camera** (while streaming): the status, checkmark items "Phone Microphone" and "Pause Video", the
    "Quality" submenu (Automatic, 480p, 720p, 1080p), "Switch Camera", "Stop Camera".
-5. **Recent:** up to three items (missed calls, new messages); choosing an item opens the right place.
+5. **Recent:** the last three items (missed calls, new messages); choosing an item opens the right
+   place; opening the call list empties the missed calls.
 6. "Settings…" ⌘, · "Quit HandLive" ⌘Q.
 
 Submenus go one level deep. Within a group, either every item has an icon or none does. Items that
