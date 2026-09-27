@@ -58,8 +58,12 @@ cho người dùng.
 - Lỗi không tự phục hồi: tạo khóa thất bại (SET-03 E1, SET-01 E9); "Không khởi động được dịch vụ kết
   nối" với "Thử lại" (SET-01 E2); "Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?" (SET-02
   E7).
-- Hướng dẫn mà người dùng chủ động mở: "Xem hướng dẫn" (SMS-01 trường 7), hoặc chọn một quyền SMS còn
-  thiếu trong chi tiết thiết bị (PAIR-02 trường 9), mở một alert gồm tiêu đề, nội dung và một nút "OK".
+- Hướng dẫn mà người dùng chủ động mở. Mỗi hướng dẫn là một alert gồm tiêu đề, nội dung và một nút
+  "OK". "Xem hướng dẫn" (SMS-01 trường 7), hoặc chọn một quyền SMS còn thiếu trong chi tiết thiết bị
+  (PAIR-02 trường 9), mở "Cấp quyền SMS trên điện thoại". Chọn một quyền cuộc gọi còn thiếu ở đó mở
+  "Cấp quyền cuộc gọi trên điện thoại" với nội dung "Trên điện thoại, mở HandLive và vào Cài đặt ›
+  Quyền và chạy nền. Chạm Cấp quyền ở mục Cuộc gọi, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho
+  phép Điện thoại, Nhật ký cuộc gọi và Danh bạ."
 - Mac: "Hủy" bên trái, hành động bên phải là nút mặc định, không tô đỏ vì người dùng chủ động chọn
   (quyết định 12); Esc hoặc ⌘. là Hủy. iPhone, Android: action sheet, hành động phá hủy màu đỏ ở
   trên, "Hủy" dưới cùng.

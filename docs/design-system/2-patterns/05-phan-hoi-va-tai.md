@@ -59,9 +59,12 @@ blaming the user.
 - Errors that can't recover on their own: key generation failed (SET-03 E1, SET-01 E9); "Couldn't
   Start the Connection Service" with "Try Again" (SET-01 E2); "Couldn't connect to the server. Delete
   from this device anyway?" (SET-02 E7).
-- Instructions the user asked for: "View Instructions" (SMS-01 field 7), or a missing SMS permission
-  selected in the device details (PAIR-02 field 9), opens an alert with a title, a message and a single
-  "OK".
+- Instructions the user asked for. Each is an alert with a title, a message and a single "OK". "View
+  Instructions" (SMS-01 field 7), or a missing SMS permission selected in the device details (PAIR-02
+  field 9), opens "Grant SMS Permission on Your Phone". A missing call permission selected there opens
+  "Grant Call Permission on Your Phone" with the message "On your phone, open HandLive and go to
+  Settings › Permissions & Background. Tap Grant Permission under Calls, or Open Settings if the
+  permission was denied, and allow Phone, Call logs, and Contacts."
 - Mac: "Cancel" on the left, the action on the right as the default button, not red, because the user
   chose it deliberately (decision 12); Esc or ⌘. means Cancel. iPhone, Android: an action sheet, with
   the destructive action in red at the top and "Cancel" at the bottom.
