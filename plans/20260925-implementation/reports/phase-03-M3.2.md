@@ -95,6 +95,21 @@ violations, 0 serious in 362 files"; both app builds `** BUILD SUCCEEDED **`).
 - Missed-call notification ≤ 1.5 s after the call ends (`call_missed_notified`), "Message" sent through the phone,
   one notification per missed call.
 
+## Follow-up: controller decisions
+
+The controller decided the deviations above (spec sync 3 on hub main, 13df812 and later; handlive-shared aa689d6 and
+fcf709d):
+
+| Decision | Commit (handlive-apple) |
+|----------|--------|
+| Deviation 2: `HL_CALL_INCOMING_MAC` ("Answer", "Decline") only when `controls.answer` and `controls.reject` are both true; otherwise the notification has no category, so no button does nothing. The panel still offers what `controls` allow | b39e6d1 feat(apple): give the Mac call notification Answer and Decline only when the phone allows both |
+| Deviation 3: CALL-01 API 7 now gives the Focus (time-sensitive) variant `sound = .default`, as built; its schema form now carries the sound and the test checks it against the schema (passive content carries none) | d5db1e7 test(apple): check the default sound of the Mac call notification during a Focus against the schema |
+| The missed-call "Message" action (`HL_CALL_SMS`, shared with iPhone/iPad) now requires an unlocked device | ae7930b feat(apple): let a missed call's Message run only on an unlocked device |
+
+Deviation 1 (the time-sensitive entitlement on the Mac) is kept. CALL-03 step 1 now says the in-call panel stays hidden
+during a Focus unless the call was answered from the Mac notification, as built. Tests and CI: see the follow-up
+section of `phase-03-I3.1.md` (the same commits; final head fdbac16, CI run 36306282473 success).
+
 Status: DONE
 Summary: The Mac posts the incoming call as an INStartCallIntent communication notification (passive with the panel, time-sensitive during a Focus), removes it when the call stops ringing, handles Answer and Decline without a window, and notifies missed calls with Message.
 Concerns/Blockers: Real-device checks with a signed build and the Android app remain.

@@ -180,6 +180,61 @@ violations, 0 serious in 362 files"; both app builds `** BUILD SUCCEEDED **`).
   notification; the Time Sensitive warning after turning it off in Settings.
 - Extension memory under 30 MB (Instruments) with a call push.
 
-Status: DONE_WITH_CONCERNS
-Summary: The extension turns call pushes into INStartCallIntent and missed-call notifications, Decline works from the notification in the background with the wake and the 15 s deadline, and the app has the incoming-call banner, the Calls tab, the Calls settings and the stale-notification cleanup; tested locally and on CI.
-Concerns/Blockers: The Calls tab stays a NavigationStack on iPad (deviation 1, needs a decision); every push path and the < 2 s decline still need a signed build, APNs and the Android app.
+## Follow-up: controller decisions
+
+The controller decided the deviations above (spec sync 3 on hub main, 13df812 and later; handlive-shared aa689d6 and
+fcf709d). Kept as built: the `NavigationStack` Calls tab (1); `sms.peer_can_send` = `can_send` with SMS in effect at
+both ends (2); `HL_CALL_INCOMING` only with `controls.reject` (3); the B3 removal and error rules (4); the cleanup of
+generic call notifications (6); removal of generic **SMS** pushes only (7); missed-call notifications only in
+Notification Center while the app is open (8). Changed in code (handlive-apple):
+
+| Decision | Commit |
+|----------|--------|
+| A late incoming-call push (E7, over 60 s after `started_at`) shows at `interruptionLevel = .active`, no longer time-sensitive (deviation 5) | 0df53dd feat(apple): show a late incoming call push at the active level |
+| "Message" (`HL_CALL_SMS`) of a missed call runs only on an unlocked device (`.authenticationRequired`; the Mac shares the category) (deviation 9) | ae7930b feat(apple): let a missed call's Message run only on an unlocked device |
+| SMS "Reply" likewise (deviation 9) | 356c4bb feat(apple): let an SMS notification's Reply run only on an unlocked device |
+| Mac: `HL_CALL_INCOMING_MAC` only when `controls.answer` and `controls.reject` are both true, otherwise no category (`phase-03-M3.2.md`) | b39e6d1 feat(apple): give the Mac call notification Answer and Decline only when the phone allows both |
+| The Mac Focus variant's default sound (CALL-01 API 7 after spec sync 3) is now in the schema form of the content and checked against the schema; passive Mac, iPhone and late content carry none | d5db1e7 test(apple): check the default sound of the Mac call notification during a Focus against the schema |
+| Mac: a waiting call (`waiting = true`, the first call already answered) stays in the in-call panel with the status "Call waiting" (`call.status_waiting`), the waiting caller and "Handle it on the phone or connect via Bluetooth", and no End (`controls.end = false`, CALL-03 E7; hub ee2a87e). `call.waiting_title` is now used only by the iPhone/iPad banner, so shared may drop `macos` from its platforms | b571af6 feat(macos): show a waiting call inside the in-call panel as Call waiting; 49d6846 test(macos): test the in-call panel of a waiting call |
+| String Catalogs regenerated for the catalog comments of handlive-shared 2d4eaeb (3 comment lines, no text change) | fdbac16 feat(apple): regenerate the String Catalogs from handlive-shared 2d4eaeb |
+
+Schema conflict found on the way: handlive-shared 26cb74c added the rule "content without a category must be at the
+active level", which rejected the button-less Mac and iPhone contents the decisions ask for. It was reported to the
+controller; shared aa689d6 dropped the rule (keeping "active ⇒ no category, no identifier") and fcf709d allowed the
+Mac Focus sound. The apple tests validate every incoming shape against fcf709d.
+
+Tests (local, Command Line Tools, shared at fcf709d):
+
+```
+HLProtocol   ✔ Test run with 64 tests in 13 suites passed after 0.030 seconds.
+HLCrypto     ✔ Test run with 46 tests in 12 suites passed after 6.807 seconds.
+HLTransport  ✔ Test run with 99 tests in 18 suites passed after 6.791 seconds.
+HLDesignSystem ✔ Test run with 24 tests in 7 suites passed after 0.108 seconds.
+HLLocalization ✔ Test run with 9 tests in 3 suites passed after 0.211 seconds.
+HLAppCore    ✔ Test run with 78 tests in 16 suites passed after 2.305 seconds.
+HLSMS        ✔ Test run with 27 tests in 5 suites passed after 0.439 seconds.
+             ✔ Test run with 10 tests in 2 suites passed after 0.015 seconds.   (Reply only once unlocked)
+HLSMSUI      ✔ Test run with 11 tests in 2 suites passed after 0.165 seconds.
+HLCalls      ✔ Test run with 14 tests in 3 suites passed after 0.382 seconds.
+             ✔ Test run with 14 tests in 2 suites passed after 0.020 seconds.   (late level, Mac categories, Message, sound)
+HLMacUI      ✔ Test run with 41 tests in 7 suites passed after 2.410 seconds.
+HLiOSUI      ✔ Test run with 23 tests in 3 suites passed after 1.074 seconds.
+After the waiting-call layout and the regenerated catalog (shared at 2d4eaeb):
+HLMacUI      ✔ Test run with 42 tests in 7 suites passed after 2.227 seconds.   (waiting call in the in-call panel)
+HLLocalization ✔ Test run with 9 tests in 3 suites passed after 0.251 seconds.  (generate-strings.py --check: OK)
+Mac Catalyst type-check of iOS/NotificationService/NotificationService.swift against HLCalls → exit 0
+swiftlint lint --strict → Done linting! Found 0 violations, 0 serious in 362 files.
+```
+
+CI (`ci-apple`, handlive-shared checked out at the same-named branch):
+- run 36305556300 on d5db1e7 with shared fcf709d — **success**;
+- **final head fdbac16: run 36306282473, shared 2d4eaeb — success**. HLProtocol 64, HLCrypto 46, HLTransport 99,
+  HLDesignSystem 24, HLLocalization 9, HLAppCore 78, HLSMS 10 + 27, HLSMSUI 11, HLCalls 14 + 14, HLMacUI 42, HLiOSUI
+  23 tests; "Found 0 violations, 0 serious in 362 files"; `Build app macOS` and `Build app iOS + Notification Service
+  Extension` both `** BUILD SUCCEEDED **`.
+
+With the Calls tab decided, the only open items are the real-device checks above.
+
+Status: DONE
+Summary: The extension turns call pushes into INStartCallIntent and missed-call notifications (a late push at the active level), Decline works from the notification in the background with the wake and the 15 s deadline, "Message" and "Reply" need an unlocked device, and the app has the incoming-call banner, the Calls tab, the Calls settings and the stale-notification cleanup; tested locally and on CI.
+Concerns/Blockers: Every push path and the < 2 s decline still need a signed build, APNs and the Android app.
