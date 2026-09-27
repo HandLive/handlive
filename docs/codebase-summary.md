@@ -4,12 +4,12 @@ English | [Tiếng Việt](codebase-summary.vi.md)
 
 > **Update this file whenever the code structure changes significantly.**
 
-## Current status (2026-09-26)
+## Current status (2026-09-27)
 
-**Phase 1 (clipboard MVP) is merged into `main`** of handlive-android, handlive-apple, handlive-shared and
-handlive-relay (2026-09-26, CI green). **Phase 2 (SMS, iPhone/iPad app, relay, push) is code complete on
-`feat/phase-02-sms-ios-relay`** in the same four repositories (CI green, not merged); gates G1 and G2 and the
-Phase 2 checks on real devices, a real relay, APNs and FCM are still open. The UI is multilingual — English by
+**Phase 1 (clipboard MVP) and Phase 2 (SMS, iPhone/iPad app, relay, push) are merged into `main`** of
+handlive-android, handlive-apple, handlive-shared and handlive-relay (2026-09-26 and 2026-09-27, CI green);
+gates G1 and G2 and the Phase 2 checks on real devices, a real relay, APNs and FCM are still open. **Phase 3
+(calls) is in progress on `feat/phase-03-calls`** in handlive-shared, handlive-android and handlive-apple. The UI is multilingual — English by
 default, Vietnamese second — with every string in the shared catalog (C20). About 416 Kotlin files, 307 Swift
 files (plus generated ones and the vendored GRDB), 78 Rust files and 48 Python tool files. Since 2026-09-25 the source code is split
 into **five git repositories in one workspace** (decision I1 in `plans/20260925-implementation/plan.md`, report
@@ -102,8 +102,9 @@ repository's commands. Module details and task cards: `plans/20260925-implementa
 
 ## Where to start implementing
 
-Phase 0 and Phase 1 are merged into `main`; the Phase 2 code is complete on `feat/phase-02-sms-ios-relay`
-(reports: `plans/20260925-implementation/reports/phase-02-*.md`, overview `phase-02-summary.md`). Still open:
-gate G1 (the device matrix of `shared/tools/bench/README.md` on real phones and Macs), gate G2 (Play Console) and
-the Phase 2 checks on real devices with a real relay, APNs and FCM → merge Phase 2 → Phase 3 (calls). See
-`plans/20260925-implementation/plan.md` and `docs/project-roadmap.md`.
+Phases 0, 1 and 2 are merged into `main` (reports: `plans/20260925-implementation/reports/phase-0N-*.md`,
+merge records `phase-01-merge.md` and `phase-02-merge.md`). Phase 3 (calls) is in progress on
+`feat/phase-03-calls` (`plans/20260925-implementation/phase-03-cuoc-goi.md`). Still open: gate G1 (the device
+matrix of `shared/tools/bench/README.md` on real phones and Macs), gate G2 (Play Console) and the Phase 2
+checks on real devices with a real relay, APNs and FCM. See `plans/20260925-implementation/plan.md` and
+`docs/project-roadmap.md`.

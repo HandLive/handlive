@@ -4,12 +4,12 @@
 
 > **Cập nhật file này mỗi khi cấu trúc code thay đổi đáng kể.**
 
-## Trạng thái hiện tại (2026-09-26)
+## Trạng thái hiện tại (2026-09-27)
 
-**Phase 1 (bảng nhớ tạm MVP) đã gộp vào `main`** của handlive-android, handlive-apple, handlive-shared và
-handlive-relay (26/09/2026, CI xanh). **Mã Phase 2 (SMS, app iPhone/iPad, relay, push) đã xong trên nhánh
-`feat/phase-02-sms-ios-relay`** ở cùng bốn kho (CI xanh, chưa gộp). Cổng G1, cổng G2 và việc kiểm Phase 2 trên
-máy thật, relay thật, APNs và FCM vẫn còn mở. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
+**Phase 1 (bảng nhớ tạm MVP) và Phase 2 (SMS, app iPhone/iPad, relay, push) đã gộp vào `main`** của
+handlive-android, handlive-apple, handlive-shared và handlive-relay (26/09/2026 và 27/09/2026, CI xanh). Cổng
+G1, cổng G2 và việc kiểm Phase 2 trên máy thật, relay thật, APNs và FCM vẫn còn mở. **Phase 3 (cuộc gọi) đang
+làm trên nhánh `feat/phase-03-calls`** ở handlive-shared, handlive-android và handlive-apple. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
 tiếng Việt thứ hai — mọi chuỗi nằm trong catalog dùng chung (C20). Khoảng 416 file Kotlin, 307 file Swift (chưa
 tính file sinh và GRDB vendor), 78 file Rust và 48 file công cụ Python. Từ 25/09/2026 mã nguồn tách thành **năm kho git trong
 một workspace** (quyết định I1 trong `plans/20260925-implementation/plan.md`, báo cáo `reports/repo-split.md`):
@@ -102,8 +102,8 @@ và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md
 
 ## Điểm bắt đầu implement
 
-Phase 0 và Phase 1 đã gộp vào `main`. Mã Phase 2 đã xong trên nhánh `feat/phase-02-sms-ios-relay` (báo cáo:
-`plans/20260925-implementation/reports/phase-02-*.md`, tổng quan `phase-02-summary.md`). Còn mở: cổng G1 (ma trận
-thiết bị của `shared/tools/bench/README.md` trên điện thoại và Mac thật), cổng G2 (Play Console) và việc kiểm
-Phase 2 trên máy thật với relay thật, APNs và FCM → gộp Phase 2 → Phase 3 (cuộc gọi). Xem
-`plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.
+Phase 0, 1 và 2 đã gộp vào `main` (báo cáo: `plans/20260925-implementation/reports/phase-0N-*.md`, biên bản
+gộp `phase-01-merge.md` và `phase-02-merge.md`). Phase 3 (cuộc gọi) đang làm trên nhánh `feat/phase-03-calls`
+(`plans/20260925-implementation/phase-03-cuoc-goi.md`). Còn mở: cổng G1 (ma trận thiết bị của
+`shared/tools/bench/README.md` trên điện thoại và Mac thật), cổng G2 (Play Console) và việc kiểm Phase 2 trên
+máy thật với relay thật, APNs và FCM. Xem `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.

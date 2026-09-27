@@ -3,15 +3,17 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 2 code complete on its branch; Phase 1 merged into main; gates G1 and G2 open
+## Project status: Phase 2 merged into main; Phase 3 in progress; gates G1 and G2 open
 
-Phase 0 (scaffold, protocol, crypto, tokens, CI) and the Phase 1 clipboard MVP are merged into `main` of
-android, apple, shared and relay (2026-09-26, CI green). The project owner merged Phase 1 before gate G1: the
-real-device checks (`shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver,
-system setting names) are still open and must pass before Phase 2 ships. Phase 2 (SMS, iOS app, relay,
-push) is code complete on `feat/phase-02-sms-ios-relay` in the four code repositories (2026-09-26, started
-before G1 by the project owner) and not merged: the real-device, relay, APNs and FCM checks and gate G2 come
-first (`plans/20260925-implementation/reports/phase-02-summary.md`). Reports: `plans/20260925-implementation/reports/phase-01-*.md`, merge record `phase-01-merge.md`.
+Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26) and Phase 2 (SMS,
+iOS app, relay, push; 2026-09-27) are merged into `main` of android, apple, shared and relay. The project
+owner merged both before their gates. Still open, and required before the first release: gate G1 (the
+`shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver, system setting
+names), gate G2 (Play Console) and the Phase 2 checks on real devices, a real relay, APNs and FCM
+(`plans/20260925-implementation/reports/phase-02-summary.md`). Phase 3 (call information and control) is in
+progress on `feat/phase-03-calls` in shared, android and apple (started 2026-09-27; relay needs no change).
+Reports: `plans/20260925-implementation/reports/phase-0N-*.md`, merge records `phase-01-merge.md` and
+`phase-02-merge.md`.
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
