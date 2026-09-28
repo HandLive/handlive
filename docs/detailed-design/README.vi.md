@@ -6,10 +6,10 @@ HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native r
 
 | Mục | Nội dung |
 |-----|----------|
-| Phiên bản | 1.2 (bản để triển khai; đồng bộ design system theo Apple HIG; đa ngôn ngữ en/vi — C20) |
-| Ngày | 2026-09-25 |
+| Phiên bản | 1.3 (bản để triển khai; đồng bộ design system theo Apple HIG; đa ngôn ngữ en/vi — C20; Duyệt web tiếp, nhóm 9, đề xuất cho Phase 6 — C21) |
+| Ngày | 2026-09-28 |
 | Nguồn | `plans/20260924-definitive-architecture/plan.md`, `docs/system-architecture.md`, `docs/code-standards.md`; giao diện: design system HandLive (Apple HIG) https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT |
-| Phạm vi | Android (hub), macOS, iOS/iPadOS, Cloud relay — Phase 1 đến Phase 5 |
+| Phạm vi | Android (hub), macOS, iOS/iPadOS, Cloud relay — Phase 1 đến Phase 6 |
 
 ## 1. Cấu trúc tài liệu
 
@@ -24,6 +24,7 @@ HandLive là dự án mã nguồn mở. Dự án đưa các tính năng native r
 | [`06-call-control.md`](06-call-control.vi.md) | 6 | Nhóm chức năng Thông tin và điều khiển cuộc gọi |
 | [`07-call-audio.md`](07-call-audio.vi.md) | 7 | Nhóm chức năng Âm thanh cuộc gọi |
 | [`08-camera-mic.md`](08-camera-mic.vi.md) | 8 | Nhóm chức năng Camera và micro |
+| [`09-web-handoff.md`](09-web-handoff.vi.md) | 9 | Nhóm chức năng Duyệt web tiếp (Phase 6, sau cổng G6) |
 
 Mỗi nhóm chức năng là một mục. Mỗi chức năng lá có đúng năm mục con theo khuôn mẫu ở phần 3.
 
@@ -67,6 +68,11 @@ một bản thì sửa bản kia trong cùng commit (`tools/docs/check_bilingual
 | CAM-03 | Điều khiển luồng camera | 8 | P5 | Mac → Android | Người dùng |
 | CAM-04 | Tự tăng tốc qua USB khi cắm cáp | 8 | P5 | Mac, Android | Hệ thống |
 | CAM-05 | Điều chỉnh chất lượng thích ứng | 8 | P5 | Android, Mac | Hệ thống |
+| WEB-01 | Gửi trang đang mở từ Android | 9 | P6 (sau G6) | Android → Mac, iOS | Người dùng |
+| WEB-02 | Hiện trang của điện thoại trên Mac | 9 | P6 (sau G6) | Mac | Người dùng |
+| WEB-03 | Gửi trang đang mở từ Mac | 9 | P6 (sau G6) | Mac → Android | Người dùng |
+| WEB-04 | Hiện trang của Mac trên Android | 9 | P6 (sau G6) | Android | Người dùng |
+| WEB-05 | Hiện trang của điện thoại trên iPhone/iPad | 9 | P6 (sau G6) | iOS | Người dùng |
 
 ## 3. Quy ước trình bày
 
@@ -162,6 +168,7 @@ một thời điểm; mỗi điện thoại ghép tối đa 8 thiết bị.
 - Phát camera qua relay (chỉ LAN hoặc USB).
 - Đồng bộ toàn bộ danh bạ (chỉ tên hiển thị gắn với hội thoại và cuộc gọi).
 - Máy khách Windows/Linux.
+- Gửi trang web đang mở từ iPhone/iPad (không có API đọc tab đang mở của Safari; Share Extension là lựa chọn về sau, C21).
 
 ## 5. Điều chỉnh và quyết định
 
@@ -191,3 +198,4 @@ bằng chứng. Điểm nào đụng tới quyết định đã chốt thì khô
 | C18 | Tin SMS mới phát hiện bằng `ContentObserver` trên provider, không cần `RECEIVE_SMS` — bớt một quyền bị Google Play hạn chế. | Điều chỉnh | Áp dụng |
 | C19 | **Đồng bộ với design system theo Apple HIG** (chủ dự án duyệt 2026-09-25): màn hình giải thích quyền chỉ có "Tiếp tục" (SET-01, SET-03); Mac: biểu tượng thanh menu mở menu, không popover (CONN-01), cài đặt "Hiện HandLive trên thanh menu" (`mac.menu_bar_extra`) và đổi activation policy `.accessory` ↔ `.regular` khi mở cửa sổ (SET-02, SET-03); cuộc gọi đến trên Mac kèm thông báo liên lạc `INStartCallIntent`, chế độ Tập trung bật thì không hiện panel — panel nổi là lệch có chủ đích so với HIG (CALL-01); nhật ký cuộc gọi ở thanh bên cửa sổ Tin nhắn (CALL-04); dòng hội thoại chỉ có chấm chưa đọc (SMS-03); lỗi bảng nhớ tạm báo tại chỗ, không đẩy thông báo (CLIP-01…03); kênh thông báo Android `clipboard`, `permission`; Mac khai báo `NSMicrophoneUsageDescription`, `NSFocusStatusUsageDescription` (SET-03, AUDIO-01, CALL-01); hộp thoại hủy ghép nối theo alert (Mac) và hộp chọn hành động (iPhone, Android) (PAIR-03); câu chữ theo 3.5. | Quyết định của chủ dự án | Áp dụng |
 | C20 | **Đa ngôn ngữ và tài liệu song ngữ** (chủ dự án quyết định 2026-09-25): tiếng Anh (`en`) là ngôn ngữ mặc định, ngôn ngữ nguồn và dự phòng; tiếng Việt (`vi`) là ngôn ngữ thứ hai. Giao diện theo ngôn ngữ ưu tiên của hệ thống; chọn riêng cho HandLive bằng cài đặt ngôn ngữ theo ứng dụng của hệ điều hành (Android 13+, iOS/iPadOS, macOS) và SET-02 trường 32 trên Android 10–12.<br>Mọi chuỗi giao diện có khóa ổn định trong catalog `shared/strings/ui-strings.json`, sinh ra tài nguyên của từng nền tảng (0.12); mã không viết cứng câu chữ. Tin giữa các thiết bị, relay và push không mang câu chữ hiển thị — chỉ mã, khóa và tham số; máy nhận hiển thị bằng ngôn ngữ của nó (APNs dùng `loc-key`, CONN-04).<br>Tài liệu song ngữ: `X.md` tiếng Anh (bản chuẩn khi hai bản lệch nhau), `X.vi.md` tiếng Việt, cùng cấu trúc, cập nhật trong cùng commit. | Quyết định của chủ dự án | Áp dụng |
+| C21 | **Duyệt web tiếp** (chủ dự án yêu cầu 2026-09-28, `plans/20260928-web-handoff/plan.md` W1–W3, W7; nhóm 9, Phase 6 sau cổng G6): trang đang mở trong trình duyệt ở foreground được phát hiện tự động — trên Android bằng một dịch vụ Hỗ trợ tiếp cận **riêng**, "Trang trình duyệt HandLive" (`canRetrieveWindowContent = true`, giới hạn ở các trình duyệt được hỗ trợ bằng `android:packageNames`; dịch vụ bảng nhớ tạm giữ `canRetrieveWindowContent = false`), sau màn hình công bố nổi bật, mặc định tắt; trên Mac qua Apple Events với quyền Tự động hóa cho từng trình duyệt — không dùng luồng chỉ chia sẻ thủ công.<br>HandLive hiển thị chỉ báo của riêng mình (mục menu và huy hiệu trên Mac, thông báo trên Android, banner trên iPhone/iPad): bề mặt Handoff của Apple chỉ dành cho thiết bị cùng một tài khoản iCloud, không mở cho ứng dụng bên thứ ba hay Android, và giao diện không bao giờ dùng từ "Handoff".<br>Loại tin mới `web` (`active`, `inactive`): bản mới nhất thắng, không `ack`, gửi lại một lần sau mỗi lần trao đổi capability, không bao giờ đi trong push; bên nhận chỉ giữ trang mới nhất của mỗi cặp trong bộ nhớ, không ghi xuống đĩa, và quên sau `WEB_PAGE_TTL`. Trang riêng tư và ẩn danh không bao giờ được gửi; bên nhận chỉ mở `http`/`https` và chỉ khi người dùng bấm hoặc chạm. iPhone/iPad chỉ nhận. | Quyết định của chủ dự án | Đề xuất (P6) |

@@ -6,10 +6,10 @@ HandLive is an open source project. It brings ecosystem-native features, such as
 
 | Item | Content |
 |-----|----------|
-| Version | 1.2 (version for implementation; design system aligned with Apple HIG; multilingual en/vi — C20) |
-| Date | 2026-09-25 |
+| Version | 1.3 (version for implementation; design system aligned with Apple HIG; multilingual en/vi — C20; Continue Browsing, group 9, proposed for Phase 6 — C21) |
+| Date | 2026-09-28 |
 | Sources | `plans/20260924-definitive-architecture/plan.md`, `docs/system-architecture.md`, `docs/code-standards.md`; UI: HandLive design system (Apple HIG) https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT |
-| Scope | Android (hub), macOS, iOS/iPadOS, Cloud relay — Phase 1 to Phase 5 |
+| Scope | Android (hub), macOS, iOS/iPadOS, Cloud relay — Phase 1 to Phase 6 |
 
 ## 1. Document structure
 
@@ -24,6 +24,7 @@ HandLive is an open source project. It brings ecosystem-native features, such as
 | [`06-call-control.md`](06-call-control.md) | 6 | Call information and control function group |
 | [`07-call-audio.md`](07-call-audio.md) | 7 | Call audio function group |
 | [`08-camera-mic.md`](08-camera-mic.md) | 8 | Camera and microphone function group |
+| [`09-web-handoff.md`](09-web-handoff.md) | 9 | Continue Browsing function group (Phase 6, after gate G6) |
 
 Each function group is one section. Each leaf function has exactly five subsections following the
 template in section 3.
@@ -69,6 +70,11 @@ version, Vietnamese `X.vi.md`; a change to one version changes the other in the 
 | CAM-03 | Control the camera stream | 8 | P5 | Mac → Android | User |
 | CAM-04 | Automatic USB boost when a cable is plugged in | 8 | P5 | Mac, Android | System |
 | CAM-05 | Adaptive quality adjustment | 8 | P5 | Android, Mac | System |
+| WEB-01 | Send the open page from Android | 9 | P6 (after G6) | Android → Mac, iOS | User |
+| WEB-02 | Show the phone's page on the Mac | 9 | P6 (after G6) | Mac | User |
+| WEB-03 | Send the open page from the Mac | 9 | P6 (after G6) | Mac → Android | User |
+| WEB-04 | Show the Mac's page on Android | 9 | P6 (after G6) | Android | User |
+| WEB-05 | Show the phone's page on iPhone/iPad | 9 | P6 (after G6) | iOS | User |
 
 ## 3. Presentation conventions
 
@@ -168,6 +174,7 @@ time; each phone pairs with at most 8 devices.
 - Camera streaming over the relay (LAN or USB only).
 - Full contacts sync (only the display names attached to conversations and calls).
 - Windows/Linux clients.
+- Sending the open web page from iPhone/iPad (no API reads Safari's open tab; a Share Extension is a later option, C21).
 
 ## 5. Adjustments and decisions
 
@@ -197,3 +204,4 @@ silently: the project owner decided each of them on 2026-09-24 (C12–C15).
 | C18 | New SMS messages are detected with a `ContentObserver` on the provider, without `RECEIVE_SMS` — one fewer permission restricted by Google Play. | Change | Applied |
 | C19 | **Alignment with the Apple HIG design system** (approved by the project owner 2026-09-25): permission primers only have "Continue" (SET-01, SET-03); Mac: the menu bar icon opens a menu, not a popover (CONN-01), a "Show HandLive in Menu Bar" setting (`mac.menu_bar_extra`) and switching the activation policy `.accessory` ↔ `.regular` when a window opens (SET-02, SET-03); an incoming call on the Mac comes with an `INStartCallIntent` communication notification, and no panel is shown while a Focus is on — the floating panel is a deliberate deviation from the HIG (CALL-01); the call log lives in the sidebar of the Messages window (CALL-04); conversation rows only carry an unread dot (SMS-03); clipboard errors are reported in place, not pushed as notifications (CLIP-01…03); Android notification channels `clipboard`, `permission`; the Mac declares `NSMicrophoneUsageDescription`, `NSFocusStatusUsageDescription` (SET-03, AUDIO-01, CALL-01); the unpair dialog is an alert (Mac) and an action sheet (iPhone, Android) (PAIR-03); wording per 3.5. | Project owner's decision | Applied |
 | C20 | **Multilingual product and bilingual documentation** (decided by the project owner 2026-09-25): English (`en`) is the default, source and fallback language; Vietnamese (`vi`) is the second language. The UI follows the system's preferred languages; a separate language for HandLive is chosen with the operating system's per-app language setting (Android 13+, iOS/iPadOS, macOS) and with SET-02 field 32 on Android 10–12.<br>Every UI string has a stable key in the catalog `shared/strings/ui-strings.json`, from which each platform's resources are generated (0.12); code never hard-codes wording. Messages between devices, the relay and push carry no display text — only codes, keys and parameters; the receiving device displays them in its own language (APNs uses `loc-key`, CONN-04).<br>Bilingual documentation: `X.md` in English (canonical when the two versions differ), `X.vi.md` in Vietnamese, same structure, updated in the same commit. | Project owner's decision | Applied |
+| C21 | **Continue Browsing** (asked by the project owner 2026-09-28, `plans/20260928-web-handoff/plan.md` W1–W3, W7; group 9, Phase 6 after gate G6): the page open in the foreground browser is detected automatically — on Android by a **separate** Accessibility service, "HandLive Browser Pages" (`canRetrieveWindowContent = true`, limited to the supported browsers by `android:packageNames`; the clipboard service keeps `canRetrieveWindowContent = false`), behind a prominent disclosure, off by default; on the Mac through Apple Events with the Automation permission per browser — not through a share-only flow.<br>HandLive shows its own indicator (menu item and badge on the Mac, a notification on Android, a banner on iPhone/iPad): Apple's Handoff surface is limited to devices on one iCloud account and is not open to third-party apps or Android, and the UI never uses the word "Handoff".<br>New type `web` (`active`, `inactive`): latest wins, no `ack`, re-sent once after each capability exchange, never in a push; the receiver keeps only the latest page per pair in memory, never on disk, and forgets it after `WEB_PAGE_TTL`. Private and incognito pages are never sent; receivers open only `http`/`https` and only when the user clicks or taps. iPhone/iPad only receive. | Project owner's decision | Proposed (P6) |
