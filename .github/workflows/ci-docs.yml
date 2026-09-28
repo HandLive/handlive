@@ -72,7 +72,9 @@ jobs:
         run: |
           # gh đọc token từ GH_TOKEN; token không bao giờ nằm trong URL hay cấu hình git.
           resolve() {
-            if gh api "repos/${OWNER}/$1/branches/${BRANCH}" --silent >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
+            # Tên nhánh là dữ liệu: mã hóa URL trước khi đưa vào đường dẫn API.
+            enc="$(jq -rn --arg b "$BRANCH" '$b|@uri')"
+            if gh api "repos/${OWNER}/$1/branches/${enc}" --silent >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
           }
           hub="$(resolve handlive)"; shared="$(resolve handlive-shared)"
           echo "hub=$hub" >> "$GITHUB_OUTPUT"; echo "shared=$shared" >> "$GITHUB_OUTPUT"
