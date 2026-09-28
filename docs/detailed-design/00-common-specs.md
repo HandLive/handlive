@@ -24,6 +24,7 @@ The "Component" column in the step table of every function uses the codes below.
 | A-AUD | `CallAudioModule` — interface `CallAudioRelay` with `HfpCallAudioRelay` and `OpusWsCallAudioRelay` | Android | Call audio: HFP monitoring; Opus/WS fallback path |
 | A-SHZ | Shizuku UserService (runs as the shell uid) | Android 11+ | Captures call audio (`VOICE_CALL`) and injects audio into the call for the Opus/WS path; optional, requires Shizuku |
 | A-CAM | `CameraStreamModule` (Camera2, MediaCodec, libopus JNI) | Android | Camera/microphone streaming |
+| A-WEB | `BrowserPagesModule`, `BrowserPagesAccessibilityService` (separate from the clipboard service), one `BrowserAdapter` per browser | Android | Reads the page open in the foreground browser for Continue Browsing (P6, group 9) |
 | M-APP | HandLive for Mac (menu bar, SwiftUI + AppKit) | macOS 13+ | WSS client, UI, clipboard, SMS, calls, video decoding |
 | M-HFP | HFP module in M-APP (`IOBluetoothHandsFreeDevice`, behind a protocol abstraction) | macOS | Call audio over SCO |
 | M-CAMX | `HandLiveCamera` — CMIOExtension (system extension) | macOS | Virtual camera |
@@ -46,7 +47,7 @@ Mac or an iPhone/iPad.
 | `device_id` | uuid | Each device, on first run | UUIDv8 = first 16 bytes of SHA-256(`ik_sig_pub`), with the 4 version bits set to `8` and the 2 variant bits set to `10`. Self-certifying: any party can check that a `device_id` matches the public key. Changes when the app is reinstalled. |
 | `pair_id` | uuid | Mac/iOS during pairing | Random UUIDv4 |
 | `id` (envelope) | uuid | Sender | UUIDv7; used to avoid processing duplicates |
-| `clip_id`, `transfer_id`, `local_id`, `call_id`, `session_id` | uuid | Per function | UUIDv7 |
+| `clip_id`, `transfer_id`, `local_id`, `call_id`, `session_id`, `page_id` | uuid | Per function | UUIDv7 |
 | `message_key` | string | Android | `sms:<_id>` with the `_id` of `content://sms` |
 | `thread_id` | int64 | Android | `thread_id` of the Telephony provider |
 | `entry_id` | int64 | Android | `CallLog.Calls._ID` |
@@ -390,7 +391,8 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 ### 0.7.1 Device ↔ device envelopes
 
 `type` keeps exactly the agreed set (`clipboard | sms | call_event | call_audio | pair | ack | ping |
-capability`) and adds `session`, `camera` for the session handshake and Phase 5.
+capability`) and adds `session`, `camera` for the session handshake and Phase 5, and `web` for
+Continue Browsing (Phase 6, README §5 C21).
 
 | type | op | Direction | Ack | Channel | Function |
 |------|----|-------|-----|------|-----------|
@@ -434,7 +436,34 @@ capability`) and adds `session`, `camera` for the session handshake and Phase 5.
 | `camera` | `stats` | C→S | — | `/v1/ctl` | CAM-05 |
 | `camera` | `state` | S→C | — | `/v1/ctl` | CAM-02, CAM-05 |
 | `camera` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/camera` | CAM-02, CAM-04 |
+| `web` | `active` | Both ways (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, the page open in the sender's foreground browser; latest wins, fire-and-forget like `call_event/state` |
+| `web` | `inactive` | Both ways (as `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, the page is no longer open in the foreground |
 | `ack` | — | Both ways | — | Every channel | Response |
+
+Payload rules of `web` (full specification in WEB-01 API 1 and API 2): `page_id` uuid (UUIDv7, new
+for each page); `url` `http` or `https` only, at most `WEB_URL_MAX` of UTF-8, as the browser shows it,
+fragment kept; `title` at most `WEB_TITLE_MAX` characters or absent; `browser` one of the ids below;
+`observed_at` timestamp. No `ack`, no error code on the wire: an invalid payload is dropped silently.
+iPhone/iPad never send `web`, and `web` never travels in a push.
+
+Browser ids (`web/active` field `browser`); the names are proper names and are not translated:
+
+| id | Browser | Android sender | Mac sender |
+|----|---------|----------------|------------|
+| `chrome` | Chrome | Yes | Yes |
+| `samsung` | Samsung Internet | Yes | — |
+| `firefox` | Firefox | Yes | No (no URL scripting) |
+| `edge` | Edge | Yes | Yes |
+| `brave` | Brave | Yes | Yes |
+| `opera` | Opera | Yes | Yes |
+| `vivaldi` | Vivaldi | Yes | Yes |
+| `duckduckgo` | DuckDuckGo | Yes | — |
+| `safari` | Safari | — | Yes |
+| `arc` | Arc | — | Yes |
+| `other` | Any other browser (receivers treat an unknown value as `other`) | — | — |
+
+"Yes" means a candidate: gate G6 confirms each browser, and the ones it rejects are listed in
+`09-web-handoff.md`.
 
 ### 0.7.2 `capability` op `hello` and `update`
 
@@ -486,6 +515,9 @@ Examples in the function groups may quote only the relevant part.
 | `features.call_audio.hfp_connected` | bool | Android: the Mac is connected to the phone through the HFP profile |
 | `features.call_audio.consented` | bool | Mac only: there is a valid `consent_record` (AUDIO-01). Android rejects every call audio request with `CALL_CONSENT_REQUIRED` while the latest value is `false` |
 | `features.call_audio.opus_fallback` | object | Android: capabilities of the Opus/WS path — `available`, `downlink` (can capture the caller's audio), `uplink` (can inject the Mac's voice), `reason` ∈ {`ok`, `disabled`, `android_10`, `shizuku_not_running`, `capture_silent`, `uplink_unsupported`} (`disabled` when `call_audio.allow_opus_fallback = false`) |
+| `features.web.enabled` | bool | From `feature.web` (P6) |
+| `features.web.send` | bool | Android: `web.send` and the "HandLive Browser Pages" Accessibility service running; Mac: `web.send`; iOS/iPadOS: always `false` |
+| `features.web.receive` | bool | Android: `web.notify` and notifications allowed (the notification is Android's only place to show a page); Mac, iOS/iPadOS: `true` |
 | `permissions_missing` | array\<string> | Android only: the missing permissions, used by the client to show guidance |
 
 ### 0.7.3 Relay control messages (WS text frame, not E2E)
@@ -889,6 +921,11 @@ SET-02 function manages these keys.
 | `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Default quality |
 | `cam.usb_boost` | bool | `true` | Mac | Switch to USB automatically when a cable is plugged in |
 | `cam.usb_wizard_dismissed` | bool | `false` | Mac | The user chose "Don't Ask Again" in the USB debugging wizard (CAM-04) |
+| `feature.web` | bool | `false` | All | Continue Browsing (P6, group 9); Android turns it on through the disclosure and the Accessibility service (WEB-01) |
+| `web.send` | bool | `true` | Android, Mac | Send the page open in the foreground browser (WEB-01, WEB-03) |
+| `web.notify` | bool | Android `true`, Mac `false` | Android, Mac | Android: the notification of WEB-04 (off → `features.web.receive = false`); Mac: an optional notification besides the menu item (WEB-02) |
+| `web.browsers` | set\<string> | Every supported browser id of the platform | Android, Mac | Per-browser allow list (ids of 0.7.1); a browser left out is never read |
+| `web.a11y_consent_at` | timestamp | empty | Android | When the user accepted the Continue Browsing disclosure (WEB-01 field 4) |
 | `mac.menu_bar_extra` | bool | `true` | Mac | Show the HandLive icon in the menu bar; off → the app keeps its Dock icon and its menu bar as the entry point (SET-03 step 6) |
 
 ## 0.10 Configuration constants
@@ -955,6 +992,11 @@ SET-02 function manages these keys.
 | `CAM_MAX_FRAME` | 1 MiB | Per HL frame |
 | `CAM_CONGESTION` / `CAM_RECOVER_AFTER` | `queue_delay_ms` > 150 or frame loss > 5 % continuously for 3 s / stable for 10 s | CAM-05 |
 | `MIC_DRIVER_WAIT` | 60 s | Wait for the microphone device to appear after the driver is installed |
+| `WEB_SETTLE` | 1.5 s | The URL must stay the same this long before `web/active` is sent (WEB-01, WEB-03) |
+| `WEB_POLL_MAC` | 1.5 s | Apple Events poll interval, only while a supported browser is frontmost (WEB-03) |
+| `WEB_PAGE_TTL` | 10 minutes | The receiver forgets a page after this long without a new `web/active` (WEB-02, WEB-04, WEB-05) |
+| `WEB_URL_MAX` | 8 KiB (UTF-8) | Longer URLs are not sent and are dropped by the receiver |
+| `WEB_TITLE_MAX` | 256 characters | The sender cuts longer titles; the receiver drops a longer one |
 
 ## 0.11 Client connection states (Mac/iOS)
 
@@ -1055,7 +1097,7 @@ error messages. Code contains no display text. Schema: `shared/strings/ui-string
 
 | Field | Rule |
 |--------|---------|
-| `key` | Lowercase `[a-z0-9_]`, 2–5 segments joined by dots; the first segment is the group: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. A key does not change when its wording is edited; a change of meaning creates a new key. Keys stay unique after `.` is turned into `_` (Android resource names) |
+| `key` | Lowercase `[a-z0-9_]`, 2–5 segments joined by dots; the first segment is the group: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `web`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. A key does not change when its wording is edited; a change of meaning creates a new key. Keys stay unique after `.` is turned into `_` (Android resource names) |
 | `en`, `vi` | A string; or a CLDR plural object: `en` has `one` and `other`, `vi` only has `other`; a plural string takes exactly one argument, named `count`. The generators pass `count` as an integer, so it is printed without digit grouping ("1500 messages", not "1,500 messages"); plural texts must read well that way. Never empty; every key has every language in `languages` |
 | `args` | Parameters `{name}` with `type` ∈ `string`, `int`, `double`. Every translation uses exactly the same set of parameters, in any order within the sentence (the generator converts them to positional parameters). Dates, times and numbers are formatted before they are passed in (0.12.3), except the `count` of a plural string (row `en`, `vi`) |
 | `comment` | Required: where the string appears and its length limit, if any — context for translators |

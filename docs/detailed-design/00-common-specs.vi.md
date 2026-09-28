@@ -24,6 +24,7 @@ Cột "Thành phần" trong bảng bước của mọi chức năng dùng các m
 | A-AUD | `CallAudioModule` — interface `CallAudioRelay` với `HfpCallAudioRelay` và `OpusWsCallAudioRelay` | Android | Âm thanh cuộc gọi: theo dõi HFP; đường dự phòng Opus/WS |
 | A-SHZ | Shizuku UserService (chạy uid shell) | Android 11+ | Thu âm cuộc gọi (`VOICE_CALL`) và chèn âm vào cuộc gọi cho đường Opus/WS; tùy chọn, cần Shizuku |
 | A-CAM | `CameraStreamModule` (Camera2, MediaCodec, libopus JNI) | Android | Phát camera/micro |
+| A-WEB | `BrowserPagesModule`, `BrowserPagesAccessibilityService` (tách khỏi dịch vụ bảng nhớ tạm), một `BrowserAdapter` cho mỗi trình duyệt | Android | Đọc trang đang mở trong trình duyệt ở foreground cho Duyệt web tiếp (P6, nhóm 9) |
 | M-APP | HandLive for Mac (menu bar, SwiftUI + AppKit) | macOS 13+ | Client WSS, UI, clipboard, SMS, cuộc gọi, giải mã video |
 | M-HFP | Mô-đun HFP trong M-APP (`IOBluetoothHandsFreeDevice`, sau protocol abstraction) | macOS | Âm thanh cuộc gọi qua SCO |
 | M-CAMX | `HandLiveCamera` — CMIOExtension (system extension) | macOS | Camera ảo |
@@ -46,7 +47,7 @@ hoặc iPhone/iPad.
 | `device_id` | uuid | Mỗi thiết bị, lần chạy đầu | UUIDv8 = 16 byte đầu của SHA-256(`ik_sig_pub`), đặt 4 bit version = `8`, 2 bit variant = `10`. Tự chứng thực: bất kỳ bên nào cũng kiểm được `device_id` khớp khóa công khai. Đổi khi cài lại ứng dụng. |
 | `pair_id` | uuid | Mac/iOS khi ghép nối | UUIDv4 ngẫu nhiên |
 | `id` (envelope) | uuid | Bên gửi | UUIDv7; dùng chống xử lý trùng |
-| `clip_id`, `transfer_id`, `local_id`, `call_id`, `session_id` | uuid | Theo chức năng | UUIDv7 |
+| `clip_id`, `transfer_id`, `local_id`, `call_id`, `session_id`, `page_id` | uuid | Theo chức năng | UUIDv7 |
 | `message_key` | string | Android | `sms:<_id>` với `_id` của `content://sms` |
 | `thread_id` | int64 | Android | `thread_id` của Telephony provider |
 | `entry_id` | int64 | Android | `CallLog.Calls._ID` |
@@ -383,7 +384,8 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 ### 0.7.1 Envelope thiết bị ↔ thiết bị
 
 `type` giữ đúng tập đã chốt (`clipboard | sms | call_event | call_audio | pair | ack | ping |
-capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
+capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5, và `web` cho Duyệt web
+tiếp (Phase 6, README §5 C21).
 
 | type | op | Chiều | Ack | Kênh | Chức năng |
 |------|----|-------|-----|------|-----------|
@@ -427,7 +429,34 @@ capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5.
 | `camera` | `stats` | C→S | — | `/v1/ctl` | CAM-05 |
 | `camera` | `state` | S→C | — | `/v1/ctl` | CAM-02, CAM-05 |
 | `camera` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/camera` | CAM-02, CAM-04 |
+| `web` | `active` | Hai chiều (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, trang đang mở trong trình duyệt ở foreground của bên gửi; bản mới nhất thắng, gửi không chờ phản hồi như `call_event/state` |
+| `web` | `inactive` | Hai chiều (như `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, trang không còn mở ở foreground |
 | `ack` | — | Hai chiều | — | Mọi kênh | Phản hồi |
+
+Quy tắc payload của `web` (đặc tả đầy đủ ở WEB-01 API 1 và API 2): `page_id` uuid (UUIDv7, mới cho
+mỗi trang); `url` chỉ `http` hoặc `https`, tối đa `WEB_URL_MAX` UTF-8, như trình duyệt hiển thị, giữ
+fragment; `title` tối đa `WEB_TITLE_MAX` ký tự hoặc vắng mặt; `browser` là một mã trong bảng dưới;
+`observed_at` timestamp. Không `ack`, không có mã lỗi trên dây: payload không hợp lệ bị bỏ im lặng.
+iPhone/iPad không bao giờ gửi `web`, và `web` không bao giờ đi trong push.
+
+Mã trình duyệt (trường `browser` của `web/active`); tên là tên riêng, không dịch:
+
+| id | Trình duyệt | Android gửi | Mac gửi |
+|----|---------|----------------|------------|
+| `chrome` | Chrome | Có | Có |
+| `samsung` | Samsung Internet | Có | — |
+| `firefox` | Firefox | Có | Không (không có scripting URL) |
+| `edge` | Edge | Có | Có |
+| `brave` | Brave | Có | Có |
+| `opera` | Opera | Có | Có |
+| `vivaldi` | Vivaldi | Có | Có |
+| `duckduckgo` | DuckDuckGo | Có | — |
+| `safari` | Safari | — | Có |
+| `arc` | Arc | — | Có |
+| `other` | Trình duyệt khác (bên nhận coi giá trị không biết là `other`) | — | — |
+
+"Có" nghĩa là ứng viên: cổng G6 xác nhận từng trình duyệt, trình duyệt bị loại được ghi trong
+`09-web-handoff.md`.
 
 ### 0.7.2 `capability` op `hello` và `update`
 
@@ -477,6 +506,9 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | `features.call_audio.hfp_connected` | bool | Android: Mac đang nối hồ sơ HFP tới điện thoại |
 | `features.call_audio.consented` | bool | Chỉ Mac: có `consent_record` hiệu lực (AUDIO-01). Android từ chối mọi yêu cầu âm thanh cuộc gọi bằng `CALL_CONSENT_REQUIRED` khi giá trị gần nhất là `false` |
 | `features.call_audio.opus_fallback` | object | Android: khả năng đường Opus/WS — `available`, `downlink` (thu được âm người gọi), `uplink` (chèn được giọng Mac), `reason` ∈ {`ok`, `disabled`, `android_10`, `shizuku_not_running`, `capture_silent`, `uplink_unsupported`} (`disabled` khi `call_audio.allow_opus_fallback = false`) |
+| `features.web.enabled` | bool | Từ `feature.web` (P6) |
+| `features.web.send` | bool | Android: `web.send` và dịch vụ Hỗ trợ tiếp cận "Trang trình duyệt HandLive" đang chạy; Mac: `web.send`; iOS/iPadOS: luôn `false` |
+| `features.web.receive` | bool | Android: `web.notify` và thông báo được phép (thông báo là nơi duy nhất Android hiện trang); Mac, iOS/iPadOS: `true` |
 | `permissions_missing` | array\<string> | Chỉ Android: quyền còn thiếu, dùng để client hiển thị hướng dẫn |
 
 ### 0.7.3 Tin điều khiển relay (WS text frame, không E2E)
@@ -879,6 +911,11 @@ SET-02 quản lý các khóa này.
 | `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Chất lượng mặc định |
 | `cam.usb_boost` | bool | `true` | Mac | Tự chuyển USB khi cắm cáp |
 | `cam.usb_wizard_dismissed` | bool | `false` | Mac | Người dùng chọn "Không hỏi lại" ở wizard bật gỡ lỗi USB (CAM-04) |
+| `feature.web` | bool | `false` | Tất cả | Duyệt web tiếp (P6, nhóm 9); Android bật qua công bố và dịch vụ Hỗ trợ tiếp cận (WEB-01) |
+| `web.send` | bool | `true` | Android, Mac | Gửi trang đang mở trong trình duyệt ở foreground (WEB-01, WEB-03) |
+| `web.notify` | bool | Android `true`, Mac `false` | Android, Mac | Android: thông báo của WEB-04 (tắt → `features.web.receive = false`); Mac: thông báo tùy chọn bên cạnh mục menu (WEB-02) |
+| `web.browsers` | set\<string> | Mọi mã trình duyệt được hỗ trợ của nền tảng | Android, Mac | Danh sách cho phép theo trình duyệt (mã ở 0.7.1); trình duyệt bị bỏ ra không bao giờ được đọc |
+| `web.a11y_consent_at` | timestamp | rỗng | Android | Lúc người dùng đồng ý công bố Duyệt web tiếp (WEB-01 trường 4) |
 | `mac.menu_bar_extra` | bool | `true` | Mac | Hiện biểu tượng HandLive trên thanh menu; tắt → app giữ biểu tượng Dock và thanh menu của app làm lối vào (SET-03 bước 6) |
 
 ## 0.10 Hằng số cấu hình
@@ -945,6 +982,11 @@ SET-02 quản lý các khóa này.
 | `CAM_MAX_FRAME` | 1 MiB | Mỗi khung HL |
 | `CAM_CONGESTION` / `CAM_RECOVER_AFTER` | `queue_delay_ms` > 150 hoặc rơi khung > 5 % liên tục 3 s / ổn định 10 s | CAM-05 |
 | `MIC_DRIVER_WAIT` | 60 s | Chờ thiết bị micro xuất hiện sau khi cài driver |
+| `WEB_SETTLE` | 1,5 s | URL phải giữ nguyên chừng này trước khi gửi `web/active` (WEB-01, WEB-03) |
+| `WEB_POLL_MAC` | 1,5 s | Chu kỳ đọc Apple Events, chỉ khi một trình duyệt được hỗ trợ ở trước nhất (WEB-03) |
+| `WEB_PAGE_TTL` | 10 phút | Bên nhận quên trang sau chừng này không có `web/active` mới (WEB-02, WEB-04, WEB-05) |
+| `WEB_URL_MAX` | 8 KiB (UTF-8) | URL dài hơn không được gửi và bị bên nhận bỏ |
+| `WEB_TITLE_MAX` | 256 ký tự | Bên gửi cắt tiêu đề dài hơn; bên nhận bỏ tiêu đề dài hơn |
 
 ## 0.11 Trạng thái kết nối của client (Mac/iOS)
 
@@ -1045,7 +1087,7 @@ thị. Schema: `shared/strings/ui-strings.schema.json`.
 
 | Trường | Quy tắc |
 |--------|---------|
-| `key` | Chữ thường `[a-z0-9_]`, 2–5 đoạn nối bằng dấu chấm; đoạn đầu là nhóm: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. Khóa không đổi khi sửa câu chữ; đổi nghĩa thì tạo khóa mới. Sau khi đổi `.` thành `_` (tên tài nguyên Android) khóa vẫn duy nhất |
+| `key` | Chữ thường `[a-z0-9_]`, 2–5 đoạn nối bằng dấu chấm; đoạn đầu là nhóm: `common`, `setup`, `settings`, `pairing`, `status`, `menu`, `clipboard`, `sms`, `call`, `call_audio`, `camera`, `web`, `permission`, `notification`, `push`, `error`, `a11y`, `infoplist`. Khóa không đổi khi sửa câu chữ; đổi nghĩa thì tạo khóa mới. Sau khi đổi `.` thành `_` (tên tài nguyên Android) khóa vẫn duy nhất |
 | `en`, `vi` | Chuỗi; hoặc object số nhiều theo CLDR: `en` có `one` và `other`, `vi` chỉ có `other`; chuỗi số nhiều có đúng một tham số, tên `count`. Bộ sinh truyền `count` dạng số nguyên nên số hiện không có dấu ngăn nghìn ("1500 tin", không phải "1.500 tin"). Câu số nhiều phải đọc ổn khi không có dấu ngăn nghìn. Không rỗng; mỗi khóa có đủ mọi ngôn ngữ trong `languages` |
 | `args` | Tham số `{tên}` với `type` ∈ `string`, `int`, `double`. Mọi bản dịch dùng đúng tập tham số, thứ tự trong câu tự do (bộ sinh đổi sang tham số có vị trí). Ngày, giờ, số được định dạng trước khi truyền vào (0.12.3), trừ `count` của chuỗi số nhiều (dòng `en`, `vi`) |
 | `comment` | Bắt buộc: chuỗi xuất hiện ở đâu, giới hạn độ dài nếu có — ngữ cảnh cho người dịch |
