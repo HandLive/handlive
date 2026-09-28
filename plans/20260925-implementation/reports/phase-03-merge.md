@@ -58,7 +58,9 @@ Last fixes before the merge (all found end to end, `phase-03-e2e-1.md`, `phase-0
    - the 4408 check on API 29.
 
    None of these was run on emulator-5580, since it holds the pairing the owner uses with the Mac test app.
-4. **Proposals not yet in the specs:**
+4. **Proposals** — settled the same day (hub `60818a8`; code merged into `main`: shared `fceca48`, android `16429ca`, apple
+   `13da56a`; reports `phase-03-android-spec-followups.md`, `phase-03-apple-spec-followups.md`; the bench start point was
+   already settled by `settled=true`):
    - the Devices empty state names only the clipboard (PAIR-02 field 11);
    - "Keep HandLive Running" needs a reason sentence on other manufacturers (SET-01 fields 7–9);
    - a grace period before the call panel's "connection lost" line (CALL-03 E6);

@@ -54,16 +54,10 @@ project owner in Vietnamese with diacritics.
      - the capability after a late permission grant (`9415777`);
      - the feature list after the first pairing (`cf567c8`, harness `88da57a`);
      - the 4408 check on API 29.
-3. **Spec proposals waiting for a decision** (details in `phase-03-merge.md`):
-   - the Devices empty state names only the clipboard (PAIR-02 field 11);
-   - a reason sentence for "Keep HandLive Running" (SET-01 fields 7–9);
-   - a grace period before the call panel's "connection lost" (CALL-03 E6);
-   - resetting the reconnect backoff only after a stable session;
-   - the bench start point for withheld callers.
-4. **Before the first release:**
+3. **Before the first release:**
    - gates G1 and G2, and the Phase 2 and Phase 3 checks on real devices;
    - the owner inputs listed in `phase-02-merge.md`: relay host and pins, APNs key, Firebase, app ids, logo and icon.
-5. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
+4. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
    Mac app.
    - How to rebuild the bridge and the debug build: `build/dev-bridge/README.md` (this machine only, git-ignored).
    - The host is overloaded (`fileproviderd`, Synology Drive, Spotlight) and freezes the emulator for seconds, so
