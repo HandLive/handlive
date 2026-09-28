@@ -464,7 +464,7 @@ flowchart TB
 | 7 | System | Both sides | The receiver replaces `features_json` and recomputes the active features (CONN-01 API 7): a feature becomes inactive → stop its tasks (API 1, logic 4); a feature becomes active → start it as after `capability/hello` (SMS-01, CALL-04).<br>The peer turns on a feature that is off on this device (for example the Mac turns on the camera and the phone has not) → show a suggestion to turn it on; never turn it on automatically. |  |
 | 8 | User | Same as above | Sees the new status on both devices (field 24; PAIR-02 field 8). |  |
 | A1 | User | Same as above | Chooses "Remove Device from Server" (field 26) or "Delete All HandLive Data" (field 27), reads the warning (field 29) and confirms (field 28). | "Cancel" → E8. |
-| A2 | System | Same as above → R-API | Gets a JWT (API 3), then calls `DELETE /v1/devices/me` (API 2) with `revoke_pairs=false` (remove from server only) or `revoke_pairs=true` (delete all). | No network or 5xx: remove from server only → E5; delete all → E7. 401 or 404 while getting the challenge → E6. |
+| A2 | System | Same as above → R-API | Gets a JWT (API 3), then calls `DELETE /v1/devices/me` (API 2) with `revoke_pairs=false` (remove from server only) or `revoke_pairs=true` (delete all, with one signed `HLREVOKE1` statement per pair in the body). | No network or 5xx: remove from server only → E5; delete all → E7. 401 or 404 while getting the challenge → E6. |
 | A3 | System | R-API, R-DB, R-KV | The relay deletes the `devices` row (the device's `pairs` rows are deleted by CASCADE), closes the device's relay connection and returns 204 (API 2).<br>Only when `revoke_pairs=true`: send `pair_revoked` to online peers and write `revoked_notice` for offline peers.<br>With `revoke_pairs=false` the relay notifies nobody: peers only see that the pair is no longer on the relay and switch to using the LAN only on their own (PAIR-02 API 1, logic 3). |  |
 | A4 | System | Initiating device | **Delete all:** for each pair with a LAN or USB session, send `pair/revoke` (API 4, `reason = reinstall`) and wait up to 10 s for the `ack`, in parallel; clean up every local pair as in PAIR-03 step 7 but delete the records outright, keeping no tombstone (the relay has already deleted the pairs); Android re-registers mDNS without the TXT `h`; go to A5.<br>**Remove from server only:** keep every pair, set `relay_registered = 0` on every pair, write `relay.enabled = false`, send `capability/update` (`features.relay.enabled = false`), go to A6. | Delete all: the sessions going through the relay were closed at A3; those peers receive `pair_revoked`. E7: `pair/revoke` is still sent over the LAN. |
 | A5 | System | Initiating device | Delete all (API 7): Android stops A-SVC and calls `disableSelf()` for the Accessibility service; delete the keys (Keystore/Keychain), database, DataStore/`UserDefaults` and displayed notifications; the Mac removes the login item. | The virtual camera/microphone are not uninstalled (CAM-01 A1); operating system permissions already granted are not revoked. |
@@ -550,7 +550,10 @@ The iPhone turns call notifications off:
 
 - **URL:** `https://{RELAY_HOST}/v1/devices/me?revoke_pairs=<true|false>`
 - **Method:** `DELETE`, header `Authorization: Bearer <jwt>`
-- **Request:** no body; the device deleted is the JWT's `sub`. Query parameters:
+- **Request:** the device deleted is the JWT's `sub`. With `revoke_pairs=false` there is no body.
+  With `revoke_pairs=true` the body is `{revocations: [{pair_id, revoked_at, sig}]}`: one signed
+  `HLREVOKE1` statement (0.6.2, PAIR-03 API 3) per pair, for every local pair and every unrevoked pair
+  that `GET /v1/pairs` lists. Query parameters:
 
 | Parameter | Type | Required | Description |
 |---------|------|----------|-------|
@@ -560,6 +563,7 @@ The iPhone turns call notifications off:
 | HTTP | Body | When |
 |------|------|---------|
 | 204 | — | Deleted, or the device no longer exists on the relay (repeated call) |
+| 400 `BAD_REQUEST` | error | `revoke_pairs=true` and a statement is missing for an unrevoked pair of the device, or one is bad (`revoked_at` outside ±10 minutes of the relay clock, `sig` does not verify with the caller's key); nothing is deleted |
 | 401 `TOKEN_EXPIRED` | error | JWT expired → get a new token and retry once (E6) |
 | 429 `RATE_LIMITED` | error | Wait for `Retry-After` |
 
@@ -569,6 +573,9 @@ The iPhone turns call notifications off:
 DELETE /v1/devices/me?revoke_pairs=true HTTP/1.1
 Host: relay.example.com
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YjFmOGMyZS05YTRkLThlNmYtYTFiMi1jM2Q0ZTVmNjA3MTgifQ.sig
+Content-Type: application/json
+
+{"revocations":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","revoked_at":1727160000000,"sig":"<b64u, 64 bytes>"}]}
 
 HTTP/1.1 204 No Content
 ```
@@ -576,7 +583,7 @@ HTTP/1.1 204 No Content
 With `revoke_pairs=true`, the relay notifies the phone, which is online:
 
 ```json
-{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}
+{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718","revoked_at":1727160000000,"sig":"<b64u, 64 bytes>"}
 ```
 
 - **Business logic:**
@@ -584,16 +591,20 @@ With `revoke_pairs=true`, the relay notifies the phone, which is online:
      in the path.
   2. One transaction: read the unrevoked pairs and their peers, then `DELETE FROM devices` — the
      `pairs` rows are deleted by `ON DELETE CASCADE` (revoked pairs included). No row → still 204.
-  3. `revoke_pairs=true`: after the commit, for each peer add `<pair_id>|<device_id>` to
-     `revoked_notice:<peer_device_id>` (TTL 30 days); if `presence:<peer_device_id>` exists → publish
+  3. `revoke_pairs=true`: before deleting, verify one statement per unrevoked pair (`by` = `sub`,
+     rules of PAIR-03 API 3 logic 2); a missing or bad one → 400 `BAD_REQUEST`, nothing is deleted;
+     statements for pairs the relay does not hold are ignored. After the commit, for each peer add
+     `<pair_id>|<device_id>|<revoked_at>|<sig>` to `revoked_notice:<peer_device_id>` (TTL 30 days); if `presence:<peer_device_id>` exists → publish
      `pair_revoked` on `dev:<peer_device_id>` right away. An offline peer receives `pair_revoked` the
      next time it connects to the relay (CONN-03 API 4) — this key is needed because the `pairs`
      rows are gone, so the "pairs revoked within 30 days" query of PAIR-03 API 4 can no longer see
-     them. The receiving device handles it as in PAIR-03 API 4 (repeats are ignored).
+     them. `pair_revoked` carries the statement; the receiving device handles it as in PAIR-03 API 4
+     (checks the signature; repeats are ignored).
   4. `revoke_pairs=false`: nobody is notified. Peers keep the pair; their next `GET /v1/pairs` call
      sees that the pair is no longer on the relay and switches to using the LAN only (PAIR-02 API 1,
      logic 3).
-  5. Delete `presence:<device_id>` and `chal:<device_id>` first, then close the device's `/v1/relay`
+  5. Delete `presence:<device_id>` first (the pending `chal:<device_id>:*` keys simply expire within
+     60 s: `/v1/auth/token` finds no device row), then close the device's `/v1/relay`
      connection (an internal close command through `dev:<device_id>`, code 1000). Presence is already
      gone, so the peers get no `presence` offline message; with `revoke_pairs=false` their relay
      connections simply drop the pair (C16).
@@ -620,7 +631,7 @@ nothing can be encrypted anymore.
 
 #### API 5 — Relay op `pair_revoked`
 
-Specified as in PAIR-03 API 4, with `by` = the `device_id` of the device that was just deleted. In
+Specified as in PAIR-03 API 4, with `by` = the `device_id` of the device that was just deleted and the statement it sent with API 2. In
 this function the relay emits it per API 2 logic 3: right at deletion (online peers) and when a peer
 reconnects to the relay.
 
@@ -720,11 +731,11 @@ SELECT 1 FROM devices WHERE device_id = $1 AND revoked_at IS NULL;
 
 ```text
 # [Design] Redis, API 2
-SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>"      # each peer, only when revoke_pairs=true
+SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>|<revoked_at>|<sig>"   # each peer, only when revoke_pairs=true
 EXPIRE   revoked_notice:<peer_device_id> 2592000                       # 30 days
 EXISTS   presence:<peer_device_id>
-PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
-DEL      presence:<device_id> chal:<device_id>                          # first: peers get no presence offline
+PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u>"}
+DEL      presence:<device_id>                                           # first: peers get no presence offline
 PUBLISH  dev:<device_id> <internal close-connection command>
 # [Design] Redis, when a device connects to the relay (addition to CONN-03 API 4)
 SMEMBERS revoked_notice:<device_id>

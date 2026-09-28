@@ -16,8 +16,8 @@
 | Tác nhân | Chính: Người dùng (sở hữu cả hai thiết bị). Hệ thống: A-UI, A-SVC, M-APP hoặc I-APP, R-API và R-KV (điểm hẹn, đăng ký cặp). |
 | Điều kiện trước | 1.<br>Android đã hoàn tất SET-01 (có quyền camera để quét QR) và A-SVC đang chạy.<br>2.<br>Mac/iOS đã hoàn tất SET-03 (quyền mạng cục bộ).<br>3.<br>Hai thiết bị cùng LAN; hoặc (từ P2) cả hai có Internet và `relay.enabled = true`.<br>4.<br>Mac/iOS chưa có cặp hiệu lực nào.<br>5.<br>Android có ít hơn 8 cặp hiệu lực. |
 | Điều kiện sau | **Thành công:** hai bên có bản ghi `paired_device` cùng `pair_id`; `PRK` nằm trong kho khóa; Mac/iOS ghim `peer_tls_sha256`; cặp được đăng ký lên relay nếu relay bật (hoặc đánh dấu chờ đăng ký); CONN-01 tự chạy.<br>**Thất bại:** không bên nào lưu gì; `pairing_secret` hoặc PIN bị hủy khỏi bộ nhớ. |
-| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone." Ở luồng PIN (A3–A4), cửa sổ đã đóng sau 120 s mà chưa ghép được: Android báo "Mã PIN đã hết hạn. Lấy mã PIN mới trên Mac hoặc iPhone rồi thử lại."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới.<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
-| Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), giới hạn 3 lần và chỉ cho phép trong LAN.<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
+| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone." Ở luồng PIN (A3–A4), cửa sổ đã đóng sau 120 s mà chưa ghép được, hoặc `pair/offer` thứ ba của PIN này kết thúc mà không có `pair/done` (A4): Android báo "Mã PIN đã hết hạn. Lấy mã PIN mới trên Mac hoặc iPhone rồi thử lại."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới và điện thoại đóng cửa sổ (E2).<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
+| Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), tối đa 3 `pair/offer` cho mỗi PIN do điện thoại tự đếm (A4) và chỉ cho phép trong LAN. Rủi ro còn lại: một `pair/offer` mang HMAC khóa bằng `K_pin`, nên kẻ tấn công lấy được một offer vẫn có thể thử 10^6 PIN ngoại tuyến (Argon2id làm mỗi lần thử tốn kém, không phải bất khả). Cách khắc phục lâu dài là PAKE (CPace) cho đường PIN — quyết định còn mở, chưa thuộc thiết kế hiện tại.<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
 
 ### 2.1.2 Màn hình
 
@@ -87,7 +87,7 @@ flowchart TB
 | A1 | Người dùng | M-APP / I-APP | Luồng PIN: chọn "Không quét được? Dùng mã PIN". | Chỉ LAN. |
 | A2 | Hệ thống | M-APP / I-APP | Sinh PIN 6 số (CSPRNG, phân bố đều), hiển thị 120 s; duyệt mDNS tìm instance có `pm = 1`. |  |
 | A3 | Người dùng | A-UI | Chọn "Nhập mã PIN", nhập 6 số, xác nhận ghép nối. |  |
-| A4 | Hệ thống | A-SVC | Khi PIN đã được xác nhận mới mở cửa sổ ghép nối với TXT `pm = 1` (không mở sớm hơn). Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11. | Sau `PIN_INVALID`, cửa sổ vẫn mở và ô PIN hiện lại: client kết nối trước khi PIN mới được xác nhận sẽ chờ PIN (chưa có `pair/offer`), ô PIN vẫn nhập được; "Đang ghép nối…" (`verifying`) bắt đầu khi PIN được xác nhận. |
+| A4 | Hệ thống | A-SVC | Khi PIN đã được xác nhận mới mở cửa sổ ghép nối với TXT `pm = 1` (không mở sớm hơn). Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11.<br>Điện thoại tự đếm các `pair/offer` của mình: tối đa 3 cho mỗi PIN (`PIN_MAX_ATTEMPTS`), bất kể client báo `attempts_left` bao nhiêu. Khi offer thứ ba kết thúc mà không có `pair/done` (`PIN_INVALID`, ngắt kết nối, hết giờ), cửa sổ đóng như "PIN hết hạn" (E2) và người dùng tạo PIN mới. | Sau `PIN_INVALID`, cửa sổ vẫn mở và ô PIN hiện lại: client kết nối trước khi PIN mới được xác nhận sẽ chờ PIN (chưa có `pair/offer`), ô PIN vẫn nhập được; "Đang ghép nối…" (`verifying`) bắt đầu khi PIN được xác nhận. |
 | A5 | Hệ thống | M-APP / I-APP | Kiểm `mac` của offer bằng PIN của mình. Sai → `pair/error PIN_INVALID` kèm số lần còn lại; lần thứ 3 sai → hủy PIN, sinh PIN mới (E7). Đúng → tiếp bước 10–12. |  |
 
 ### 2.1.5 Đặc tả API/service
@@ -170,7 +170,11 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
   3. Kiểm `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); sai → `AUTH_FAILED`.
   4. Một cửa sổ ghép nối chỉ phục vụ một client: kết nối thứ hai trong cùng cửa sổ →
      `PAIRING_CLOSED`. Chỉ kết nối đó bị từ chối: cửa sổ, bộ đếm giờ và client đang giữ cửa
-     sổ vẫn tiếp tục.
+     sổ vẫn tiếp tục. Kết nối chưa giữ cửa sổ không bao giờ đóng được cửa sổ, dù lỗi gì
+     (`AUTH_FAILED`, tin sai định dạng, ngắt kết nối): chỉ socket của chính nó bị từ chối.
+  5. Kiểm soát kết nối trên `/v1/pair`, riêng với `/v1/ctl`: tối đa 4 kết nối cùng lúc và 2 mỗi IP
+     (`PAIR_CONN_LIMIT`); vượt → đóng 4429 `RATE_LIMITED`. Tin đầu tiên (`pair/hello`) được đọc với
+     giới hạn 8 KiB; lớn hơn → đóng 4400.
 
 #### API 3 — `WS pair/offer`
 
@@ -269,7 +273,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 |--------|------|----------|-------|
 | `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Có | Mã lỗi (0.8.1) |
 | `message` | string | Có | Mô tả ngắn, không chứa dữ liệu nhạy cảm |
-| `attempts_left` | int32 | Bắt buộc với `PIN_INVALID`, không có với mã khác | Số lần nhập còn lại, 0–3 |
+| `attempts_left` | int32 | Bắt buộc với `PIN_INVALID`, không có với mã khác | Số lần nhập còn lại, 0–3; chỉ để giao diện bên kia hiển thị — điện thoại bỏ qua giá trị client gửi và tự đếm offer của mình (A4) |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -447,7 +451,7 @@ SMEMBERS rv:<rv_id>         # tìm thành viên còn lại để chuyển rv_msg
 | Tác nhân | Chính: Người dùng. Hệ thống: A-UI, A-SVC, M-APP / I-APP, R-API. |
 | Điều kiện trước | Ứng dụng đã hoàn tất thiết lập ban đầu (SET-01 hoặc SET-03). |
 | Điều kiện sau | Danh sách hiển thị khớp dữ liệu cục bộ và trạng thái kết nối hiện tại; cặp bị thu hồi từ xa (nếu phát hiện) được dọn theo PAIR-03. Không thay đổi dữ liệu nào khác. |
-| Ngoại lệ | E1 — Chưa có cặp nào: hiển thị trạng thái trống và nút "Thêm thiết bị".<br>E2 — Relay không truy cập được: chỉ hiển thị dữ liệu cục bộ, không báo lỗi chặn.<br>E3 — Relay báo một cặp đã thu hồi: dọn cặp đó (PAIR-03, luồng B) và báo "Thiết bị <tên> đã được hủy ghép nối từ thiết bị khác".<br>E4 — Lỗi đọc cơ sở dữ liệu: báo lỗi và cho thử lại. |
+| Ngoại lệ | E1 — Chưa có cặp nào: hiển thị trạng thái trống và nút "Thêm thiết bị".<br>E2 — Relay không truy cập được: chỉ hiển thị dữ liệu cục bộ, không báo lỗi chặn.<br>E3 — Relay báo một cặp đã thu hồi kèm tuyên bố hợp lệ (`revoked_by` = đối phương, `revoke_sig` hợp lệ với khóa công khai `ik_sig` của đối phương, PAIR-03 API 4): dọn cặp đó (PAIR-03, luồng B) và báo "Thiết bị <tên> đã được hủy ghép nối từ thiết bị khác". Dòng đã thu hồi mà không có tuyên bố hoặc tuyên bố sai thì bỏ qua: không hủy cặp, không xóa dữ liệu; người dùng vẫn tự hủy ghép nối được.<br>E4 — Lỗi đọc cơ sở dữ liệu: báo lỗi và cho thử lại. |
 | Yêu cầu đặc biệt | Trạng thái cập nhật trong ≤ 1 s sau khi kết nối thay đổi (theo dõi luồng trạng thái, không hỏi vòng).<br>Không hiển thị khóa, `pair_id` hay dấu vân tay đầy đủ; "Mã an toàn" chỉ là 8 ký tự hex đầu SHA-256(`attestation`) để người dùng đối chiếu giữa hai thiết bị nếu muốn.<br>Đọc được bằng VoiceOver/TalkBack. |
 
 ### 2.2.2 Màn hình
@@ -502,7 +506,7 @@ flowchart TB
 | 2 | Hệ thống | A-UI / M-APP / I-APP | Đọc `paired_device` hiệu lực; lấy trạng thái từ bộ quản lý kết nối (Android: phiên đang mở theo `pair_id`; client: máy trạng thái 0.11) và capability gần nhất (`features_json`). | Lỗi đọc DB → E4. |
 | 3 | Hệ thống | như trên | Không có cặp → hiển thị trạng thái trống. | E1. |
 | 4 | Hệ thống | A-SVC / M-APP / I-APP, R-API | Nếu `relay.enabled` và có Internet: gọi `GET /v1/pairs` (tối đa 1 lần mỗi 60 s để tránh gọi thừa). | Lỗi mạng → E2, bỏ qua. |
-| 5 | Hệ thống | như trên | So từng cặp cục bộ với kết quả relay: có cặp `revoked_at` khác null → 5a; không có → 5b. | Relay lỗi → E2, sang 5b. |
+| 5 | Hệ thống | như trên | So từng cặp cục bộ với kết quả relay: có cặp `revoked_at` khác null với tuyên bố hợp lệ (E3) → 5a; không có → 5b. | Relay lỗi → E2, sang 5b. Đã thu hồi nhưng không có tuyên bố hợp lệ → bỏ qua, sang 5b. |
 | 5a | Hệ thống | như trên | Dọn cặp bị thu hồi theo PAIR-03 luồng B (xóa khóa, dữ liệu đồng bộ), báo "Thiết bị <tên> đã được hủy ghép nối từ thiết bị khác". | E3. |
 | 5b | Hệ thống | như trên | Hiển thị danh sách và đăng ký nhận thay đổi trạng thái kết nối, capability để cập nhật ≤ 1 s. |  |
 | 6 | Người dùng | như trên | Xem chi tiết một thiết bị; chọn "Thêm thiết bị" (PAIR-01), "Hủy ghép nối" (PAIR-03) hoặc "Tùy chọn" (SET-02). |  |
@@ -533,13 +537,15 @@ CONN-01 và SET-02, không phát sinh lời gọi mới.
 | `pairs[].peer_device_id` | uuid | Thiết bị còn lại |
 | `pairs[].peer_platform` | enum{android\| macos\| ios\| ipados} |  |
 | `pairs[].created_at` | timestamp |  |
-| `pairs[].revoked_at` | timestamp \| null | Khác null nghĩa là đã thu hồi |
+| `pairs[].revoked_at` | timestamp \| null | Khác null nghĩa là đã thu hồi; thời điểm đã ký trong tuyên bố |
+| `pairs[].revoked_by` | uuid \| null | `by` của tuyên bố: thành viên đã thu hồi |
+| `pairs[].revoke_sig` | b64u (64 byte) \| null | Chữ ký `HLREVOKE1` (0.6.2); `null` ở các dòng thu hồi trước khi có thu hồi có chữ ký |
 | `pairs[].peer_online` | bool | Đối phương đang nối relay (theo presence) |
 
 - **Ví dụ:**
 
 ```json
-{"pairs":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","peer_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","peer_platform":"android","created_at":1727150003210,"revoked_at":null,"peer_online":true}]}
+{"pairs":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","peer_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","peer_platform":"android","created_at":1727150003210,"revoked_at":null,"revoked_by":null,"revoke_sig":null,"peer_online":true}]}
 ```
 
 - **Logic nghiệp vụ:**
@@ -553,6 +559,11 @@ CONN-01 và SET-02, không phát sinh lời gọi mới.
      việc đăng ký khi nó đăng ký lại. Ngược lại, cặp mà relay liệt kê không có `revoked_at` trong khi
      thiết bị vẫn để `relay_registered = 0` → đặt `relay_registered = 1` (đối phương đã hoàn tất đăng
      ký trong lúc chờ). Việc này cũng kết thúc thời gian chờ 24 h.
+  4. Một cặp đã thu hồi chỉ được tính khi `revoked_by` là `device_id` của đối phương và `revoke_sig`
+     hợp lệ với khóa công khai `ik_sig` đã lưu của đối phương trên `"HLREVOKE1"` ‖ `pair_id` ‖
+     `revoked_by` ‖ `revoked_at` (0.6.2). Ngược lại (không có tuyên bố, dòng thu hồi trước quy tắc
+     này, người ký khác, chữ ký sai) thì bỏ qua dòng đó: không hủy cặp, không xóa gì, người dùng vẫn
+     tự hủy ghép nối được (PAIR-03).
 
 #### Query
 
@@ -575,7 +586,7 @@ LIMIT 1;
 SELECT p.pair_id,
        CASE WHEN p.device_a = $1 THEN p.device_b ELSE p.device_a END AS peer_device_id,
        d.platform AS peer_platform,
-       p.created_at, p.revoked_at
+       p.created_at, p.revoked_at, p.revoked_by, p.revoke_sig
 FROM pairs p
 JOIN devices d ON d.device_id = CASE WHEN p.device_a = $1 THEN p.device_b ELSE p.device_a END
 WHERE (p.device_a = $1 OR p.device_b = $1)
@@ -597,7 +608,7 @@ MGET presence:<peer_device_id_1> presence:<peer_device_id_2> ...
 | Mục | Nội dung |
 |-----|----------|
 | Tên | PAIR-03 — Hủy ghép nối thiết bị (tại chỗ và từ xa) |
-| Mô tả | Chấm dứt quan hệ tin cậy của một cặp.<br>**Luồng A (cả hai đang kết nối):** bên khởi tạo gửi `pair/revoke`, bên kia xác nhận, cả hai xóa khóa và dữ liệu.<br>**Luồng B (đối phương không kết nối được, ví dụ máy bị mất):** bên khởi tạo xóa cục bộ và thu hồi trên relay; đối phương tự dọn khi quay lại mạng (relay báo `pair_revoked`, hoặc Android trả `PAIR_UNKNOWN` trong LAN).<br>Dữ liệu đã đồng bộ (SMS, nhật ký cuộc gọi) trên Mac/iOS bị xóa cùng cặp. |
+| Mô tả | Chấm dứt quan hệ tin cậy của một cặp.<br>**Luồng A (cả hai đang kết nối):** bên khởi tạo gửi `pair/revoke`, bên kia xác nhận, cả hai xóa khóa và dữ liệu.<br>**Luồng B (đối phương không kết nối được, ví dụ máy bị mất):** bên khởi tạo xóa cục bộ và thu hồi trên relay; đối phương tự dọn khi quay lại mạng (relay báo `pair_revoked` kèm tuyên bố có chữ ký của bên khởi tạo, hoặc Android trả `PAIR_UNKNOWN` trong LAN). Một lần thu hồi từ relay chỉ được xử lý khi tuyên bố do đối phương ký (API 4); riêng relay không bao giờ hủy cặp được một thiết bị.<br>Dữ liệu đã đồng bộ (SMS, nhật ký cuộc gọi) trên Mac/iOS bị xóa cùng cặp. |
 | Tác nhân | Chính: Người dùng. Hệ thống: A-UI, A-SVC, M-APP / I-APP, R-API, R-KV. |
 | Điều kiện trước | Có ít nhất một cặp hiệu lực; người dùng đang ở PAIR-02. |
 | Điều kiện sau | **Bên khởi tạo:** không còn `PRK`, bản ghi cặp và dữ liệu đồng bộ của cặp; Android bỏ hint của cặp khỏi TXT `h`; relay đánh dấu `revoked_at` (ngay hoặc khi có mạng).<br>**Đối phương:** dọn giống hệt khi nhận được tín hiệu thu hồi. Phiên `/v1/ctl` của cặp bị đóng. |
@@ -656,8 +667,8 @@ flowchart TB
 | 5 | Hệ thống | như trên | Chờ `ack` tối đa 10 s. | Hết hạn → E2, luồng B. |
 | 6 | Hệ thống | Thiết bị đối phương | Trả `ack`, rồi dọn như bước 7 phía mình; hiển thị trường 5; gửi `session/bye` và đóng 1000. |  |
 | 7 | Hệ thống | Bên khởi tạo | Xóa `PRK` (Keychain `SecItemDelete` / xóa cột `prk_enc`), xóa dữ liệu đồng bộ của cặp (client), đặt `revoked_at`; Android đăng ký lại mDNS không còn hint của cặp. |  |
-| 8 | Hệ thống | Bên khởi tạo, R-API | Nếu cặp đã đăng ký relay: `POST /v1/pairs/{pair_id}/revoke`. | Không có mạng → E3, giữ bia mộ, thử lại nền. Relay trả đã thu hồi → E4. |
-| 9 | Hệ thống | R-API, R-KV | Relay đặt `revoked_at`, ngừng chuyển tiếp và push; nếu đối phương đang nối relay, gửi op `pair_revoked` để nó dọn ngay. Bên khởi tạo xóa hẳn bản ghi bia mộ. | Đối phương offline: sẽ nhận `pair_revoked` khi kết nối relay, hoặc thấy qua `GET /v1/pairs` (PAIR-02), hoặc bị Android từ chối `session/hello` với `PAIR_UNKNOWN` trong LAN. |
+| 8 | Hệ thống | Bên khởi tạo, R-API | Nếu cặp đã đăng ký relay: ký tuyên bố `HLREVOKE1` (0.6.2) với `revoked_at` = hiện tại và gửi `POST /v1/pairs/{pair_id}/revoke` `{revoked_at, sig}`. Lần thử lại sau E3 ký tuyên bố mới với thời điểm hiện tại. | Không có mạng → E3, giữ bia mộ, thử lại nền. Relay trả đã thu hồi → E4. |
+| 9 | Hệ thống | R-API, R-KV | Relay lưu tuyên bố (`revoked_at`, `revoked_by`, `revoke_sig`), ngừng chuyển tiếp và push; nếu đối phương đang nối relay, gửi op `pair_revoked` kèm tuyên bố để nó kiểm chữ ký rồi dọn ngay. Bên khởi tạo xóa hẳn bản ghi bia mộ. | Đối phương offline: sẽ nhận `pair_revoked` khi kết nối relay, hoặc thấy qua `GET /v1/pairs` (PAIR-02), hoặc bị Android từ chối `session/hello` với `PAIR_UNKNOWN` trong LAN. |
 | 10 | Người dùng | như trên | Thấy kết quả `done` hoặc `done_pending_remote`. |  |
 
 ### 2.3.5 Đặc tả API/service
@@ -716,13 +727,16 @@ flowchart TB
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `reason` | enum{user\| reinstall\| lost_device} | Có | `lost_device` khi người dùng chọn hủy từ xa lúc đối phương offline |
+| `revoked_at` | timestamp | Có | Thời điểm thu hồi (ms), lệch không quá ±10 phút so với đồng hồ relay (`REVOKE_CLOCK_SKEW`) |
+| `sig` | b64u (64 byte) | Có | Ed25519(`ik_sig` của bên gọi, `"HLREVOKE1"` ‖ `pair_id` (16) ‖ `by` = `device_id` của bên gọi (16) ‖ `revoked_at` (uint64 BE)) — 0.6.2 |
+| `reason` | enum{user\| reinstall\| lost_device} | Không | Chỉ để tham khảo, không được ký, không được lưu; `lost_device` khi người dùng chọn hủy từ xa lúc đối phương offline |
 
 - **Response:**
 
 | HTTP | Body | Khi nào |
 |------|------|---------|
 | 204 | — | Thu hồi thành công hoặc đã thu hồi từ trước (idempotent) |
+| 400 `BAD_REQUEST` | lỗi | Thiếu `revoked_at` hoặc `sig`, `revoked_at` lệch quá ±10 phút so với đồng hồ relay, hoặc `sig` không hợp lệ với `ik_sig_pub` đã lưu của bên gọi |
 | 403 `NOT_PAIRED` | lỗi | Người gọi không thuộc cặp |
 | 404 `DEVICE_NOT_FOUND` | lỗi | `pair_id` không tồn tại → coi như thành công ở phía thiết bị |
 
@@ -734,26 +748,36 @@ Host: relay.example.com
 Authorization: Bearer <jwt>
 Content-Type: application/json
 
-{"reason":"lost_device"}
+{"revoked_at":1727160000000,"sig":"<b64u, 64 byte>","reason":"lost_device"}
 ```
 
 - **Logic nghiệp vụ:**
   1. Chỉ thành viên của cặp được thu hồi.
-  2. Cập nhật `revoked_at`, `revoked_by`; nếu đã thu hồi thì không đổi, vẫn trả 204.
-  3. Tra `presence:<đối phương>`; nếu online, publish `pair_revoked` lên kênh `dev:<đối phương>`.
-  4. Từ thời điểm này relay từ chối mọi khung `to` /`from` giữa hai thiết bị của cặp (`relay.error
+  2. Kiểm tuyên bố với `by` = `sub` của JWT: `revoked_at` lệch không quá ±10 phút so với đồng hồ
+     relay, `sig` hợp lệ với `ik_sig_pub` của bên gọi trong `devices` (kiểm chặt, 0.6.5); thiếu hoặc
+     sai → 400 `BAD_REQUEST`, không thay đổi gì.
+  3. Lưu tuyên bố: `revoked_at` = giá trị đã ký, `revoked_by` = `sub`, `revoke_sig` = `sig`; nếu đã
+     thu hồi thì không đổi (giữ tuyên bố đầu tiên), vẫn trả 204.
+  4. Tra `presence:<đối phương>`; nếu online, publish `pair_revoked` kèm tuyên bố đã lưu lên kênh
+     `dev:<đối phương>`.
+  5. Từ thời điểm này relay từ chối mọi khung `to` /`from` giữa hai thiết bị của cặp (`relay.error
      NOT_PAIRED`) và từ chối `POST /v1/push` cho cặp.
 
 #### API 4 — Relay op `pair_revoked`
 
 - **URL:** `wss://{RELAY_HOST}/v1/relay`
 - **Method:** WS text frame điều khiển (R-API → thiết bị). Bổ sung vào danh mục 0.7.3.
-- **Request:** `{"op":"pair_revoked","pair_id":"<uuid>","by":"<device_id>"}`
+- **Request:** `{"op":"pair_revoked","pair_id":"<uuid>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u, 64 byte>"}` — tuyên bố đã lưu ở API 3 (hoặc kèm `DELETE /v1/devices/me?revoke_pairs=true`, SET-02).
 - **Response:** N/A.
 - **Ví dụ:**
-  `{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}`
+  `{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","revoked_at":1727160000000,"sig":"<b64u, 64 byte>"}`
 - **Logic nghiệp vụ:**
-  1. Thiết bị nhận dọn cặp như bước 7 và hiển thị trường 5; nhận lặp lại thì bỏ qua.
+  1. Thiết bị nhận (mọi client và điện thoại) chỉ xử lý khi `by` là `device_id` của đối phương trong
+     cặp đó và `sig` hợp lệ với khóa công khai `ik_sig` đã lưu của đối phương trên `"HLREVOKE1"` ‖
+     `pair_id` ‖ `by` ‖ `revoked_at` (0.6.2). Khi đó thiết bị dọn cặp như bước 7 và hiển thị trường 5;
+     nhận lặp lại thì bỏ qua. Ngược lại (không có `sig`, `by` khác, chữ ký sai, dòng thu hồi trước khi
+     có thu hồi có chữ ký) thì bỏ qua tin: không hủy cặp, không xóa gì, người dùng vẫn tự hủy ghép nối
+     được.
   2. Ngay sau khi một thiết bị kết nối relay, relay gửi `pair_revoked` cho mọi cặp đã thu hồi trong
      30 ngày mà thiết bị là thành viên, để thiết bị offline lúc bị thu hồi vẫn tự dọn.
 
@@ -782,16 +806,16 @@ UPDATE paired_device SET revoked_at = :now WHERE pair_id = :pair_id;
 SELECT pair_id FROM paired_device
 WHERE revoked_at IS NOT NULL AND relay_registered = 1;
 
--- [Thiết kế] Relay, API 3
+-- [Thiết kế] Relay, API 3 ($3 = revoked_at đã ký, $4 = sig, cả hai đã được kiểm trước)
 UPDATE pairs
-SET revoked_at = now(), revoked_by = $2
+SET revoked_at = $3, revoked_by = $2, revoke_sig = $4
 WHERE pair_id = $1
   AND (device_a = $2 OR device_b = $2)
   AND revoked_at IS NULL
 RETURNING CASE WHEN device_a = $2 THEN device_b ELSE device_a END AS peer_device_id;
 
 -- [Thiết kế] Relay, API 4: cặp đã thu hồi trong 30 ngày của thiết bị vừa kết nối
-SELECT pair_id, revoked_by
+SELECT pair_id, revoked_by, revoked_at, revoke_sig
 FROM pairs
 WHERE (device_a = $1 OR device_b = $1)
   AND revoked_at > now() - INTERVAL '30 days';
@@ -800,5 +824,5 @@ WHERE (device_a = $1 OR device_b = $1)
 ```text
 # [Thiết kế] Redis, API 3: báo đối phương đang online
 GET     presence:<peer_device_id>
-PUBLISH dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
+PUBLISH dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u>"}
 ```

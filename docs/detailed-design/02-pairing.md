@@ -16,8 +16,8 @@ English | [Tiếng Việt](02-pairing.vi.md)
 | Actors | Primary: User (owns both devices). System: A-UI, A-SVC, M-APP or I-APP, R-API and R-KV (rendezvous, pair registration). |
 | Preconditions | 1.<br>Android has completed SET-01 (with the camera permission for scanning the QR code) and A-SVC is running.<br>2.<br>Mac/iOS has completed SET-03 (local network permission).<br>3.<br>Both devices are on the same LAN; or (from P2) both have internet access and `relay.enabled = true`.<br>4.<br>Mac/iOS has no active pair yet.<br>5.<br>Android has fewer than 8 active pairs. |
 | Postconditions | **Success:** both sides have a `paired_device` record with the same `pair_id`; `PRK` is in the key store; Mac/iOS pins `peer_tls_sha256`; the pair is registered with the relay if the relay is enabled (or marked as waiting for registration); CONN-01 starts automatically.<br>**Failure:** neither side stores anything; the `pairing_secret` or the PIN is wiped from memory. |
-| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone." In the PIN flow (A3–A4) the window closed after 120 s without a pair: Android shows "The PIN has expired. Get a new PIN on your Mac or iPhone and try again."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID`); after 3 failed attempts Mac/iOS generates a new PIN.<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background (API 8 logic 6).<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN. |
-| Special requirements | **Security:** `pairing_secret` is 256 bits, lives only 120 s, never leaves the device except through the QR code and is never logged; HMAC comparison is constant-time; the relay never sees `pairing_secret` and is not used for the PIN.<br>The PIN is the fallback path: an active attacker in the middle at the exact moment of pairing could guess the PIN offline — mitigated by Argon2id (t=3, m=64 MiB, p=4), a limit of 3 attempts and allowing it on the LAN only.<br>**Performance:** from scanning to "Paired" ≤ 5 s on the LAN, ≤ 8 s through the relay.<br>**Usability:** the QR code has enough contrast in both light and dark appearance; the instructions are readable with VoiceOver/TalkBack; QR recognition runs entirely on the device (bundled ML Kit). |
+| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone." In the PIN flow (A3–A4) the window closed after 120 s without a pair, or the third `pair/offer` for this PIN ended without `pair/done` (A4): Android shows "The PIN has expired. Get a new PIN on your Mac or iPhone and try again."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID`); after 3 failed attempts Mac/iOS generates a new PIN and the phone closes the window (E2).<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background (API 8 logic 6).<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN. |
+| Special requirements | **Security:** `pairing_secret` is 256 bits, lives only 120 s, never leaves the device except through the QR code and is never logged; HMAC comparison is constant-time; the relay never sees `pairing_secret` and is not used for the PIN.<br>The PIN is the fallback path: an active attacker in the middle at the exact moment of pairing could guess the PIN offline — mitigated by Argon2id (t=3, m=64 MiB, p=4), at most 3 `pair/offer` per PIN counted by the phone (A4) and allowing it on the LAN only. Remaining risk: a single `pair/offer` carries an HMAC keyed by `K_pin`, so an attacker who obtains one offer can still try the 10^6 PINs offline (Argon2id makes each guess costly, not impossible). The long-term fix is a PAKE (CPace) for the PIN path — an open decision, not part of the current design.<br>**Performance:** from scanning to "Paired" ≤ 5 s on the LAN, ≤ 8 s through the relay.<br>**Usability:** the QR code has enough contrast in both light and dark appearance; the instructions are readable with VoiceOver/TalkBack; QR recognition runs entirely on the device (bundled ML Kit). |
 
 ### 2.1.2 Screens
 
@@ -87,7 +87,7 @@ flowchart TB
 | A1 | User | M-APP / I-APP | PIN flow: chooses "Can't Scan? Use a PIN". | LAN only. |
 | A2 | System | M-APP / I-APP | Generates a 6-digit PIN (CSPRNG, uniformly distributed) and shows it for 120 s; browses mDNS for an instance with `pm = 1`. |  |
 | A3 | User | A-UI | Chooses "Enter PIN", types the 6 digits and confirms the pairing. |  |
-| A4 | System | A-SVC | Once the PIN is confirmed, opens the pairing window with TXT `pm = 1` (never earlier). The client connects to `/v1/pair` and sends `pair/hello` with `mode = "pin"`. Both sides use `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) instead of `pairing_secret` in steps 9–11. | After `PIN_INVALID` the window stays open and the PIN field comes back: a client that connects before the new PIN is confirmed waits for it (no `pair/offer` yet) and the PIN field stays editable; "Pairing…" (`verifying`) starts when the PIN is confirmed. |
+| A4 | System | A-SVC | Once the PIN is confirmed, opens the pairing window with TXT `pm = 1` (never earlier). The client connects to `/v1/pair` and sends `pair/hello` with `mode = "pin"`. Both sides use `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) instead of `pairing_secret` in steps 9–11.<br>The phone counts its own `pair/offer` messages: at most 3 per PIN (`PIN_MAX_ATTEMPTS`), whatever `attempts_left` the client reports. When the third offer ends without `pair/done` (`PIN_INVALID`, disconnect, timeout), the window closes as "PIN expired" (E2) and the user makes a new PIN. | After `PIN_INVALID` the window stays open and the PIN field comes back: a client that connects before the new PIN is confirmed waits for it (no `pair/offer` yet) and the PIN field stays editable; "Pairing…" (`verifying`) starts when the PIN is confirmed. |
 | A5 | System | M-APP / I-APP | Checks the offer's `mac` with its own PIN. Wrong → `pair/error PIN_INVALID` with the number of attempts left; third failure → discard the PIN and generate a new one (E7). Correct → continue with steps 10–12. |  |
 
 ### 2.1.5 API/service specification
@@ -175,7 +175,12 @@ Authentication strings shared by the APIs below:
   3. Check `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); mismatch → `AUTH_FAILED`.
   4. A pairing window serves only one client: a second connection in the same window →
      `PAIRING_CLOSED`. Only that connection is refused: the window, its timer and the client
-     that holds it carry on.
+     that holds it carry on. A connection that has not claimed the window can never close it,
+     whatever its failure (`AUTH_FAILED`, a malformed message, a disconnect): only its own socket is
+     refused.
+  5. Admission on `/v1/pair`, separate from `/v1/ctl`: at most 4 connections at once and 2 per IP
+     (`PAIR_CONN_LIMIT`); over the cap → close 4429 `RATE_LIMITED`. The first message (`pair/hello`)
+     is read with an 8 KiB cap; a larger one → close 4400.
 
 #### API 3 — `WS pair/offer`
 
@@ -278,7 +283,7 @@ Authentication strings shared by the APIs below:
 |--------|------|----------|-------|
 | `code` | enum{QR_INVALID\| PAIRING_CLOSED\| PIN_INVALID\| AUTH_FAILED\| INTERNAL} | Yes | Error code (0.8.1) |
 | `message` | string | Yes | Short description that contains no sensitive data |
-| `attempts_left` | int32 | Required with `PIN_INVALID`, absent with any other code | Number of attempts left, 0–3 |
+| `attempts_left` | int32 | Required with `PIN_INVALID`, absent with any other code | Number of attempts left, 0–3; information for the other side's UI only — the phone ignores the value a client sends and counts its own offers (A4) |
 
 - **Response:** N/A.
 - **Example:**
@@ -457,7 +462,7 @@ SMEMBERS rv:<rv_id>         # find the other member to forward rv_msg to
 | Actors | Primary: User. System: A-UI, A-SVC, M-APP / I-APP, R-API. |
 | Preconditions | The app has completed initial setup (SET-01 or SET-03). |
 | Postconditions | The list shown matches the local data and the current connection status; pairs revoked remotely (if detected) are cleaned up per PAIR-03. No other data changes. |
-| Exceptions | E1 — No pairs yet: show the empty state and the "Add Device" button.<br>E2 — The relay is unreachable: show local data only, without a blocking error.<br>E3 — The relay reports a pair as revoked: clean up that pair (PAIR-03, flow B) and show "\<name> was unpaired from another device".<br>E4 — Database read error: show an error and allow a retry. |
+| Exceptions | E1 — No pairs yet: show the empty state and the "Add Device" button.<br>E2 — The relay is unreachable: show local data only, without a blocking error.<br>E3 — The relay reports a pair as revoked with a valid statement (`revoked_by` = the peer, `revoke_sig` verifies with the peer's `ik_sig` public key, PAIR-03 API 4): clean up that pair (PAIR-03, flow B) and show "\<name> was unpaired from another device". A revoked row without a statement or with an invalid one is ignored: no unpairing, no data deleted; the user can still unpair by hand.<br>E4 — Database read error: show an error and allow a retry. |
 | Special requirements | The status updates within ≤ 1 s after the connection changes (by observing the state stream, not by polling).<br>Keys, `pair_id` and full fingerprints are never shown; the "Security Code" is only the first 8 hex characters of SHA-256(`attestation`), so that the user can compare it between the two devices if they want to.<br>Readable with VoiceOver/TalkBack. |
 
 ### 2.2.2 Screens
@@ -512,7 +517,7 @@ flowchart TB
 | 2 | System | A-UI / M-APP / I-APP | Reads the active `paired_device` rows; gets the status from the connection manager (Android: the open sessions by `pair_id`; client: the 0.11 state machine) and the latest capability (`features_json`). | DB read error → E4. |
 | 3 | System | Same as above | No pair → show the empty state. | E1. |
 | 4 | System | A-SVC / M-APP / I-APP, R-API | If `relay.enabled` and the internet is available: call `GET /v1/pairs` (at most once every 60 s to avoid unnecessary calls). | Network error → E2, skip. |
-| 5 | System | Same as above | Compares each local pair with the relay's result: a pair with a non-null `revoked_at` → 5a; none → 5b. | Relay error → E2, go to 5b. |
+| 5 | System | Same as above | Compares each local pair with the relay's result: a pair with a non-null `revoked_at` whose statement is valid (E3) → 5a; none → 5b. | Relay error → E2, go to 5b. Revoked without a valid statement → ignored, 5b. |
 | 5a | System | Same as above | Cleans up the revoked pair per PAIR-03 flow B (delete the keys and synced data) and shows "\<name> was unpaired from another device". | E3. |
 | 5b | System | Same as above | Shows the list and subscribes to connection status and capability changes so it updates within ≤ 1 s. |  |
 | 6 | User | Same as above | Views a device's details; chooses "Add Device" (PAIR-01), "Unpair" (PAIR-03) or "Options" (SET-02). |  |
@@ -543,13 +548,15 @@ already received in CONN-01 and SET-02; no new call is made.
 | `pairs[].peer_device_id` | uuid | The other device |
 | `pairs[].peer_platform` | enum{android\| macos\| ios\| ipados} |  |
 | `pairs[].created_at` | timestamp |  |
-| `pairs[].revoked_at` | timestamp \| null | Non-null means revoked |
+| `pairs[].revoked_at` | timestamp \| null | Non-null means revoked; the signed time of the statement |
+| `pairs[].revoked_by` | uuid \| null | `by` of the statement: the member that revoked |
+| `pairs[].revoke_sig` | b64u (64 bytes) \| null | `HLREVOKE1` signature (0.6.2); `null` on rows revoked before signed revocation |
 | `pairs[].peer_online` | bool | The peer is connected to the relay (per presence) |
 
 - **Example:**
 
 ```json
-{"pairs":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","peer_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","peer_platform":"android","created_at":1727150003210,"revoked_at":null,"peer_online":true}]}
+{"pairs":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","peer_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","peer_platform":"android","created_at":1727150003210,"revoked_at":null,"revoked_by":null,"revoke_sig":null,"peer_online":true}]}
 ```
 
 - **Business logic:**
@@ -564,6 +571,11 @@ already received in CONN-01 and SET-02; no new call is made.
      Conversely, a pair that the relay lists without `revoked_at` while the device still has
      `relay_registered = 0` → set `relay_registered = 1` (the peer completed the registration in the
      meantime); this also ends a 24 h wait.
+  4. A revoked pair counts only when `revoked_by` is the peer's `device_id` and `revoke_sig`
+     verifies with the peer's stored `ik_sig` public key over `"HLREVOKE1"` ‖ `pair_id` ‖
+     `revoked_by` ‖ `revoked_at` (0.6.2). Otherwise (no statement, a row revoked before this rule,
+     another signer, a bad signature) the row is ignored: nothing is unpaired or deleted, and the user
+     can still unpair by hand (PAIR-03).
 
 #### Query
 
@@ -586,7 +598,7 @@ LIMIT 1;
 SELECT p.pair_id,
        CASE WHEN p.device_a = $1 THEN p.device_b ELSE p.device_a END AS peer_device_id,
        d.platform AS peer_platform,
-       p.created_at, p.revoked_at
+       p.created_at, p.revoked_at, p.revoked_by, p.revoke_sig
 FROM pairs p
 JOIN devices d ON d.device_id = CASE WHEN p.device_a = $1 THEN p.device_b ELSE p.device_a END
 WHERE (p.device_a = $1 OR p.device_b = $1)
@@ -608,7 +620,7 @@ MGET presence:<peer_device_id_1> presence:<peer_device_id_2> ...
 | Item | Content |
 |-----|----------|
 | Name | PAIR-03 — Unpair a device (locally and remotely) |
-| Description | Ends the trust relationship of a pair.<br>**Flow A (both are connected):** the initiator sends `pair/revoke`, the other side acknowledges, and both delete the keys and data.<br>**Flow B (the peer can't be reached, for example a lost device):** the initiator deletes locally and revokes on the relay; the peer cleans up by itself when it is back online (the relay sends `pair_revoked`, or Android returns `PAIR_UNKNOWN` on the LAN).<br>Synced data (SMS, call log) on Mac/iOS is deleted together with the pair. |
+| Description | Ends the trust relationship of a pair.<br>**Flow A (both are connected):** the initiator sends `pair/revoke`, the other side acknowledges, and both delete the keys and data.<br>**Flow B (the peer can't be reached, for example a lost device):** the initiator deletes locally and revokes on the relay; the peer cleans up by itself when it is back online (the relay sends `pair_revoked` with the initiator's signed statement, or Android returns `PAIR_UNKNOWN` on the LAN). A revocation from the relay is acted on only when its statement is signed by the peer (API 4); the relay alone can never unpair a device.<br>Synced data (SMS, call log) on Mac/iOS is deleted together with the pair. |
 | Actors | Primary: User. System: A-UI, A-SVC, M-APP / I-APP, R-API, R-KV. |
 | Preconditions | At least one active pair exists; the user is in PAIR-02. |
 | Postconditions | **Initiator:** no `PRK`, pair record or synced data of the pair remains; Android removes the pair's hint from TXT `h`; the relay marks `revoked_at` (immediately or once a network is available).<br>**Peer:** cleans up in exactly the same way when it receives the revocation signal. The pair's `/v1/ctl` session is closed. |
@@ -667,8 +679,8 @@ flowchart TB
 | 5 | System | Same as above | Waits up to 10 s for the `ack`. | Timeout → E2, flow B. |
 | 6 | System | Peer device | Returns the `ack`, then cleans up on its side as in step 7; shows field 5; sends `session/bye` and closes with 1000. |  |
 | 7 | System | Initiator | Deletes `PRK` (Keychain `SecItemDelete` / clears the `prk_enc` column), deletes the pair's synced data (client) and sets `revoked_at`; Android re-registers mDNS without the pair's hint. |  |
-| 8 | System | Initiator, R-API | If the pair is registered with the relay: `POST /v1/pairs/{pair_id}/revoke`. | No network → E3, keep the tombstone, retry in the background. The relay reports it as already revoked → E4. |
-| 9 | System | R-API, R-KV | The relay sets `revoked_at` and stops forwarding and pushing; if the peer is connected to the relay, it sends the `pair_revoked` op so the peer cleans up right away. The initiator deletes the tombstone record for good. | Peer offline: it receives `pair_revoked` when it connects to the relay, or sees the revocation through `GET /v1/pairs` (PAIR-02), or Android rejects its `session/hello` with `PAIR_UNKNOWN` on the LAN. |
+| 8 | System | Initiator, R-API | If the pair is registered with the relay: sign the statement `HLREVOKE1` (0.6.2) with `revoked_at` = now and send `POST /v1/pairs/{pair_id}/revoke` `{revoked_at, sig}`. A retry after E3 signs a new statement with the current time. | No network → E3, keep the tombstone, retry in the background. The relay reports it as already revoked → E4. |
+| 9 | System | R-API, R-KV | The relay stores the statement (`revoked_at`, `revoked_by`, `revoke_sig`) and stops forwarding and pushing; if the peer is connected to the relay, it sends the `pair_revoked` op with the statement so the peer cleans up right away after checking the signature. The initiator deletes the tombstone record for good. | Peer offline: it receives `pair_revoked` when it connects to the relay, or sees the revocation through `GET /v1/pairs` (PAIR-02), or Android rejects its `session/hello` with `PAIR_UNKNOWN` on the LAN. |
 | 10 | User | Same as above | Sees the result `done` or `done_pending_remote`. |  |
 
 ### 2.3.5 API/service specification
@@ -729,13 +741,16 @@ flowchart TB
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `reason` | enum{user\| reinstall\| lost_device} | Yes | `lost_device` when the user chooses to unpair remotely while the peer is offline |
+| `revoked_at` | timestamp | Yes | Time of the revocation (ms), within ±10 minutes of the relay clock (`REVOKE_CLOCK_SKEW`) |
+| `sig` | b64u (64 bytes) | Yes | Ed25519(`ik_sig` of the caller, `"HLREVOKE1"` ‖ `pair_id` (16) ‖ `by` = the caller's `device_id` (16) ‖ `revoked_at` (uint64 BE)) — 0.6.2 |
+| `reason` | enum{user\| reinstall\| lost_device} | No | Informational, not signed and not stored; `lost_device` when the user chooses to unpair remotely while the peer is offline |
 
 - **Response:**
 
 | HTTP | Body | When |
 |------|------|---------|
 | 204 | — | Revoked successfully, or already revoked earlier (idempotent) |
+| 400 `BAD_REQUEST` | error | `revoked_at` or `sig` missing, `revoked_at` outside ±10 minutes of the relay clock, or `sig` does not verify with the caller's stored `ik_sig_pub` |
 | 403 `NOT_PAIRED` | error | The caller is not a member of the pair |
 | 404 `DEVICE_NOT_FOUND` | error | `pair_id` does not exist → treated as success on the device side |
 
@@ -747,28 +762,36 @@ Host: relay.example.com
 Authorization: Bearer <jwt>
 Content-Type: application/json
 
-{"reason":"lost_device"}
+{"revoked_at":1727160000000,"sig":"<b64u, 64 bytes>","reason":"lost_device"}
 ```
 
 - **Business logic:**
   1. Only a member of the pair can revoke it.
-  2. Update `revoked_at`, `revoked_by`; if already revoked, change nothing and still return 204.
-  3. Look up `presence:<peer>`; if the peer is online, publish `pair_revoked` on the `dev:<peer>`
-     channel.
-  4. From this moment the relay refuses every `to`/`from` frame between the two devices of the pair
+  2. Check the statement with `by` = the JWT's `sub`: `revoked_at` within ±10 minutes of the relay
+     clock, `sig` verifies with the caller's `ik_sig_pub` from `devices` (strict verification,
+     0.6.5); missing or bad → 400 `BAD_REQUEST`, nothing changes.
+  3. Store the statement: `revoked_at` = the signed value, `revoked_by` = `sub`, `revoke_sig` = `sig`;
+     if already revoked, change nothing (the first statement stays) and still return 204.
+  4. Look up `presence:<peer>`; if the peer is online, publish `pair_revoked` with the stored
+     statement on the `dev:<peer>` channel.
+  5. From this moment the relay refuses every `to`/`from` frame between the two devices of the pair
      (`relay.error NOT_PAIRED`) and refuses `POST /v1/push` for the pair.
 
 #### API 4 — Relay op `pair_revoked`
 
 - **URL:** `wss://{RELAY_HOST}/v1/relay`
 - **Method:** control WS text frame (R-API → device). Added to the 0.7.3 catalog.
-- **Request:** `{"op":"pair_revoked","pair_id":"<uuid>","by":"<device_id>"}`
+- **Request:** `{"op":"pair_revoked","pair_id":"<uuid>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u, 64 bytes>"}` — the statement stored at API 3 (or with `DELETE /v1/devices/me?revoke_pairs=true`, SET-02).
 - **Response:** N/A.
 - **Example:**
-  `{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}`
+  `{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","revoked_at":1727160000000,"sig":"<b64u, 64 bytes>"}`
 - **Business logic:**
-  1. The receiving device cleans up the pair as in step 7 and shows field 5; a repeated message is
-     ignored.
+  1. The receiving device (every client and the phone) acts only when `by` is the peer's `device_id`
+     of that pair and `sig` verifies with the peer's stored `ik_sig` public key over
+     `"HLREVOKE1"` ‖ `pair_id` ‖ `by` ‖ `revoked_at` (0.6.2). Then it cleans up the pair as in step 7
+     and shows field 5; a repeated message is ignored. Otherwise (no `sig`, another `by`, a bad
+     signature, a row revoked before signed revocation) the message is ignored: nothing is unpaired
+     or deleted, and the user can still unpair by hand.
   2. Right after a device connects to the relay, the relay sends `pair_revoked` for every pair revoked
      within the last 30 days that the device is a member of, so that a device that was offline at
      revocation time still cleans up by itself.
@@ -798,16 +821,16 @@ UPDATE paired_device SET revoked_at = :now WHERE pair_id = :pair_id;
 SELECT pair_id FROM paired_device
 WHERE revoked_at IS NOT NULL AND relay_registered = 1;
 
--- [Design] Relay, API 3
+-- [Design] Relay, API 3 ($3 = the signed revoked_at, $4 = sig, both checked beforehand)
 UPDATE pairs
-SET revoked_at = now(), revoked_by = $2
+SET revoked_at = $3, revoked_by = $2, revoke_sig = $4
 WHERE pair_id = $1
   AND (device_a = $2 OR device_b = $2)
   AND revoked_at IS NULL
 RETURNING CASE WHEN device_a = $2 THEN device_b ELSE device_a END AS peer_device_id;
 
 -- [Design] Relay, API 4: pairs of the device that just connected, revoked within the last 30 days
-SELECT pair_id, revoked_by
+SELECT pair_id, revoked_by, revoked_at, revoke_sig
 FROM pairs
 WHERE (device_a = $1 OR device_b = $1)
   AND revoked_at > now() - INTERVAL '30 days';
@@ -816,5 +839,5 @@ WHERE (device_a = $1 OR device_b = $1)
 ```text
 # [Design] Redis, API 3: notify the peer if it is online
 GET     presence:<peer_device_id>
-PUBLISH dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
+PUBLISH dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u>"}
 ```

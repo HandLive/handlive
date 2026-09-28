@@ -452,7 +452,7 @@ flowchart TB
 | 7 | Hệ thống | Hai bên | Bên nhận thay `features_json`, tính lại tính năng hiệu lực (CONN-01 API 7): mất hiệu lực → dừng tác vụ (API 1, logic 4); có hiệu lực mới → khởi chạy như sau `capability/hello` (SMS-01, CALL-04).<br>Đối phương bật một tính năng mà thiết bị này đang tắt (ví dụ Mac bật camera, điện thoại chưa bật) → hiện gợi ý bật, không tự bật. |  |
 | 8 | Người dùng | như trên | Thấy trạng thái mới trên cả hai thiết bị (trường 24; PAIR-02 trường 8). |  |
 | A1 | Người dùng | như trên | Chọn "Xóa thiết bị khỏi máy chủ" (trường 26) hoặc "Xóa toàn bộ dữ liệu HandLive" (trường 27), đọc cảnh báo (trường 29), xác nhận (trường 28). | "Hủy" → E8. |
-| A2 | Hệ thống | như trên → R-API | Lấy JWT (API 3) rồi gọi `DELETE /v1/devices/me` (API 2) với `revoke_pairs=false` (chỉ xóa khỏi máy chủ) hoặc `revoke_pairs=true` (xóa toàn bộ). | Không có mạng hoặc 5xx: chỉ xóa khỏi máy chủ → E5; xóa toàn bộ → E7. 401 hoặc 404 khi lấy challenge → E6. |
+| A2 | Hệ thống | như trên → R-API | Lấy JWT (API 3) rồi gọi `DELETE /v1/devices/me` (API 2) với `revoke_pairs=false` (chỉ xóa khỏi máy chủ) hoặc `revoke_pairs=true` (xóa toàn bộ, body có mỗi cặp một tuyên bố `HLREVOKE1` có chữ ký). | Không có mạng hoặc 5xx: chỉ xóa khỏi máy chủ → E5; xóa toàn bộ → E7. 401 hoặc 404 khi lấy challenge → E6. |
 | A3 | Hệ thống | R-API, R-DB, R-KV | Relay xóa dòng `devices` (các dòng `pairs` của thiết bị xóa theo CASCADE), đóng kết nối relay của thiết bị, trả 204 (API 2).<br>Chỉ khi `revoke_pairs=true`: gửi `pair_revoked` cho đối phương đang online và ghi `revoked_notice` cho đối phương offline.<br>Khi `revoke_pairs=false` relay không báo ai: đối phương chỉ thấy cặp không còn trên relay và tự chuyển sang chỉ dùng LAN (PAIR-02 API 1, logic 3). |  |
 | A4 | Hệ thống | Thiết bị khởi tạo | **Xóa toàn bộ:** mỗi cặp đang có phiên LAN hoặc USB gửi `pair/revoke` (API 4, `reason = reinstall`), chờ `ack` tối đa 10 s, song song; dọn mọi cặp cục bộ như PAIR-03 bước 7 nhưng xóa hẳn bản ghi, không giữ bia mộ (relay đã xóa cặp); Android đăng ký lại mDNS không còn TXT `h`; sang A5.<br>**Chỉ xóa khỏi máy chủ:** giữ mọi cặp, đặt `relay_registered = 0` cho mọi cặp, ghi `relay.enabled = false`, gửi `capability/update` (`features.relay.enabled = false`), sang A6. | Xóa toàn bộ: phiên đi qua relay đã đóng ở A3, đối phương đó nhận `pair_revoked`. E7: vẫn gửi `pair/revoke` qua LAN. |
 | A5 | Hệ thống | Thiết bị khởi tạo | Xóa toàn bộ (API 7): Android dừng A-SVC, gọi `disableSelf()` cho dịch vụ Hỗ trợ tiếp cận; xóa khóa (Keystore/Keychain), cơ sở dữ liệu, DataStore/`UserDefaults`, thông báo đã hiển thị; Mac hủy mục đăng nhập. | Không gỡ camera/micro ảo (CAM-01 A1), không thu hồi quyền hệ điều hành đã cấp. |
@@ -537,7 +537,10 @@ iPhone tắt thông báo cuộc gọi:
 
 - **URL:** `https://{RELAY_HOST}/v1/devices/me?revoke_pairs=<true|false>`
 - **Method:** `DELETE`, header `Authorization: Bearer <jwt>`
-- **Request:** không có body; thiết bị bị xóa là `sub` của JWT. Tham số truy vấn:
+- **Request:** thiết bị bị xóa là `sub` của JWT. Với `revoke_pairs=false` không có body. Với
+  `revoke_pairs=true` body là `{revocations: [{pair_id, revoked_at, sig}]}`: mỗi cặp một tuyên bố
+  `HLREVOKE1` có chữ ký (0.6.2, PAIR-03 API 3), cho mọi cặp cục bộ và mọi cặp chưa thu hồi mà
+  `GET /v1/pairs` liệt kê. Tham số truy vấn:
 
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |---------|------|----------|-------|
@@ -547,6 +550,7 @@ iPhone tắt thông báo cuộc gọi:
 | HTTP | Body | Khi nào |
 |------|------|---------|
 | 204 | — | Đã xóa, hoặc thiết bị không còn trên relay (gọi lặp) |
+| 400 `BAD_REQUEST` | lỗi | `revoke_pairs=true` mà thiếu tuyên bố cho một cặp chưa thu hồi của thiết bị, hoặc có tuyên bố sai (`revoked_at` lệch quá ±10 phút so với đồng hồ relay, `sig` không hợp lệ với khóa của bên gọi); không xóa gì |
 | 401 `TOKEN_EXPIRED` | lỗi | JWT hết hạn → lấy token mới rồi thử lại một lần (E6) |
 | 429 `RATE_LIMITED` | lỗi | Chờ `Retry-After` |
 
@@ -556,6 +560,9 @@ iPhone tắt thông báo cuộc gọi:
 DELETE /v1/devices/me?revoke_pairs=true HTTP/1.1
 Host: relay.example.com
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YjFmOGMyZS05YTRkLThlNmYtYTFiMi1jM2Q0ZTVmNjA3MTgifQ.sig
+Content-Type: application/json
+
+{"revocations":[{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","revoked_at":1727160000000,"sig":"<b64u, 64 byte>"}]}
 
 HTTP/1.1 204 No Content
 ```
@@ -563,22 +570,25 @@ HTTP/1.1 204 No Content
 Với `revoke_pairs=true`, relay báo cho điện thoại đang online:
 
 ```json
-{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}
+{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718","revoked_at":1727160000000,"sig":"<b64u, 64 byte>"}
 ```
 
 - **Logic nghiệp vụ:**
   1. Chỉ xóa chính thiết bị gọi (`sub`); không có biến thể nhận `device_id` trong đường dẫn.
   2. Một giao dịch: đọc các cặp chưa thu hồi và đối phương của chúng, rồi `DELETE FROM devices` —
      `pairs` bị xóa theo `ON DELETE CASCADE` (kể cả cặp đã thu hồi). Không còn dòng → vẫn 204.
-  3. `revoke_pairs=true`: sau commit, với mỗi đối phương, thêm `<pair_id>|<device_id>` vào
-     `revoked_notice:<peer_device_id>` (TTL 30 ngày); nếu có `presence:<peer_device_id>` → publish
+  3. `revoke_pairs=true`: trước khi xóa, kiểm mỗi cặp chưa thu hồi một tuyên bố (`by` = `sub`, quy
+     tắc của PAIR-03 API 3 logic 2); thiếu hoặc sai → 400 `BAD_REQUEST`, không xóa gì; tuyên bố cho
+     cặp mà relay không có thì bỏ qua. Sau commit, với mỗi đối phương, thêm
+     `<pair_id>|<device_id>|<revoked_at>|<sig>` vào `revoked_notice:<peer_device_id>` (TTL 30 ngày); nếu có `presence:<peer_device_id>` → publish
      `pair_revoked` lên `dev:<peer_device_id>` ngay. Đối phương offline nhận `pair_revoked` khi kết
      nối relay lần sau (CONN-03 API 4) — cần khóa này vì dòng `pairs` đã bị xóa nên truy vấn "cặp đã
-     thu hồi trong 30 ngày" của PAIR-03 API 4 không còn thấy. Thiết bị nhận xử lý như PAIR-03 API 4
-     (nhận lặp thì bỏ qua).
+     thu hồi trong 30 ngày" của PAIR-03 API 4 không còn thấy. `pair_revoked` mang theo tuyên bố; thiết
+     bị nhận xử lý như PAIR-03 API 4 (kiểm chữ ký; nhận lặp thì bỏ qua).
   4. `revoke_pairs=false`: không báo ai. Đối phương giữ cặp; lần gọi `GET /v1/pairs` kế tiếp thấy
      cặp không còn trên relay và chuyển sang chỉ dùng LAN (PAIR-02 API 1, logic 3).
-  5. Xóa `presence:<device_id>` và `chal:<device_id>` trước, rồi đóng kết nối `/v1/relay` của thiết bị
+  5. Xóa `presence:<device_id>` trước (các khóa `chal:<device_id>:*` đang chờ tự hết hạn trong 60 s:
+     `/v1/auth/token` không còn thấy dòng thiết bị), rồi đóng kết nối `/v1/relay` của thiết bị
      (lệnh đóng nội bộ qua `dev:<device_id>`, mã 1000). Presence đã bị xóa nên đối phương không nhận
      `presence` offline. Với `revoke_pairs=false`, kết nối relay của đối phương chỉ bỏ cặp đó (C16).
   6. JWT cũ còn hạn (≤ 15 phút) không dùng tiếp được: endpoint dùng JWT kiểm `devices` còn dòng của
@@ -601,7 +611,7 @@ trước khi xóa khóa, vì sau khi xóa `PRK` không mã hóa được nữa.
 
 #### API 5 — Relay op `pair_revoked`
 
-Đặc tả như PAIR-03 API 4, `by` = `device_id` của thiết bị vừa xóa. Ở chức năng này relay phát theo
+Đặc tả như PAIR-03 API 4, `by` = `device_id` của thiết bị vừa xóa, kèm tuyên bố nó đã gửi ở API 2. Ở chức năng này relay phát theo
 API 2 logic 3: ngay khi xóa (đối phương online) và khi đối phương kết nối lại relay.
 
 #### API 6 — `POST /v1/devices`, `POST /v1/pairs`
@@ -695,11 +705,11 @@ SELECT 1 FROM devices WHERE device_id = $1 AND revoked_at IS NULL;
 
 ```text
 # [Thiết kế] Redis, API 2
-SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>"      # mỗi đối phương, chỉ khi revoke_pairs=true
+SADD     revoked_notice:<peer_device_id> "<pair_id>|<device_id>|<revoked_at>|<sig>"   # mỗi đối phương, chỉ khi revoke_pairs=true
 EXPIRE   revoked_notice:<peer_device_id> 2592000                       # 30 ngày
 EXISTS   presence:<peer_device_id>
-PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>"}
-DEL      presence:<device_id> chal:<device_id>                          # trước: đối phương không nhận presence offline
+PUBLISH  dev:<peer_device_id> {"op":"pair_revoked","pair_id":"<pair_id>","by":"<device_id>","revoked_at":<ms>,"sig":"<b64u>"}
+DEL      presence:<device_id>                                           # trước: đối phương không nhận presence offline
 PUBLISH  dev:<device_id> <lệnh đóng kết nối nội bộ>
 # [Thiết kế] Redis, khi một thiết bị kết nối relay (bổ sung CONN-03 API 4)
 SMEMBERS revoked_notice:<device_id>
