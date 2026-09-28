@@ -24,6 +24,10 @@
 >   hoặc banner trong ứng dụng; iPhone/iPad chỉ từ chối được, không trả lời được.
 > - Không ghi log số điện thoại, tên liên hệ, phím DTMF; log chỉ gồm `type`, `op`, `call_id`, mã
 >   lỗi. Lỗi của nhóm được cô lập: không làm dừng A-SVC, không đóng phiên `/v1/ctl`.
+> - Android kiểm cuộc gọi theo từng phiên: `call_event/action` và `call_event/log_sync` được trả
+>   `FEATURE_DISABLED` khi cuộc gọi không hiệu lực với phiên đã gửi chúng (tắt ở một trong hai phía,
+>   theo `capability` mới nhất của client đó, hoặc thiếu `READ_PHONE_STATE`), bất kể các phiên khác
+>   cho phép gì.
 
 ## 6.1 CALL-01 — Thông báo cuộc gọi đến trên Mac/iOS
 
@@ -616,7 +620,7 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 
 | Mã | Khi nào |
 |----|---------|
-| `FEATURE_DISABLED` | `feature.call = false` trên Android |
+| `FEATURE_DISABLED` | Cuộc gọi không hiệu lực với phiên gửi yêu cầu (`feature.call = false` trên Android hoặc trên client đó, hoặc thiếu `READ_PHONE_STATE`) |
 | `BAD_REQUEST` | Thiếu trường, `action` hoặc `audio` ngoài danh sách |
 | `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`}; `details.action` = giá trị đã gửi |
 | `CALL_NOT_FOUND` | Không có ngữ cảnh, `call_id` khác ngữ cảnh hiện tại, hoặc `endCall()` trả `false` khi máy đã `IDLE` |
@@ -893,7 +897,8 @@ flowchart TB
 | `call_id` | uuid | Có | Ngữ cảnh đang `offhook` |
 | `action` | enum{end\| hold\| unhold\| dtmf\| mute} | Có | Trong CALL-03 chỉ `end` được thực hiện qua WebSocket |
 
-- **Response (`ack.data`):** `{}` khi `ok = true`. Lỗi: `FEATURE_DISABLED`, `BAD_REQUEST`,
+- **Response (`ack.data`):** `{}` khi `ok = true`. Lỗi: `FEATURE_DISABLED` (cuộc gọi không hiệu lực
+  với phiên gửi yêu cầu, như CALL-02 API 1), `BAD_REQUEST`,
   `CALL_HFP_REQUIRED` (`hold`, `unhold`, `dtmf`, `mute`), `CALL_NOT_FOUND`, `PERMISSION_MISSING`,
   `CALL_ACTION_NOT_ALLOWED` (`reason` ∈ {`state`, `waiting`, `system` }), `INTERNAL`.
 - **Ví dụ:**
@@ -1128,8 +1133,8 @@ flowchart TB
 | `has_more` | bool | Còn mục sau trang này |
 | `reset` | bool | `true` khi Android bỏ qua con trỏ gửi lên và trả trang đầu như đồng bộ lần đầu (E5) |
 
-Lỗi (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.permission =
-"android.permission.READ_CALL_LOG"`), `BAD_REQUEST` (`limit` ngoài 1–500), `INTERNAL`.
+Lỗi (`ack.error.code`): `FEATURE_DISABLED` (cuộc gọi không hiệu lực với phiên gửi yêu cầu, E1),
+`PERMISSION_MISSING` (`details.permission = "android.permission.READ_CALL_LOG"`), `BAD_REQUEST` (`limit` ngoài 1–500), `INTERNAL`.
 
 - **Ví dụ:** đồng bộ lần đầu, một trang:
 

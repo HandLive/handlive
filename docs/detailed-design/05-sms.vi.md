@@ -19,6 +19,10 @@
 >   clipboard hay cuộc gọi.
 > - Mọi envelope `sms` đi được trong LAN và qua relay như nhau; relay chỉ thấy `type = sms` và kích
 >   thước.
+> - Android kiểm SMS theo từng phiên: mọi yêu cầu `sms/*` được trả `FEATURE_DISABLED` khi SMS không
+>   hiệu lực với phiên đã gửi nó (tắt trên Android hoặc trên client đó, theo `capability` mới nhất
+>   của nó), bất kể các phiên khác cho phép gì. Thiếu quyền vẫn dùng mã riêng
+>   (`PERMISSION_MISSING`).
 
 ## 5.1 SMS-01 — Đồng bộ hội thoại và lịch sử SMS
 
@@ -811,8 +815,8 @@ VALUES (:pair_id, :message_key, :thread_id, :address, :body, :box, :ts, :ts_sent
 | Tác nhân | Chính: Người dùng. Hệ thống: M-APP / I-APP, A-SVC, A-SMS, OS (`SmsManager`, `SubscriptionManager`, `UNUserNotificationCenter`), R-API (chỉ chuyển tiếp khi đi qua relay). |
 | Điều kiện trước | 1. Cặp hiệu lực; SMS hiệu lực và `features.sms.can_send = true` (Android có `SEND_SMS`).<br>2. Điện thoại có ít nhất một SIM hoạt động.<br>3. Gửi ngay cần phiên `/v1/ctl`; không có phiên thì tin được xếp hàng. |
 | Điều kiện sau | **Thành công:** tin nằm trong hộp Sent của điện thoại và trong `sms_message` (`box = sent`, `local_id` = mã tạm); `sms_outbox.state` = `sent` hoặc `delivered`.<br>**Thất bại:** `sms_outbox.state = failed`, `last_error` = mã lỗi, bong bóng có nút "Thử lại".<br>**Chưa gửi:** `state = pending` ("Đang chờ điện thoại") tới khi có phiên hoặc quá 24 h. |
-| Ngoại lệ | E1 — Không có phiên, hoặc không có `ack` sau 3 lần thử lại: giữ `pending`, gửi lại khi có phiên mới; quá 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) hoặc `can_send = false`: lý do hiện là "Thiếu quyền SMS trên điện thoại" (câu của PAIR-02 trường 8).<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Nội dung rỗng (`BAD_REQUEST`) hoặc quá 1 600 ký tự (`PAYLOAD_TOO_LARGE`); client chặn trước khi gửi.<br>E6 — `SMS_SIM_UNAVAILABLE`: SIM được chọn không hoạt động, hoặc máy nhiều SIM mà không xác định được SIM mặc định → client mở bộ chọn SIM.<br>E7 — Gửi thất bại ở mạng: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, nút "Thử lại".<br>E8 — Trả lời nhanh trên iOS không nhận được `ack` trong khoảng 20 s: giữ `pending`, hiện thông báo cục bộ "Chưa gửi được, mở HandLive để thử lại."<br>E9 — Hội thoại nhiều người nhận: v1 không cho trả lời từ Mac/iOS.<br>E10 — Nhà mạng không gửi báo phát: trạng thái dừng ở "Đã gửi". |
-| Yêu cầu đặc biệt | **Hiệu năng:** bong bóng tạm hiện ≤ 100 ms sau khi bấm Gửi; `ack` ≤ 300 ms trong LAN; "Đã gửi" ≤ 2 s trong điều kiện sóng bình thường (mục tiêu Phase 2).<br>**Không gửi trùng:** thử lại dùng lại cùng `id` envelope; Android chống trùng theo `id` (0.5.1) và theo `local_id` trong 24 h; client không tự gửi lại tin đã được `accepted`.<br>**Riêng tư:** không log nội dung, số nhận; hàng đợi nằm trong cơ sở dữ liệu SQLCipher.<br>**Chi phí:** tin dài bị chia nhiều phần, mỗi phần tính cước như một SMS; client hiển thị số phần ước tính trước khi gửi.<br>**Tuân thủ:** `SEND_SMS` cần Permissions Declaration Form; nếu bị từ chối (Plan B), `can_send = false` và client ẩn ô soạn tin. |
+| Ngoại lệ | E1 — Không có phiên, hoặc không có `ack` sau 3 lần thử lại: giữ `pending`, gửi lại khi có phiên mới; quá 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) hoặc `can_send = false`: lý do hiện là "Thiếu quyền SMS trên điện thoại" (câu của PAIR-02 trường 8).<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Nội dung rỗng (`BAD_REQUEST`) hoặc quá 1 600 ký tự (`PAYLOAD_TOO_LARGE`); client chặn trước khi gửi.<br>E6 — `SMS_SIM_UNAVAILABLE`: SIM được chọn không hoạt động, hoặc máy nhiều SIM mà không xác định được SIM mặc định → client mở bộ chọn SIM.<br>E7 — Gửi thất bại ở mạng: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, nút "Thử lại".<br>E8 — Trả lời nhanh trên iOS không nhận được `ack` trong khoảng 20 s: giữ `pending`, hiện thông báo cục bộ "Chưa gửi được, mở HandLive để thử lại."<br>E9 — Hội thoại nhiều người nhận: v1 không cho trả lời từ Mac/iOS.<br>E10 — Nhà mạng không gửi báo phát: trạng thái dừng ở "Đã gửi".<br>E11 — `RATE_LIMITED`: cặp đã vượt giới hạn gửi (`SMS_SEND_LIMIT`: 10 mỗi phút, 100 mỗi ngày) → `failed` với lý do "Đã vượt giới hạn gửi, thử lại sau." và nút "Thử lại"; điện thoại hiện trường 12 tối đa một lần mỗi ngày. |
+| Yêu cầu đặc biệt | **Hiệu năng:** bong bóng tạm hiện ≤ 100 ms sau khi bấm Gửi; `ack` ≤ 300 ms trong LAN; "Đã gửi" ≤ 2 s trong điều kiện sóng bình thường (mục tiêu Phase 2).<br>**Không gửi trùng:** thử lại dùng lại cùng `id` envelope; Android chống trùng theo `id` (0.5.1) và theo `local_id` trong 24 h; client không tự gửi lại tin đã được `accepted`.<br>**Riêng tư:** không log nội dung, số nhận; hàng đợi nằm trong cơ sở dữ liệu SQLCipher.<br>**Chi phí:** tin dài bị chia nhiều phần, mỗi phần tính cước như một SMS; client hiển thị số phần ước tính trước khi gửi.<br>**Giới hạn chống lạm dụng:** Android gửi tối đa 10 `sms/send` mỗi phút và 100 mỗi ngày (cửa sổ trượt) cho mỗi cặp (`SMS_SEND_LIMIT`), để client bị chiếm quyền hoặc bị lỗi không gửi SMS vô hạn bằng tiền của người dùng.<br>**Tuân thủ:** `SEND_SMS` cần Permissions Declaration Form; nếu bị từ chối (Plan B), `can_send = false` và client ẩn ô soạn tin. |
 
 ### 5.4.2 Màn hình
 
@@ -833,6 +837,7 @@ N/A — chưa có wireframe được duyệt.
 | 9 | Nút "Thử lại" | action | Input | — | Trên bong bóng `failed`; tạo `local_id` mới |
 | 10 | Ô trả lời nhanh | string(1600) | Input | Rỗng | Trong thông báo của SMS-02 (hành động `HL_SMS_REPLY`) |
 | 11 | Thông báo "Chưa gửi được" | string | Output | — | Chỉ iOS (E8): "Chưa gửi được, mở HandLive để thử lại." |
+| 12 | Thông báo "Tạm dừng gửi" | string | Output | — | Chỉ Android (E11): "HandLive tạm dừng gửi tin nhắn từ \<tên>. Có quá nhiều tin nhắn được gửi trong thời gian ngắn." — `<tên>` là tên client, ví dụ "HandLive tạm dừng gửi tin nhắn từ MacBook của Lan. Có quá nhiều tin nhắn được gửi trong thời gian ngắn."; tối đa một lần mỗi cặp mỗi ngày; kênh `permission` |
 
 ### 5.4.4 Luồng nghiệp vụ
 
@@ -876,7 +881,7 @@ flowchart TB
 | 3 | Hệ thống | M-APP / I-APP | Sinh `local_id` (UUIDv7); ghi `sms_outbox` với `state = pending`, `thread_id` (null với số mới), `addresses_json`, `body`, `sub_id`; hiện bong bóng tạm "Đang chờ điện thoại". |  |
 | 4 | Hệ thống | M-APP / I-APP | Kiểm phiên `/v1/ctl` và `can_send`. | Không có phiên → E1. `can_send = false` → E3. |
 | 5 | Hệ thống | M-APP / I-APP | Sinh `id` envelope, gửi `sms/send` (API 1), tăng `attempts`. Không có `ack` trong `REQUEST_TIMEOUT` → gửi lại **cùng `id`** sau 5 s, 15 s, 45 s (`SMS_OUTBOX_RETRY`). Khi có phiên mới, các dòng `pending` được gửi lại theo thứ tự `created_at`. | Hết 3 lần → E1; trả lời nhanh trên iOS → E8. |
-| 6 | Hệ thống | A-SVC, A-SMS | Kiểm theo thứ tự của bảng lỗi API 1: `feature.sms`, `SEND_SMS`, tham số, độ dài nội dung, người nhận (libphonenumber → E.164), SIM. Chống trùng theo `id` trước khi kiểm và theo `local_id` ngay sau bước tham số (`local_id` đã nhận thì bỏ qua các bước kiểm còn lại). | `ack` lỗi → client đặt `failed` và `last_error` (E2–E6). |
+| 6 | Hệ thống | A-SVC, A-SMS | Kiểm theo thứ tự của bảng lỗi API 1: SMS hiệu lực với phiên này, `SEND_SMS`, tham số, độ dài nội dung, người nhận (libphonenumber → E.164), SIM, giới hạn gửi của cặp. Chống trùng theo `id` trước khi kiểm và theo `local_id` ngay sau bước tham số (`local_id` đã nhận thì bỏ qua các bước kiểm còn lại). | `ack` lỗi → client đặt `failed` và `last_error` (E2–E6, E11). |
 | 7 | Hệ thống | A-SVC, M-APP / I-APP | Android trả `ack` `{accepted: true, parts}`; client đặt `state = sending`, hiện "Đang gửi…". |  |
 | 8 | Hệ thống | A-SMS, OS | Ghi `local_id` vào `SendRegistry`; chia tin bằng `divideMessage`, gửi bằng `sendMultipartTextMessage` qua `SmsManager` của `sub_id` (API 3), mỗi phần một PendingIntent "sent" và "delivered". Gửi `sms/status` `sending`. |  |
 | 9 | Hệ thống | A-SMS, A-SVC | Nhận kết quả từng phần: mọi phần `RESULT_OK` → `sms/status` `sent`; mọi phần có báo phát thành công → `delivered`; phần đầu tiên lỗi → `failed` kèm `error_code` (API 2). Client cập nhật `sms_outbox.state`. | E7, E10. |
@@ -927,12 +932,13 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 
 | Mã | Khi nào |
 |----|---------|
-| `FEATURE_DISABLED` | `feature.sms = false` trên Android |
+| `FEATURE_DISABLED` | SMS không hiệu lực với phiên gửi yêu cầu: `feature.sms = false` trên Android hoặc trên client đó |
 | `PERMISSION_MISSING` | Thiếu `SEND_SMS`; `details.permission = "android.permission.SEND_SMS"` |
 | `BAD_REQUEST` | Thiếu trường, `addresses` không đúng 1 phần tử, `body` rỗng |
 | `PAYLOAD_TOO_LARGE` | `body` > 1 600 ký tự |
 | `SMS_INVALID_ADDRESS` | Không chuẩn hóa được thành E.164 và không phải số tổng đài ngắn |
 | `SMS_SIM_UNAVAILABLE` | `sub_id` không thuộc SIM đang hoạt động, hoặc vắng `sub_id` mà không xác định được SIM; `details.sims` = các `sub_id` hợp lệ |
+| `RATE_LIMITED` | Cặp đã có 10 lần gửi được nhận trong phút vừa qua hoặc 100 lần trong 24 h vừa qua (`SMS_SEND_LIMIT`); `details.retry_after_ms` = thời gian chờ tới khi được gửi lại (logic 8) |
 
 - **Ví dụ:**
 
@@ -965,6 +971,11 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
      mọi mục `SendRegistry` thuộc cặp đó.
   7. `id` envelope của lần gửi đầu được giữ trong bộ nhớ để thử lại; sau khi client khởi động lại
      thì dùng `id` mới, Android vẫn chống trùng theo `local_id`.
+  8. Giới hạn gửi mỗi cặp (`SMS_SEND_LIMIT`): Android đếm các `sms/send` đã nhận của từng cặp trong
+     một phút trượt và 24 h trượt; yêu cầu đã qua mọi bước kiểm khác nhưng sẽ vượt 10 mỗi phút hoặc
+     100 mỗi ngày → `RATE_LIMITED` kèm `details.retry_after_ms`, không gửi gì. Yêu cầu trùng (`id`
+     hoặc `local_id`) không bị đếm lại. Lần từ chối đầu tiên của một cặp trong ngày đăng trường 12
+     trên điện thoại; các lần từ chối sau trong ngày đó không đăng gì.
 
 #### API 2 — `WS sms/status`
 

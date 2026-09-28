@@ -26,6 +26,10 @@ English | [Tiếng Việt](06-call-control.vi.md)
 > - Never log phone numbers, contact names or DTMF keys; logs hold only `type`, `op`, `call_id` and
 >   error codes. Errors in this group stay isolated: they never stop A-SVC and never close the
 >   `/v1/ctl` session.
+> - Android checks calls per session: `call_event/action` and `call_event/log_sync` are answered
+>   with `FEATURE_DISABLED` when calls are not in effect for the session that sent them (turned off
+>   on either side, per that client's latest `capability`, or `READ_PHONE_STATE` missing), whatever
+>   other sessions allow.
 
 ## 6.1 CALL-01 — Incoming call notification on Mac/iOS
 
@@ -636,7 +640,7 @@ Errors (`ack.error.code`), in check order:
 
 | Code | When |
 |----|---------|
-| `FEATURE_DISABLED` | `feature.call = false` on Android |
+| `FEATURE_DISABLED` | Calls are not in effect for the requesting session (`feature.call = false` on Android or on that client, or `READ_PHONE_STATE` missing) |
 | `BAD_REQUEST` | Missing field, or `action` or `audio` outside the list |
 | `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`}; `details.action` = the value sent |
 | `CALL_NOT_FOUND` | No context, a `call_id` other than the current context, or `endCall()` returns `false` when the phone is already `IDLE` |
@@ -919,7 +923,8 @@ flowchart TB
 | `call_id` | uuid | Yes | The `offhook` context |
 | `action` | enum{end\| hold\| unhold\| dtmf\| mute} | Yes | In CALL-03 only `end` is carried out over WebSocket |
 
-- **Response (`ack.data`):** `{}` when `ok = true`. Errors: `FEATURE_DISABLED`, `BAD_REQUEST`,
+- **Response (`ack.data`):** `{}` when `ok = true`. Errors: `FEATURE_DISABLED` (calls not in effect
+  for the requesting session, as in CALL-02 API 1), `BAD_REQUEST`,
   `CALL_HFP_REQUIRED` (`hold`, `unhold`, `dtmf`, `mute`), `CALL_NOT_FOUND`, `PERMISSION_MISSING`,
   `CALL_ACTION_NOT_ALLOWED` (`reason` ∈ {`state`, `waiting`, `system` }), `INTERNAL`.
 - **Example:**
@@ -1155,8 +1160,8 @@ flowchart TB
 | `has_more` | bool | More entries follow this page |
 | `reset` | bool | `true` when Android ignored the cursor it received and returns the first page as in a first sync (E5) |
 
-Errors (`ack.error.code`): `FEATURE_DISABLED`, `PERMISSION_MISSING` (`details.permission =
-"android.permission.READ_CALL_LOG"`), `BAD_REQUEST` (`limit` outside 1–500), `INTERNAL`.
+Errors (`ack.error.code`): `FEATURE_DISABLED` (calls not in effect for the requesting session, E1),
+`PERMISSION_MISSING` (`details.permission = "android.permission.READ_CALL_LOG"`), `BAD_REQUEST` (`limit` outside 1–500), `INTERNAL`.
 
 - **Example:** first sync, a single page:
 

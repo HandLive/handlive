@@ -19,6 +19,10 @@ English | [Tiếng Việt](05-sms.vi.md)
 >   and do not affect the clipboard or calls.
 > - Every `sms` envelope travels the same way on the LAN and over the relay; the relay sees only
 >   `type = sms` and the size.
+> - Android checks SMS per session: every `sms/*` request is answered with `FEATURE_DISABLED` when
+>   SMS is not in effect for the session that sent it (turned off on Android or on that client, per
+>   its latest `capability`), whatever other sessions allow. A missing permission keeps its own code
+>   (`PERMISSION_MISSING`).
 
 ## 5.1 SMS-01 — Sync conversations and SMS history
 
@@ -824,8 +828,8 @@ VALUES (:pair_id, :message_key, :thread_id, :address, :body, :box, :ts, :ts_sent
 | Actors | Primary: User. System: M-APP / I-APP, A-SVC, A-SMS, OS (`SmsManager`, `SubscriptionManager`, `UNUserNotificationCenter`), R-API (forwarding only, when traffic goes through the relay). |
 | Preconditions | 1. An active pair; SMS active and `features.sms.can_send = true` (Android has `SEND_SMS`).<br>2. The phone has at least one active SIM.<br>3. Sending immediately needs a `/v1/ctl` session; without a session the message is queued. |
 | Postconditions | **Success:** the message is in the phone's Sent box and in `sms_message` (`box = sent`, `local_id` = the temporary ID); `sms_outbox.state` = `sent` or `delivered`.<br>**Failure:** `sms_outbox.state = failed`, `last_error` = the error code, the bubble has a "Try Again" button.<br>**Not sent yet:** `state = pending` ("Waiting for phone") until a session exists or 24 h have passed. |
-| Exceptions | E1 — No session, or no `ack` after 3 retries: keep `pending`, send again when a new session exists; after 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) or `can_send = false`: the reason shown is "Missing SMS permission on the phone" (the PAIR-02 field 8 text).<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Empty content (`BAD_REQUEST`) or more than 1,600 characters (`PAYLOAD_TOO_LARGE`); the client blocks it before sending.<br>E6 — `SMS_SIM_UNAVAILABLE`: the selected SIM is not active, or the phone has several SIMs and the default SIM cannot be determined → the client opens the SIM picker.<br>E7 — Sending fails at the network: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, "Try Again" button.<br>E8 — A quick reply on iOS gets no `ack` within about 20 s: keep `pending`, show the local notification "Not sent yet. Open HandLive to try again."<br>E9 — Conversation with several recipients: v1 does not allow replying from Mac/iOS.<br>E10 — The carrier sends no delivery report: the status stays at "Sent". |
-| Special requirements | **Performance:** the placeholder bubble appears ≤ 100 ms after pressing Send; `ack` ≤ 300 ms on the LAN; "Sent" ≤ 2 s with normal signal (Phase 2 target).<br>**No duplicate sends:** a retry reuses the same envelope `id`; Android deduplicates by `id` (0.5.1) and by `local_id` within 24 h; the client never resends on its own a message that was already `accepted`.<br>**Privacy:** no logging of content or recipient numbers; the queue lives in the SQLCipher database.<br>**Cost:** long messages are split into several parts, each billed as one SMS; the client shows the estimated number of parts before sending.<br>**Compliance:** `SEND_SMS` needs the Permissions Declaration Form; if it is rejected (Plan B), `can_send = false` and the client hides the message field. |
+| Exceptions | E1 — No session, or no `ack` after 3 retries: keep `pending`, send again when a new session exists; after 24 h → `failed` (`NOT_CONNECTED`).<br>E2 — `FEATURE_DISABLED`.<br>E3 — `PERMISSION_MISSING` (`SEND_SMS`) or `can_send = false`: the reason shown is "Missing SMS permission on the phone" (the PAIR-02 field 8 text).<br>E4 — `SMS_INVALID_ADDRESS`.<br>E5 — Empty content (`BAD_REQUEST`) or more than 1,600 characters (`PAYLOAD_TOO_LARGE`); the client blocks it before sending.<br>E6 — `SMS_SIM_UNAVAILABLE`: the selected SIM is not active, or the phone has several SIMs and the default SIM cannot be determined → the client opens the SIM picker.<br>E7 — Sending fails at the network: `SMS_NO_SERVICE`, `SMS_RADIO_OFF`, `SMS_LIMIT_EXCEEDED`, `SMS_GENERIC_FAILURE` → `failed`, "Try Again" button.<br>E8 — A quick reply on iOS gets no `ack` within about 20 s: keep `pending`, show the local notification "Not sent yet. Open HandLive to try again."<br>E9 — Conversation with several recipients: v1 does not allow replying from Mac/iOS.<br>E10 — The carrier sends no delivery report: the status stays at "Sent".<br>E11 — `RATE_LIMITED`: the pair went over the send limit (`SMS_SEND_LIMIT`: 10 per minute, 100 per day) → `failed` with the reason "Sending limit reached. Try again later." and "Try Again"; the phone shows field 12 at most once per day. |
+| Special requirements | **Performance:** the placeholder bubble appears ≤ 100 ms after pressing Send; `ack` ≤ 300 ms on the LAN; "Sent" ≤ 2 s with normal signal (Phase 2 target).<br>**No duplicate sends:** a retry reuses the same envelope `id`; Android deduplicates by `id` (0.5.1) and by `local_id` within 24 h; the client never resends on its own a message that was already `accepted`.<br>**Privacy:** no logging of content or recipient numbers; the queue lives in the SQLCipher database.<br>**Cost:** long messages are split into several parts, each billed as one SMS; the client shows the estimated number of parts before sending.<br>**Abuse limit:** Android sends at most 10 `sms/send` per minute and 100 per day (rolling) for each pair (`SMS_SEND_LIMIT`), so a compromised or faulty client cannot send SMS at the user's expense without limit.<br>**Compliance:** `SEND_SMS` needs the Permissions Declaration Form; if it is rejected (Plan B), `can_send = false` and the client hides the message field. |
 
 ### 5.4.2 Screens
 
@@ -846,6 +850,7 @@ N/A — no approved wireframe yet.
 | 9 | "Try Again" button | action | Input | — | On a `failed` bubble; creates a new `local_id` |
 | 10 | Quick-reply field | string(1600) | Input | Empty | In the SMS-02 notification (action `HL_SMS_REPLY`) |
 | 11 | "Not sent yet" notification | string | Output | — | iOS only (E8): "Not sent yet. Open HandLive to try again." |
+| 12 | "Stopped sending" notification | string | Output | — | Android only (E11): "HandLive stopped sending messages from \<name> for now. Too many were sent in a short time." — `<name>` = the client's name, for example "HandLive stopped sending messages from Lan's MacBook for now. Too many were sent in a short time."; at most once per pair per day; channel `permission` |
 
 ### 5.4.4 Business flow
 
@@ -889,7 +894,7 @@ flowchart TB
 | 3 | System | M-APP / I-APP | Generate `local_id` (UUIDv7); write `sms_outbox` with `state = pending`, `thread_id` (null for a new number), `addresses_json`, `body`, `sub_id`; show the placeholder bubble "Waiting for phone". |  |
 | 4 | System | M-APP / I-APP | Check the `/v1/ctl` session and `can_send`. | No session → E1. `can_send = false` → E3. |
 | 5 | System | M-APP / I-APP | Generate the envelope `id`, send `sms/send` (API 1), increment `attempts`. No `ack` within `REQUEST_TIMEOUT` → resend with the **same `id`** after 5 s, 15 s, 45 s (`SMS_OUTBOX_RETRY`). When a new session exists, the `pending` rows are sent again in `created_at` order. | After 3 attempts → E1; quick reply on iOS → E8. |
-| 6 | System | A-SVC, A-SMS | Checks in the order of the API 1 error table: `feature.sms`, `SEND_SMS`, parameters, text length, recipient (libphonenumber → E.164), SIM. Deduplicates by `id` before the checks and by `local_id` right after the parameters (an accepted `local_id` skips the remaining checks). | Error `ack` → the client sets `failed` and `last_error` (E2–E6). |
+| 6 | System | A-SVC, A-SMS | Checks in the order of the API 1 error table: SMS in effect for this session, `SEND_SMS`, parameters, text length, recipient (libphonenumber → E.164), SIM, the pair's send limit. Deduplicates by `id` before the checks and by `local_id` right after the parameters (an accepted `local_id` skips the remaining checks). | Error `ack` → the client sets `failed` and `last_error` (E2–E6, E11). |
 | 7 | System | A-SVC, M-APP / I-APP | Android returns the `ack` `{accepted: true, parts}`; the client sets `state = sending` and shows "Sending…". |  |
 | 8 | System | A-SMS, OS | Record `local_id` in `SendRegistry`; split the message with `divideMessage` and send it with `sendMultipartTextMessage` through the `SmsManager` of `sub_id` (API 3), with a "sent" and a "delivered" PendingIntent for each part. Send `sms/status` `sending`. |  |
 | 9 | System | A-SMS, A-SVC | Receive the result of each part: every part `RESULT_OK` → `sms/status` `sent`; every part with a successful delivery report → `delivered`; the first part that fails → `failed` with `error_code` (API 2). The client updates `sms_outbox.state`. | E7, E10. |
@@ -940,12 +945,13 @@ Errors (`ack.error.code`), in the order they are checked:
 
 | Code | When |
 |----|---------|
-| `FEATURE_DISABLED` | `feature.sms = false` on Android |
+| `FEATURE_DISABLED` | SMS is not in effect for the requesting session: `feature.sms = false` on Android or on that client |
 | `PERMISSION_MISSING` | `SEND_SMS` missing; `details.permission = "android.permission.SEND_SMS"` |
 | `BAD_REQUEST` | Missing field, `addresses` does not have exactly 1 element, empty `body` |
 | `PAYLOAD_TOO_LARGE` | `body` > 1,600 characters |
 | `SMS_INVALID_ADDRESS` | Cannot be normalized to E.164 and is not a short code |
 | `SMS_SIM_UNAVAILABLE` | `sub_id` is not an active SIM, or `sub_id` is absent and no SIM can be determined; `details.sims` = the valid `sub_id` values |
+| `RATE_LIMITED` | The pair already had 10 accepted sends in the last minute or 100 in the last 24 h (`SMS_SEND_LIMIT`); `details.retry_after_ms` = the wait until a send is allowed again (logic 8) |
 
 - **Example:**
 
@@ -980,6 +986,11 @@ Errors (`ack.error.code`), in the order they are checked:
      re-broadcasts the `sms/status` of every `SendRegistry` entry of that pair.
   7. The envelope `id` of the first send is kept in memory for retries; after the client restarts,
      a new `id` is used and Android still deduplicates by `local_id`.
+  8. Send limit per pair (`SMS_SEND_LIMIT`): Android counts the accepted `sms/send` of each pair over
+     a rolling minute and a rolling 24 h; a request that passed every other check but would exceed
+     10 per minute or 100 per day → `RATE_LIMITED` with `details.retry_after_ms`, nothing is sent. A
+     duplicate (`id` or `local_id`) is not counted again. The first refusal for a pair in a day posts
+     field 12 on the phone; later refusals that day post nothing.
 
 #### API 2 — `WS sms/status`
 
