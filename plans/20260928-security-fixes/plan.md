@@ -1,6 +1,6 @@
 # Security fixes from the vbsec scan of 2026-09-28
 
-**Status:** in progress · **Source:** `vbsec-reports/scan-2026-09-28-085857.md` (8 MEDIUM, 9 LOW, verdict PASS) ·
+**Status:** done, merged into `main` on 2026-09-28 · **Source:** `reports/vbsec-scan-2026-09-28.md` (8 MEDIUM, 9 LOW, verdict PASS) ·
 **Branch:** `fix/security-scan-findings` in android, apple, relay and shared; hub changes on `main`.
 
 The project owner asked to fix every finding and then review the fixes. The decisions below are the single source
@@ -106,3 +106,26 @@ then the platforms.
 4. Review of every branch (reviewer agents), fixes, then merge into `main` (shared first) once CI is green.
 
 Reports: `plans/20260928-security-fixes/reports/`.
+
+## Result
+
+All 17 findings are fixed, reviewed (first review, fixes, a final verification round) and merged, CI green on `main`:
+shared `5fc8a3f`, relay `cda13bf`, apple `6487c16`, android `41f905e`. Hub specs: `c9c42ff`…`68dc1f8`, `0f8bb82`,
+`56a7c44`, `e885957`, `5aea806`; hub CI `ce5eb82`. Agent reports: `reports/specs.md`, `shared.md`, `relay.md`,
+`android.md`, `apple.md` (each with its review-fix sections).
+
+Changes the reviews added to the plan: the relay trusts a loopback proxy by default when it binds loopback and warns
+on untrusted `X-Forwarded-For` (CONN-03 API 1 logic 4); pre-auth `UNSUPPORTED_VERSION`/`AUTH_FAILED` over the relay
+keep the normal backoff (CONN-03 E9); the epoch dedup set closes the session with 4410 at 20,000 ids and kept acks
+are bounded to 8 MiB (§0.10 `DEDUP_WINDOW`); only failures before the hello `mac` check count toward `CTL_IP_BLOCK`
+and an established session clears the count.
+
+## Open (not in this change)
+
+- PAKE (CPace) for the PIN path: one offer still allows an offline guess within the window (02-pairing).
+- `session/hello` has no replay cache: a replayed hello through the relay is not counted toward `CTL_IP_BLOCK`.
+- The SMS-limit notice uses the `permission` channel, whose description is about permission suggestions.
+- Relay: Redis Cluster would reject the two-key registration script (single Redis is the documented deployment);
+  instances of the old and new version drop each other's `pair_revoked` bus messages during a rolling deploy.
+- Apple: `ChannelInbox` has no buffer bound (needs a decision on the overflow behavior).
+- Carrier NAT: 30 relay auth requests per minute per IPv4 address (about 200 devices) is accepted for now.
