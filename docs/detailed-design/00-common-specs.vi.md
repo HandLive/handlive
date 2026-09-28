@@ -441,19 +441,19 @@ iPhone/iPad không bao giờ gửi `web`, và `web` không bao giờ đi trong p
 
 Mã trình duyệt (trường `browser` của `web/active`); tên là tên riêng, không dịch:
 
-| id | Trình duyệt | Android gửi | Mac gửi |
-|----|---------|----------------|------------|
-| `chrome` | Chrome | Có | Có |
-| `samsung` | Samsung Internet | Có | — |
-| `firefox` | Firefox | Có | Không (không có scripting URL) |
-| `edge` | Edge | Có | Có |
-| `brave` | Brave | Có | Có |
-| `opera` | Opera | Có | Có |
-| `vivaldi` | Vivaldi | Có | Có |
-| `duckduckgo` | DuckDuckGo | Có | — |
-| `safari` | Safari | — | Có |
-| `arc` | Arc | — | Có |
-| `other` | Trình duyệt khác (bên nhận coi giá trị không biết là `other`) | — | — |
+| Trình duyệt | id | Android gửi | Mac gửi |
+|---------|----|----------------|------------|
+| Chrome | `chrome` | Có | Có |
+| Samsung Internet | `samsung` | Có | — |
+| Firefox | `firefox` | Có | Không (không có scripting URL) |
+| Edge | `edge` | Có | Có |
+| Brave | `brave` | Có | Có |
+| Opera | `opera` | Có | Có |
+| Vivaldi | `vivaldi` | Có | Có |
+| DuckDuckGo | `duckduckgo` | Có | — |
+| Safari | `safari` | — | Có |
+| Arc | `arc` | — | Có |
+| Trình duyệt khác (bên nhận coi giá trị không biết là `other`) | `other` | — | — |
 
 "Có" nghĩa là ứng viên: cổng G6 xác nhận từng trình duyệt, trình duyệt bị loại được ghi trong
 `09-web-handoff.md`.

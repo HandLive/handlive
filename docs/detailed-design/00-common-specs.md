@@ -448,19 +448,19 @@ iPhone/iPad never send `web`, and `web` never travels in a push.
 
 Browser ids (`web/active` field `browser`); the names are proper names and are not translated:
 
-| id | Browser | Android sender | Mac sender |
-|----|---------|----------------|------------|
-| `chrome` | Chrome | Yes | Yes |
-| `samsung` | Samsung Internet | Yes | — |
-| `firefox` | Firefox | Yes | No (no URL scripting) |
-| `edge` | Edge | Yes | Yes |
-| `brave` | Brave | Yes | Yes |
-| `opera` | Opera | Yes | Yes |
-| `vivaldi` | Vivaldi | Yes | Yes |
-| `duckduckgo` | DuckDuckGo | Yes | — |
-| `safari` | Safari | — | Yes |
-| `arc` | Arc | — | Yes |
-| `other` | Any other browser (receivers treat an unknown value as `other`) | — | — |
+| Browser | id | Android sender | Mac sender |
+|---------|----|----------------|------------|
+| Chrome | `chrome` | Yes | Yes |
+| Samsung Internet | `samsung` | Yes | — |
+| Firefox | `firefox` | Yes | No (no URL scripting) |
+| Edge | `edge` | Yes | Yes |
+| Brave | `brave` | Yes | Yes |
+| Opera | `opera` | Yes | Yes |
+| Vivaldi | `vivaldi` | Yes | Yes |
+| DuckDuckGo | `duckduckgo` | Yes | — |
+| Safari | `safari` | — | Yes |
+| Arc | `arc` | — | Yes |
+| Any other browser (receivers treat an unknown value as `other`) | `other` | — | — |
 
 "Yes" means a candidate: gate G6 confirms each browser, and the ones it rejects are listed in
 `09-web-handoff.md`.
