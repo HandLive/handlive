@@ -38,9 +38,10 @@ jobs:
     timeout-minutes: 5
     if: github.event_name != 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Không có danh tính hay trailer của công cụ AI trong commit mới
         env:
@@ -69,24 +70,28 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           GH_TOKEN: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
         run: |
+          # gh đọc token từ GH_TOKEN; token không bao giờ nằm trong URL hay cấu hình git.
           resolve() {
-            if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/$1.git" "$BRANCH" >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
+            if gh api "repos/${OWNER}/$1/branches/${BRANCH}" --silent >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
           }
           hub="$(resolve handlive)"; shared="$(resolve handlive-shared)"
           echo "hub=$hub" >> "$GITHUB_OUTPUT"; echo "shared=$shared" >> "$GITHUB_OUTPUT"
           echo "hub → $hub, handlive-shared → $shared"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
       - name: Kho handlive-shared cạnh docs/
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           repository: ${{ github.repository_owner }}/handlive-shared
           path: shared
           ref: ${{ steps.refs.outputs.shared }}
           token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+          persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
           cache: pip
