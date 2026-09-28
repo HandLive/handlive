@@ -4,7 +4,7 @@ English | [Tiếng Việt](project-roadmap.vi.md)
 
 > Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`.
 
-HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase.
+HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase. One exception to the order (project owner's decision, 2026-09-28): Phases 5 and 6 are done before Phase 4 finishes, because Phase 4 waits for the G4 Bluetooth hands-free spike on real hardware.
 
 ## Phase 1. Clipboard sync (MVP)
 
@@ -33,7 +33,7 @@ Android uses the public Telecom APIs: `TelephonyCallback`, `acceptRingingCall`, 
 
 ## Phase 6. Continue Browsing (proposed)
 
-**Starts with the G6 spike (3–5 days).** The web page open on one device continues on another: Android to Mac, Android to iPhone and iPad (while the app is open), Mac to Android. Android reads the foreground browser's address bar through a separate Accessibility service, limited to the supported browsers, behind a disclosure and off by default. The Mac reads the front tab through Apple Events, with the Automation permission per browser. The Mac shows the page in its menu, Android as a quiet notification, iPhone and iPad as a banner; the user opens it with one click or tap. Private tabs are never sent and pages are never stored. Built only on Phase 1 infrastructure (session, encryption, capabilities), so it does not depend on Phases 4 and 5 and may start while Phase 4 waits for gate G4; the project owner decides the order. Detailed design: group 9, WEB-01 to WEB-05, decision C21.
+**Starts with the G6 spike (3–5 days).** The web page open on one device continues on another: Android to Mac, Android to iPhone and iPad (while the app is open), Mac to Android. Android reads the foreground browser's address bar through a separate Accessibility service, limited to the supported browsers, behind a disclosure and off by default. The Mac reads the front tab through Apple Events, with the Automation permission per browser. The Mac shows the page in its menu, Android as a quiet notification, iPhone and iPad as a banner; the user opens it with one click or tap. Private tabs are never sent and pages are never stored. Built only on Phase 1 infrastructure (session, encryption, capabilities), so it does not depend on Phases 4 and 5; by the project owner's decision of 2026-09-28 it is done before Phase 4 finishes. Detailed design: group 9, WEB-01 to WEB-05, decision C21.
 **Gate G6:** Android address bar and incognito detection for Chrome, Samsung Internet, Firefox, Edge and Brave on Android 10 and 15, with the battery cost of the service; Apple Events for Safari, Chrome and Arc on macOS 13 and 26, Safari private windows, TCC for a Developer ID build; the current Play Accessibility policy. Go or no-go per browser. **Effort:** about 1.5 person-months (Android 3 weeks, macOS 2 weeks, iOS half a week, test 1 week, spike 1 week).
 
 ## Total effort

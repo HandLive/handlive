@@ -4,7 +4,7 @@
 
 > Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`.
 
-HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau.
+HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm xong trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
 
 ## Phase 1. Đồng bộ clipboard (MVP)
 
@@ -33,7 +33,7 @@ Android dùng API Telecom công khai: `TelephonyCallback`, `acceptRingingCall`, 
 
 ## Phase 6. Duyệt web tiếp (đề xuất)
 
-**Bắt đầu bằng spike G6 (3–5 ngày).** Trang web đang mở trên một thiết bị được xem tiếp trên thiết bị khác: Android sang Mac, Android sang iPhone và iPad (khi ứng dụng đang mở), Mac sang Android. Android đọc thanh địa chỉ của trình duyệt ở foreground qua một dịch vụ Hỗ trợ tiếp cận riêng, giới hạn ở các trình duyệt được hỗ trợ, sau màn hình công bố, mặc định tắt. Mac đọc tab trước nhất qua Apple Events, với quyền Tự động hóa cho từng trình duyệt. Mac hiện trang trong menu, Android hiện thông báo im lặng, iPhone và iPad hiện banner; người dùng mở bằng một lần bấm hoặc chạm. Tab riêng tư không bao giờ được gửi và trang không bao giờ được lưu. Chỉ dựa trên hạ tầng Phase 1 (phiên, mã hóa, capability), nên không phụ thuộc Phase 4 và 5 và có thể bắt đầu khi Phase 4 còn chờ cổng G4; chủ dự án quyết định thứ tự. Thiết kế chi tiết: nhóm 9, WEB-01 tới WEB-05, quyết định C21.
+**Bắt đầu bằng spike G6 (3–5 ngày).** Trang web đang mở trên một thiết bị được xem tiếp trên thiết bị khác: Android sang Mac, Android sang iPhone và iPad (khi ứng dụng đang mở), Mac sang Android. Android đọc thanh địa chỉ của trình duyệt ở foreground qua một dịch vụ Hỗ trợ tiếp cận riêng, giới hạn ở các trình duyệt được hỗ trợ, sau màn hình công bố, mặc định tắt. Mac đọc tab trước nhất qua Apple Events, với quyền Tự động hóa cho từng trình duyệt. Mac hiện trang trong menu, Android hiện thông báo im lặng, iPhone và iPad hiện banner; người dùng mở bằng một lần bấm hoặc chạm. Tab riêng tư không bao giờ được gửi và trang không bao giờ được lưu. Chỉ dựa trên hạ tầng Phase 1 (phiên, mã hóa, capability), nên không phụ thuộc Phase 4 và 5; theo quyết định của chủ dự án ngày 28/09/2026, phase này làm xong trước khi Phase 4 hoàn tất. Thiết kế chi tiết: nhóm 9, WEB-01 tới WEB-05, quyết định C21.
 **Cổng G6:** thanh địa chỉ và nhận biết ẩn danh trên Android cho Chrome, Samsung Internet, Firefox, Edge và Brave trên Android 10 và 15, kèm chi phí pin của dịch vụ; Apple Events cho Safari, Chrome và Arc trên macOS 13 và 26, cửa sổ riêng tư của Safari, TCC với bản Developer ID; chính sách Hỗ trợ tiếp cận hiện hành của Play. Đạt hoặc không đạt theo từng trình duyệt. **Công:** khoảng 1.5 person-month (Android 3 tuần, macOS 2 tuần, iOS nửa tuần, test 1 tuần, spike 1 tuần).
 
 ## Công tổng
