@@ -897,7 +897,7 @@ SET-02 quản lý các khóa này.
 | `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi một phiên đã giữ `Connected` được 30 s (phiên rớt sớm hơn giữ nguyên bậc hiện tại, để một thiết bị nhận kết nối rồi rớt ngay không bị thử lại mỗi 0,5 s); thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
 | `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
-| `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id; một chiều đạt 20 000 id vì rekey chưa xong thì đóng phiên với 4410) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2) |
+| `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id; một chiều đạt 20 000 id vì rekey chưa xong thì đóng phiên với 4410) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2); các `ack` giữ lại để trả lời envelope trùng bị giới hạn 8 MiB mỗi phiên, bỏ cái cũ nhất trước, và envelope trùng mà `ack` của nó đã bị bỏ thì bị bỏ qua, không trả lời |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
 | `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Trước mã hóa |
