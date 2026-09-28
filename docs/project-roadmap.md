@@ -31,9 +31,14 @@ Android uses the public Telecom APIs: `TelephonyCallback`, `acceptRingingCall`, 
 **Starts with a one-week CMIOExtension spike.** Android captures video with Camera2, encodes it with MediaCodec, sends it over Wi-Fi, detects a USB cable by itself, and lowers quality when the phone runs hot. macOS decodes with VideoToolbox, outputs video through CMIOExtension and audio through AudioServerPlugin, and installs via a PKG.
 **Measure:** latency under 120 ms over Wi-Fi, under 70 ms over USB. **Effort:** about 5.5 person-months.
 
+## Phase 6. Continue Browsing (proposed)
+
+**Starts with the G6 spike (3–5 days).** The web page open on one device continues on another: Android to Mac, Android to iPhone and iPad (while the app is open), Mac to Android. Android reads the foreground browser's address bar through a separate Accessibility service, limited to the supported browsers, behind a disclosure and off by default. The Mac reads the front tab through Apple Events, with the Automation permission per browser. The Mac shows the page in its menu, Android as a quiet notification, iPhone and iPad as a banner; the user opens it with one click or tap. Private tabs are never sent and pages are never stored. Built only on Phase 1 infrastructure (session, encryption, capabilities), so it does not depend on Phases 4 and 5 and may start while Phase 4 waits for gate G4; the project owner decides the order. Detailed design: group 9, WEB-01 to WEB-05, decision C21.
+**Gate G6:** Android address bar and incognito detection for Chrome, Samsung Internet, Firefox, Edge and Brave on Android 10 and 15, with the battery cost of the service; Apple Events for Safari, Chrome and Arc on macOS 13 and 26, Safari private windows, TCC for a Developer ID build; the current Play Accessibility policy. Go or no-go per browser. **Effort:** about 1.5 person-months (Android 3 weeks, macOS 2 weeks, iOS half a week, test 1 week, spike 1 week).
+
 ## Total effort
 
-About 22 person-months. Two people take about 11 months. Three people take about 7.5 months. The MVP (Phase 1) takes about 2 months with two people. Usable clipboard and SMS (Phase 1 plus Phase 2) takes about 4 months with two people.
+About 22 person-months for Phases 1 to 5; Phase 6 adds about 1.5. Two people take about 11 months. Three people take about 7.5 months. The MVP (Phase 1) takes about 2 months with two people. Usable clipboard and SMS (Phase 1 plus Phase 2) takes about 4 months with two people.
 
 | Phase | Android | macOS | iOS | Server | Test | Total |
 |-------|:-------:|:-----:|:---:|:------:|:----:|:----:|
@@ -42,3 +47,4 @@ About 22 person-months. Two people take about 11 months. Three people take about
 | P3 | 1 | 1 | 0.5 | — | 0.5 | 3 |
 | P4 | 2 | 2 | — | 0.5 | 1.5 | 6 |
 | P5 | 2 | 2.5 | — | — | 1 | 5.5 |
+| P6 | 0.6 | 0.4 | 0.1 | — | 0.4 | 1.5 |

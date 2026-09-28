@@ -16,6 +16,7 @@ Người dùng Android thiếu các tính năng gắn với một hệ sinh thá
 - Nhận và gửi SMS từ macOS và iOS.
 - Nhận cuộc gọi, điều khiển, rồi **nghe và nói** ngay trên macOS.
 - Dùng camera và mic Android như thiết bị ảo trong Zoom, Meet, FaceTime, OBS.
+- Duyệt web tiếp: mở trang web của điện thoại trên Mac, iPhone hoặc iPad, và trang của Mac trên điện thoại (Phase 6, đề xuất).
 - Mã hóa đầu-cuối luôn bật. Máy chủ không đọc nội dung.
 
 ## 3. Ngoài phạm vi

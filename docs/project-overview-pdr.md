@@ -16,6 +16,7 @@ Android users lack features that stay inside one ecosystem, such as Apple Contin
 - Receive and send SMS from macOS and iOS.
 - Receive calls, control them, then **listen and talk** right on macOS.
 - Use the Android camera and mic as virtual devices in Zoom, Meet, FaceTime, OBS.
+- Continue browsing: open the web page from the phone on the Mac, iPhone or iPad, and the Mac's page on the phone (Phase 6, proposed).
 - End-to-end encryption always on. No server can read the content.
 
 ## 3. Out of scope

@@ -31,9 +31,14 @@ Android dùng API Telecom công khai: `TelephonyCallback`, `acceptRingingCall`, 
 **Bắt đầu bằng một tuần thử CMIOExtension.** Android lấy hình bằng Camera2, nén bằng MediaCodec, gửi qua Wi-Fi, tự nhận cáp USB, hạ chất lượng khi máy nóng. macOS giải mã bằng VideoToolbox, đưa hình ra CMIOExtension, đưa tiếng ra AudioServerPlugin, cài bằng PKG.
 **Đo:** trễ dưới 120 ms qua Wi-Fi, dưới 70 ms qua USB. **Công:** khoảng 5.5 person-month.
 
+## Phase 6. Duyệt web tiếp (đề xuất)
+
+**Bắt đầu bằng spike G6 (3–5 ngày).** Trang web đang mở trên một thiết bị được xem tiếp trên thiết bị khác: Android sang Mac, Android sang iPhone và iPad (khi ứng dụng đang mở), Mac sang Android. Android đọc thanh địa chỉ của trình duyệt ở foreground qua một dịch vụ Hỗ trợ tiếp cận riêng, giới hạn ở các trình duyệt được hỗ trợ, sau màn hình công bố, mặc định tắt. Mac đọc tab trước nhất qua Apple Events, với quyền Tự động hóa cho từng trình duyệt. Mac hiện trang trong menu, Android hiện thông báo im lặng, iPhone và iPad hiện banner; người dùng mở bằng một lần bấm hoặc chạm. Tab riêng tư không bao giờ được gửi và trang không bao giờ được lưu. Chỉ dựa trên hạ tầng Phase 1 (phiên, mã hóa, capability), nên không phụ thuộc Phase 4 và 5 và có thể bắt đầu khi Phase 4 còn chờ cổng G4; chủ dự án quyết định thứ tự. Thiết kế chi tiết: nhóm 9, WEB-01 tới WEB-05, quyết định C21.
+**Cổng G6:** thanh địa chỉ và nhận biết ẩn danh trên Android cho Chrome, Samsung Internet, Firefox, Edge và Brave trên Android 10 và 15, kèm chi phí pin của dịch vụ; Apple Events cho Safari, Chrome và Arc trên macOS 13 và 26, cửa sổ riêng tư của Safari, TCC với bản Developer ID; chính sách Hỗ trợ tiếp cận hiện hành của Play. Đạt hoặc không đạt theo từng trình duyệt. **Công:** khoảng 1.5 person-month (Android 3 tuần, macOS 2 tuần, iOS nửa tuần, test 1 tuần, spike 1 tuần).
+
 ## Công tổng
 
-Khoảng 22 person-month. Hai người làm khoảng 11 tháng. Ba người làm khoảng 7.5 tháng. MVP (Phase 1) khoảng 2 tháng với hai người. Dùng được clipboard và SMS (Phase 1 cùng Phase 2) khoảng 4 tháng với hai người.
+Khoảng 22 person-month cho Phase 1 tới 5; Phase 6 thêm khoảng 1.5. Hai người làm khoảng 11 tháng. Ba người làm khoảng 7.5 tháng. MVP (Phase 1) khoảng 2 tháng với hai người. Dùng được clipboard và SMS (Phase 1 cùng Phase 2) khoảng 4 tháng với hai người.
 
 | Phase | Android | macOS | iOS | Server | Test | Tổng |
 |-------|:-------:|:-----:|:---:|:------:|:----:|:----:|
@@ -42,3 +47,4 @@ Khoảng 22 person-month. Hai người làm khoảng 11 tháng. Ba người làm
 | P3 | 1 | 1 | 0.5 | — | 0.5 | 3 |
 | P4 | 2 | 2 | — | 0.5 | 1.5 | 6 |
 | P5 | 2 | 2.5 | — | — | 1 | 5.5 |
+| P6 | 0.6 | 0.4 | 0.1 | — | 0.4 | 1.5 |
