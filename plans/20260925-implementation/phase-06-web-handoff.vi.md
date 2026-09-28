@@ -8,8 +8,9 @@ mở), trang của Mac trên điện thoại (thông báo). Trang đang mở đ�
 không bao giờ được gửi và không trang nào được lưu.
 
 Trạng thái: chủ dự án đề xuất ngày 28/09/2026 (`plans/20260928-web-handoff/plan.md`). Phase 6 chỉ cần
-hạ tầng Phase 1 (phiên, E2E, capability) và không phụ thuộc Phase 4 và 5; có thể bắt đầu khi Phase 4
-còn chờ cổng G4. Chủ dự án quyết định thứ tự.
+hạ tầng Phase 1 (phiên, E2E, capability) và không phụ thuộc Phase 4 và 5.
+Quyết định của chủ dự án ngày 28/09/2026: Phase 5 và 6 làm xong trước khi Phase 4
+hoàn tất (Phase 4 chờ spike phần cứng HFP của cổng G4).
 
 ## Cổng G6 — spike (3–5 ngày, trước mọi thẻ việc khác)
 
@@ -40,7 +41,8 @@ Câu hỏi: có đọc được ổn định trang đang mở của từng trìn
 
 - Chỉ gửi trang khi URL đã ổn định trong `WEB_SETTLE` (1,5 s) và không bao giờ gửi khi thanh địa chỉ
   có focus; Mac đọc mỗi `WEB_POLL_MAC` (1,5 s) chỉ khi một trình duyệt được hỗ trợ ở trước nhất và
-  chiều này hiệu lực.
+  chiều này hiệu lực; khi trang vẫn mở, bên gửi gửi lại mỗi `WEB_REFRESH` (5 phút) với cùng
+  `page_id`.
 - Không trang riêng tư hay ẩn danh nào được gửi trong toàn bộ ma trận kiểm thử; trạng thái riêng tư
   không xác định thì không bao giờ gửi.
 - Bên nhận quên trang sau `WEB_PAGE_TTL` (10 phút) không được làm mới, khi có `web/inactive` và khi
@@ -60,7 +62,7 @@ Câu hỏi: có đọc được ổn định trang đang mở của từng trìn
 | A6.2 [android] | Phía gửi: `BrowserPagesAccessibilityService` (`@xml/a11y_browser_pages`, bộ lọc gói theo G6), một `BrowserAdapter` cho mỗi trình duyệt đạt G6, chuẩn hóa, `WEB_SETTLE`, nhận biết riêng tư, quy tắc `web/inactive`, gửi lại sau trao đổi capability; màn hình công bố (WEB-01 trường 2–4), thẻ tính năng, SET-02 trường 34, 35, 37, `web.a11y_consent_at`. Đầu vào: WEB-01, SET-01 phần B | `android/feature/web`, `android/app` (manifest, xml) | WEB-01 E1–E10 có test hoặc test thủ công được ghi lại; dịch vụ bảng nhớ tạm vẫn có `canRetrieveWindowContent = false`; không xử lý sự kiện nào khi không có phiên hiệu lực |
 | M6.1 [macOS] | Phía nhận: WEB-02 — dạng có huy hiệu của biểu tượng thanh menu, mục menu đầu tiên có dòng host và ⌘O, thông báo tùy chọn (`web.notify`), `NSWorkspace.open`, dọn khi hết TTL và khi phiên kết thúc; dòng Cài đặt cho `feature.web` và `web.notify`. Đầu vào: WEB-02, SET-02 | `apple/macOS/HandLive`, `apple/Packages/…` (model web dùng chung với iOS) | WEB-02 E1–E6 có test; VoiceOver đọc được mục menu và nhãn huy hiệu |
 | M6.2 [macOS] | Phía gửi: WEB-03 — theo dõi kích hoạt ứng dụng, khóa và ngủ, vòng đời đọc định kỳ, script theo trình duyệt đạt G6, kiểm chế độ riêng tư, `WEB_SETTLE`, trạng thái Tự động hóa và "Mở Cài đặt hệ thống", `NSAppleEventsUsageDescription`, entitlement `com.apple.security.automation.apple-events`; dòng Cài đặt cho `web.send` và `web.browsers`. Đầu vào: WEB-03, SET-02 | `apple/macOS/HandLive`, `apple/project.yml` | WEB-03 E1–E7 có test hoặc test thủ công được ghi lại; không đọc định kỳ khi không có trình duyệt được hỗ trợ ở trước nhất |
-| I6.1 [iOS] | WEB-05: banner trên màn hình Thiết bị, `UIApplication.open`, dọn khi xuống nền và hết TTL; công tắc "Duyệt web tiếp"; capability `send = false`, `receive = feature.web`. Đầu vào: WEB-05, SET-02 | `apple/iOS/HandLive` | WEB-05 E1–E3 có test; kiểm Dynamic Type AX5 và VoiceOver |
+| I6.1 [iOS] | WEB-05: banner phủ lên đầu tab đang hiển thị, đóng được cho tới khi có `page_id` mới, `UIApplication.open`, dọn khi xuống nền và hết TTL; công tắc "Duyệt web tiếp"; capability `send = false`, `receive = feature.web`. Đầu vào: WEB-05, SET-02 | `apple/iOS/HandLive` | WEB-05 E1–E3 có test; kiểm Dynamic Type AX5 và VoiceOver |
 | T6.1 [test] | Ma trận đầu-cuối: Android → Mac, Android → iPhone, Mac → Android qua LAN và relay; tab riêng tư trên mọi trình duyệt được hỗ trợ; tắt màn hình, khóa, ngủ; gửi lại khi kết nối lại; TTL; trang chỉ mở khi chạm; TalkBack/VoiceOver; en và vi | kịch bản `shared/tools/e2e/`, `reports/phase-06-T6.1.md` | Đạt mọi tiêu chí ở trên; không trang riêng tư nào bị gửi |
 
 ## Nhánh và thứ tự làm

@@ -9,7 +9,8 @@ page is ever stored.
 
 Status: proposed by the project owner on 2026-09-28 (`plans/20260928-web-handoff/plan.md`). Phase 6
 needs only the Phase 1 infrastructure (session, E2E, capability) and does not depend on Phases 4 and
-5; it may start while Phase 4 waits for gate G4. The project owner decides the order.
+5. Owner decision of 2026-09-28: Phases 5 and 6 are done before Phase 4 finishes (Phase 4 waits for the
+G4 HFP hardware spike).
 
 ## Gate G6 — spike (3–5 days, before any other task card)
 
@@ -42,7 +43,8 @@ told apart?
 
 - A page is sent only after its URL has been stable for `WEB_SETTLE` (1.5 s) and never while the
   address bar has focus; the Mac polls every `WEB_POLL_MAC` (1.5 s) only while a supported browser is
-  frontmost and the direction is in effect.
+  frontmost and the direction is in effect; while the same page stays open, the sender re-sends it
+  every `WEB_REFRESH` (5 minutes) with the same `page_id`.
 - Zero private or incognito pages sent across the whole test matrix; an unknown private state is
   never sent.
 - The receiver forgets the page after `WEB_PAGE_TTL` (10 minutes) without a refresh, on
@@ -63,7 +65,7 @@ told apart?
 | A6.2 [android] | Sending: `BrowserPagesAccessibilityService` (`@xml/a11y_browser_pages`, package filter from G6), one `BrowserAdapter` per browser that passed G6, normalization, `WEB_SETTLE`, private detection, `web/inactive` rules, re-send after the capability exchange; the disclosure (WEB-01 fields 2–4), the feature card, SET-02 fields 34, 35, 37, `web.a11y_consent_at`. Inputs: WEB-01, SET-01 part B | `android/feature/web`, `android/app` (manifest, xml) | WEB-01 E1–E10 have tests or a recorded manual test; the clipboard service still has `canRetrieveWindowContent = false`; no event is processed when no session is in effect |
 | M6.1 [macOS] | Receiving: WEB-02 — the badge variant of the menu bar icon, the first menu item with the host line and ⌘O, the optional notification (`web.notify`), `NSWorkspace.open`, TTL and session-end cleanup; Settings rows for `feature.web` and `web.notify`. Inputs: WEB-02, SET-02 | `apple/macOS/HandLive`, `apple/Packages/…` (web models shared with iOS) | WEB-02 E1–E6 have tests; VoiceOver reads the item and the badge label |
 | M6.2 [macOS] | Sending: WEB-03 — activation, lock and sleep observers, polling lifecycle, the per-browser scripts that passed G6, private-mode checks, `WEB_SETTLE`, Automation status and "Open System Settings", `NSAppleEventsUsageDescription`, entitlement `com.apple.security.automation.apple-events`; Settings rows for `web.send` and `web.browsers`. Inputs: WEB-03, SET-02 | `apple/macOS/HandLive`, `apple/project.yml` | WEB-03 E1–E7 have tests or a recorded manual test; no polling while no supported browser is frontmost |
-| I6.1 [iOS] | WEB-05: the banner on the Devices screen, `UIApplication.open`, cleanup on background and TTL; the "Continue Browsing" switch; capability `send = false`, `receive = feature.web`. Inputs: WEB-05, SET-02 | `apple/iOS/HandLive` | WEB-05 E1–E3 have tests; Dynamic Type AX5 and VoiceOver checked |
+| I6.1 [iOS] | WEB-05: the banner laid over the top of the visible tab, closable until a new `page_id` arrives, `UIApplication.open`, cleanup on background and TTL; the "Continue Browsing" switch; capability `send = false`, `receive = feature.web`. Inputs: WEB-05, SET-02 | `apple/iOS/HandLive` | WEB-05 E1–E3 have tests; Dynamic Type AX5 and VoiceOver checked |
 | T6.1 [test] | End-to-end matrix: Android → Mac, Android → iPhone, Mac → Android over the LAN and the relay; private tabs in every supported browser; screen off, lock, sleep; reconnect re-send; TTL; the page opens only on a tap; TalkBack/VoiceOver; en and vi | `shared/tools/e2e/` scenarios, `reports/phase-06-T6.1.md` | Every criterion above met; zero private pages sent |
 
 ## Branch and work order
