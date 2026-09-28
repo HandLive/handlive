@@ -9,7 +9,7 @@ This page explains what data HandLive handles, where that data goes, and what th
 ## In short
 
 - No account: HandLive never asks for your name, email address or phone number.
-- Your clipboard, messages, calls and camera stay between the devices you pair. Everything that leaves a device is end-to-end encrypted with keys that only your devices hold.
+- Your clipboard, messages, calls, camera and, when you turn on Continue Browsing, the address of the web page you have open stay between the devices you pair. Everything that leaves a device is end-to-end encrypted with keys that only your devices hold.
 - When your devices are not on the same Wi-Fi network, the relay server passes encrypted data between them. It cannot read the content and does not keep it.
 - No ads, no analytics, no tracking, and no third-party SDK that collects data.
 
@@ -29,7 +29,16 @@ This page explains what data HandLive handles, where that data goes, and what th
 
 ## Permissions
 
-HandLive asks for a permission only when you turn on the feature that needs it, after a screen that explains why: notifications, the local network, the camera (to scan the pairing QR code), SMS and contacts (messages), phone state and call log (calls), microphone and Bluetooth (taking calls on the Mac), and Accessibility (sending what you copy automatically on Android). Turning a feature off stops its use of the permission.
+HandLive asks for a permission only when you turn on the feature that needs it, after a screen that explains why: notifications, the local network, the camera (to scan the pairing QR code), SMS and contacts (messages), phone state and call log (calls), microphone and Bluetooth (taking calls on the Mac), Accessibility (sending what you copy automatically on Android, and reading the open page's address in supported browsers for Continue Browsing), and Automation on the Mac (reading the open page's address in each browser you allow). Turning a feature off stops its use of the permission.
+
+## Web pages (Continue Browsing, planned)
+
+Continue Browsing is off by default. When you turn it on, HandLive sends the address and title of the web page open in the foreground browser to your paired devices, so you can continue there: from your Android phone to your Mac, iPhone and iPad, and from your Mac to your phone.
+
+- The address travels end-to-end encrypted, like everything else, also through the relay, which cannot read it. It is never sent in a push notification.
+- It is never stored: the receiving device keeps only the latest page in memory and forgets it after 10 minutes, when you leave the page, or when the devices disconnect. HandLive never keeps a browsing history.
+- Pages in incognito or private tabs and windows are never sent. You can exclude any browser in Settings.
+- The receiving device never opens a page by itself: you always click or tap first.
 
 ## Calls
 
@@ -45,4 +54,4 @@ When you take a phone call on your Mac, the audio goes only between your phone a
 
 HandLive is open source under the Apache License 2.0, so anyone can check what the apps and the relay server do: https://github.com/HandLive. Questions about privacy: me@hxd.vn. Security issues: see the [security policy](https://github.com/HandLive/.github/blob/main/SECURITY.md).
 
-Last updated: 2026-09-26.
+Last updated: 2026-09-28.

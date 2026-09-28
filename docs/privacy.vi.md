@@ -9,7 +9,7 @@ Trang này giải thích HandLive xử lý dữ liệu gì, dữ liệu đi đâ
 ## Tóm tắt
 
 - Không cần tài khoản. HandLive không hỏi tên, email hay số điện thoại.
-- Clipboard, tin nhắn, cuộc gọi và camera chỉ đi giữa các thiết bị đã ghép. Dữ liệu rời thiết bị đều mang mã hóa đầu-cuối. Chỉ các thiết bị đã ghép giữ khóa.
+- Clipboard, tin nhắn, cuộc gọi, camera và, khi bật Duyệt web tiếp, địa chỉ trang web đang mở chỉ đi giữa các thiết bị đã ghép. Dữ liệu rời thiết bị đều mang mã hóa đầu-cuối. Chỉ các thiết bị đã ghép giữ khóa.
 - Khi các thiết bị không cùng mạng Wi-Fi, máy chủ relay chuyển dữ liệu đã mã hóa. Máy chủ không đọc nội dung và không giữ nội dung.
 - Không quảng cáo, không phân tích hành vi, không theo dõi. Không SDK bên thứ ba thu thập dữ liệu.
 
@@ -29,7 +29,16 @@ Trang này giải thích HandLive xử lý dữ liệu gì, dữ liệu đi đâ
 
 ## Quyền
 
-HandLive chỉ xin một quyền khi người dùng bật tính năng cần quyền đó, sau một màn hình giải thích lý do. Các quyền gồm: thông báo, mạng cục bộ, camera (quét mã QR ghép nối), SMS và danh bạ (tin nhắn), trạng thái điện thoại và nhật ký cuộc gọi, micro và Bluetooth (nghe gọi trên Mac), Hỗ trợ tiếp cận (tự gửi nội dung vừa sao chép trên Android). Tắt tính năng thì tính năng đó ngừng dùng quyền.
+HandLive chỉ xin một quyền khi người dùng bật tính năng cần quyền đó, sau một màn hình giải thích lý do. Các quyền gồm: thông báo, mạng cục bộ, camera (quét mã QR ghép nối), SMS và danh bạ (tin nhắn), trạng thái điện thoại và nhật ký cuộc gọi, micro và Bluetooth (nghe gọi trên Mac), Hỗ trợ tiếp cận (tự gửi nội dung vừa sao chép trên Android, và đọc địa chỉ trang đang mở trong các trình duyệt được hỗ trợ cho Duyệt web tiếp), Tự động hóa trên Mac (đọc địa chỉ trang đang mở trong từng trình duyệt người dùng cho phép). Tắt tính năng thì tính năng đó ngừng dùng quyền.
+
+## Trang web (Duyệt web tiếp, dự kiến)
+
+Duyệt web tiếp mặc định tắt. Khi bật, HandLive gửi địa chỉ và tiêu đề của trang web đang mở trong trình duyệt ở foreground tới các thiết bị đã ghép, để người dùng xem tiếp ở đó: từ điện thoại Android sang Mac, iPhone và iPad, và từ Mac sang điện thoại.
+
+- Địa chỉ đi dưới mã hóa đầu-cuối như mọi dữ liệu khác, kể cả qua relay, relay không đọc được. Địa chỉ không bao giờ đi trong thông báo đẩy.
+- Địa chỉ không bao giờ được lưu: thiết bị nhận chỉ giữ trang mới nhất trong bộ nhớ và quên sau 10 phút, khi người dùng rời trang, hoặc khi các thiết bị ngắt kết nối. HandLive không bao giờ giữ lịch sử duyệt web.
+- Trang trong tab hoặc cửa sổ ẩn danh, riêng tư không bao giờ được gửi. Người dùng có thể loại bất kỳ trình duyệt nào trong Cài đặt.
+- Thiết bị nhận không bao giờ tự mở trang: người dùng luôn bấm hoặc chạm trước.
 
 ## Cuộc gọi
 
@@ -45,4 +54,4 @@ Khi người dùng nghe cuộc gọi trên Mac, âm thanh chỉ đi giữa đi�
 
 HandLive dùng Apache License 2.0. Ai cũng kiểm được ứng dụng và máy chủ relay làm gì: https://github.com/HandLive. Câu hỏi về quyền riêng tư: me@hxd.vn. Lỗ hổng bảo mật: xem [chính sách bảo mật](https://github.com/HandLive/.github/blob/main/SECURITY.vi.md).
 
-Cập nhật lần cuối: 2026-09-26.
+Cập nhật lần cuối: 2026-09-28.
