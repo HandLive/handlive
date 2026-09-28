@@ -17,7 +17,7 @@ English | [Tiếng Việt](03-connectivity.vi.md)
 | Actors | Primary: System (M-APP / I-APP, A-SVC). The user acts indirectly (opening the app, turning on Wi-Fi, opening the lid) or clicks "Reconnect Now". |
 | Preconditions | 1. There is a valid pair (PAIR-01).<br>2. A-SVC is running as a foreground service.<br>3. Both devices are on the same LAN and the network allows mDNS multicast.<br>4. The client has been granted the local network permission (iOS 14+, macOS 15+) per SET-03. |
 | Postconditions | **Success:** state `Connected` (LAN); session keys ready; the peer's capability stored in `features_json`; `last_seen_at`, `last_host`, `last_port` updated; the effective features turned on; the Android foreground service notification reads "Connected to \<name>".<br>**Failure:** move to CONN-03 after `LAN_DISCOVERY_GRACE` (if the relay is on) or to `Backoff` (CONN-02). |
-| Exceptions | E1 — No instance with a matching hint within 10 s → CONN-03 (relay on) or keep browsing.<br>E2 — `TLS_PIN_MISMATCH`: drop this instance (it may be another device or an impostor) and try the next instance; if every instance of the pair fails the pin (the phone has regenerated its TLS key, 0.6.1) → stop trying and show "Needs to be paired again" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → report "Couldn't verify the phone", long 5-minute backoff, no continuous retries.<br>E4 — `PAIR_UNKNOWN` or `PAIR_REVOKED` (4403) → clean up the pair per PAIR-03 flow B, ask to pair again.<br>E5 — 4426 `UNSUPPORTED_VERSION` → prompt to update the app on the older device.<br>E6 — Handshake longer than 5 s (4408) → CONN-02 backoff.<br>E7 — The network isolates clients (guest Wi-Fi, mDNS blocked) → same as E1.<br>E8 — Local network permission denied → report it and open the SET-03 guidance. |
+| Exceptions | E1 — No instance with a matching hint within 10 s → CONN-03 (relay on) or keep browsing.<br>E2 — `TLS_PIN_MISMATCH`: drop this instance (it may be another device or an impostor) and try the next instance; if every instance of the pair fails the pin (the phone has regenerated its TLS key, 0.6.1) → stop trying and show "Needs to be paired again" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → report "Couldn't verify the phone", long 5-minute backoff, no continuous retries.<br>E4 — `PAIR_UNKNOWN` or `PAIR_REVOKED` (4403) on the LAN (pinned TLS to the phone) → clean up the pair per PAIR-03 flow B, ask to pair again. Over the relay the same codes only lead to `Backoff` (CONN-03 E9).<br>E5 — 4426 `UNSUPPORTED_VERSION` → prompt to update the app on the older device.<br>E6 — Handshake longer than 5 s (4408) → CONN-02 backoff.<br>E7 — The network isolates clients (guest Wi-Fi, mDNS blocked) → same as E1.<br>E8 — Local network permission denied → report it and open the SET-03 guidance. |
 | Special requirements | **Performance:** reconnect < 3 s when `last_host` is known (a project success metric); handshake ≤ 300 ms on the LAN.<br>**Security:** TLS 1.3 only; pin the certificate's SHA-256, no hostname check; the mDNS TXT contains no static identifier (0.4.1).<br>**Platform:** iOS/macOS declare `NSLocalNetworkUsageDescription` and `NSBonjourServices = ["_handlive._tcp"]`; Android runs A-SVC with type `connectedDevice` (permissions `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) with an ongoing notification.<br>**Feature independence:** capabilities decide each feature; a feature that lacks a permission does not block the other features. |
 
 ### 3.1.2 Screens
@@ -145,10 +145,10 @@ flowchart TB
 - **Business logic:**
   1. TLS delegate: take the leaf certificate from `SecTrust`, compute SHA-256 over the DER, compare it
      with `peer_tls_sha256`; match → `.useCredential`, mismatch → `.cancelAuthenticationChallenge` (E2).
-  2. A-SVC allows at most 16 concurrent `/v1/ctl` connections without a handshake and closes any
-     connection that does not send `session/hello` within 5 s (protection against resource
-     exhaustion); the 17th connection is closed with 4429 `RATE_LIMITED`, silent connections are
-     closed with 4408.
+  2. A-SVC allows at most 16 concurrent `/v1/ctl` connections without a handshake, and at most 4 of
+     them from the same IP (`CTL_PREAUTH_LIMIT`), and closes any connection that does not send
+     `session/hello` within 5 s (protection against resource exhaustion); a connection over either
+     cap is closed with 4429 `RATE_LIMITED`, silent connections are closed with 4408.
 
 #### API 4 — `WS session/hello`
 
@@ -180,7 +180,10 @@ Payload after base64 decoding:
   1. Order of checks in A-SVC: `protocol` (different major → 4426) → the pair exists (no →
      `PAIR_UNKNOWN`, 4401) → not revoked (4403) → `device_id` matches → `mac`.
   2. Wrong `mac` 5 times/minute from the same IP address (every `session/hello` rejected with `AUTH_FAILED` counts: wrong `mac`, wrong `device_id`, a low-order ephemeral key; `PAIR_UNKNOWN` and `PAIR_REVOKED` do not) → block that IP for 5 minutes (connections
-     from a blocked IP are closed with 4429 `RATE_LIMITED` right after TLS).
+     from a blocked IP are closed with 4429 `RATE_LIMITED` right after TLS). This rule is unchanged.
+     Next to it (`CTL_IP_BLOCK`): handshake timeouts (4408), `PAIR_UNKNOWN` and `BAD_REQUEST` before
+     the handshake also count toward a block — 10 of them within 5 minutes from the same IP block it
+     for 5 minutes (4429).
   3. `nonce` is not stored; Android's ephemeral key is generated anew for every welcome, so a
      replayed hello never leads to a usable session.
 
@@ -401,6 +404,10 @@ flowchart TB
      close 4410 `REKEY_FAILED`, then reconnect (E4).
   3. Envelopes encrypted with the old key that arrive within 30 s of the switch are still decrypted;
      after that → `DECRYPT_FAILED`.
+  4. Deduplication (`DEDUP_WINDOW`, 0.5.1 rule 2) covers the whole key epoch, per direction: the set
+     of accepted `id`s starts empty with the new keys; the previous epoch's set is kept as long as its
+     keys are still accepted (30 s), then dropped. Only envelopes that decrypted are recorded. Relay
+     and LAN sessions behave the same.
 
 #### API 4 — `WS session/bye`
 
@@ -447,7 +454,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Actors | Primary: System (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Preconditions | 1. There is a valid pair, already registered with the relay or registrable right away (PAIR-01 API 8). 2. `relay.enabled = true` on both devices. 3. Internet access. |
 | Postconditions | **Success:** an E2E session through the relay, status "Connected over the internet"; the data features work as on the LAN (except the camera and call audio — they need proximity).<br>**Phone offline:** state `WaitingPeer` ("Phone offline"), a wake push has been sent. |
-| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin, on any device (Android included) → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`. |
+| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin, on any device (Android included) → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` or `PAIR_REVOKED` over the relay, before the handshake authenticated the phone → `Backoff`, never unpair: anyone on the relay path could forge it. A revocation is acted on only through a signed `pair_revoked` (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) or the LAN (CONN-01 E4). |
 | Special requirements | **Security:** the relay only sees the wrapper (`to`/`from`, `type`, size, time); it has no E2E key; 15-minute JWT; pinned SPKI of ISRG Root X1/X2 + a backup key.<br>**Resources:** at most 2 MiB/s per pair and direction; envelope ≤ 256 KiB.<br>**Reference performance:** SMS and call notifications through the relay ≤ 1 s when both sides are online.<br>**Operations:** the relay is stateless; presence and routing between instances go through Redis; statistics only per `device_hash`. |
 
 ### 3.3.2 Screens
@@ -537,6 +544,7 @@ flowchart TB
 | 200 | as above | Already registered; `app_version`, `last_seen_at` updated |
 | 401 `SIGNATURE_INVALID` | error | Wrong signature, `device_id` does not match the key, or `ts` is skewed |
 | 410 `DEVICE_REVOKED` | error | The device has been removed |
+| 429 `RATE_LIMITED` | error | Over the per-IP limit or the relay-wide cap (logic 3); `Retry-After` |
 
 - **Example:**
 
@@ -553,7 +561,13 @@ flowchart TB
      key.
   2. Upsert by `device_id`; the `ik_sig_pub` of a `device_id` never changes (a new key = a new
      `device_id`).
-  3. At most 10 new registrations per hour per IP address.
+  3. At most 10 new registrations per hour per IP address, an IPv6 address counted per /64
+     (`RELAY_REG_IP_LIMIT`), and at most `RELAY_MAX_REGISTRATIONS_PER_HOUR` (default 1,000) new
+     registrations per hour on the whole relay; over either → 429 `RATE_LIMITED`. Updating an existing
+     registration does not count.
+  4. At startup the relay logs a warning when `RELAY_TRUSTED_PROXIES` is empty and it binds a
+     non-loopback address (the per-IP limits then see the proxy's address, or trust nobody's
+     `X-Forwarded-For`).
 
 #### API 2 — `POST /v1/auth/challenge`
 
@@ -564,8 +578,11 @@ flowchart TB
   `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429 `RATE_LIMITED`.
 - **Example:** `{"device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}` →
   `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQA","expires_at":1727151160000}`
-- **Business logic:** Generate 32 random bytes, write `chal:<device_id>` (overwriting any older
-  challenge), TTL 60 s; at most 10 times/minute per device.
+- **Business logic:** First the per-IP limit: 30 requests/minute per client IP for
+  `/auth/challenge` and `/auth/token` together (IPv6 per /64), checked before any database lookup →
+  429 `RATE_LIMITED`. Then at most 10 challenges/minute per (`device_id`, client IP). Generate 32
+  random bytes and write `chal:<device_id>:<challenge>` with TTL 60 s; a new challenge never replaces
+  another pending one, so a stranger asking for challenges for a `device_id` cannot lock it out.
 
 #### API 3 — `POST /v1/auth/token`
 
@@ -581,11 +598,11 @@ flowchart TB
 
 - **Response 200:** `access_token` — string (JWT HS256, claims `sub`, `iat`, `exp`, `jti`);
   `expires_in` — int32 (900). Errors: 400 `BAD_REQUEST` (`sig` is not a 64-byte b64u), 401
-  `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`, 404 `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 500
-  `INTERNAL`.
+  `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`, 404 `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429
+  `RATE_LIMITED` (per-IP limit of API 2), 500 `INTERNAL`.
 - **Example:** `{"access_token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YjFm…","expires_in":900}`
-- **Business logic:** Read and delete `chal:<device_id>` in a single command (`GETDEL`); missing or
-  different → `CHALLENGE_EXPIRED`; verify the signature with the `ik_sig_pub` in `devices`; update
+- **Business logic:** Per-IP limit of API 2 first. Read and delete `chal:<device_id>:<challenge>` (the
+  `challenge` echoed in the request) in a single command (`GETDEL`); missing → `CHALLENGE_EXPIRED`; verify the signature with the `ik_sig_pub` in `devices`; update
   `last_seen_at`.
 
 #### API 4 — `GET /v1/relay` (WebSocket)
@@ -598,7 +615,8 @@ flowchart TB
   invalid; 404 `DEVICE_NOT_FOUND` if the device has removed itself from the relay. Right after
   opening, the relay sends `presence` for every valid pair, `pair_revoked` for pairs revoked within
   the last 30 days, and `pair_revoked` for each element of `revoked_notice:<device_id>` (the peer
-  deleted all of its data, SET-02), then deletes that key.
+  deleted all of its data, SET-02), then deletes that key. Each `pair_revoked` carries the stored
+  `HLREVOKE1` statement; the device acts on it only if the signature is the peer's (PAIR-03 API 4).
 - **Example:** `GET /v1/relay HTTP/1.1` · `Host: relay.example.com` ·
   `Authorization: Bearer eyJhbGciOi…` · `Upgrade: websocket`
 - **Business logic:**
@@ -712,8 +730,9 @@ SELECT pair_id FROM paired_device WHERE revoked_at IS NULL AND relay_registered 
 
 ```text
 # [Design] Redis
-SET       chal:<device_id> <challenge> EX 60           # API 2
-GETDEL    chal:<device_id>                             # API 3
+INCR      rl:ip:<ip>:auth:<minute>                     # API 2 and 3, before any database lookup
+SET       chal:<device_id>:<challenge> 1 EX 60         # API 2, one key per challenge
+GETDEL    chal:<device_id>:<challenge>                 # API 3
 SET       presence:<device_id> <instance_id> EX 60     # API 4, renewed every 20 s
 SUBSCRIBE dev:<device_id>                              # API 4
 SMEMBERS  revoked_notice:<device_id>                   # API 4: send pair_revoked for each element

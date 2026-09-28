@@ -17,7 +17,7 @@
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng tác động gián tiếp (mở ứng dụng, bật WiFi, mở nắp máy) hoặc bấm "Kết nối lại ngay". |
 | Điều kiện trước | 1. Có một cặp hiệu lực (PAIR-01).<br>2. A-SVC đang chạy dưới dạng foreground service.<br>3. Hai thiết bị cùng LAN và mạng cho phép multicast mDNS.<br>4. Client đã được cấp quyền mạng cục bộ (iOS 14+, macOS 15+) theo SET-03. |
 | Điều kiện sau | **Thành công:** trạng thái `Connected` (LAN); khóa phiên sẵn sàng; capability của đối phương lưu vào `features_json`; `last_seen_at`, `last_host`, `last_port` cập nhật; tính năng hiệu lực được bật; thông báo foreground service trên Android ghi "Đã kết nối với <tên>".<br>**Thất bại:** chuyển CONN-03 sau `LAN_DISCOVERY_GRACE` (nếu relay bật) hoặc sang `Backoff` (CONN-02). |
-| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt.<br>E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp; mọi instance của cặp đều lệch ghim (điện thoại đã sinh lại khóa TLS, 0.6.1) → dừng thử, hiển thị "Cần ghép nối lại" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục.<br>E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại.<br>E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn.<br>E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff.<br>E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1.<br>E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
+| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt.<br>E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp; mọi instance của cặp đều lệch ghim (điện thoại đã sinh lại khóa TLS, 0.6.1) → dừng thử, hiển thị "Cần ghép nối lại" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục.<br>E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) trong LAN (TLS ghim tới điện thoại) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại. Qua relay, cùng các mã này chỉ dẫn đến `Backoff` (CONN-03 E9).<br>E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn.<br>E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff.<br>E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1.<br>E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
 | Yêu cầu đặc biệt | **Hiệu năng:** kết nối lại < 3 s khi đã biết `last_host` (chỉ số thành công của dự án); bắt tay ≤ 300 ms trong LAN.<br>**Bảo mật:** chỉ TLS 1.3; ghim SHA-256 chứng chỉ, không kiểm hostname; TXT mDNS không chứa định danh tĩnh (0.4.1).<br>**Nền tảng:** iOS/macOS khai báo `NSLocalNetworkUsageDescription` và `NSBonjourServices = ["_handlive._tcp"]`; Android chạy A-SVC type `connectedDevice` (quyền `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) với thông báo thường trực.<br>**Độc lập tính năng:** capability quyết định từng tính năng; một tính năng thiếu quyền không chặn các tính năng khác. |
 
 ### 3.1.2 Màn hình
@@ -144,9 +144,10 @@ flowchart TB
 - **Logic nghiệp vụ:**
   1. Delegate TLS: lấy chứng chỉ lá từ `SecTrust`, tính SHA-256 trên DER, so với `peer_tls_sha256`;
      khớp → `.useCredential`, khác → `.cancelAuthenticationChallenge` (E2).
-  2. A-SVC giới hạn 16 kết nối `/v1/ctl` chưa bắt tay cùng lúc và đóng kết nối không gửi
-     `session/hello` trong 5 s (chống cạn tài nguyên); kết nối thứ 17 bị đóng 4429 `RATE_LIMITED`,
-     kết nối im lặng bị đóng 4408.
+  2. A-SVC giới hạn 16 kết nối `/v1/ctl` chưa bắt tay cùng lúc, trong đó tối đa 4 từ cùng một IP
+     (`CTL_PREAUTH_LIMIT`), và đóng kết nối không gửi `session/hello` trong 5 s (chống cạn tài
+     nguyên); kết nối vượt một trong hai giới hạn bị đóng 4429 `RATE_LIMITED`, kết nối im lặng bị
+     đóng 4408.
 
 #### API 4 — `WS session/hello`
 
@@ -178,7 +179,9 @@ Payload sau khi giải base64:
   1. Thứ tự kiểm ở A-SVC: `protocol` (khác major → 4426) → cặp tồn tại (không → `PAIR_UNKNOWN`,
      4401) → chưa thu hồi (4403) → `device_id` khớp → `mac`.
   2. Sai `mac` 5 lần/phút từ cùng địa chỉ IP (tính mọi `session/hello` bị từ chối với `AUTH_FAILED`: sai `mac`, sai `device_id`, khóa tạm bậc thấp; không tính `PAIR_UNKNOWN`, `PAIR_REVOKED`) → chặn IP đó 5 phút (kết nối từ IP bị chặn đóng 4429
-     `RATE_LIMITED` ngay sau TLS).
+     `RATE_LIMITED` ngay sau TLS). Quy tắc này giữ nguyên. Bên cạnh đó (`CTL_IP_BLOCK`): bắt tay quá
+     giờ (4408), `PAIR_UNKNOWN` và `BAD_REQUEST` trước bắt tay cũng được tính — 10 lần trong 5 phút từ
+     cùng một IP thì chặn IP đó 5 phút (4429).
   3. Không lưu `nonce`; khóa tạm của Android sinh mới cho mỗi lần welcome nên hello bị phát lại
      không dẫn tới phiên dùng được.
 
@@ -397,6 +400,10 @@ flowchart TB
      (E4).
   3. Envelope mã hóa bằng khóa cũ đến trong 30 s sau khi đổi vẫn được giải mã; sau đó →
      `DECRYPT_FAILED`.
+  4. Chống trùng (`DEDUP_WINDOW`, 0.5.1 quy tắc 2) bao trọn thế hệ khóa, theo từng chiều: tập `id`
+     đã nhận bắt đầu rỗng với khóa mới; tập của thế hệ trước được giữ chừng nào khóa của nó còn được
+     nhận (30 s), rồi bỏ. Chỉ ghi envelope đã giải mã được. Phiên qua relay và phiên LAN xử lý như
+     nhau.
 
 #### API 4 — `WS session/bye`
 
@@ -441,7 +448,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Điều kiện trước | 1. Có cặp hiệu lực, đã đăng ký relay hoặc đăng ký được ngay (PAIR-01 API 8). 2. `relay.enabled = true` ở cả hai thiết bị. 3. Có Internet. |
 | Điều kiện sau | **Thành công:** phiên E2E qua relay, trạng thái "Đã kết nối qua Internet"; các tính năng dữ liệu hoạt động như LAN (trừ camera và âm thanh cuộc gọi — cần ở gần).<br>**Điện thoại offline:** trạng thái `WaitingPeer` ("Điện thoại ngoại tuyến"), đã gửi push đánh thức. |
-| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim, trên mọi thiết bị (kể cả Android) → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`. |
+| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim, trên mọi thiết bị (kể cả Android) → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` qua relay, trước khi bước bắt tay xác thực được điện thoại → `Backoff`, không bao giờ hủy cặp: bất kỳ ai trên đường relay cũng có thể giả mạo nó. Việc thu hồi chỉ được xử lý qua `pair_revoked` có chữ ký (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) hoặc qua LAN (CONN-01 E4). |
 | Yêu cầu đặc biệt | **Bảo mật:** relay chỉ thấy lớp bọc (`to`/`from`, `type`, kích thước, thời điểm); không có khóa E2E; JWT 15 phút; ghim SPKI ISRG Root X1/X2 + khóa dự phòng.<br>**Tài nguyên:** tối đa 2 MiB/s mỗi cặp mỗi chiều; envelope ≤ 256 KiB.<br>**Hiệu năng tham khảo:** SMS, thông báo cuộc gọi qua relay ≤ 1 s khi hai bên đã online.<br>**Vận hành:** relay stateless; presence và định tuyến giữa instance qua Redis; thống kê chỉ theo `device_hash`. |
 
 ### 3.3.2 Màn hình
@@ -531,6 +538,7 @@ flowchart TB
 | 200 | như trên | Đã có, cập nhật `app_version`, `last_seen_at` |
 | 401 `SIGNATURE_INVALID` | lỗi | Chữ ký sai, `device_id` không khớp khóa, hoặc `ts` lệch |
 | 410 `DEVICE_REVOKED` | lỗi | Thiết bị đã bị xóa |
+| 429 `RATE_LIMITED` | lỗi | Vượt giới hạn theo IP hoặc giới hạn toàn relay (logic 3); `Retry-After` |
 
 - **Ví dụ:**
 
@@ -546,7 +554,13 @@ flowchart TB
   1. Kiểm `ts`, dựng lại chuỗi ký, kiểm `sig`, kiểm `device_id` dẫn xuất từ khóa.
   2. Upsert theo `device_id`; `ik_sig_pub` của một `device_id` không bao giờ đổi (đổi khóa =
      `device_id` mới).
-  3. Giới hạn 10 lần/giờ mỗi địa chỉ IP cho đăng ký mới.
+  3. Giới hạn 10 lần/giờ mỗi địa chỉ IP cho đăng ký mới, địa chỉ IPv6 tính theo /64
+     (`RELAY_REG_IP_LIMIT`), và tối đa `RELAY_MAX_REGISTRATIONS_PER_HOUR` (mặc định 1 000) đăng ký mới
+     mỗi giờ trên toàn relay; vượt một trong hai → 429 `RATE_LIMITED`. Cập nhật một đăng ký đã có
+     không bị tính.
+  4. Khi khởi động, relay ghi cảnh báo vào log nếu `RELAY_TRUSTED_PROXIES` rỗng mà relay lắng nghe
+     trên địa chỉ không phải loopback (khi đó giới hạn theo IP chỉ thấy địa chỉ của proxy, hoặc không
+     tin `X-Forwarded-For` của ai).
 
 #### API 2 — `POST /v1/auth/challenge`
 
@@ -557,8 +571,11 @@ flowchart TB
   `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429 `RATE_LIMITED`.
 - **Ví dụ:** `{"device_id":"5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"}` →
   `{"challenge":"0tXoN3f1C9aYQbJ8kVw2mZr5uHs7pLd4gEi6cBy0xQA","expires_at":1727151160000}`
-- **Logic nghiệp vụ:** Sinh 32 byte ngẫu nhiên, ghi `chal:<device_id>` (ghi đè challenge cũ), TTL 60
-  s; tối đa 10 lần/phút mỗi thiết bị.
+- **Logic nghiệp vụ:** Trước hết là giới hạn theo IP: 30 yêu cầu/phút mỗi IP cho `/auth/challenge`
+  và `/auth/token` cộng lại (IPv6 theo /64), kiểm trước mọi truy vấn cơ sở dữ liệu → 429
+  `RATE_LIMITED`. Sau đó tối đa 10 challenge/phút mỗi (`device_id`, IP). Sinh 32 byte ngẫu nhiên, ghi
+  `chal:<device_id>:<challenge>` với TTL 60 s; challenge mới không bao giờ thay challenge khác đang
+  chờ, nên người lạ xin challenge cho một `device_id` không khóa được thiết bị đó.
 
 #### API 3 — `POST /v1/auth/token`
 
@@ -574,11 +591,12 @@ flowchart TB
 
 - **Response 200:** `access_token` — string (JWT HS256, claim `sub`, `iat`, `exp`, `jti`);
   `expires_in` — int32 (900). Lỗi: 400 `BAD_REQUEST` (`sig` không phải b64u 64 byte), 401
-  `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`, 404 `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 500
-  `INTERNAL`.
+  `CHALLENGE_EXPIRED`, 401 `SIGNATURE_INVALID`, 404 `DEVICE_NOT_FOUND`, 410 `DEVICE_REVOKED`, 429
+  `RATE_LIMITED` (giới hạn theo IP của API 2), 500 `INTERNAL`.
 - **Ví dụ:** `{"access_token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YjFm…","expires_in":900}`
-- **Logic nghiệp vụ:** Lấy và xóa `chal:<device_id>` trong một lệnh (`GETDEL`); không có hoặc khác →
-  `CHALLENGE_EXPIRED`; kiểm chữ ký bằng `ik_sig_pub` trong `devices`; cập nhật `last_seen_at`.
+- **Logic nghiệp vụ:** Kiểm giới hạn theo IP của API 2 trước. Lấy và xóa
+  `chal:<device_id>:<challenge>` (`challenge` gửi lại trong yêu cầu) trong một lệnh (`GETDEL`); không
+  có → `CHALLENGE_EXPIRED`; kiểm chữ ký bằng `ik_sig_pub` trong `devices`; cập nhật `last_seen_at`.
 
 #### API 4 — `GET /v1/relay` (WebSocket)
 
@@ -590,6 +608,8 @@ flowchart TB
   `DEVICE_NOT_FOUND` nếu thiết bị đã tự xóa khỏi relay. Ngay sau khi mở, relay gửi `presence` cho
   mọi cặp hiệu lực, `pair_revoked` cho cặp đã thu hồi trong 30 ngày, và `pair_revoked` cho từng phần
   tử của `revoked_notice:<device_id>` (đối phương đã xóa toàn bộ dữ liệu, SET-02) rồi xóa khóa đó.
+  Mỗi `pair_revoked` mang tuyên bố `HLREVOKE1` đã lưu; thiết bị chỉ xử lý khi chữ ký là của đối
+  phương (PAIR-03 API 4).
 - **Ví dụ:** `GET /v1/relay HTTP/1.1` · `Host: relay.example.com` ·
   `Authorization: Bearer eyJhbGciOi…` · `Upgrade: websocket`
 - **Logic nghiệp vụ:**
@@ -701,8 +721,9 @@ SELECT pair_id FROM paired_device WHERE revoked_at IS NULL AND relay_registered 
 
 ```text
 # [Thiết kế] Redis
-SET       chal:<device_id> <challenge> EX 60           # API 2
-GETDEL    chal:<device_id>                             # API 3
+INCR      rl:ip:<ip>:auth:<phút>                       # API 2 và 3, trước mọi truy vấn cơ sở dữ liệu
+SET       chal:<device_id>:<challenge> 1 EX 60         # API 2, mỗi challenge một khóa
+GETDEL    chal:<device_id>:<challenge>                 # API 3
 SET       presence:<device_id> <instance_id> EX 60     # API 4, gia hạn mỗi 20 s
 SUBSCRIBE dev:<device_id>                              # API 4
 SMEMBERS  revoked_notice:<device_id>                   # API 4: gửi pair_revoked cho từng phần tử
