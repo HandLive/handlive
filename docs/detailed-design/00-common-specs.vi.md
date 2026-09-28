@@ -873,7 +873,7 @@ SET-02 quản lý các khóa này.
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `REQUEST_TIMEOUT` | 10 s | Chờ `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: ping WS; relay: thêm `ping` E2E mỗi 30 s |
-| `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi thành công; thử ngay khi đổi mạng hoặc thức dậy |
+| `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi một phiên đã giữ `Connected` được 30 s (phiên rớt sớm hơn giữ nguyên bậc hiện tại, để một thiết bị nhận kết nối rồi rớt ngay không bị thử lại mỗi 0,5 s); thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
 | `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
 | `DEDUP_WINDOW` | 5 phút / 1 000 id |  |

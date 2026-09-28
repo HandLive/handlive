@@ -882,7 +882,7 @@ SET-02 function manages these keys.
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `REQUEST_TIMEOUT` | 10 s | Waiting for `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: WS ping; relay: plus an E2E `ping` every 30 s |
-| `RECONNECT_BACKOFF` | 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Back to 0 on success; retry immediately on a network change or wake-up |
+| `RECONNECT_BACKOFF` | 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Back to 0 once a session has stayed `Connected` for 30 s (a session that drops sooner keeps the current step, so a peer that accepts and then drops at once is not retried every 0.5 s); retry immediately on a network change or wake-up |
 | `LAN_DISCOVERY_GRACE` | 10 s | Not seen on the LAN after 10 s → try the relay |
 | `REKEY_AFTER` | 24 h or 10,000 envelopes/direction |  |
 | `DEDUP_WINDOW` | 5 minutes / 1,000 ids |  |
