@@ -900,14 +900,14 @@ SET-02 function manages these keys.
 | `PIN_MAX_ATTEMPTS` | 3 | The phone sends at most 3 `pair/offer` per PIN; after the third without `pair/done` the window closes as "PIN expired" (PAIR-01 A4) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `CTL_PREAUTH_LIMIT` | 16 connections without a handshake, at most 4 per IP | `/v1/ctl`; over the cap → 4429 (CONN-01 API 3) |
-| `CTL_IP_BLOCK` | 10 pre-handshake failures (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) within 5 minutes → IP blocked for 5 minutes | Next to the `AUTH_FAILED` rule (5/minute); blocked → 4429 (CONN-01 API 4) |
+| `CTL_IP_BLOCK` | 10 pre-handshake failures (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) within 5 minutes → IP blocked for 5 minutes; only failures before a `session/hello` passed its `mac` check count, and an established session clears the address's count | Next to the `AUTH_FAILED` rule (5/minute); blocked → 4429 (CONN-01 API 4) |
 | `PAIR_CONN_LIMIT` | 4 connections at once, 2 per IP; first message ≤ 8 KiB | `/v1/pair`; over the cap → 4429 (PAIR-01 API 2) |
 | `REQUEST_TIMEOUT` | 10 s | Waiting for `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: WS ping; relay: plus an E2E `ping` every 30 s |
 | `RECONNECT_BACKOFF` | 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Back to 0 once a session has stayed `Connected` for 30 s (a session that drops sooner keeps the current step, so a peer that accepts and then drops at once is not retried every 0.5 s); retry immediately on a network change or wake-up |
 | `LAN_DISCOVERY_GRACE` | 10 s | Not seen on the LAN after 10 s → try the relay |
 | `REKEY_AFTER` | 24 h or 10,000 envelopes/direction |  |
-| `DEDUP_WINDOW` | Every `id` accepted in the current key epoch, per direction (≤ 10,000 ids) | Emptied at rekey; the previous epoch's ids are kept while its keys are still accepted; only decrypted envelopes are recorded (0.5.1 rule 2) |
+| `DEDUP_WINDOW` | Every `id` accepted in the current key epoch, per direction (≤ 10,000 ids; a direction that reaches 20,000 ids because the rekey has not completed closes the session with 4410) | Emptied at rekey; the previous epoch's ids are kept while its keys are still accepted; only decrypted envelopes are recorded (0.5.1 rule 2) |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
 | `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Before encryption |

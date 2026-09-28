@@ -890,14 +890,14 @@ SET-02 quản lý các khóa này.
 | `PIN_MAX_ATTEMPTS` | 3 | Điện thoại gửi tối đa 3 `pair/offer` cho mỗi PIN; sau lần thứ ba không có `pair/done` thì cửa sổ đóng như "PIN hết hạn" (PAIR-01 A4) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `CTL_PREAUTH_LIMIT` | 16 kết nối chưa bắt tay, tối đa 4 mỗi IP | `/v1/ctl`; vượt → 4429 (CONN-01 API 3) |
-| `CTL_IP_BLOCK` | 10 lỗi trước bắt tay (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) trong 5 phút → chặn IP 5 phút | Bên cạnh quy tắc `AUTH_FAILED` (5/phút); bị chặn → 4429 (CONN-01 API 4) |
+| `CTL_IP_BLOCK` | 10 lỗi trước bắt tay (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) trong 5 phút → chặn IP 5 phút; chỉ tính lỗi xảy ra trước khi một `session/hello` qua được kiểm tra `mac`, và một phiên thiết lập thành công xóa bộ đếm của địa chỉ đó | Bên cạnh quy tắc `AUTH_FAILED` (5/phút); bị chặn → 4429 (CONN-01 API 4) |
 | `PAIR_CONN_LIMIT` | 4 kết nối cùng lúc, 2 mỗi IP; tin đầu tiên ≤ 8 KiB | `/v1/pair`; vượt → 4429 (PAIR-01 API 2) |
 | `REQUEST_TIMEOUT` | 10 s | Chờ `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: ping WS; relay: thêm `ping` E2E mỗi 30 s |
 | `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi một phiên đã giữ `Connected` được 30 s (phiên rớt sớm hơn giữ nguyên bậc hiện tại, để một thiết bị nhận kết nối rồi rớt ngay không bị thử lại mỗi 0,5 s); thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
 | `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
-| `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2) |
+| `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id; một chiều đạt 20 000 id vì rekey chưa xong thì đóng phiên với 4410) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2) |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
 | `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Trước mã hóa |
