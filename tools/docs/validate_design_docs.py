@@ -11,7 +11,7 @@ from pathlib import Path
 
 DOC_DIR = Path(__file__).resolve().parents[2] / "docs" / "detailed-design"
 COMMON = DOC_DIR / "00-common-specs.md"
-GROUP_FILES = sorted(p for p in DOC_DIR.glob("0[1-8]-*.md"))
+GROUP_FILES = sorted(p for p in DOC_DIR.glob("0[1-9]-*.md"))
 
 TEMPLATES = {
     "vi": {
