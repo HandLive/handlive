@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 3 merged; Phase 4 waits for the HFP spike; gates G1 and G2 open
+## Project status: Phase 3 merged; Phases 5 and 6 start before Phase 4 (G5, G6 spikes); gates G1 and G2 open
 
 Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26), Phase 2 (SMS, iOS
 app, relay, push; 2026-09-27) and Phase 3 (call information and control; 2026-09-28) are merged into `main`.
@@ -14,7 +14,11 @@ names), gate G2 (Play Console) and the Phase 2 and Phase 3 checks on real device
 (`plans/20260925-implementation/reports/phase-02-summary.md`, `phase-03-merge.md`). Phase 4 (taking calls on
 the Mac) opened on `feat/phase-04-call-audio` in apple with the gate G4 spike: the probe
 `apple/Tools/HFPSpike` is ready and needs a real phone paired over Bluetooth and a real call
-(`phase-04-spike-d1.md`); no other Phase 4 task card starts before G4. Reports:
+(`phase-04-spike-d1.md`); no other Phase 4 task card starts before G4. On 2026-09-28 the project owner decided
+that Phases 5 (camera/mic) and 6 (Web Handoff, added the same day) are done before Phase 4 finishes; each starts with
+its spike (G5: `apple/Tools/CameraSpike` on `feat/phase-05-camera-mic`; G6: probes on `feat/phase-06-web-handoff` in
+android and apple). The security scan fixes of 2026-09-28 are merged (`plans/20260928-security-fixes/plan.md`,
+open points listed there). Reports:
 `plans/20260925-implementation/reports/phase-0N-*.md`, merge records `phase-01-merge.md`, `phase-02-merge.md`
 and `phase-03-merge.md`.
 
@@ -109,7 +113,7 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 | iOS/iPadOS app | Swift 6, SwiftUI, iOS 16+; WebSocket + APNs alert + Notification Service Extension (metadata only; no PushKit/CallKit — detailed design C7); clipboard + SMS |
 | Cloud relay | Rust, Actix-web + actix-ws; zero-knowledge (relays encrypted blobs only, never decrypts/logs payloads); self-hosted single VPS initially |
 
-## Development phases (build in order)
+## Development phases (build in order; exception: Phases 5 and 6 before Phase 4 finishes)
 
 1. **Clipboard sync** (MVP): Android FG service + Ktor WS server + mDNS + QR pairing + XChaCha20 E2E
    ↔ macOS menu-bar app. Target: text <50ms, 5MB image <2s.
@@ -120,6 +124,9 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
    disclosure UI required before enabling.
 5. **Camera/mic virtual devices** (CMIOExtension + AudioServerPlugin). Starts with a 1-week
    CMIOExtension spike.
+6. **Web Handoff ("Continue Browsing")**: the page open in the foreground browser appears on the other device
+   (Android AccessibilityService reading the URL bar, Mac Apple Events; iPhone/iPad receive only). Starts with the
+   G6 spike; design `plans/20260928-web-handoff/plan.md`, group 9 of the detailed design.
 
 ## Conventions specific to this repo
 
@@ -158,7 +165,7 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
   `plans/20260925-implementation/reports/` and end with the status block from
   `~/.claude/rules/orchestration-protocol.md`.
 - **Read in this order before coding a task:** this file → `docs/detailed-design/README.md`
-  (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C20; read `X.md` or its Vietnamese
+  (catalog, conventions §3 incl. §3.5 UI wording, decisions C1–C21; read `X.md` or its Vietnamese
   twin `X.vi.md`) →
   `docs/detailed-design/00-common-specs.md` (protocol, errors, data model, settings keys) → the
   phase file → the leaf functions it names → `docs/code-standards.md`. UI work also reads
