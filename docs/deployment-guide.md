@@ -111,10 +111,10 @@ English | [Tiếng Việt](deployment-guide.vi.md)
   relay/README.md.
 - **Limits:** at most 10 new device registrations per hour per IP (IPv6 counted per /64) and at most
   `RELAY_MAX_REGISTRATIONS_PER_HOUR` (default 1,000) on the whole relay; `/v1/auth/*` allows 30 requests per
-  minute per IP. The relay logs a warning at startup when `RELAY_TRUSTED_PROXIES` is empty and it binds a
-  non-loopback address. Behind a reverse proxy, set
-  `RELAY_TRUSTED_PROXIES` to the proxy's address so that `X-Forwarded-For` is believed; a load test from one
-  machine needs `RELAY_TRUSTED_PROXIES=127.0.0.1` (`shared/tools/bench/relay_load.py`).
+  minute per IP. When the relay binds a loopback address and `RELAY_TRUSTED_PROXIES` is empty, it trusts
+  `X-Forwarded-For` from `127.0.0.1` and `::1` (the local reverse proxy). A reverse proxy on another host needs
+  `RELAY_TRUSTED_PROXIES` set to its address; the relay logs a warning at startup when the variable is empty and
+  it binds a non-loopback address, and when an untrusted peer sends `X-Forwarded-For`.
 - **Several instances:** every instance uses the same PostgreSQL and Redis; Redis holds presence and forwards
   frames between instances (C5). `RELAY_INSTANCE_ID` names an instance in `presence:<device_id>`.
 

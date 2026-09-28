@@ -558,9 +558,15 @@ flowchart TB
      (`RELAY_REG_IP_LIMIT`), và tối đa `RELAY_MAX_REGISTRATIONS_PER_HOUR` (mặc định 1 000) đăng ký mới
      mỗi giờ trên toàn relay; vượt một trong hai → 429 `RATE_LIMITED`. Cập nhật một đăng ký đã có
      không bị tính.
-  4. Khi khởi động, relay ghi cảnh báo vào log nếu `RELAY_TRUSTED_PROXIES` rỗng mà relay lắng nghe
-     trên địa chỉ không phải loopback (khi đó giới hạn theo IP chỉ thấy địa chỉ của proxy, hoặc không
-     tin `X-Forwarded-For` của ai).
+  4. IP của client: khi `RELAY_TRUSTED_PROXIES` rỗng và relay lắng nghe trên địa chỉ loopback, relay
+     tin các địa chỉ loopback (`127.0.0.1`, `::1`) là proxy, vì chỉ reverse proxy trên cùng máy mới tới
+     được relay; địa chỉ được so sánh sau khi đổi IPv6 dạng IPv4-mapped về IPv4. Khi khởi động, relay
+     ghi cảnh báo vào log nếu `RELAY_TRUSTED_PROXIES` rỗng mà relay lắng nghe trên địa chỉ không phải
+     loopback, và ghi cảnh báo tối đa một lần mỗi phút khi một peer không được tin gửi
+     `X-Forwarded-For` (nếu không, giới hạn theo IP sẽ gộp mọi client sau proxy vào một nhóm). Giới
+     hạn toàn relay được kiểm tra trước khi tăng bộ đếm theo IP, nên yêu cầu bị từ chối không tiêu
+     hạn mức của IP. Sau carrier NAT, nhiều điện thoại dùng chung một địa chỉ IPv4; 30 yêu cầu xác
+     thực mỗi phút mỗi IP đủ cho khoảng 200 thiết bị, mức này được chấp nhận với relay tự host.
 
 #### API 2 — `POST /v1/auth/challenge`
 

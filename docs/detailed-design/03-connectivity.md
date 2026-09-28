@@ -565,9 +565,15 @@ flowchart TB
      (`RELAY_REG_IP_LIMIT`), and at most `RELAY_MAX_REGISTRATIONS_PER_HOUR` (default 1,000) new
      registrations per hour on the whole relay; over either → 429 `RATE_LIMITED`. Updating an existing
      registration does not count.
-  4. At startup the relay logs a warning when `RELAY_TRUSTED_PROXIES` is empty and it binds a
-     non-loopback address (the per-IP limits then see the proxy's address, or trust nobody's
-     `X-Forwarded-For`).
+  4. Client IP: when `RELAY_TRUSTED_PROXIES` is empty and the relay binds a loopback address, it
+     trusts the loopback addresses (`127.0.0.1`, `::1`) as proxies, since only a local reverse proxy
+     can reach it; addresses are compared after mapping IPv4-mapped IPv6 to IPv4. At startup the
+     relay logs a warning when `RELAY_TRUSTED_PROXIES` is empty and it binds a non-loopback address,
+     and at most once a minute when a peer it does not trust sends `X-Forwarded-For` (the per-IP
+     limits would otherwise put every client behind a proxy into one bucket). The relay-wide cap is
+     checked before the per-IP counter is incremented, so a refused request does not use up an IP's
+     quota. Behind carrier NAT many phones share one IPv4 address; 30 auth requests per minute per IP
+     is enough for about 200 devices, which is accepted for a self-hosted relay.
 
 #### API 2 — `POST /v1/auth/challenge`
 
