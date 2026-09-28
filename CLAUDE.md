@@ -45,23 +45,32 @@ project owner in Vietnamese with diacritics.
 
 ## Next steps (handoff of 2026-09-28 — start here)
 
-1. **Phase 4, gate G4: the HFP spike.** It needs the owner's hardware.
+1. **Gates G5 and G6 (Phases 5 and 6 go before Phase 4, owner decision 2026-09-28).** Both probes are built and
+   pushed; each needs the owner's hardware.
+   - G5: `apple/Tools/CameraSpike` on `feat/phase-05-camera-mic`, runbook in its README, results in
+     `reports/phase-05-spike-d6.md`. Signing the host app needs a **paid Apple Developer Program team** (the current
+     team 3S93UPADXV is a free Personal Team without the System Extension capability).
+   - G6: `android/tools/web-spike` and `apple/Tools/WebSpike` on `feat/phase-06-web-handoff`, results in
+     `reports/phase-06-spike-g6.md`. Needs real phones with Samsung Internet, Firefox, Edge, Brave installed, the
+     accessibility service turned on by hand, and Automation grants on macOS 26 and 13/14.
+   - No other Phase 5 or 6 card starts before its gate.
+2. **Phase 4, gate G4: the HFP spike.** It needs the owner's hardware.
    - Run `apple/Tools/HFPSpike` from branch `feat/phase-04-call-audio`, following the runbook
      `apple/Tools/HFPSpike/README.md`.
    - Hardware: an Android phone with a SIM, paired to the Mac over Bluetooth, and a real call.
    - Fill in `reports/phase-04-spike-d1.md`. G4 also asks for runs on macOS 26 and on macOS 13 or 14.
    - Decide whether HFP or Opus/WS is the primary path (update AUDIO-02 and plan D1) before any other Phase 4 card.
-2. **Rerun the end-to-end checks on a quiet host** with `shared/tools/e2e`.
+3. **Rerun the end-to-end checks on a quiet host** with `shared/tools/e2e`.
    - Use an emulator that is not paired with the Mac test app, and pull `android/` before building the APK.
    - Rerun:
      - the PIN pairing fixes (android `0cd3a61`…`c0d2d51`);
      - the capability after a late permission grant (`9415777`);
      - the feature list after the first pairing (`cf567c8`, harness `88da57a`);
      - the 4408 check on API 29.
-3. **Before the first release:**
+4. **Before the first release:**
    - gates G1 and G2, and the Phase 2 and Phase 3 checks on real devices;
    - the owner inputs listed in `phase-02-merge.md`: relay host and pins, APNs key, Firebase, app ids, logo and icon.
-4. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
+5. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
    Mac app.
    - How to rebuild the bridge and the debug build: `build/dev-bridge/README.md` (this machine only, git-ignored).
    - The host is overloaded (`fileproviderd`, Synology Drive, Spotlight) and freezes the emulator for seconds, so
