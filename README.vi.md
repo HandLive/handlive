@@ -19,6 +19,7 @@ HandLive đưa các tính năng gắn với một hệ sinh thái, như Handoff 
 | Thông tin cuộc gọi và điều khiển (nghe, từ chối, kết thúc; giữ máy và DTMF qua Bluetooth HFP) | ✅ | ✅ (thông tin và từ chối, không có âm thanh) |
 | **Âm thanh cuộc gọi** (nghe và nói trên máy) | ✅ | ❌ (Apple không mở API HFP phía tai nghe) |
 | Camera và mic ảo (Zoom, Meet, FaceTime, OBS) | ✅ | ❌ |
+| Duyệt web tiếp: trang web đang mở trên thiết bị này được xem tiếp trên thiết bị kia (dự kiến, Phase 6) | Dự kiến (hai chiều) | Dự kiến (chỉ từ điện thoại) |
 
 ## Ảnh màn hình
 
@@ -52,6 +53,7 @@ HandLive xây lần lượt. Mỗi phase là một phần dùng được.
 3. **Thông tin và điều khiển cuộc gọi.** Dùng API Telecom công khai, không dùng `InCallService` (quyết định D9). Mac hiện bảng cuộc gọi nổi.
 4. **Âm thanh cuộc gọi.** Dùng HFP/SCO, dự phòng Opus, khử tiếng vang.
 5. **Camera và mic ảo.** Dùng CMIOExtension và AudioServerPlugin trên macOS.
+6. **Duyệt web tiếp** (đề xuất). Trang web đang mở chuyển giữa điện thoại và Mac, iPhone hoặc iPad; bắt đầu bằng spike G6 và chỉ cần Phase 1.
 
 Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.vi.md).
 

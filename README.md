@@ -19,6 +19,7 @@ HandLive brings features that belong to one ecosystem, such as Apple Handoff and
 | Call details and control (answer, decline, end; hold and DTMF over Bluetooth HFP) | ✅ | ✅ (details and decline, no audio) |
 | **Call audio** (talk and listen on the computer) | ✅ | ❌ (Apple offers no hands-free-side HFP API) |
 | Virtual camera and microphone (Zoom, Meet, FaceTime, OBS) | ✅ | ❌ |
+| Continue Browsing: the web page open on one device continues on the other (planned, Phase 6) | Planned (both ways) | Planned (from the phone only) |
 
 ## Screenshots
 
@@ -52,6 +53,7 @@ Built in order; each phase delivers something usable.
 3. **Call details and control**: public Telecom APIs (no `InCallService`, decision D9) and a floating call panel.
 4. **Call audio**: HFP/SCO, Opus fallback, echo cancellation.
 5. **Virtual camera and microphone**: CMIOExtension and AudioServerPlugin on macOS.
+6. **Continue Browsing** (proposed): the open web page moves between the phone and the Mac, iPhone or iPad; starts with the G6 spike and needs only Phase 1.
 
 Details: [`docs/project-roadmap.md`](docs/project-roadmap.md).
 

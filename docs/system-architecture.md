@@ -52,11 +52,13 @@ ANDROID (Audio Gateway role)
 | Call audio | BT HFP SCO (mSBC 16kHz) | Opus/WS LAN → Opus/relay | <40ms BT, <150ms WS |
 | Notifications | WebSocket LAN | APNs/FCM | <500ms |
 | Camera/mic video | WiFi WS binary (SEPARATE channel) | USB ADB-forward (boost) | <120ms / <70ms |
+| Open web page (Phase 6, planned) | WebSocket LAN | Cloud relay (never push) | after a 1.5s settle |
 
 ## 5. Protocol
 
 **Envelope (JSON, plaintext):** `{v, type, id (uuid-v7), ts (ms), payload (base64 encrypted)}`.
-`type` ∈ `clipboard|sms|call_event|call_audio|pair|ack|ping|capability`.
+`type` ∈ `clipboard|sms|call_event|call_audio|pair|ack|ping|capability`, plus `session`, `camera` and
+`web` (Continue Browsing, Phase 6 — detailed design C21).
 
 **Audio binary frame** (not JSON-wrapped, to cut overhead):
 `[0x48 0x4C][version:1B][seq:4B][timestamp:4B][encrypted_opus_frame:NB]`.
