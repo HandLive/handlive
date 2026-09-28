@@ -6,7 +6,7 @@ English | [Tiếng Việt](09-web-handoff.vi.md)
 > I-APP (0.1), identifier `page_id` (0.2), data types (0.3), envelope (0.5.1), security principles
 > (0.6.5), message type `web` (0.7.1), browser ids (0.7.1), capability `features.web` (0.7.2), settings
 > keys `feature.web`, `web.send`, `web.notify`, `web.browsers` (0.9.5), constants `WEB_SETTLE`,
-> `WEB_POLL_MAC`, `WEB_PAGE_TTL`, `WEB_URL_MAX`, `WEB_TITLE_MAX` (0.10). Decision applied: README §5 C21.
+> `WEB_POLL_MAC`, `WEB_REFRESH`, `WEB_PAGE_TTL`, `WEB_URL_MAX`, `WEB_TITLE_MAX` (0.10). Decision applied: README §5 C21.
 > Source: `plans/20260928-web-handoff/plan.md` (W1–W9).
 >
 > **Phase P6, not built yet.** Every leaf function in this group depends on gate **G6** (the spike,
@@ -24,9 +24,11 @@ English | [Tiếng Việt](09-web-handoff.vi.md)
 >   `features.web.enabled` and `send`, and the receiver has `features.web.enabled` and `receive`, per
 >   the latest capability of each side (0.7.2). Mapping of the settings keys: SET-02 API 1.
 > - **QW3 — Latest wins, no `ack`.** `web/active` and `web/inactive` are events without an `ack`, like
->   `call_event/state`. The sender sends only when the page changes, and re-sends its current
->   `web/active` once, right after a new session has finished exchanging capabilities. Nothing is
->   queued while there is no session.
+>   `call_event/state`. The sender sends when the page changes, re-sends its current
+>   `web/active` once, right after a new session has finished exchanging capabilities, and, while the
+>   same page stays open, re-sends it with the same `page_id` every `WEB_REFRESH` (5 minutes), so the
+>   receiver's `WEB_PAGE_TTL` never expires a page that is still open. Nothing is queued while there
+>   is no session.
 > - **QW4 — Never stored.** The receiver keeps only the latest page of each pair, in memory. It
 >   forgets it on `web/inactive` for that `page_id`, after `WEB_PAGE_TTL` (10 minutes) without a new
 >   `web/active`, when the session ends, and when the feature stops being in effect. No page is written
@@ -123,7 +125,7 @@ flowchart TB
 | 4 | System | A-WEB | Private, unknown, `FLAG_SECURE`, not `http`/`https`, or longer than `WEB_URL_MAX` → step 8. | E5, E6, E7. |
 | 5 | System | A-WEB | Normalizes (API 4, logic 3): adds `https://` when the bar shows only the host; keeps the fragment; cuts the title to `WEB_TITLE_MAX` characters; empty title → absent. |  |
 | 6 | System | A-WEB | Starts or restarts the `WEB_SETTLE` timer on every change of the normalized URL; the timer fires only when the URL has not changed and the bar has no focus. |  |
-| 7 | System | A-SVC | Builds `web/active` (API 1): a new `page_id` when the URL differs from the last one sent, the same `page_id` when only the title changed; sends it to every session in effect. Nothing is sent when the URL and the title equal the last ones sent. |  |
+| 7 | System | A-SVC | Builds `web/active` (API 1): a new `page_id` when the URL differs from the last one sent, the same `page_id` when only the title changed; sends it to every session in effect. Nothing is sent when the URL and the title equal the last ones sent, except the refresh: while the same page stays open, the same `web/active` (same `page_id`, new `observed_at`) is sent again every `WEB_REFRESH` (QW3). |  |
 | 8 | System | A-SVC | Sends `web/inactive` (API 2) for the last `page_id` sent, once, to every session that received it; forgets that page. | Nothing sent before → nothing to do. |
 | 9 | User | OS | Switches to another app, turns the screen off, or opens a private tab. | Detection: API 3 logic 4, API 5. |
 | 10 | System | A-SVC | When a new session finishes the capability exchange and the direction is in effect: sends the current `web/active` again (same `page_id`) if a page is still active. | E9. |
@@ -166,8 +168,8 @@ flowchart TB
 ```
 
 - **Business logic:**
-  1. **Sender:** sends only per QW2, QW5, QW6; never re-sends an identical `data` (except once after
-     a new capability exchange, QW3).
+  1. **Sender:** sends only per QW2, QW5, QW6; never re-sends the same page except once after
+     a new capability exchange and every `WEB_REFRESH` while it stays open (QW3).
   2. **Receiver validation** (QW8) — drop the message silently when: `url` does not parse, its scheme
      is not `http` or `https`, it has no host, or it is longer than `WEB_URL_MAX`; `title` is longer than
      `WEB_TITLE_MAX`; `page_id` is not a uuid; the direction is not in effect for the session. An unknown
@@ -476,7 +478,7 @@ flowchart TB
 | 5 | System | M-APP | Starts a timer: every `WEB_POLL_MAC` runs the browser's script (API 1) on a background queue and reads `{url, title, mode}`. | E6. |
 | 6 | System | M-APP | Private or unknown mode, a scheme other than `http`/`https`, or longer than `WEB_URL_MAX` → step 9. | E4, E5. |
 | 7 | System | M-APP | Restarts the `WEB_SETTLE` timer on every URL change; cuts the title to `WEB_TITLE_MAX`. |  |
-| 8 | System | M-APP | Sends `web/active` (WEB-01 API 1, `browser` from the API 1 table) with the `page_id` rules of WEB-01 step 7. |  |
+| 8 | System | M-APP | Sends `web/active` (WEB-01 API 1, `browser` from the API 1 table) with the `page_id` and `WEB_REFRESH` rules of WEB-01 step 7. |  |
 | 9 | System | M-APP | Sends `web/inactive` for the last page sent (once); stops the timer when the browser is no longer frontmost or the direction is no longer in effect. |  |
 | 10 | User | OS | Activates another app, locks the screen, or the Mac sleeps or switches user. | API 2. |
 | 11 | System | M-APP | After a new session's capability exchange: sends the current `web/active` again when a browser is still frontmost with an active page. | E7. |
@@ -683,10 +685,10 @@ N/A — the page lives only in A-SVC memory (QW4); `web.notify` is read from Dat
 | Item | Content |
 |-----|----------|
 | Name | WEB-05 — Show the phone's page on iPhone/iPad |
-| Description | While the HandLive app is in the foreground on iPhone/iPad and has a session with the phone, a page received from the phone (WEB-01) is shown as a banner at the top of the Devices screen: "Continue browsing: \<title or host>", with the host under it; tapping it opens the URL in Safari (`UIApplication.open`).<br>No push and no Live Activity: an app in the background has no session and receives the current page again after it returns to the foreground and reconnects (QW3). |
+| Description | While the HandLive app is in the foreground on iPhone/iPad and has a session with the phone, a page received from the phone (WEB-01) is shown as a banner laid over the top of whichever tab is visible: "Continue browsing: \<title or host>", with the host under it; tapping it opens the URL in Safari (`UIApplication.open`). The user can close the banner; it then stays hidden until a page with a new `page_id` arrives.<br>No push and no Live Activity: an app in the background has no session and receives the current page again after it returns to the foreground and reconnects (QW3). |
 | Actors | Primary: User. System: I-APP, A-SVC (sender), OS (`UIApplication`). |
 | Preconditions | 1.<br>A valid pair; the app in the foreground with a session to the phone.<br>2.<br>`feature.web = true` on iPhone/iPad (`features.web.receive = true`) and the Android → iPhone/iPad direction in effect (QW2). |
-| Postconditions | The banner shows the phone's latest page while it is valid. Nothing is written to disk. |
+| Postconditions | The banner shows the phone's latest page while it is valid, unless the user closed it for that `page_id`. Nothing is written to disk. |
 | Exceptions | E1 — Invalid payload or direction not in effect: dropped silently (QW8).<br>E2 — `web/inactive`, `WEB_PAGE_TTL` or the session ends (including the app going to the background): the banner is removed.<br>E3 — `UIApplication.open` completes with `false`: nothing opens; the banner stays. |
 | Special requirements | **Privacy:** QW4.<br>**Security:** QW7.<br>**Accessibility:** VoiceOver reads the banner as a button, "Continue browsing: \<title or host>, \<host>"; Dynamic Type up to AX5. |
 
@@ -698,10 +700,11 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Page banner | string | Output | Hidden | Top of the Devices screen (PAIR-02): "Continue browsing: \<title or host>" with the browser glyph |
+| 1 | Page banner | string | Output | Hidden | Overlay at the top of whichever tab is visible: "Continue browsing: \<title or host>" with the browser glyph; hidden while the page's `page_id` is the one the user closed (field 5) |
 | 2 | Host line | string | Output | Hidden | The host in full under field 1 (punycode per QW7); hidden when field 1 already shows the host |
 | 3 | Tap on the banner | action | Input | — | Opens the URL (API 1) |
 | 4 | "Continue Browsing" switch | bool | Input/Output | `feature.web` = `false` | iPhone/iPad Settings (SET-02 field 34) |
+| 5 | "Close" button on the banner | action | Input | — | Hides the banner and remembers that `page_id` in memory; a `web/active` with the same `page_id` (refresh, reconnect) keeps it hidden, a new `page_id` shows it again |
 
 ### 9.5.4 Business flow
 
@@ -709,13 +712,13 @@ N/A — no approved wireframe yet.
 flowchart TB
   subgraph ND["User"]
     U1["(1) Open HandLive on the iPhone or iPad"]
-    U6["(6) Tap the banner"]
+    U6["(6) Tap or close the banner"]
   end
   subgraph HT["System"]
     S2["(2) Session and capability exchange, the phone sends its current page"]
     D3{"(3) Valid and in effect?"}
     S4["(4) Keep the page in memory, restart WEB_PAGE_TTL"]
-    S5["(5) Show the banner on the Devices screen"]
+    S5["(5) Show the banner over the visible tab"]
     S7["(7) Check the URL again, open it in Safari"]
     S8["(8) web/inactive, TTL, background or session end: remove the banner"]
     X1(["Dropped"])
@@ -732,8 +735,8 @@ flowchart TB
 | 2 | System | I-APP, A-SVC | The session opens (CONN-01 or CONN-03); after the capability exchange the phone sends its current `web/active` if a page is active (WEB-01 step 10); later pages arrive as they settle. |  |
 | 3 | System | I-APP | Validates per WEB-01 API 1 logic 2 and checks the direction. | E1. |
 | 4 | System | I-APP | Replaces the stored page, restarts the `WEB_PAGE_TTL` timer. |  |
-| 5 | System | I-APP | Shows fields 1 and 2 at the top of the Devices screen. |  |
-| 6 | User | I-APP | Taps the banner (field 3). |  |
+| 5 | System | I-APP | Shows fields 1 and 2 over the top of the visible tab, unless the user closed this `page_id` (field 5). |  |
+| 6 | User | I-APP | Taps the banner (field 3), or closes it (field 5): it stays hidden until a new `page_id` arrives. |  |
 | 7 | System | I-APP, OS | Checks the URL again (QW7), calls `UIApplication.shared.open(url)` (API 1). | E3. |
 | 8 | System | I-APP | `web/inactive` with the stored `page_id`, TTL, the app moving to the background or the session ending → removes the banner and forgets the page. | E2. |
 

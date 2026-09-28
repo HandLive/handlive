@@ -6,7 +6,7 @@
 > I-APP (0.1), định danh `page_id` (0.2), kiểu dữ liệu (0.3), envelope (0.5.1), nguyên tắc bảo mật
 > (0.6.5), loại tin `web` (0.7.1), mã trình duyệt (0.7.1), capability `features.web` (0.7.2), khóa cài
 > đặt `feature.web`, `web.send`, `web.notify`, `web.browsers` (0.9.5), hằng số `WEB_SETTLE`,
-> `WEB_POLL_MAC`, `WEB_PAGE_TTL`, `WEB_URL_MAX`, `WEB_TITLE_MAX` (0.10). Quyết định áp dụng: README §5 C21.
+> `WEB_POLL_MAC`, `WEB_REFRESH`, `WEB_PAGE_TTL`, `WEB_URL_MAX`, `WEB_TITLE_MAX` (0.10). Quyết định áp dụng: README §5 C21.
 > Nguồn: `plans/20260928-web-handoff/plan.md` (W1–W9).
 >
 > **Phase P6, chưa xây dựng.** Mọi chức năng lá của nhóm phụ thuộc cổng **G6** (spike, plan W8): bộ
@@ -25,8 +25,10 @@
 >   `features.web.enabled` và `send`, bên nhận có `features.web.enabled` và `receive`, theo capability
 >   mới nhất của mỗi bên (0.7.2). Ánh xạ khóa cài đặt: SET-02 API 1.
 > - **QW3 — Bản mới nhất thắng, không `ack`.** `web/active` và `web/inactive` là sự kiện không có
->   `ack`, như `call_event/state`. Bên gửi chỉ gửi khi trang đổi, và gửi lại `web/active` hiện tại một
->   lần ngay sau khi phiên mới trao đổi xong capability. Không xếp hàng khi không có phiên.
+>   `ack`, như `call_event/state`. Bên gửi gửi khi trang đổi, gửi lại `web/active` hiện tại một lần ngay
+>   sau khi phiên mới trao đổi xong capability, và khi trang vẫn mở thì gửi lại với cùng `page_id` mỗi
+>   `WEB_REFRESH` (5 phút), để `WEB_PAGE_TTL` của bên nhận không bao giờ làm hết hạn một trang còn mở.
+>   Không xếp hàng khi không có phiên.
 > - **QW4 — Không bao giờ lưu.** Bên nhận chỉ giữ trang mới nhất của mỗi cặp, trong bộ nhớ. Bên nhận
 >   quên trang khi có `web/inactive` cho `page_id` đó, sau `WEB_PAGE_TTL` (10 phút) không có
 >   `web/active` mới, khi phiên kết thúc, và khi tính năng hết hiệu lực. Không trang nào được ghi vào cơ
@@ -122,7 +124,7 @@ flowchart TB
 | 4 | Hệ thống | A-WEB | Riêng tư, không xác định, `FLAG_SECURE`, không phải `http`/`https`, hoặc dài hơn `WEB_URL_MAX` → bước 8. | E5, E6, E7. |
 | 5 | Hệ thống | A-WEB | Chuẩn hóa (API 4, logic 3): thêm `https://` khi thanh địa chỉ chỉ hiện host; giữ fragment; cắt tiêu đề còn `WEB_TITLE_MAX` ký tự; tiêu đề rỗng → vắng mặt. |  |
 | 6 | Hệ thống | A-WEB | Khởi động hoặc khởi động lại bộ hẹn giờ `WEB_SETTLE` mỗi khi URL đã chuẩn hóa đổi; bộ hẹn giờ chỉ kích hoạt khi URL không đổi và thanh địa chỉ không có focus. |  |
-| 7 | Hệ thống | A-SVC | Dựng `web/active` (API 1): `page_id` mới khi URL khác URL gửi gần nhất, giữ `page_id` khi chỉ tiêu đề đổi; gửi tới mọi phiên hiệu lực. Không gửi khi URL và tiêu đề trùng với lần gửi gần nhất. |  |
+| 7 | Hệ thống | A-SVC | Dựng `web/active` (API 1): `page_id` mới khi URL khác URL gửi gần nhất, giữ `page_id` khi chỉ tiêu đề đổi; gửi tới mọi phiên hiệu lực. Không gửi khi URL và tiêu đề trùng với lần gửi gần nhất, trừ lần làm mới: khi trang vẫn mở, cùng `web/active` (cùng `page_id`, `observed_at` mới) được gửi lại mỗi `WEB_REFRESH` (QW3). |  |
 | 8 | Hệ thống | A-SVC | Gửi `web/inactive` (API 2) cho `page_id` gửi gần nhất, một lần, tới mọi phiên đã nhận nó; quên trang đó. | Chưa gửi gì trước đó → không làm gì. |
 | 9 | Người dùng | OS | Chuyển sang ứng dụng khác, tắt màn hình, hoặc mở tab riêng tư. | Cách phát hiện: API 3 logic 4, API 5. |
 | 10 | Hệ thống | A-SVC | Khi phiên mới trao đổi xong capability và chiều này hiệu lực: gửi lại `web/active` hiện tại (cùng `page_id`) nếu còn trang đang mở. | E9. |
@@ -165,8 +167,8 @@ flowchart TB
 ```
 
 - **Logic nghiệp vụ:**
-  1. **Bên gửi:** chỉ gửi theo QW2, QW5, QW6; không gửi lại `data` y hệt (trừ một lần sau lần trao
-     đổi capability mới, QW3).
+  1. **Bên gửi:** chỉ gửi theo QW2, QW5, QW6; không gửi lại cùng trang, trừ một lần sau lần trao
+     đổi capability mới và mỗi `WEB_REFRESH` khi trang vẫn mở (QW3).
   2. **Bên nhận kiểm tra** (QW8) — bỏ im lặng khi: `url` không phân tích được, scheme không phải
      `http` hoặc `https`, không có host, hoặc dài hơn `WEB_URL_MAX`; `title` dài hơn `WEB_TITLE_MAX`;
      `page_id` không phải uuid; chiều này không hiệu lực với phiên. Giá trị `browser` không biết được coi
@@ -471,7 +473,7 @@ flowchart TB
 | 5 | Hệ thống | M-APP | Khởi động bộ hẹn giờ: mỗi `WEB_POLL_MAC` chạy script của trình duyệt (API 1) trên hàng đợi nền và đọc `{url, title, mode}`. | E6. |
 | 6 | Hệ thống | M-APP | Chế độ riêng tư hoặc không xác định, scheme khác `http`/`https`, hoặc dài hơn `WEB_URL_MAX` → bước 9. | E4, E5. |
 | 7 | Hệ thống | M-APP | Chạy lại bộ hẹn giờ `WEB_SETTLE` mỗi khi URL đổi; cắt tiêu đề còn `WEB_TITLE_MAX`. |  |
-| 8 | Hệ thống | M-APP | Gửi `web/active` (WEB-01 API 1, `browser` theo bảng API 1) với quy tắc `page_id` của WEB-01 bước 7. |  |
+| 8 | Hệ thống | M-APP | Gửi `web/active` (WEB-01 API 1, `browser` theo bảng API 1) với quy tắc `page_id` và `WEB_REFRESH` của WEB-01 bước 7. |  |
 | 9 | Hệ thống | M-APP | Gửi `web/inactive` cho trang gửi gần nhất (một lần); dừng bộ hẹn giờ khi trình duyệt không còn ở trước nhất hoặc chiều này hết hiệu lực. |  |
 | 10 | Người dùng | OS | Kích hoạt ứng dụng khác, khóa màn hình, hoặc Mac ngủ hay chuyển người dùng. | API 2. |
 | 11 | Hệ thống | M-APP | Sau lần trao đổi capability của phiên mới: gửi lại `web/active` hiện tại khi một trình duyệt vẫn ở trước nhất với trang đang mở. | E7. |
@@ -677,10 +679,10 @@ N/A — trang chỉ nằm trong bộ nhớ A-SVC (QW4); `web.notify` đọc từ
 | Mục | Nội dung |
 |-----|----------|
 | Tên | WEB-05 — Hiện trang của điện thoại trên iPhone/iPad |
-| Mô tả | Khi ứng dụng HandLive đang ở foreground trên iPhone/iPad và có phiên với điện thoại, trang nhận từ điện thoại (WEB-01) hiện thành banner ở đầu màn hình Thiết bị: "Duyệt web tiếp: \<tiêu đề hoặc host>", kèm host bên dưới; chạm vào thì mở URL trong Safari (`UIApplication.open`).<br>Không push, không Live Activity: ứng dụng ở nền không có phiên và nhận lại trang hiện tại sau khi trở lại foreground và kết nối lại (QW3). |
+| Mô tả | Khi ứng dụng HandLive đang ở foreground trên iPhone/iPad và có phiên với điện thoại, trang nhận từ điện thoại (WEB-01) hiện thành banner phủ lên đầu tab đang hiển thị, bất kể tab nào: "Duyệt web tiếp: \<tiêu đề hoặc host>", kèm host bên dưới; chạm vào thì mở URL trong Safari (`UIApplication.open`). Người dùng có thể đóng banner; banner ẩn cho tới khi có trang với `page_id` mới.<br>Không push, không Live Activity: ứng dụng ở nền không có phiên và nhận lại trang hiện tại sau khi trở lại foreground và kết nối lại (QW3). |
 | Tác nhân | Chính: Người dùng. Hệ thống: I-APP, A-SVC (bên gửi), OS (`UIApplication`). |
 | Điều kiện trước | 1.<br>Cặp hiệu lực; ứng dụng ở foreground và có phiên tới điện thoại.<br>2.<br>`feature.web = true` trên iPhone/iPad (`features.web.receive = true`) và chiều Android → iPhone/iPad hiệu lực (QW2). |
-| Điều kiện sau | Banner hiện trang mới nhất của điện thoại khi trang còn hợp lệ. Không ghi gì xuống đĩa. |
+| Điều kiện sau | Banner hiện trang mới nhất của điện thoại khi trang còn hợp lệ, trừ khi người dùng đã đóng nó cho `page_id` đó. Không ghi gì xuống đĩa. |
 | Ngoại lệ | E1 — Payload không hợp lệ hoặc chiều này không hiệu lực: bỏ im lặng (QW8).<br>E2 — `web/inactive`, hết `WEB_PAGE_TTL` hoặc phiên kết thúc (kể cả khi ứng dụng xuống nền): gỡ banner.<br>E3 — `UIApplication.open` kết thúc với `false`: không mở gì; banner vẫn giữ. |
 | Yêu cầu đặc biệt | **Riêng tư:** QW4.<br>**Bảo mật:** QW7.<br>**Truy cập:** VoiceOver đọc banner là một nút, "Duyệt web tiếp: \<tiêu đề hoặc host>, \<host>"; Dynamic Type tới AX5. |
 
@@ -692,10 +694,11 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Banner trang | string | Output | Ẩn | Đầu màn hình Thiết bị (PAIR-02): "Duyệt web tiếp: \<tiêu đề hoặc host>" kèm biểu tượng trình duyệt |
+| 1 | Banner trang | string | Output | Ẩn | Lớp phủ ở đầu tab đang hiển thị, bất kể tab nào: "Duyệt web tiếp: \<tiêu đề hoặc host>" kèm biểu tượng trình duyệt; ẩn khi `page_id` của trang là `page_id` người dùng đã đóng (trường 5) |
 | 2 | Dòng host | string | Output | Ẩn | Host đầy đủ dưới trường 1 (punycode theo QW7); ẩn khi trường 1 đã hiện host |
 | 3 | Chạm vào banner | action | Input | — | Mở URL (API 1) |
 | 4 | Công tắc "Duyệt web tiếp" | bool | Input/Output | `feature.web` = `false` | Cài đặt trên iPhone/iPad (SET-02 trường 34) |
+| 5 | Nút "Đóng" trên banner | action | Input | — | Ẩn banner và nhớ `page_id` đó trong bộ nhớ; `web/active` cùng `page_id` (làm mới, kết nối lại) giữ banner ẩn, `page_id` mới thì hiện lại |
 
 ### 9.5.4 Luồng nghiệp vụ
 
@@ -703,13 +706,13 @@ N/A — chưa có wireframe được duyệt.
 flowchart TB
   subgraph ND["Người dùng"]
     U1["(1) Mở HandLive trên iPhone hoặc iPad"]
-    U6["(6) Chạm vào banner"]
+    U6["(6) Chạm hoặc đóng banner"]
   end
   subgraph HT["Hệ thống"]
     S2["(2) Phiên và trao đổi capability, điện thoại gửi trang hiện tại"]
     D3{"(3) Hợp lệ và hiệu lực?"}
     S4["(4) Giữ trang trong bộ nhớ, chạy lại WEB_PAGE_TTL"]
-    S5["(5) Hiện banner trên màn hình Thiết bị"]
+    S5["(5) Hiện banner phủ lên tab đang hiển thị"]
     S7["(7) Kiểm lại URL, mở trong Safari"]
     S8["(8) web/inactive, hết TTL, xuống nền hoặc phiên kết thúc: gỡ banner"]
     X1(["Bị bỏ"])
@@ -726,8 +729,8 @@ flowchart TB
 | 2 | Hệ thống | I-APP, A-SVC | Phiên mở (CONN-01 hoặc CONN-03); sau khi trao đổi capability, điện thoại gửi `web/active` hiện tại nếu có trang đang mở (WEB-01 bước 10); các trang sau tới khi chúng ổn định. |  |
 | 3 | Hệ thống | I-APP | Kiểm hợp lệ theo WEB-01 API 1 logic 2 và kiểm chiều này. | E1. |
 | 4 | Hệ thống | I-APP | Thay trang đang giữ, chạy lại bộ hẹn giờ `WEB_PAGE_TTL`. |  |
-| 5 | Hệ thống | I-APP | Hiện trường 1 và 2 ở đầu màn hình Thiết bị. |  |
-| 6 | Người dùng | I-APP | Chạm vào banner (trường 3). |  |
+| 5 | Hệ thống | I-APP | Hiện trường 1 và 2 phủ lên đầu tab đang hiển thị, trừ khi người dùng đã đóng `page_id` này (trường 5). |  |
+| 6 | Người dùng | I-APP | Chạm vào banner (trường 3), hoặc đóng nó (trường 5): banner ẩn cho tới khi có `page_id` mới. |  |
 | 7 | Hệ thống | I-APP, OS | Kiểm lại URL (QW7), gọi `UIApplication.shared.open(url)` (API 1). | E3. |
 | 8 | Hệ thống | I-APP | `web/inactive` với `page_id` đang giữ, hết TTL, ứng dụng xuống nền hoặc phiên kết thúc → gỡ banner và quên trang. | E2. |
 

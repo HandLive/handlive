@@ -984,6 +984,7 @@ SET-02 quản lý các khóa này.
 | `MIC_DRIVER_WAIT` | 60 s | Chờ thiết bị micro xuất hiện sau khi cài driver |
 | `WEB_SETTLE` | 1,5 s | URL phải giữ nguyên chừng này trước khi gửi `web/active` (WEB-01, WEB-03) |
 | `WEB_POLL_MAC` | 1,5 s | Chu kỳ đọc Apple Events, chỉ khi một trình duyệt được hỗ trợ ở trước nhất (WEB-03) |
+| `WEB_REFRESH` | 5 phút | Khi trang vẫn mở, bên gửi gửi lại `web/active` với cùng `page_id` theo chu kỳ này, để `WEB_PAGE_TTL` không bao giờ làm hết hạn một trang còn mở (WEB-01, WEB-03) |
 | `WEB_PAGE_TTL` | 10 phút | Bên nhận quên trang sau chừng này không có `web/active` mới (WEB-02, WEB-04, WEB-05) |
 | `WEB_URL_MAX` | 8 KiB (UTF-8) | URL dài hơn không được gửi và bị bên nhận bỏ |
 | `WEB_TITLE_MAX` | 256 ký tự | Bên gửi cắt tiêu đề dài hơn; bên nhận bỏ tiêu đề dài hơn |

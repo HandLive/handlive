@@ -994,6 +994,7 @@ SET-02 function manages these keys.
 | `MIC_DRIVER_WAIT` | 60 s | Wait for the microphone device to appear after the driver is installed |
 | `WEB_SETTLE` | 1.5 s | The URL must stay the same this long before `web/active` is sent (WEB-01, WEB-03) |
 | `WEB_POLL_MAC` | 1.5 s | Apple Events poll interval, only while a supported browser is frontmost (WEB-03) |
+| `WEB_REFRESH` | 5 minutes | While the same page stays open, the sender re-sends its `web/active` with the same `page_id` this often, so `WEB_PAGE_TTL` never expires an open page (WEB-01, WEB-03) |
 | `WEB_PAGE_TTL` | 10 minutes | The receiver forgets a page after this long without a new `web/active` (WEB-02, WEB-04, WEB-05) |
 | `WEB_URL_MAX` | 8 KiB (UTF-8) | Longer URLs are not sent and are dropped by the receiver |
 | `WEB_TITLE_MAX` | 256 characters | The sender cuts longer titles; the receiver drops a longer one |
