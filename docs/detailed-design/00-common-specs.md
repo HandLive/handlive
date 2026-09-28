@@ -222,8 +222,12 @@ General rules:
 
 1. Operations marked with an ack in 0.7.1 must be answered with `ack` within **10 s**
    (`REQUEST_TIMEOUT`); after that the caller treats it as a `TIMEOUT` error.
-2. The receiver keeps the `id`s processed in the last 5 minutes (LRU of 1,000 entries); on a
-   duplicate `id` it resends the earlier `ack` and does not process the message again.
+2. The receiver keeps, per direction, every `id` accepted in the current key epoch (`DEDUP_WINDOW`,
+   0.10): the set is emptied at rekey (0.6.3 step 6), so it holds at most 10,000 ids, and while the
+   previous epoch's keys are still accepted its ids are kept too. An `id` is recorded only after the
+   envelope decrypted successfully, so a forged envelope never takes an `id`. On a duplicate `id` it
+   resends the earlier `ack` and does not process the message again. LAN and relay sessions behave
+   the same.
 3. Unknown `type` or `op`: for a request → error `ack` `UNSUPPORTED_TYPE`; for an event → ignore
    it.
 4. Envelope ≤ 256 KiB. Larger data goes in chunks (`clipboard` op `chunk`).
@@ -297,6 +301,12 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
 - Pairing attestation (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
   BE). Both sides sign it with Ed25519; the relay checks both signatures before allowing routing.
+- Revocation statement (`HLREVOKE1`, PAIR-03): `sig` = Ed25519(`ik_sig` of the revoking device,
+  `"HLREVOKE1"` ‖ `pair_id` (16) ‖ `by` = the revoking `device_id` (16) ‖ `revoked_at` (uint64 BE,
+  ms)) — 49 bytes signed. The relay checks it with the caller's stored key, stores it and forwards it;
+  a device acts on a revocation from the relay only when `by` is the peer of that pair and `sig`
+  verifies with the peer's stored `ik_sig` public key (PAIR-03 API 4). Test vector:
+  `shared/test-vectors/` (`revoke`).
 - Detailed flow: PAIR-01.
 
 ### 0.6.3 Session handshake on `/v1/ctl`
@@ -348,7 +358,12 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 
 ### 0.6.4 Device authentication with the relay
 
-1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s).
+1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s). Each
+   challenge is stored on its own (`chal:<device_id>:<challenge>`, 0.9.4) and used once; a new
+   challenge never replaces another pending one, so a stranger asking for challenges cannot lock a
+   device out. Limits (CONN-03 API 2–3): 30 requests per minute per client IP for `/auth/challenge`
+   and `/auth/token` together, checked before any database lookup, and 10 challenges per minute per
+   (`device_id`, client IP); an IPv6 client counts per /64.
 2. `POST /v1/auth/token` `{device_id, challenge, sig}` with `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖
    challenge (the 32 raw bytes after b64u decoding) ‖ 16-byte `device_id`) → `{access_token, expires_in}`. The
    token is an HS256 JWT, `sub` = `device_id`, valid for 15 minutes.
@@ -482,7 +497,7 @@ Examples in the function groups may quote only the relevant part.
 | `rv_join` | Device→R | `{rv_id}` — joins the pairing rendezvous | PAIR-01 |
 | `rv_joined` | R→device | `{rv_id, peer_present}` | PAIR-01 |
 | `rv_msg` | Both ways | `{rv_id, env}` — carries `pair` envelopes through the rendezvous | PAIR-01 |
-| `pair_revoked` | R→device | `{pair_id, by}` — the pair has been revoked; sent as soon as it happens and when the device reconnects | PAIR-03 |
+| `pair_revoked` | R→device | `{pair_id, by, revoked_at, sig}` — the pair has been revoked, with the revoking device's signed statement (`HLREVOKE1`, 0.6.2); sent as soon as it happens and when the device reconnects; acted on only when `sig` verifies with the peer's key | PAIR-03 |
 
 ### 0.7.4 Relay REST
 
@@ -492,10 +507,10 @@ Examples in the function groups may quote only the relevant part.
 | POST | `/v1/auth/challenge` | — | Get a challenge | CONN-03 |
 | POST | `/v1/auth/token` | — | Exchange a signature for a JWT | CONN-03 |
 | PUT | `/v1/devices/me/push-token` | JWT | Update the push token | CONN-04 |
-| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Remove the device from the relay. `false`: silent deregistration, the pairs stay usable on the LAN. `true`: revoke every pair and notify the peers. Without `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
+| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Remove the device from the relay. `false`: silent deregistration, the pairs stay usable on the LAN. `true`: revoke every pair and notify the peers; body `{revocations: [{pair_id, revoked_at, sig}]}`, one `HLREVOKE1` statement per unrevoked pair, a missing or bad one → 400 `BAD_REQUEST`. Without `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
 | POST | `/v1/pairs` | JWT | Register a pair (attestation + 2 signatures) | PAIR-01 |
-| GET | `/v1/pairs` | JWT | List the device's pairs; `?include_revoked=` takes only `true` or `false`, any other value → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
-| POST | `/v1/pairs/{pair_id}/revoke` | JWT | Revoke a pair | PAIR-03 |
+| GET | `/v1/pairs` | JWT | List the device's pairs; a revoked pair carries `revoked_by`, `revoked_at`, `revoke_sig`; `?include_revoked=` takes only `true` or `false`, any other value → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
+| POST | `/v1/pairs/{pair_id}/revoke` | JWT | Revoke a pair; body `{revoked_at, sig}` (`HLREVOKE1`, 0.6.2), a missing or bad statement → 400 `BAD_REQUEST` | PAIR-03 |
 | POST | `/v1/push` | JWT | Send a push to a device of the same pair | CONN-04 |
 | GET (WS) | `/v1/relay` | JWT | Relay channel | CONN-03 |
 
@@ -515,7 +530,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `FEATURE_DISABLED` | General | The feature is off on the receiving side | Show "This feature is off on \<device>" |
 | `PERMISSION_MISSING` | General | Missing Android permission; `details.permission` | Guide the user to grant the permission (SET-01) |
 | `TIMEOUT` | General | No ack within the deadline | Retry according to each function's policy |
-| `RATE_LIMITED` | General | Quota exceeded | Wait `details.retry_after_ms` |
+| `RATE_LIMITED` | General | Quota exceeded (e.g. the `sms/send` limit, SMS-04); `details.retry_after_ms` | Wait `details.retry_after_ms` |
 | `PAYLOAD_TOO_LARGE` | General | Size limit exceeded | Tell the user |
 | `NOT_CONNECTED` | General | No session to the target device | Wait for a connection or queue |
 | `INTERNAL` | General | Unexpected error | Retry once, then report the error |
@@ -523,8 +538,8 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `PAIRING_CLOSED` | Pairing | The 120 s window has ended or the Mac has refreshed the QR | Scan the new QR (PIN flow: get a new PIN) |
 | `PIN_INVALID` | Pairing | Wrong PIN (at most 3 attempts) | Enter it again; after 3 attempts the Mac generates a new PIN |
 | `AUTH_FAILED` | Session | Wrong HMAC or signature | No automatic retry |
-| `PAIR_UNKNOWN` | Session | No matching pair | Delete the local pair, ask to pair again |
-| `PAIR_REVOKED` | Session | The pair has been revoked | Delete the local pair |
+| `PAIR_UNKNOWN` | Session | No matching pair | On the LAN (pinned TLS to the phone): delete the local pair, ask to pair again. Over the relay, before authentication: `Backoff`, never unpair (CONN-03 E9) |
+| `PAIR_REVOKED` | Session | The pair has been revoked | On the LAN: delete the local pair. Over the relay, before authentication: `Backoff`, never unpair (CONN-03 E9) |
 | `DECRYPT_FAILED` | Session | The envelope cannot be decrypted | Close the session, reconnect |
 | `TLS_PIN_MISMATCH` | Session | The certificate does not match the pin | Drop this instance, try another instance |
 | `CLIP_TOO_LARGE` | Clipboard | Exceeds `max_text_bytes`/`max_image_bytes` | Tell the user |
@@ -590,7 +605,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | 4410 | `REKEY_FAILED` — rekey without an `ack` within 10 s, an error `ack` or invalid data (CONN-02 E4) |
 | 4411 | `IDLE_TIMEOUT` — session silent for more than 45 s (CONN-02) |
 | 4426 | `UNSUPPORTED_VERSION` |
-| 4429 | `RATE_LIMITED` — more than 16 connections without a handshake, or the IP is blocked for 5 minutes because of a wrong `mac` (CONN-01 API 3, API 4) |
+| 4429 | `RATE_LIMITED` — on `/v1/ctl`: more than 16 connections without a handshake or more than 4 from one IP, or the IP is blocked for 5 minutes (wrong `mac`, or repeated pre-handshake failures, CONN-01 API 3, API 4); on `/v1/pair`: more than 4 connections or more than 2 from one IP (PAIR-01 API 2) |
 | 4500 | `INTERNAL` |
 
 ## 0.9 Data model
@@ -795,8 +810,9 @@ CREATE TABLE pairs (
   sig_a          BYTEA       NOT NULL,
   sig_b          BYTEA       NOT NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  revoked_at     TIMESTAMPTZ,
-  revoked_by     UUID,
+  revoked_at     TIMESTAMPTZ,                           -- the signed revoked_at of the statement (ms precision)
+  revoked_by     UUID,                                  -- by of the statement (the revoking member)
+  revoke_sig     BYTEA       CHECK (octet_length(revoke_sig) = 64),  -- HLREVOKE1 signature (0.6.2); NULL on rows revoked before signed revocation
   CHECK (device_a <> device_b)
 );
 CREATE INDEX idx_pairs_device_a ON pairs (device_a) WHERE revoked_at IS NULL;
@@ -817,13 +833,16 @@ Redis keys `[Design]`:
 
 | Key / channel | Type | TTL | Description |
 |-------------|------|-----|-------|
-| `chal:<device_id>` | string | 60 s | Pending challenge |
+| `chal:<device_id>:<challenge>` | string | 60 s | One pending challenge (b64u in the key); `GETDEL` when used; several can be pending at once (0.6.4) |
 | `presence:<device_id>` | string (instance id) | 60 s, renewed every 20 s | Which instance the device is connected to |
 | `dev:<device_id>` | pub/sub channel | — | The instance holding the connection subscribes; other instances publish the frames to forward |
 | `rv:<rv_id>` | set (device_id) | 180 s | Pairing rendezvous |
-| `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 days | Pairs revoked because the peer deleted all of its data (`DELETE /v1/devices/me?revoke_pairs=true`, the `pairs` row has already been deleted); `pair_revoked` is sent when the device connects to the relay, then the key is deleted |
+| `revoked_notice:<device_id>` | set (`<pair_id>\|<by>\|<revoked_at>\|<sig>`) | 30 days | Pairs revoked because the peer deleted all of its data (`DELETE /v1/devices/me?revoke_pairs=true`, the `pairs` row has already been deleted), with the peer's `HLREVOKE1` statement (`revoked_at` in ms, `sig` b64u); `pair_revoked` is sent when the device connects to the relay, then the key is deleted |
 | `rl:<device_id>:<group>:<minute>` | counter | 120 s | Rate limit |
-| `rl:ip:<ip>:reg:<hour>` | counter | 3,600 s | 10 new registrations/hour/IP (CONN-03 API 1); the IP is taken from `X-Forwarded-For` only when the request comes from a trusted reverse proxy (Phase 2) |
+| `rl:ip:<ip>:reg:<hour>` | counter | 3,600 s | 10 new registrations/hour/IP (CONN-03 API 1); the IP is taken from `X-Forwarded-For` only when the request comes from a trusted reverse proxy (Phase 2); `<ip>` is the IPv4 address or the IPv6 /64 prefix, as in every `rl:ip:` key |
+| `rl:reg:<hour>` | counter | 3,600 s | New device registrations of the whole relay, at most `RELAY_MAX_REGISTRATIONS_PER_HOUR` (CONN-03 API 1) |
+| `rl:ip:<ip>:auth:<minute>` | counter | 120 s | 30 requests/minute/IP for `/v1/auth/challenge` and `/v1/auth/token` together, checked before any database lookup (0.6.4) |
+| `rl:<device_id>:<ip>:chal:<minute>` | counter | 120 s | 10 challenges/minute per (`device_id`, IP) (CONN-03 API 2) |
 | `usage_salt:<YYYY-MM>` | string (32 random bytes) | 40 days | Monthly salt of `device_hash` (0.6.5), kept only here |
 | `maintenance:<day>` | string (lock) | 25 h | Only the instance that takes it runs the daily cleanup |
 | `wake:<device_id>:<reason>` | string | 300 s | Coalesces repeated `wake` pushes with the same reason (CONN-04 API 2); released when the send fails |
@@ -878,14 +897,17 @@ SET-02 function manages these keys.
 |------|---------|---------|
 | `CTL_PORT` | 47800 (fallback 47801–47809) |  |
 | `PAIRING_WINDOW` | 120 s | QR/PIN validity and the `/v1/pair` window |
-| `PIN_MAX_ATTEMPTS` | 3 |  |
+| `PIN_MAX_ATTEMPTS` | 3 | The phone sends at most 3 `pair/offer` per PIN; after the third without `pair/done` the window closes as "PIN expired" (PAIR-01 A4) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
+| `CTL_PREAUTH_LIMIT` | 16 connections without a handshake, at most 4 per IP | `/v1/ctl`; over the cap → 4429 (CONN-01 API 3) |
+| `CTL_IP_BLOCK` | 10 pre-handshake failures (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) within 5 minutes → IP blocked for 5 minutes | Next to the `AUTH_FAILED` rule (5/minute); blocked → 4429 (CONN-01 API 4) |
+| `PAIR_CONN_LIMIT` | 4 connections at once, 2 per IP; first message ≤ 8 KiB | `/v1/pair`; over the cap → 4429 (PAIR-01 API 2) |
 | `REQUEST_TIMEOUT` | 10 s | Waiting for `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: WS ping; relay: plus an E2E `ping` every 30 s |
 | `RECONNECT_BACKOFF` | 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Back to 0 once a session has stayed `Connected` for 30 s (a session that drops sooner keeps the current step, so a peer that accepts and then drops at once is not retried every 0.5 s); retry immediately on a network change or wake-up |
 | `LAN_DISCOVERY_GRACE` | 10 s | Not seen on the LAN after 10 s → try the relay |
 | `REKEY_AFTER` | 24 h or 10,000 envelopes/direction |  |
-| `DEDUP_WINDOW` | 5 minutes / 1,000 ids |  |
+| `DEDUP_WINDOW` | Every `id` accepted in the current key epoch, per direction (≤ 10,000 ids) | Emptied at rekey; the previous epoch's ids are kept while its keys are still accepted; only decrypted envelopes are recorded (0.5.1 rule 2) |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
 | `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Before encryption |
@@ -906,6 +928,7 @@ SET-02 function manages these keys.
 | `SMS_OUTBOX_EXPIRY` | 24 h | Waiting messages past the deadline → `failed` |
 | `SMS_PAGE_MAX_BYTES` | 180 KiB plaintext / `ack` | Together with `SMS_PAGE_MAX` keeps the envelope < 256 KiB |
 | `SMS_BODY_MAX` | 1,600 characters |  |
+| `SMS_SEND_LIMIT` | 10 `sms/send` per minute and 100 per day (rolling), per pair | Over → `RATE_LIMITED` with `details.retry_after_ms` (SMS-04 API 1) |
 | `SMS_SEND_MATCH_WINDOW` | 60 s | A new provider row in `sent` or `failed` matches a `SendRegistry` entry still waiting for its final result or at most this long after it (SMS-04 API 4) |
 | `SMS_QUICK_REPLY_TIMEOUT` | 20 s | Quick reply from an iOS notification |
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Coalesces the `onChange` calls of the SMS provider |
@@ -913,6 +936,10 @@ SET-02 function manages these keys.
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 minutes / 60 s |  |
 | `RELAY_IDLE_DISCONNECT` | 5 minutes | Android leaves the relay after this long without a relayed session, a rendezvous, a ringing call or traffic (CONN-03 step 2) |
 | `RELAY_RATE_LIMIT` | REST 60/minute, push 30/minute, 2 MiB/s per pair and direction |  |
+| `RELAY_AUTH_LIMIT` | 30/minute per client IP (`/auth/challenge` + `/auth/token`); 10 challenges/minute per (`device_id`, IP) | IPv6 counted per /64 (0.6.4) |
+| `RELAY_REG_IP_LIMIT` | 10 new registrations/hour per IP | IPv6 counted per /64 (CONN-03 API 1) |
+| `RELAY_MAX_REGISTRATIONS_PER_HOUR` | 1,000 (default, relay setting) | New device registrations of the whole relay; over → 429 `RATE_LIMITED` (CONN-03 API 1) |
+| `REVOKE_CLOCK_SKEW` | ±10 minutes | `revoked_at` of a revocation statement against the relay clock (PAIR-03 API 3) |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2.5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
 | `CAM_STATS_INTERVAL` | 1 s |  |
@@ -967,7 +994,7 @@ camera channel uses USB); every instance fails the pin → "Needs to be paired a
 name (status line, screen-reader text of the status indicator): "Connected via Wi-Fi to \<name>",
 "Connected over the internet to \<name>", "Connected via USB to \<name>".
 
-From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. Over the relay, a session or handshake that ends while the `/v1/relay` link stays up means the phone left (CONN-03 E8): back to `WaitingPeer`, not `Backoff`; while in `WaitingPeer`, a hint-matching mDNS instance leads back to `Discovering` for a LAN session. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule.
+From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. Over the relay, a session or handshake that ends while the `/v1/relay` link stays up means the phone left (CONN-03 E8): back to `WaitingPeer`, not `Backoff`; while in `WaitingPeer`, a hint-matching mDNS instance leads back to `Discovering` for a LAN session. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule. A `session/error` `PAIR_UNKNOWN` or `PAIR_REVOKED` received over the relay, before the handshake authenticated the phone, leads to `Backoff` and never to unpairing (CONN-03 E9); over the LAN (pinned TLS to the phone) it keeps its meaning (CONN-01 E4).
 
 ## 0.12 Localization and the UI string catalog
 

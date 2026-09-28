@@ -220,8 +220,11 @@ Quy tắc chung:
 
 1. Thao tác đánh dấu "có ack" ở 0.7.1 phải được trả `ack` trong **10 s** (`REQUEST_TIMEOUT`); quá
    hạn bên gọi coi là lỗi `TIMEOUT`.
-2. Bên nhận lưu `id` đã xử lý trong 5 phút gần nhất (LRU 1 000 mục); gặp `id` trùng thì gửi lại
-   `ack` cũ, không xử lý lại.
+2. Bên nhận lưu, theo từng chiều, mọi `id` đã nhận trong thế hệ khóa hiện tại (`DEDUP_WINDOW`,
+   0.10): tập này được xóa khi rekey (0.6.3 bước 6) nên giữ tối đa 10 000 id, và trong lúc khóa của
+   thế hệ trước còn được nhận thì id của thế hệ đó cũng được giữ. Một `id` chỉ được ghi lại sau khi
+   envelope giải mã thành công, nên envelope giả không chiếm được `id` nào. Gặp `id` trùng thì gửi
+   lại `ack` cũ, không xử lý lại. Phiên LAN và phiên qua relay xử lý như nhau.
 3. `type` hoặc `op` không biết: nếu là yêu cầu → `ack` lỗi `UNSUPPORTED_TYPE`; nếu là sự kiện → bỏ
    qua.
 4. Envelope ≤ 256 KiB. Dữ liệu lớn hơn đi theo chunk (`clipboard` op `chunk`).
@@ -294,6 +297,12 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 - Bản chứng thực ghép nối (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
   BE). Cả hai bên ký Ed25519; relay kiểm hai chữ ký trước khi cho phép định tuyến.
+- Tuyên bố thu hồi (`HLREVOKE1`, PAIR-03): `sig` = Ed25519(`ik_sig` của thiết bị thu hồi,
+  `"HLREVOKE1"` ‖ `pair_id` (16) ‖ `by` = `device_id` của thiết bị thu hồi (16) ‖ `revoked_at` (uint64
+  BE, ms)) — ký 49 byte. Relay kiểm bằng khóa đã lưu của bên gọi, lưu lại và chuyển tiếp; thiết bị
+  chỉ xử lý một lần thu hồi từ relay khi `by` là đối phương của cặp đó và `sig` hợp lệ với khóa công
+  khai `ik_sig` đã lưu của đối phương (PAIR-03 API 4). Vector kiểm thử: `shared/test-vectors/`
+  (`revoke`).
 - Luồng chi tiết: PAIR-01.
 
 ### 0.6.3 Bắt tay phiên trên `/v1/ctl`
@@ -343,7 +352,12 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 
 ### 0.6.4 Xác thực thiết bị với relay
 
-1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s).
+1. `POST /v1/auth/challenge` `{device_id}` → `{challenge (b64u 32 byte), expires_at}` (60 s). Mỗi
+   challenge được lưu riêng (`chal:<device_id>:<challenge>`, 0.9.4) và chỉ dùng một lần; challenge
+   mới không bao giờ thay challenge khác đang chờ, nên người lạ xin challenge không khóa được thiết
+   bị. Giới hạn (CONN-03 API 2–3): 30 yêu cầu mỗi phút mỗi IP cho `/auth/challenge` và `/auth/token`
+   cộng lại, kiểm trước mọi truy vấn cơ sở dữ liệu, và 10 challenge mỗi phút mỗi (`device_id`, IP);
+   client IPv6 tính theo /64.
 2. `POST /v1/auth/token` `{device_id, challenge, sig}` với `sig` = Ed25519(`ik_sig`, `"HLAUTH1"` ‖
    challenge (32 byte thô đã giải b64u) ‖ `device_id` 16 byte) → `{access_token, expires_in}`. Token
    JWT HS256, `sub` = `device_id`, hạn 15 phút.
@@ -474,7 +488,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | `rv_join` | Thiết bị→R | `{rv_id}` — tham gia điểm hẹn ghép nối | PAIR-01 |
 | `rv_joined` | R→thiết bị | `{rv_id, peer_present}` | PAIR-01 |
 | `rv_msg` | Hai chiều | `{rv_id, env}` — chuyển envelope `pair` qua điểm hẹn | PAIR-01 |
-| `pair_revoked` | R→thiết bị | `{pair_id, by}` — cặp đã bị thu hồi; gửi ngay khi xảy ra và khi thiết bị kết nối lại | PAIR-03 |
+| `pair_revoked` | R→thiết bị | `{pair_id, by, revoked_at, sig}` — cặp đã bị thu hồi, kèm tuyên bố có chữ ký của thiết bị thu hồi (`HLREVOKE1`, 0.6.2); gửi ngay khi xảy ra và khi thiết bị kết nối lại; chỉ được xử lý khi `sig` hợp lệ với khóa của đối phương | PAIR-03 |
 
 ### 0.7.4 REST của relay
 
@@ -484,10 +498,10 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | POST | `/v1/auth/challenge` | — | Lấy challenge | CONN-03 |
 | POST | `/v1/auth/token` | — | Đổi chữ ký lấy JWT | CONN-03 |
 | PUT | `/v1/devices/me/push-token` | JWT | Cập nhật push token | CONN-04 |
-| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Xóa thiết bị khỏi relay. `false`: gỡ đăng ký im lặng, các cặp vẫn dùng được trong LAN. `true`: thu hồi mọi cặp và báo đối phương. Thiếu `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
+| DELETE | `/v1/devices/me?revoke_pairs=<bool>` | JWT | Xóa thiết bị khỏi relay. `false`: gỡ đăng ký im lặng, các cặp vẫn dùng được trong LAN. `true`: thu hồi mọi cặp và báo đối phương; body `{revocations: [{pair_id, revoked_at, sig}]}`, mỗi cặp chưa thu hồi một tuyên bố `HLREVOKE1`, thiếu hoặc sai → 400 `BAD_REQUEST`. Thiếu `revoke_pairs` → 400 `BAD_REQUEST` (0.8.2) | SET-02 |
 | POST | `/v1/pairs` | JWT | Đăng ký cặp (bản chứng thực + 2 chữ ký) | PAIR-01 |
-| GET | `/v1/pairs` | JWT | Danh sách cặp của thiết bị; `?include_revoked=` chỉ nhận `true` hoặc `false`, giá trị khác → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
-| POST | `/v1/pairs/{pair_id}/revoke` | JWT | Thu hồi cặp | PAIR-03 |
+| GET | `/v1/pairs` | JWT | Danh sách cặp của thiết bị; cặp đã thu hồi có `revoked_by`, `revoked_at`, `revoke_sig`; `?include_revoked=` chỉ nhận `true` hoặc `false`, giá trị khác → 400 `BAD_REQUEST` (0.8.2) | PAIR-02, CONN-03 |
+| POST | `/v1/pairs/{pair_id}/revoke` | JWT | Thu hồi cặp; body `{revoked_at, sig}` (`HLREVOKE1`, 0.6.2), thiếu hoặc sai tuyên bố → 400 `BAD_REQUEST` | PAIR-03 |
 | POST | `/v1/push` | JWT | Gửi push tới thiết bị cùng cặp | CONN-04 |
 | GET (WS) | `/v1/relay` | JWT | Kênh relay | CONN-03 |
 
@@ -506,7 +520,7 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `FEATURE_DISABLED` | Chung | Tính năng tắt ở bên nhận | Hiển thị "Tính năng đang tắt trên <thiết bị>" |
 | `PERMISSION_MISSING` | Chung | Thiếu quyền Android; `details.permission` | Hướng dẫn cấp quyền (SET-01) |
 | `TIMEOUT` | Chung | Không có ack trong hạn | Thử lại theo chính sách từng chức năng |
-| `RATE_LIMITED` | Chung | Vượt hạn mức | Chờ `details.retry_after_ms` |
+| `RATE_LIMITED` | Chung | Vượt hạn mức (ví dụ giới hạn `sms/send`, SMS-04); `details.retry_after_ms` | Chờ `details.retry_after_ms` |
 | `PAYLOAD_TOO_LARGE` | Chung | Vượt giới hạn kích thước | Báo người dùng |
 | `NOT_CONNECTED` | Chung | Không có phiên tới thiết bị đích | Chờ kết nối hoặc xếp hàng |
 | `INTERNAL` | Chung | Lỗi không mong đợi | Thử lại 1 lần, rồi báo lỗi |
@@ -514,8 +528,8 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `PAIRING_CLOSED` | Ghép nối | Hết cửa sổ 120 s hoặc Mac đã làm mới QR | Quét QR mới (luồng PIN: lấy mã PIN mới) |
 | `PIN_INVALID` | Ghép nối | PIN sai (tối đa 3 lần) | Nhập lại; quá 3 lần Mac sinh PIN mới |
 | `AUTH_FAILED` | Phiên | HMAC hoặc chữ ký sai | Không thử lại tự động |
-| `PAIR_UNKNOWN` | Phiên | Không có cặp tương ứng | Xóa cặp cục bộ, yêu cầu ghép nối lại |
-| `PAIR_REVOKED` | Phiên | Cặp đã bị thu hồi | Xóa cặp cục bộ |
+| `PAIR_UNKNOWN` | Phiên | Không có cặp tương ứng | Trong LAN (TLS ghim tới điện thoại): xóa cặp cục bộ, yêu cầu ghép nối lại. Qua relay, trước khi xác thực: `Backoff`, không bao giờ hủy cặp (CONN-03 E9) |
+| `PAIR_REVOKED` | Phiên | Cặp đã bị thu hồi | Trong LAN: xóa cặp cục bộ. Qua relay, trước khi xác thực: `Backoff`, không bao giờ hủy cặp (CONN-03 E9) |
 | `DECRYPT_FAILED` | Phiên | Không giải mã được envelope | Đóng phiên, kết nối lại |
 | `TLS_PIN_MISMATCH` | Phiên | Chứng chỉ không khớp ghim | Bỏ instance này, thử instance khác |
 | `CLIP_TOO_LARGE` | Clipboard | Vượt `max_text_bytes`/`max_image_bytes` | Báo người dùng |
@@ -581,7 +595,7 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | 4410 | `REKEY_FAILED` — rekey không có `ack` trong 10 s, `ack` lỗi hoặc dữ liệu sai (CONN-02 E4) |
 | 4411 | `IDLE_TIMEOUT` — phiên im lặng quá 45 s (CONN-02) |
 | 4426 | `UNSUPPORTED_VERSION` |
-| 4429 | `RATE_LIMITED` — quá 16 kết nối chưa bắt tay, hoặc IP bị chặn 5 phút vì sai `mac` (CONN-01 API 3, API 4) |
+| 4429 | `RATE_LIMITED` — trên `/v1/ctl`: quá 16 kết nối chưa bắt tay hoặc quá 4 kết nối từ một IP, hoặc IP bị chặn 5 phút (sai `mac`, hoặc lỗi trước bắt tay lặp lại, CONN-01 API 3, API 4); trên `/v1/pair`: quá 4 kết nối hoặc quá 2 kết nối từ một IP (PAIR-01 API 2) |
 | 4500 | `INTERNAL` |
 
 ## 0.9 Mô hình dữ liệu
@@ -786,8 +800,9 @@ CREATE TABLE pairs (
   sig_a          BYTEA       NOT NULL,
   sig_b          BYTEA       NOT NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  revoked_at     TIMESTAMPTZ,
-  revoked_by     UUID,
+  revoked_at     TIMESTAMPTZ,                           -- revoked_at đã ký trong tuyên bố (độ chính xác ms)
+  revoked_by     UUID,                                  -- by của tuyên bố (thành viên thu hồi)
+  revoke_sig     BYTEA       CHECK (octet_length(revoke_sig) = 64),  -- chữ ký HLREVOKE1 (0.6.2); NULL ở các dòng thu hồi trước khi có thu hồi có chữ ký
   CHECK (device_a <> device_b)
 );
 CREATE INDEX idx_pairs_device_a ON pairs (device_a) WHERE revoked_at IS NULL;
@@ -808,13 +823,16 @@ Khóa Redis `[Thiết kế]`:
 
 | Khóa / kênh | Kiểu | TTL | Mô tả |
 |-------------|------|-----|-------|
-| `chal:<device_id>` | string | 60 s | Challenge đang chờ |
+| `chal:<device_id>:<challenge>` | string | 60 s | Một challenge đang chờ (b64u trong khóa); `GETDEL` khi dùng; có thể có nhiều challenge chờ cùng lúc (0.6.4) |
 | `presence:<device_id>` | string (instance id) | 60 s, gia hạn 20 s/lần | Thiết bị đang nối tới instance nào |
 | `dev:<device_id>` | pub/sub channel | — | Instance đang giữ kết nối subscribe; instance khác publish khung cần chuyển |
 | `rv:<rv_id>` | set (device_id) | 180 s | Điểm hẹn ghép nối |
-| `revoked_notice:<device_id>` | set (`<pair_id>\| <by>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
+| `revoked_notice:<device_id>` | set (`<pair_id>\|<by>\|<revoked_at>\|<sig>`) | 30 ngày | Cặp đã bị thu hồi do đối phương xóa toàn bộ dữ liệu (`DELETE /v1/devices/me?revoke_pairs=true`, dòng `pairs` đã bị xóa), kèm tuyên bố `HLREVOKE1` của đối phương (`revoked_at` tính bằng ms, `sig` b64u); gửi `pair_revoked` khi thiết bị kết nối relay rồi xóa khóa |
 | `rl:<device_id>:<nhóm>:<phút>` | counter | 120 s | Rate limit |
-| `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2) |
+| `rl:ip:<ip>:reg:<giờ>` | counter | 3 600 s | 10 đăng ký mới/giờ/IP (CONN-03 API 1); IP lấy từ `X-Forwarded-For` chỉ khi đến từ reverse proxy tin cậy (Phase 2); `<ip>` là địa chỉ IPv4 hoặc tiền tố /64 của IPv6, như mọi khóa `rl:ip:` |
+| `rl:reg:<giờ>` | counter | 3 600 s | Số thiết bị mới đăng ký trên toàn relay, tối đa `RELAY_MAX_REGISTRATIONS_PER_HOUR` (CONN-03 API 1) |
+| `rl:ip:<ip>:auth:<phút>` | counter | 120 s | 30 yêu cầu/phút/IP cho `/v1/auth/challenge` và `/v1/auth/token` cộng lại, kiểm trước mọi truy vấn cơ sở dữ liệu (0.6.4) |
+| `rl:<device_id>:<ip>:chal:<phút>` | counter | 120 s | 10 challenge/phút mỗi (`device_id`, IP) (CONN-03 API 2) |
 | `usage_salt:<YYYY-MM>` | string (32 byte ngẫu nhiên) | 40 ngày | Muối theo tháng của `device_hash` (0.6.5), chỉ lưu ở đây |
 | `maintenance:<ngày>` | string (khóa) | 25 h | Chỉ instance lấy được khóa mới chạy dọn dữ liệu hằng ngày |
 | `wake:<device_id>:<lý do>` | string | 300 s | Gộp các push `wake` lặp cùng lý do (CONN-04 API 2); nhả khi gửi lỗi |
@@ -869,14 +887,17 @@ SET-02 quản lý các khóa này.
 |------|---------|---------|
 | `CTL_PORT` | 47800 (dự phòng 47801–47809) |  |
 | `PAIRING_WINDOW` | 120 s | Hạn QR/PIN và cửa sổ `/v1/pair` |
-| `PIN_MAX_ATTEMPTS` | 3 |  |
+| `PIN_MAX_ATTEMPTS` | 3 | Điện thoại gửi tối đa 3 `pair/offer` cho mỗi PIN; sau lần thứ ba không có `pair/done` thì cửa sổ đóng như "PIN hết hạn" (PAIR-01 A4) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
+| `CTL_PREAUTH_LIMIT` | 16 kết nối chưa bắt tay, tối đa 4 mỗi IP | `/v1/ctl`; vượt → 4429 (CONN-01 API 3) |
+| `CTL_IP_BLOCK` | 10 lỗi trước bắt tay (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) trong 5 phút → chặn IP 5 phút | Bên cạnh quy tắc `AUTH_FAILED` (5/phút); bị chặn → 4429 (CONN-01 API 4) |
+| `PAIR_CONN_LIMIT` | 4 kết nối cùng lúc, 2 mỗi IP; tin đầu tiên ≤ 8 KiB | `/v1/pair`; vượt → 4429 (PAIR-01 API 2) |
 | `REQUEST_TIMEOUT` | 10 s | Chờ `ack` |
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: ping WS; relay: thêm `ping` E2E mỗi 30 s |
 | `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi một phiên đã giữ `Connected` được 30 s (phiên rớt sớm hơn giữ nguyên bậc hiện tại, để một thiết bị nhận kết nối rồi rớt ngay không bị thử lại mỗi 0,5 s); thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
 | `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
-| `DEDUP_WINDOW` | 5 phút / 1 000 id |  |
+| `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2) |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
 | `CLIP_MAX_IMAGE` | 10 MiB |  |
 | `CHUNK_SIZE` | 64 KiB | Trước mã hóa |
@@ -897,6 +918,7 @@ SET-02 quản lý các khóa này.
 | `SMS_OUTBOX_EXPIRY` | 24 h | Tin chờ quá hạn → `failed` |
 | `SMS_PAGE_MAX_BYTES` | 180 KiB plaintext / `ack` | Cùng với `SMS_PAGE_MAX` giữ envelope < 256 KiB |
 | `SMS_BODY_MAX` | 1 600 ký tự |  |
+| `SMS_SEND_LIMIT` | 10 `sms/send` mỗi phút và 100 mỗi ngày (cửa sổ trượt), mỗi cặp | Vượt → `RATE_LIMITED` kèm `details.retry_after_ms` (SMS-04 API 1) |
 | `SMS_SEND_MATCH_WINDOW` | 60 s | Dòng provider mới ở `sent` hoặc `failed` khớp mục `SendRegistry` còn chờ kết quả cuối hoặc đã có kết quả đó không quá chừng này (SMS-04 API 4) |
 | `SMS_QUICK_REPLY_TIMEOUT` | 20 s | Trả lời nhanh từ thông báo iOS |
 | `SMS_OBSERVER_DEBOUNCE` | 100 ms | Gom các lần `onChange` của provider SMS |
@@ -904,6 +926,10 @@ SET-02 quản lý các khóa này.
 | `JWT_TTL` / `CHALLENGE_TTL` | 15 phút / 60 s |  |
 | `RELAY_IDLE_DISCONNECT` | 5 phút | Android tự rời relay sau chừng này thời gian không có phiên qua relay, điểm hẹn, cuộc gọi đang đổ chuông hay lưu lượng (CONN-03 bước 2) |
 | `RELAY_RATE_LIMIT` | REST 60/phút, push 30/phút, 2 MiB/s mỗi cặp mỗi chiều |  |
+| `RELAY_AUTH_LIMIT` | 30/phút mỗi IP (`/auth/challenge` + `/auth/token`); 10 challenge/phút mỗi (`device_id`, IP) | IPv6 tính theo /64 (0.6.4) |
+| `RELAY_REG_IP_LIMIT` | 10 đăng ký mới/giờ mỗi IP | IPv6 tính theo /64 (CONN-03 API 1) |
+| `RELAY_MAX_REGISTRATIONS_PER_HOUR` | 1 000 (mặc định, cấu hình relay) | Số thiết bị mới đăng ký trên toàn relay; vượt → 429 `RATE_LIMITED` (CONN-03 API 1) |
+| `REVOKE_CLOCK_SKEW` | ±10 phút | `revoked_at` của tuyên bố thu hồi so với đồng hồ relay (PAIR-03 API 3) |
 | `CAM_DEFAULT` | 1280×720, 30 fps, 2,5 Mbps |  |
 | `CAM_IDR_INTERVAL` | 1 s (WiFi), 2 s (USB) |  |
 | `CAM_STATS_INTERVAL` | 1 s |  |
@@ -958,7 +984,7 @@ camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại
 trạng thái, câu đọc màn hình của chỉ báo trạng thái): "Đã kết nối qua Wi-Fi với <tên>",
 "Đã kết nối qua Internet với <tên>", "Đã kết nối qua USB với <tên>".
 
-Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Qua relay, phiên hoặc bước bắt tay kết thúc trong khi liên kết `/v1/relay` vẫn còn nghĩa là điện thoại đã rời (CONN-03 E8): quay về `WaitingPeer`, không về `Backoff`; khi đang ở `WaitingPeer`, thấy instance mDNS có hint khớp thì quay về `Discovering` để mở phiên LAN. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường.
+Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Qua relay, phiên hoặc bước bắt tay kết thúc trong khi liên kết `/v1/relay` vẫn còn nghĩa là điện thoại đã rời (CONN-03 E8): quay về `WaitingPeer`, không về `Backoff`; khi đang ở `WaitingPeer`, thấy instance mDNS có hint khớp thì quay về `Discovering` để mở phiên LAN. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường. `session/error` `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` nhận qua relay, trước khi bước bắt tay xác thực được điện thoại, dẫn đến `Backoff` và không bao giờ hủy cặp (CONN-03 E9); trong LAN (TLS ghim tới điện thoại) vẫn giữ ý nghĩa cũ (CONN-01 E4).
 
 ## 0.12 Bản địa hóa và catalog chuỗi giao diện
 
