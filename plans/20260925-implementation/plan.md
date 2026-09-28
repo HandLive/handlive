@@ -2,9 +2,9 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 merged into `main` (2026-09-27, by decision of the project owner before gates G1 and G2 and before its real-device, relay, APNs and FCM checks, which are still open, `reports/phase-02-merge.md`); Phase 3 merged into `main` (2026-09-28, by decision of the project owner before its real-device checks, `reports/phase-03-merge.md`); Phase 4 opened on `feat/phase-04-call-audio` with the spike of gate G4 (`reports/phase-04-spike-d1.md`) · **Sources:**
-`plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
-(33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
+**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 merged into `main` (2026-09-27, by decision of the project owner before gates G1 and G2 and before its real-device, relay, APNs and FCM checks, which are still open, `reports/phase-02-merge.md`); Phase 3 merged into `main` (2026-09-28, by decision of the project owner before its real-device checks, `reports/phase-03-merge.md`); Phase 4 opened on `feat/phase-04-call-audio` with the spike of gate G4 (`reports/phase-04-spike-d1.md`); Phase 6 (Continue Browsing) proposed on 2026-09-28, waiting for its G6 spike · **Sources:**
+`plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.3
+(38 leaf functions, C1–C21), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
 
 ## 1. Planning decisions
@@ -13,8 +13,8 @@ English | [Tiếng Việt](plan.vi.md)
 |---|-----------|-------|
 | I1 | **Five repositories in one workspace** (since 2026-09-25, decided by the project owner so that each part can go into a group; previously a monorepo): the hub `handlive` (docs, plans, `tools/docs/`) and four repositories `handlive-android`, `handlive-apple` (macOS + iOS + shared Swift packages), `handlive-relay`, `handlive-shared` (test vectors, schemas, design tokens, `tools/vectors`, `tools/schemas`), cloned into `android/`, `apple/`, `relay/`, `shared/` inside the hub folder — `tools/workspace.sh`; report `reports/repo-split.md` | Each part is pushed to the group separately; the three platforms still match one wire protocol because the test vectors and schemas exist in a single copy in `shared/`, and builds and tests read them through `../shared` |
 | I2 | **Phase 0** builds the scaffold, the protocol and encryption libraries and the cross-platform test vectors before any feature | Every later phase reuses them; encryption mismatches between Tink and CryptoKit must surface from the start |
-| I3 | Phases 1 → 5 in roadmap order; one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met (exceptions decided by the project owner: on 2026-09-26 Phase 1 merged and Phase 2 started before gate G1; on 2026-09-27 Phase 2 merged and Phase 3 started before gates G1 and G2 and before the Phase 2 real-device checks; on 2026-09-28 Phase 3 merged and Phase 4 started before the Phase 3 real-device checks; all of them still have to pass before the first release) | Each phase is a usable product |
-| I4 | Phases 4 and 5 open with a **one-week spike** with a go/no-go gate (D1, D6) before any feature code | Risks R1, R6 |
+| I3 | Phases 1 → 5 in roadmap order (Phase 6 needs only Phase 1 and may start while Phase 4 waits for gate G4; the project owner decides the order); one branch per phase `feat/phase-0N-<slug>`, merged into `main` once the measurable criteria are met (exceptions decided by the project owner: on 2026-09-26 Phase 1 merged and Phase 2 started before gate G1; on 2026-09-27 Phase 2 merged and Phase 3 started before gates G1 and G2 and before the Phase 2 real-device checks; on 2026-09-28 Phase 3 merged and Phase 4 started before the Phase 3 real-device checks; all of them still have to pass before the first release) | Each phase is a usable product |
+| I4 | Phases 4 and 5 open with a **one-week spike** with a go/no-go gate (D1, D6) before any feature code; Phase 6 with a 3–5 day spike (G6, plan W8) | Risks R1, R6; browser adapters and private-window detection for Phase 6 |
 | I5 | UI strings come from the catalog `shared/strings/ui-strings.json` (stable keys, `en` + `vi`, 0.12); the wording matches the detailed design (English `X.md`, Vietnamese `X.vi.md`); the UI is built to the design system (components, tokens, wording) | No strings written in code; both languages always complete |
 | I6 | When code and docs disagree: fix the docs first (00-common-specs → leaf function), run `tools/docs/validate_design_docs.py`, and only then change the code | The docs are the contract between the platforms |
 | I7 | **Multilingual product, bilingual docs** (project-owner decision 2026-09-25, C20): English is the product's default language, Vietnamese the second; the localization foundation (string catalog, resource generators, language selection) is built in Phase 1 before any screen. Every document has `X.md` (English, canonical) and `X.vi.md` (Vietnamese), changed in the same commit; agent reports are written in English only; plans and reports from before 2026-09-25 stay in Vietnamese as an archive; file names stay as they are, as identifiers | Open source aimed at an international community; Vietnamese users still get a complete UI and documentation |
@@ -30,8 +30,9 @@ English | [Tiếng Việt](plan.vi.md)
 | 3 | Call information and control | CALL-01…04 | Android, macOS, iOS | 2 | Incoming call < 200 ms; answer < 500 ms end to end | [phase-03-cuoc-goi.md](phase-03-cuoc-goi.md) |
 | 4 | Taking calls on the Mac | AUDIO-01…04, CALL-03 (hold, DTMF, mute over HFP) | Android, macOS | 3, spike D1 | MOS ≥ 3.5 (HFP), ≥ 3.0 (Opus/WS); ERL > 40 dB | [phase-04-am-thanh-cuoc-goi.md](phase-04-am-thanh-cuoc-goi.md) |
 | 5 | The phone as webcam and microphone | CAM-01…05 | Android, macOS | 1, spike D6 | Latency < 120 ms over Wi-Fi, < 70 ms over USB at 720p30 | [phase-05-camera-micro.md](phase-05-camera-micro.md) |
+| 6 | Continue Browsing (proposed) | WEB-01…05, SET-01 part B and SET-02 fields 34–37 for `web` | Android, macOS, iOS | 1, spike G6 | Sent after a 1.5 s settle; zero private pages sent; nothing stored | [phase-06-web-handoff.md](phase-06-web-handoff.md) |
 
-Effort estimate (roadmap): P1 3.5 · P2 4 · P3 3 · P4 6 · P5 5.5 person-months; Phase 0 about 0.5.
+Effort estimate (roadmap): P1 3.5 · P2 4 · P3 3 · P4 6 · P5 5.5 · P6 1.5 person-months; Phase 0 about 0.5.
 
 ## 3. How to hand work to agents
 
@@ -43,7 +44,7 @@ criteria, constraints, work context path (`/Users/hxd/HandLive` — the workspac
 five repositories; the agent works in the repository of its part), reports path
 (`plans/20260925-implementation/reports/`).
 
-**Mandatory reading order before writing code:** `CLAUDE.md` → `docs/detailed-design/README.md` (catalog, conventions §3, decisions C1–C20; every document has two versions — the English `X.md` is canonical, the Vietnamese `X.vi.md` has the same content) → `docs/detailed-design/00-common-specs.md` → the phase file → the leaf
+**Mandatory reading order before writing code:** `CLAUDE.md` → `docs/detailed-design/README.md` (catalog, conventions §3, decisions C1–C21; every document has two versions — the English `X.md` is canonical, the Vietnamese `X.vi.md` has the same content) → `docs/detailed-design/00-common-specs.md` → the phase file → the leaf
 functions it names → `docs/code-standards.md`. UI work also reads
 `docs/design-system/README.md`, the matching platform section in `docs/design-system/3-platforms/`
 and the README of each component involved.
@@ -86,6 +87,7 @@ repository) only when a mismatch is found, and run the validator.
 | G2 | Before the Phase 2 release | Play Console: Permissions Declaration Form for SMS and the call log submitted (`docs/deployment-guide.md`) | Activate Plan B (Notification Listener for incoming SMS; F-Droid/APK distribution) |
 | G4 (spike D1) | First week of Phase 4 | `IOBluetoothHandsFreeDevice` receives SCO audio in the HF role on macOS 13, 14, 15, 26 with Pixel and Samsung | Opus/WS becomes the primary path; HFP keeps only control; update AUDIO-02 and plan D1 |
 | G5 (spike D6) | First week of Phase 5 | CMIOExtension delivers frames to Zoom/Meet/FaceTime; the AudioServerPlugin loopback is audible in meeting apps | Stop Phase 5, write a report |
+| G6 (spike, plan W8) | First 3–5 days of Phase 6 | Android: address bar and incognito detection for Chrome, Samsung Internet, Firefox, Edge, Brave on API 29 and 35, battery cost measured; Mac: Apple Events for Safari, Chrome, Arc on macOS 13 and 26, Safari private windows, TCC for a Developer ID build; the Play Accessibility policy checked. Go/no-go per browser | Rejected browsers are listed in `09-web-handoff.md`; none passes → stop Phase 6, write a report |
 
 Items to check on real devices (not open questions; they are tasks inside the phases): the system setting names in English and Vietnamese ("Privacy & Security" / "Quyền riêng tư & Bảo mật",
 "Focus" / "Tập trung", "Paste from Other Apps" / "Dán từ ứng dụng khác") — A1.4, M1.1; the Magic
