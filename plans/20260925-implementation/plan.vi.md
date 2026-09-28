@@ -2,7 +2,7 @@
 
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); Phase 2 đã gộp vào `main` (27/09/2026, chủ dự án cho gộp trước cổng G1, G2 và trước việc kiểm trên máy thật, relay, APNs, FCM, các việc này vẫn còn mở, `reports/phase-02-merge.md`); Phase 3 đã gộp vào `main` (28/09/2026, chủ dự án cho gộp trước việc kiểm trên máy thật; commit gộp của Android còn chờ chủ dự án, `reports/phase-03-merge.md`); Phase 4 mở trên nhánh `feat/phase-04-call-audio` bằng spike của cổng G4 (`reports/phase-04-spike-d1.md`) · **Nguồn:**
+**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); Phase 2 đã gộp vào `main` (27/09/2026, chủ dự án cho gộp trước cổng G1, G2 và trước việc kiểm trên máy thật, relay, APNs, FCM, các việc này vẫn còn mở, `reports/phase-02-merge.md`); Phase 3 đã gộp vào `main` (28/09/2026, chủ dự án cho gộp trước việc kiểm trên máy thật, `reports/phase-03-merge.md`); Phase 4 mở trên nhánh `feat/phase-04-call-audio` bằng spike của cổng G4 (`reports/phase-04-spike-d1.md`) · **Nguồn:**
 `plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.2
 (33 chức năng lá, C1–C20), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.

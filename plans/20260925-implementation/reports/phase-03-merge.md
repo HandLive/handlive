@@ -14,23 +14,12 @@ tree was compared with the branch head that was green on CI, and they were ident
 |------------|--------------|----------------|----|
 | handlive-shared | `acb8c69` | 60 | green on `main` |
 | handlive-apple | `d8a9c93` | 81 | green on `main` |
-| handlive-android | not merged yet | 75 (head `cf567c8`, green on the branch) | — |
+| handlive-android | `3afbc39` | 75 (head `cf567c8`, green on the branch) | see below |
 | handlive-relay | — | no Phase 3 change | — |
 
-**handlive-android is waiting for the owner.** This session's permission settings refused the push of the Android
-merge commit to `main`, so it was not made. The branch head `cf567c8` passed `gradlew check` on CI. To finish, from
-the workspace root, the same procedure:
-
-```sh
-git -C android fetch origin
-git -C android worktree add --detach /tmp/hl-merge-android origin/main
-git -C /tmp/hl-merge-android merge --no-ff --signoff origin/feat/phase-03-calls -m "Merge branch 'feat/phase-03-calls'"
-git -C /tmp/hl-merge-android push origin HEAD:main
-git -C android worktree remove /tmp/hl-merge-android
-```
-
-Until then, Android's `main` is Phase 2 code while shared `main` already has the Phase 3 catalog and schemas; nothing
-runs CI on Android `main` in between.
+**handlive-android was merged later the same day** (`3afbc39`), after this session's first push was refused by its
+permission settings. Same procedure: the merge was made in a temporary worktree from `origin/main` `9d349ab`, its tree
+is identical to the branch head `cf567c8`, and `ci-android` on `main` passed (run 36364018327).
 
 Last fixes before the merge (all found end to end, `phase-03-e2e-1.md`, `phase-03-android-e2e-fixes.md`):
 
@@ -89,5 +78,5 @@ the spike of gate G4:
 - handlive-android and handlive-shared get their `feat/phase-04-call-audio` branches when their cards start.
 
 Status: DONE_WITH_CONCERNS
-Summary: Phase 3 is merged into main in handlive-shared and handlive-apple; handlive-android is ready (green branch head, no conflicts) and waits for the owner to push its merge commit.
-Concerns/Blockers: the Android merge push was refused by the session's permission settings; the Phase 3 real-device checks, gates G1 and G2 and the end-to-end reruns listed above are open.
+Summary: Phase 3 is merged into main in handlive-shared, handlive-apple and handlive-android, CI green on main.
+Concerns/Blockers: the Phase 3 real-device checks, gates G1 and G2 and the end-to-end reruns listed above are open.

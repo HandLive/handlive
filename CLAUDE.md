@@ -3,12 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 3 merged (Android merge commit pending); Phase 4 waits for the HFP spike; gates G1 and G2 open
+## Project status: Phase 3 merged; Phase 4 waits for the HFP spike; gates G1 and G2 open
 
 Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26), Phase 2 (SMS, iOS
 app, relay, push; 2026-09-27) and Phase 3 (call information and control; 2026-09-28) are merged into `main`.
-Phase 3 is merged in shared and apple; the Android merge commit waits for the project owner, because a
-permission setting refused its push (`phase-03-merge.md` has the commands); relay had no Phase 3 change. The
+Phase 3 is merged in shared, apple and android (android `3afbc39`); relay had no Phase 3 change. The
 project owner merged each phase before its gates. Still open, and required before the first release: gate G1
 (the `shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver, system setting
 names), gate G2 (Play Console) and the Phase 2 and Phase 3 checks on real devices, a real relay, APNs and FCM
@@ -42,35 +41,29 @@ project owner in Vietnamese with diacritics.
 
 ## Next steps (handoff of 2026-09-28 — start here)
 
-1. **Finish the Phase 3 merge in handlive-android.** The session's permission settings refused the push.
-   - Run the five commands in `plans/20260925-implementation/reports/phase-03-merge.md`: they merge
-     `feat/phase-03-calls`, head `cf567c8`, which is green and has no conflicts.
-   - Wait for Android CI on `main`.
-   - Then remove "Android merge commit pending" from this file, `README*.md`, `docs/codebase-summary*.md` and
-     `plans/20260925-implementation/plan*.md`.
-2. **Phase 4, gate G4: the HFP spike.** It needs the owner's hardware.
+1. **Phase 4, gate G4: the HFP spike.** It needs the owner's hardware.
    - Run `apple/Tools/HFPSpike` from branch `feat/phase-04-call-audio`, following the runbook
      `apple/Tools/HFPSpike/README.md`.
    - Hardware: an Android phone with a SIM, paired to the Mac over Bluetooth, and a real call.
    - Fill in `reports/phase-04-spike-d1.md`. G4 also asks for runs on macOS 26 and on macOS 13 or 14.
    - Decide whether HFP or Opus/WS is the primary path (update AUDIO-02 and plan D1) before any other Phase 4 card.
-3. **Rerun the end-to-end checks on a quiet host** with `shared/tools/e2e`.
+2. **Rerun the end-to-end checks on a quiet host** with `shared/tools/e2e`.
    - Use an emulator that is not paired with the Mac test app, and pull `android/` before building the APK.
    - Rerun:
      - the PIN pairing fixes (android `0cd3a61`…`c0d2d51`);
      - the capability after a late permission grant (`9415777`);
      - the feature list after the first pairing (`cf567c8`, harness `88da57a`);
      - the 4408 check on API 29.
-4. **Spec proposals waiting for a decision** (details in `phase-03-merge.md`):
+3. **Spec proposals waiting for a decision** (details in `phase-03-merge.md`):
    - the Devices empty state names only the clipboard (PAIR-02 field 11);
    - a reason sentence for "Keep HandLive Running" (SET-01 fields 7–9);
    - a grace period before the call panel's "connection lost" (CALL-03 E6);
    - resetting the reconnect backoff only after a stable session;
    - the bench start point for withheld callers.
-5. **Before the first release:**
+4. **Before the first release:**
    - gates G1 and G2, and the Phase 2 and Phase 3 checks on real devices;
    - the owner inputs listed in `phase-02-merge.md`: relay host and pins, APNs key, Firebase, app ids, logo and icon.
-6. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
+5. **Live Mac ↔ emulator testing** uses emulator `hl-claude-api35` (serial `emulator-5580`) with a debug build of the
    Mac app.
    - How to rebuild the bridge and the debug build: `build/dev-bridge/README.md` (this machine only, git-ignored).
    - The host is overloaded (`fileproviderd`, Synology Drive, Spotlight) and freezes the emulator for seconds, so

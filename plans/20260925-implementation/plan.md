@@ -2,7 +2,7 @@ English | [Tiếng Việt](plan.vi.md)
 
 # HandLive implementation plan — hand-off to coding agents
 
-**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 merged into `main` (2026-09-27, by decision of the project owner before gates G1 and G2 and before its real-device, relay, APNs and FCM checks, which are still open, `reports/phase-02-merge.md`); Phase 3 merged into `main` (2026-09-28, by decision of the project owner before its real-device checks; the Android merge commit waits for the owner, `reports/phase-03-merge.md`); Phase 4 opened on `feat/phase-04-call-audio` with the spike of gate G4 (`reports/phase-04-spike-d1.md`) · **Sources:**
+**Status:** Phase 0 and Phase 1 merged into `main` of every repository (2026-09-26, the project owner merged Phase 1 before gate G1 — the G1 real-device checks are still open, `reports/phase-01-merge.md`); Phase 2 merged into `main` (2026-09-27, by decision of the project owner before gates G1 and G2 and before its real-device, relay, APNs and FCM checks, which are still open, `reports/phase-02-merge.md`); Phase 3 merged into `main` (2026-09-28, by decision of the project owner before its real-device checks, `reports/phase-03-merge.md`); Phase 4 opened on `feat/phase-04-call-audio` with the spike of gate G4 (`reports/phase-04-spike-d1.md`) · **Sources:**
 `plans/20260924-definitive-architecture/plan.md` (architecture, D1–D12), `docs/detailed-design/` v1.2
 (33 leaf functions, C1–C20), `docs/design-system/` (Apple HIG, version 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.

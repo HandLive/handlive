@@ -8,7 +8,7 @@ English | [Tiếng Việt](codebase-summary.vi.md)
 
 **Phase 1 (clipboard MVP), Phase 2 (SMS, iPhone/iPad app, relay, push) and Phase 3 (calls) are merged into
 `main`** of handlive-android, handlive-apple, handlive-shared and handlive-relay (2026-09-26, 2026-09-27 and
-2026-09-28, CI green; the Android merge commit of Phase 3 waits for the project owner, `phase-03-merge.md`);
+2026-09-28, CI green, `phase-03-merge.md`);
 gates G1 and G2 and the Phase 2 and Phase 3 checks on real devices are still open. **Phase 4 (call audio)
 opened on `feat/phase-04-call-audio`** in handlive-apple with the HFP spike probe `Tools/HFPSpike`. The UI is multilingual — English by
 default, Vietnamese second — with every string in the shared catalog (C20). About 483 Kotlin files, 387 Swift
@@ -104,8 +104,7 @@ repository's commands. Module details and task cards: `plans/20260925-implementa
 ## Where to start implementing
 
 Phases 0 to 3 are merged into `main` (reports: `plans/20260925-implementation/reports/phase-0N-*.md`, merge
-records `phase-01-merge.md`, `phase-02-merge.md` and `phase-03-merge.md`; the Android merge commit of Phase 3
-waits for the project owner). Phase 4 (call audio) starts with the HFP spike of gate G4 on
+records `phase-01-merge.md`, `phase-02-merge.md` and `phase-03-merge.md`). Phase 4 (call audio) starts with the HFP spike of gate G4 on
 `feat/phase-04-call-audio` (`plans/20260925-implementation/phase-04-am-thanh-cuoc-goi.md`,
 `reports/phase-04-spike-d1.md`). Still open: gate G1 (the device matrix of `shared/tools/bench/README.md` on
 real phones and Macs), gate G2 (Play Console) and the Phase 2 and Phase 3 checks on real devices with a real

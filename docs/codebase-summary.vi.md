@@ -8,7 +8,7 @@
 
 **Phase 1 (bảng nhớ tạm MVP), Phase 2 (SMS, app iPhone/iPad, relay, push) và Phase 3 (cuộc gọi) đã gộp vào
 `main`** của handlive-android, handlive-apple, handlive-shared và handlive-relay (26/09/2026, 27/09/2026 và
-28/09/2026, CI xanh; commit gộp Phase 3 của Android còn chờ chủ dự án, `phase-03-merge.md`). Cổng G1, cổng G2
+28/09/2026, CI xanh, `phase-03-merge.md`). Cổng G1, cổng G2
 và việc kiểm Phase 2, Phase 3 trên máy thật vẫn còn mở. **Phase 4 (âm thanh cuộc gọi) mở trên nhánh
 `feat/phase-04-call-audio`** ở handlive-apple với công cụ spike HFP `Tools/HFPSpike`. Giao diện đa ngôn ngữ — tiếng Anh mặc định,
 tiếng Việt thứ hai — mọi chuỗi nằm trong catalog dùng chung (C20). Khoảng 483 file Kotlin, 387 file Swift (chưa
@@ -104,8 +104,7 @@ và thẻ việc: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md
 ## Điểm bắt đầu implement
 
 Phase 0 đến 3 đã gộp vào `main` (báo cáo: `plans/20260925-implementation/reports/phase-0N-*.md`, biên bản
-gộp `phase-01-merge.md`, `phase-02-merge.md` và `phase-03-merge.md`; commit gộp Phase 3 của Android còn chờ chủ
-dự án). Phase 4 (âm thanh cuộc gọi) bắt đầu bằng spike HFP của cổng G4 trên nhánh `feat/phase-04-call-audio`
+gộp `phase-01-merge.md`, `phase-02-merge.md` và `phase-03-merge.md`). Phase 4 (âm thanh cuộc gọi) bắt đầu bằng spike HFP của cổng G4 trên nhánh `feat/phase-04-call-audio`
 (`plans/20260925-implementation/phase-04-am-thanh-cuoc-goi.md`, `reports/phase-04-spike-d1.md`). Còn mở: cổng
 G1 (ma trận thiết bị của `shared/tools/bench/README.md` trên điện thoại và Mac thật), cổng G2 (Play Console) và
 việc kiểm Phase 2, Phase 3 trên máy thật với relay thật, APNs và FCM. Xem `plans/20260925-implementation/plan.md` và `docs/project-roadmap.md`.

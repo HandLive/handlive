@@ -6,7 +6,7 @@ English | [Tiếng Việt](README.vi.md)
 >
 > Design motto: *"WebSocket for data, Bluetooth for voice."*
 
-**Status:** Phase 0 (scaffold, protocol, encryption, tokens and CI), Phase 1 (clipboard sync between Android and Mac), Phase 2 (SMS, the iPhone and iPad app, the cloud relay and push notifications) and Phase 3 (call information and control) are merged into `main` (the Android part of Phase 3 still waits for its merge commit). Phase 4 (taking calls on the Mac) starts with a Bluetooth hands-free spike that needs a real phone. Gates G1 (real-device checks) and G2 (Play Console) are still open, so there is no release yet. The source code lives in four separate repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
+**Status:** Phase 0 (scaffold, protocol, encryption, tokens and CI), Phase 1 (clipboard sync between Android and Mac), Phase 2 (SMS, the iPhone and iPad app, the cloud relay and push notifications) and Phase 3 (call information and control) are merged into `main`. Phase 4 (taking calls on the Mac) starts with a Bluetooth hands-free spike that needs a real phone. Gates G1 (real-device checks) and G2 (Play Console) are still open, so there is no release yet. The source code lives in four separate repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
 
 ## What HandLive solves
 
