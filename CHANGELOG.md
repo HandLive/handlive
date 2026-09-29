@@ -31,7 +31,7 @@ First coordinated public beta across the HandLive workspace.
 
 | Repository | Tag | Commit |
 |------------|-----|--------|
-| [handlive](https://github.com/HandLive/handlive) | `v0.1.0-beta.1` | (hub release commit) |
+| [handlive](https://github.com/HandLive/handlive) | `v0.1.0-beta.1` | `e3c2a63` |
 | [handlive-android](https://github.com/HandLive/handlive-android) | `v0.1.0-beta.1` | `60435aa` |
 | [handlive-apple](https://github.com/HandLive/handlive-apple) | `v0.1.0-beta.1` | `0ce7f4b` |
 | [handlive-shared](https://github.com/HandLive/handlive-shared) | `v0.1.0-beta.1` | `1536980` |
