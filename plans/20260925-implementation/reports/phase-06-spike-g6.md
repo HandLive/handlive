@@ -286,6 +286,11 @@ the browsers with `adb` (`am start -a VIEW`, `input keyevent`). Log: `hlweb.log`
 - The owner granted Automation for Chrome and Safari to "Web Spike" (the prompt named the spike, not the terminal).
 - Chrome: URL and title read in 80–240 ms per poll; `mode=normal` reported. Safari: read in 79 ms; `private=unknown`
   (no Accessibility trust). Private windows not tested yet.
+- **Private windows (2026-09-29, owner opened them):** Chrome incognito → `mode=incognito`, `private=true`, no host
+  logged and no `active` event. Safari private window with `example.com` → `ev=active … private=unknown
+  bounds_match=yes ax=untrusted`: without Accessibility trust the probe cannot tell a Safari private window from a
+  normal one (both are `unknown`), followed by one Apple Events timeout (`-1712`, 2 s). Under the rule "unknown → do
+  not send", Safari would send nothing; Safari needs the Accessibility permission (to be tested) or stays unsupported.
 - Cost: 3,887 polls in about 70 minutes of real browsing, 25.7 s CPU in total (~0.6 % while a browser is in front).
 - Some web apps (Google Docs, internal dashboards) change the URL every few seconds (query/fragment), which gives a
   new `active` every few seconds: the product needs a rule for such churn (for example, keep `page_id` while only the
@@ -303,8 +308,8 @@ here:
 | Android 35 / 29 | Firefox | | | | | |
 | Android 35 / 29 | Edge | | | | | |
 | Android 35 / 29 | Brave | | | | | |
-| macOS 27 (this Mac) | Safari | yes (79 ms) | — | not tested | ~0.6 % | open (private windows) |
-| macOS 27 (this Mac) | Chrome | yes (80–240 ms) | — | `mode` read; incognito not tested | ~0.6 % | open (incognito) |
+| macOS 27 (this Mac) | Safari | yes (79–117 ms) | — | **no** without Accessibility (`unknown`) | ~0.6 % | no-go unless Accessibility is accepted |
+| macOS 27 (this Mac) | Chrome | yes (80–240 ms) | — | yes (`mode=incognito`) | ~0.6 % | go |
 | macOS 26 / 13–14 | Arc | | — | | | |
 
 ## Decision rule
