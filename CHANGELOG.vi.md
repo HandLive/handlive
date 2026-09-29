@@ -6,6 +6,37 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.1.0-beta.1] — 30/09/2026
+
+Bản beta công khai phối hợp đầu tiên trên toàn workspace HandLive.
+
+### Added
+
+- Hub `README.md` / `README.vi.md`: bảng Trạng thái rõ hơn, ô lộ trình ngắn hơn, và liên kết tới bản beta này.
+- Tăng phiên bản app cho tag beta: Android `0.1.0-beta.1` (versionCode 2), Apple marketing `0.1.0`.
+
+### Có trong bản beta này (mã trên `main`)
+
+- Phase 0–3: đồng bộ clipboard, cầu SMS, shell app iOS, relay Rust, metadata và điều khiển cuộc gọi.
+- Sửa ghép QR máy thật (Galaxy S25 Ultra ↔ Mac, 30/09/2026).
+- Sửa HOME leave của spike G6 trên Android 16 (chỉ spike; chưa mở thẻ sản phẩm).
+
+### Chưa có trong bản beta này
+
+- Âm thanh cuộc gọi (Phase 4 / G4), camera/mic ảo (Phase 5 / G5), sản phẩm Duyệt web tiếp (Phase 6).
+- Phân phối App Store / Play Store; cổng **G1** và **G2** vẫn mở.
+- Thông tin đăng nhập APNs / FCM / relay sản xuất (đầu vào của chủ dự án).
+
+### Commit phối hợp
+
+| Kho | Tag | Commit |
+|-----|-----|--------|
+| [handlive](https://github.com/HandLive/handlive) | `v0.1.0-beta.1` | (commit phát hành hub) |
+| [handlive-android](https://github.com/HandLive/handlive-android) | `v0.1.0-beta.1` | `60435aa` |
+| [handlive-apple](https://github.com/HandLive/handlive-apple) | `v0.1.0-beta.1` | `0ce7f4b` |
+| [handlive-shared](https://github.com/HandLive/handlive-shared) | `v0.1.0-beta.1` | `1536980` |
+| [handlive-relay](https://github.com/HandLive/handlive-relay) | `v0.1.0-beta.1` | `cda13bf` (`main`) |
+
 ## [2026-09-30]
 
 ### Changed

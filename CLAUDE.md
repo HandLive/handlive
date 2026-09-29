@@ -48,6 +48,8 @@ project owner in Vietnamese with diacritics.
 0. **README roadmap is the live progress board.** After every concrete finished task, update `README.md` /
    `README.vi.md` (and `docs/project-roadmap*.md`, hub CHANGELOG, this handoff) in the same change set. See the
    rule under Roadmap and progress in the hub README.
+0b. **First public beta `v0.1.0-beta.1` (2026-09-30).** Coordinated tags on hub, android, apple, shared, relay.
+   Not a store release: G1/G2 still open. Prefer the hub release notes for the SHA matrix.
 1. **Real-device pairing (S25 ↔ Mac) — stable and on `main` (2026-09-30).** Apple/android/shared/hub merged and
    pushed. Treat G1 pairing as informally green on this machine; formal G1 matrix still open.
    `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`.

@@ -8,6 +8,8 @@ HandLive brings ecosystem-native features, such as Apple Handoff, to Android. Th
 
 ## Progress snapshot (2026-09-30)
 
+**Latest tag:** [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (first public beta). Live table: hub [`README.md`](../README.md#roadmap-and-progress).
+
 | Phase | Code on `main` | Gate / blocker |
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
