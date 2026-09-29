@@ -16,9 +16,9 @@ HandLive brings ecosystem-native features, such as Apple Handoff, to Android. Th
 | 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30) |
 | 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open |
 | 3 | Done (2026-09-28) | Real-device checks open |
-| 4 | Spike only (`HFPSpike`) | G4: need BT phone + live call |
-| 5 | Spike only (`CameraSpike`) | G5: need paid Apple Developer team |
-| 6 | Spike probes on `main`; product cards not started | G6: owner browser decisions; Firefox/Edge/Brave rows |
+| 4 | Spike on `main` (`HFPSpike`, merged 2026-09-30) | G4: need BT phone + live call |
+| 5 | Spike on `main` (`CameraSpike`, merged 2026-09-30) | G5: need paid Apple Developer team |
+| 6 | Spike probes on `main` (Apple+Android merged 2026-09-30); product cards not started | G6: owner browser decisions; Firefox/Edge/Brave rows |
 
 ## Phase 1. Clipboard sync (MVP)
 

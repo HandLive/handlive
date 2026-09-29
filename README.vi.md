@@ -13,9 +13,9 @@ HandLive là mã nguồn mở (Apache-2.0). Kho này là **hub tài liệu**. M�
 | | |
 |--|--|
 | **Bản phát hành mới nhất** | [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (beta công khai đầu tiên, 30/09/2026) |
-| **Phase trên `main`** | 0–3 đã merge (clipboard, SMS, metadata/điều khiển cuộc gọi) |
+| **Phase trên `main`** | 0–3 mã sản phẩm; spike Phase 4–6 cũng trên `main` (30/09/2026) |
 | **Còn mở trước 1.0** | Cổng **G1** (ma trận máy thật) và **G2** (Play Console); kiểm relay / APNs / FCM thật |
-| **Đang làm** | Spike Phase 4–6 (âm thanh G4, camera/mic G5, Duyệt web tiếp G6) |
+| **Đang làm** | Quyết định phần cứng/trình duyệt G4/G5/G6; chưa mở thẻ sản phẩm Phase 4–6 |
 | **Ngôn ngữ** | Tiếng Anh (mặc định) và tiếng Việt; mọi tài liệu hub có `X.md` + `X.vi.md` |
 
 Bản beta dành cho người thử sớm. Chưa phải bản trên App Store / Play Store.
@@ -68,9 +68,9 @@ Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md
 | **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định |
 | **2** SMS + iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · G2 và push thật còn mở |
 | **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, metadata iOS | **Mã xong** · kiểm máy thật còn mở |
-| **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike G4** · cần BT điện thoại + cuộc gọi thật |
-| **5** Camera / mic ảo | CMIOExtension + AudioServerPlugin | **Spike G5** · cần Apple Developer trả phí |
-| **6** Duyệt web tiếp | URL đang mở giữa các thiết bị | **Spike G6** · đã đo Chrome/Samsung; còn go/no-go trình duyệt |
+| **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |
+| **5** Camera / mic ảo | CMIOExtension + AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
+| **6** Duyệt web tiếp | URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome/Samsung; còn go/no-go trình duyệt |
 | **G0** Vector mã hóa | | **Xong** |
 | **G1** Ma trận Phase 1 máy thật | | **Mở** (trước 1.0) |
 | **G2** Tờ khai SMS / nhật ký Play Console | | **Mở** (trước 1.0; phương án B: F-Droid/APK) |

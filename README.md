@@ -13,9 +13,9 @@ HandLive is open source (Apache-2.0). This repository is the **documentation hub
 | | |
 |--|--|
 | **Latest release** | [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (first public beta, 2026-09-30) |
-| **Phases on `main`** | 0–3 merged (clipboard, SMS, call metadata/control) |
+| **Phases on `main`** | 0–3 product code; Phase 4–6 **spike probes** also on `main` (2026-09-30) |
 | **Still open before 1.0** | Gates **G1** (real-device matrix) and **G2** (Play Console); real relay / APNs / FCM checks |
-| **In progress** | Phase 4–6 spikes (call audio G4, camera/mic G5, Continue Browsing G6) |
+| **In progress** | G4/G5/G6 hardware and browser decisions; product cards for Phases 4–6 not started |
 | **Languages** | English (default) and Vietnamese; every hub doc has `X.md` + `X.vi.md` |
 
 Beta builds are for early testers. They are not App Store / Play Store releases yet.
@@ -68,9 +68,9 @@ Full narrative: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards
 | **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable |
 | **2** SMS + iOS + relay + push | Conversations, Rust relay, APNs/FCM | **Code done** · G2 and real push still open |
 | **3** Call info and control | Telecom APIs, Mac panel, iOS metadata | **Code done** · real-device checks open |
-| **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike G4** · needs BT phone + live call |
-| **5** Virtual camera / mic | CMIOExtension + AudioServerPlugin | **Spike G5** · needs paid Apple Developer team |
-| **6** Continue Browsing | Foreground URL across devices | **Spike G6** · Chrome/Samsung measured; browser go/no-go pending |
+| **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike on `main`** (`HFPSpike`) · G4 needs BT phone + live call |
+| **5** Virtual camera / mic | CMIOExtension + AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs paid Apple Developer team |
+| **6** Continue Browsing | Foreground URL across devices | **Spike on `main`** · Chrome/Samsung measured; browser go/no-go pending |
 | **G0** Test vectors | | **Done** |
 | **G1** Real-device Phase 1 matrix | | **Open** (before 1.0) |
 | **G2** Play Console SMS / call-log | | **Open** (before 1.0; Plan B: F-Droid/APK) |

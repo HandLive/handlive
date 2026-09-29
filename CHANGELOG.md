@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Merged remaining spike/fix branches into `main`: apple `fix/real-device-pairing`,
+  `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
+  `fix/real-device-pairing`. Relay local checkout moved to `main`. README roadmap updated.
+
 ## [0.1.0-beta.1] — 2026-09-30
 
 First coordinated public beta across the HandLive workspace.

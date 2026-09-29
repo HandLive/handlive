@@ -16,9 +16,9 @@ HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như
 | 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026) |
 | 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở |
 | 3 | Xong (28/09/2026) | Kiểm máy thật còn mở |
-| 4 | Chỉ spike (`HFPSpike`) | G4: cần ghép BT điện thoại + cuộc gọi thật |
-| 5 | Chỉ spike (`CameraSpike`) | G5: cần Apple Developer trả phí |
-| 6 | Probe spike trên `main`; chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
+| 4 | Spike trên `main` (`HFPSpike`, merge 30/09/2026) | G4: cần ghép BT điện thoại + cuộc gọi thật |
+| 5 | Spike trên `main` (`CameraSpike`, merge 30/09/2026) | G5: cần Apple Developer trả phí |
+| 6 | Probe spike trên `main` (Apple+Android merge 30/09/2026); chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
 
 ## Phase 1. Đồng bộ clipboard (MVP)
 
