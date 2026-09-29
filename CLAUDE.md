@@ -43,7 +43,21 @@ same commit (`tools/docs/check_bilingual_docs.py`). Agent reports under `plans/*
 English only; plans and reports dated before 2026-09-25 stay Vietnamese as an archive. Talk to the
 project owner in Vietnamese with diacritics.
 
-## Next steps (handoff of 2026-09-29 — start here)
+## Next steps (handoff of 2026-09-30 — start here)
+
+0. **Real-device pairing (S25 ↔ Mac) — owner confirms it is smoother/stable (2026-09-30).** Working-tree fixes live on
+   apple/android `fix/security-scan-findings` (+ `shared` strings). Next: commit onto `fix/real-device-pairing` when
+   the owner asks, rebuild, and treat G1 pairing as informally green for this machine. Details:
+   `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`.
+1. **Gates G5 and G6 (Phases 5 and 6 go before Phase 4).** Probes are built. **G6 HOME on Android 16 is fixed and
+   verified** on S25 (`fix/g6-home-android16`, `inactive reason=left front=com.sec.android.app.launcher`). Still
+   pending: owner decisions on Safari / Samsung Internet origin-only; Firefox/Edge/Brave matrix rows. G5 needs a
+   paid Apple Developer team.
+2. **Phase 4, gate G4:** HFP spike needs the S25 paired with the Mac over Bluetooth (owner) and a real call.
+3. **Rerun e2e on a quiet host** with `shared/tools/e2e` (emulator not paired with the Mac test app).
+4. **Before the first release:** G1, G2, Phase 2/3 on real devices; owner inputs in `phase-02-merge.md`.
+
+## Next steps (handoff of 2026-09-29 — archive)
 
 0. **Real-device session of 2026-09-29 (read `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`
    first).** A Galaxy S25 Ultra (adb `R5GL320PPZT`) is connected; the G6 probe and a HandLive debug build are

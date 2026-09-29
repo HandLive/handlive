@@ -274,10 +274,12 @@ the browsers with `adb` (`am start -a VIEW`, `input keyevent`). Log: `hlweb.log`
   probe returns `ERROR_TAKE_SCREENSHOT_SECURE_WINDOW`; an `adb screencap` of the Secret mode window is black), and no
   host is logged for them. Chrome's `id:incognito_button` marker also fired once on a normal tab (tab switcher), which
   is a false positive: FLAG_SECURE is the reliable signal on API 34+.
-- **Page end:** screen off → `inactive reason=screen_off` (works). **HOME does not end the page** in either browser:
-  the service only receives events from the browser packages and the 2-s poll did not see the launcher. Must be fixed
-  before any product code (e.g. listen to `TYPE_WINDOWS_CHANGED` without the package filter for window changes only,
-  or check `getWindows()` in the poll).
+- **Page end:** screen off → `inactive reason=screen_off` (works). **HOME on Android 16:** first real-device run
+  failed (service only heard browser packages; poll never saw the launcher). **Fixed and verified 2026-09-30** on
+  branch `fix/g6-home-android16` (S25 Ultra `R5GL320PPZT`, Chrome 153): drop `android:packageNames`, add
+  `typeWindowsChanged` + `flagRetrieveInteractiveWindows`, front package via `FrontPackage` / `getWindows()`.
+  Runtime: `ev=active … host=example.com` then after HOME `ev=inactive … reason=left front=com.sec.android.app.launcher`
+  (~10 s, settle + poll). Unit tests green.
 - **Cost:** 461 events / 379 ms CPU in 30 s while browsing (~1.3 %); 4 events / 10 ms CPU in 5 min idle.
 - Each `uiautomator dump` unbinds and rebinds the service (`disconnected`/`connected` lines), as on the emulator.
 
