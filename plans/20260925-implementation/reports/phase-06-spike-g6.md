@@ -256,6 +256,41 @@ cold boot of `hl-api29`) is needed first.
   installed); run `watch` from the terminal, then from `WebSpike.app` (ad-hoc, no entitlement, Developer ID if an
   identity is available); Safari private windows with and without Accessibility trust, plus `ax-dump`.
 
+## Real device and Mac runs (2026-09-29)
+
+### Galaxy S25 Ultra (SM-S938B), Android 16 (API 36)
+
+The owner connected the phone over USB and turned the spike's accessibility service on by hand; the controller drove
+the browsers with `adb` (`am start -a VIEW`, `input keyevent`). Log: `hlweb.log` on the phone, host + hash only.
+
+- **Samsung Internet 30.0.0.67:** URL bar `com.sec.android.app.sbrowser:id/location_bar_edit_text`. Its text is
+  U+200E (left-to-right mark) + the **host only** (`example.com` for `example.com/path?q=1#frag`), so the first probe
+  build rejected it (`nobar`/invalid). Fixed in `1306e78` (bidi controls are dropped before parsing, test first). After
+  the fix every page is `host_only=true`: Samsung Internet can only give the site's origin, never the page.
+- **Chrome 153.0.8010.53:** `com.android.chrome:id/url_bar` holds host + path + query + fragment **without the
+  scheme**, as on Chrome 91 (`scheme=assumed`).
+- **http pages** (`http://neverssl.com`): both browsers hide the scheme, so the probe sends `https://…`.
+- **Private:** Samsung Secret mode and Chrome incognito are both detected through FLAG_SECURE (the API 34+ screenshot
+  probe returns `ERROR_TAKE_SCREENSHOT_SECURE_WINDOW`; an `adb screencap` of the Secret mode window is black), and no
+  host is logged for them. Chrome's `id:incognito_button` marker also fired once on a normal tab (tab switcher), which
+  is a false positive: FLAG_SECURE is the reliable signal on API 34+.
+- **Page end:** screen off → `inactive reason=screen_off` (works). **HOME does not end the page** in either browser:
+  the service only receives events from the browser packages and the 2-s poll did not see the launcher. Must be fixed
+  before any product code (e.g. listen to `TYPE_WINDOWS_CHANGED` without the package filter for window changes only,
+  or check `getWindows()` in the poll).
+- **Cost:** 461 events / 379 ms CPU in 30 s while browsing (~1.3 %); 4 events / 10 ms CPU in 5 min idle.
+- Each `uiautomator dump` unbinds and rebinds the service (`disconnected`/`connected` lines), as on the emulator.
+
+### This Mac (macOS 27), `WebSpike.app` (ad-hoc, hardened runtime + Apple Events entitlement)
+
+- The owner granted Automation for Chrome and Safari to "Web Spike" (the prompt named the spike, not the terminal).
+- Chrome: URL and title read in 80–240 ms per poll; `mode=normal` reported. Safari: read in 79 ms; `private=unknown`
+  (no Accessibility trust). Private windows not tested yet.
+- Cost: 3,887 polls in about 70 minutes of real browsing, 25.7 s CPU in total (~0.6 % while a browser is in front).
+- Some web apps (Google Docs, internal dashboards) change the URL every few seconds (query/fragment), which gives a
+  new `active` every few seconds: the product needs a rule for such churn (for example, keep `page_id` while only the
+  fragment or query changes, or a longer settle for the same host).
+
 ## Results
 
 Fill in the tables in `android/tools/web-spike/README.md` and `apple/Tools/WebSpike/README.md` and copy the summary
@@ -263,13 +298,13 @@ here:
 
 | Platform | Browser | Normal page found | Full URL or host only | Private detected | Cost | Go / no-go |
 |----------|---------|-------------------|-----------------------|------------------|------|------------|
-| Android 35 / 29 | Chrome | | | | | |
-| Android 35 / 29 | Samsung Internet | | | | | |
+| Android 36 (S25 Ultra) / 29 (emu) | Chrome 153 / 91 | yes (`url_bar`) | full path, no scheme | yes (FLAG_SECURE, API 36) | ~1.3 % CPU browsing | go, with the http→https and HOME fixes |
+| Android 36 (S25 Ultra) | Samsung Internet 30 | yes (`location_bar_edit_text`, after `1306e78`) | host only | yes (FLAG_SECURE) | same | origin only — owner decides |
 | Android 35 / 29 | Firefox | | | | | |
 | Android 35 / 29 | Edge | | | | | |
 | Android 35 / 29 | Brave | | | | | |
-| macOS 26 / 13–14 | Safari | | — | | | |
-| macOS 26 / 13–14 | Chrome | | — | | | |
+| macOS 27 (this Mac) | Safari | yes (79 ms) | — | not tested | ~0.6 % | open (private windows) |
+| macOS 27 (this Mac) | Chrome | yes (80–240 ms) | — | `mode` read; incognito not tested | ~0.6 % | open (incognito) |
 | macOS 26 / 13–14 | Arc | | — | | | |
 
 ## Decision rule
