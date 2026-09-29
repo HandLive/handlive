@@ -65,9 +65,9 @@ Built in order; each phase delivers something usable. Exception (owner, 2026-09-
 
 **Whenever a concrete piece of work finishes** (a phase card merged, a gate closed or waived, a spike go/no-go, a real-device bugfix landed on `main`), the same change set **must** update:
 
-1. The progress table in this `README.md` and `README.vi.md` (status column and the Status blurb at the top).
-2. The matching summary in [`docs/project-roadmap.md`](docs/project-roadmap.md) and [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md).
-3. The hub [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG.vi.md`](CHANGELOG.vi.md) when the change is user- or release-visible.
+1. The progress table in this `README.md` and in `README.vi.md` (status column and the Status blurb at the top).
+2. The matching summary in [`docs/project-roadmap.md`](docs/project-roadmap.md) (and `docs/project-roadmap.vi.md`).
+3. The hub [`CHANGELOG.md`](CHANGELOG.md) (and `CHANGELOG.vi.md`) when the change is user- or release-visible.
 4. `CLAUDE.md` Next steps when the handoff for coding agents changes.
 
 Do not leave progress only in a plan report or a chat. A finished task without a README roadmap update is incomplete.

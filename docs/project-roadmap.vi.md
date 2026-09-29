@@ -2,9 +2,9 @@
 
 # HandLive: Lộ trình
 
-> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.md`](../README.vi.md#lộ-trình-và-tiến-độ) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
+> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
 
-HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm xong trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
+HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
 
 ## Tiến độ tóm tắt (30/09/2026)
 

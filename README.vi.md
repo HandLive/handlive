@@ -46,7 +46,7 @@ Chi tiết: [`docs/system-architecture.md`](docs/system-architecture.vi.md) và 
 
 ## Lộ trình và tiến độ
 
-HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike HFP phần cứng của cổng G4. Mô tả đầy đủ và bảng công sức: [`docs/project-roadmap.md`](docs/project-roadmap.vi.md). Thẻ việc và cổng: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
+HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike HFP phần cứng của cổng G4. Chi tiết đầy đủ và bảng công sức: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md). Thẻ việc và cổng: [`plans/20260925-implementation/plan.vi.md`](plans/20260925-implementation/plan.vi.md).
 
 | Phase / cổng | Mục tiêu | Trạng thái (tính đến 30/09/2026) |
 |--------------|----------|----------------------------------|
@@ -66,8 +66,8 @@ HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoạ
 **Mỗi khi hoàn thành một công việc cụ thể** (merge thẻ phase, đóng hoặc miễn cổng, go/no-go spike, sửa lỗi máy thật đã vào `main`), cùng một đợt thay đổi **phải** cập nhật:
 
 1. Bảng tiến độ trong `README.md` và `README.vi.md` (cột trạng thái và đoạn Trạng thái ở đầu file).
-2. Tóm tắt tương ứng trong [`docs/project-roadmap.md`](docs/project-roadmap.md) và [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md).
-3. [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG.vi.md`](CHANGELOG.vi.md) của hub khi thay đổi nhìn thấy được với người dùng hoặc bản phát hành.
+2. Tóm tắt tương ứng trong [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md) (và `docs/project-roadmap.md`).
+3. [`CHANGELOG.vi.md`](CHANGELOG.vi.md) (và `CHANGELOG.md`) của hub khi thay đổi nhìn thấy được với người dùng hoặc bản phát hành.
 4. Mục Next steps trong `CLAUDE.md` khi handoff cho agent viết mã đổi.
 
 Không để tiến độ chỉ nằm trong báo cáo plan hoặc trong chat. Việc đã xong mà chưa cập nhật lộ trình trên README coi như chưa hoàn tất.
@@ -105,7 +105,7 @@ tools/workspace.sh status
 |------|----------|
 | [`docs/project-overview-pdr.md`](docs/project-overview-pdr.vi.md) | Sản phẩm là gì, mục tiêu, phạm vi, ràng buộc |
 | [`docs/system-architecture.md`](docs/system-architecture.vi.md) | Kiến trúc, kênh truyền, giao thức, bảo mật |
-| [`docs/project-roadmap.md`](docs/project-roadmap.vi.md) | Năm phase và ước lượng công sức |
+| [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md) | Năm phase và ước lượng công sức |
 | [`docs/screenshots/README.vi.md`](docs/screenshots/README.vi.md) | Ảnh màn hình ứng dụng Android, iPhone, iPad và Mac |
 | [`docs/design-guidelines.md`](docs/design-guidelines.vi.md) | Nguyên tắc trải nghiệm và bảo mật |
 | [`docs/code-standards.md`](docs/code-standards.vi.md) | Quy ước code từng nền tảng |
