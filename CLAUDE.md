@@ -43,7 +43,16 @@ same commit (`tools/docs/check_bilingual_docs.py`). Agent reports under `plans/*
 English only; plans and reports dated before 2026-09-25 stay Vietnamese as an archive. Talk to the
 project owner in Vietnamese with diacritics.
 
-## Next steps (handoff of 2026-09-28 — start here)
+## Next steps (handoff of 2026-09-29 — start here)
+
+0. **Real-device session of 2026-09-29 (read `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`
+   first).** A Galaxy S25 Ultra (adb `R5GL320PPZT`) is connected; the G6 probe and a HandLive debug build are
+   installed on it, and a HandLive debug build runs on this Mac from `~/Applications/HandLiveDev.app`.
+   - **Open bug:** HandLive QR pairing phone ↔ Mac fails with AUTH_FAILED on real devices; root cause unknown (split
+     phone vs Mac with the `shared/tools/e2e` fake Mac, fix test-first on `fix/real-device-pairing`).
+   - G6 real-device results are in `phase-06-spike-g6.md`; owner decisions pending on Safari (Accessibility) and
+     Samsung Internet (origin only); HOME does not end a page on Android 16 (probe bug).
+   - G4 needs the S25 paired with the Mac over Bluetooth and the Bluetooth permission granted — owner actions.
 
 1. **Gates G5 and G6 (Phases 5 and 6 go before Phase 4, owner decision 2026-09-28).** Both probes are built and
    pushed; each needs the owner's hardware.
