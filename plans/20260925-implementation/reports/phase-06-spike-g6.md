@@ -86,6 +86,144 @@ this answer.
   `36450704048`); another agent's `fix/web-message-type` branches cover it. The spikes are not in these builds;
   ci-apple stopped before SwiftLint, so the local `swiftlint --strict` run is the only lint result for `Tools/WebSpike`.
 
+## Emulator run (hl-api29, Chrome 91)
+
+2026-09-29, emulator `emulator-5590` (AVD `hl-api29`, google_apis arm64, API 29), Chrome 91.0.4472.114, spike
+built from `feat/phase-06-web-handoff`. On this disposable emulator the service was turned on with `adb shell
+settings put secure enabled_accessibility_services …` + `accessibility_enabled 1` (owner's approval for this device
+only). Chrome's first-run screen was skipped with the debug command-line file
+(`/data/local/tmp/chrome-command-line`: `--disable-fre --no-first-run --no-default-browser-check`), so no terms were
+accepted and no account was used. Only public test pages were opened.
+
+**Host condition:** the Mac was overloaded the whole time (load 20–60: `fileproviderd`, Synology Drive, Time
+Machine, Spotlight). The emulator froze for up to 7 minutes, `am start` took 10 s to 9 min, and from about 09:00
+`system_server` was killed by the Android watchdog every 4–15 minutes (`Watchdog: *** GOODBYE!` at 09:11, 09:30,
+09:45, 09:53, 10:00, 10:04, 10:17, 10:21). The spike process was killed once too (pid 3538 → 6062). Timings and
+`cpu_ms` from this run do not count, and the incognito, screen-off and tab-switch steps could not be run (below).
+
+### 1. URL bar node and what it shows
+
+- Found by id: `com.android.chrome:id/url_bar` (`EditText`, editable), inside `id/location_bar`, next to
+  `id/location_bar_status_icon`. `via=id` on every page; no `nobar`, no `fallback`.
+- **Idle bar: full address without the scheme** — not host only. Read with `uiautomator dump`:
+  `example.com/path?q=1#frag`, `example.com/plain-http`, `en.wikipedia.org/wiki/Handoff`; the root page shows as
+  `example.com` (logged `host_only=true`, which is right for a root page: the flag cannot tell "root" from "path
+  hidden"). Query and fragment are kept. An IDN shows in Unicode (`bücher.example`) and is logged in punycode
+  (`host=xn--bcher-kva.example`).
+- **The scheme is hidden for http too:** `http://example.com/plain-http` shows as `example.com/plain-http`, so the
+  normalizer built `https://example.com/plain-http` (wrong scheme). The only hint is the status icon's description:
+  "Your connection to this site is not secure. Site information" (http) vs "Connection is secure. Site information"
+  (https) — localized text, so not a reliable key. Fixed in the probe as a measurement: the active line now says
+  `scheme=shown|assumed` (below). For the product (W3/WEB-01): either accept that Chrome http pages are sent as
+  https (the receiver's page may then fail or redirect), or read the status icon's description per locale.
+- **Focused bar:** when the bar is tapped, Chrome 91 empties the field (the node's text is the 26-character hint
+  "Search or type web address"; an empty `EditText` reports its hint as text on API 29) and moves the current address
+  to the first suggestion row (`id/line_2`, `url=full`, still without the scheme). The spike ignores a focused bar,
+  so this is harmless.
+- **Full address with scheme:** no node holds it. The `WebView` node's text is the page title (redacted length 14 on
+  example.com), not the URL. The best available is scheme-less full address from `url_bar`.
+
+### 2. Debounce and typing
+
+One `active` line per page, about 1.5 s after `am start` (Chrome writes the address in the bar before the page loads,
+so the settle clock starts at once). Typing `example.org/typed` then `x` into the focused bar, waiting 10 s: nothing
+logged. In-page address changes (Wikipedia replaces `/wiki/Handoff` with `/wiki/Handover` through the History API)
+give a new hash for the same host, as expected.
+
+```
+HLWEB ts=2026-09-29T08:32:19.882+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=example.com hash=e2c215b585e0 host_only=true private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:32:26.27+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=example.com hash=429dc28254c1 host_only=false private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:32:32.961+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=en.wikipedia.org hash=222981a00eea host_only=false private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:31:31.77+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=xn--bcher-kva.example hash=2bcd5f49841e host_only=true private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:42:00.405+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=example.com hash=4ab803e731e4 host_only=false private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:53:39.751+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=en.wikipedia.org hash=95297c3a9621 host_only=false private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+(tap bar 08:53:44, dump 08:53:47, type 08:53:50 and 08:53:56: no active line)
+```
+
+The IDN line came late (08:31:31 for a page opened at 08:27:50) because the emulator was frozen; `www.wikipedia.org`
+and a second IDN visit were missed during a 7-minute freeze and a spike process restart.
+
+### 3. Incognito and FLAG_SECURE
+
+**Not run.** Opening an incognito tab needs taps in Chrome's menu, and from 09:00 the emulator's `system_server`
+restarted every few minutes (launcher ANR, "Can't find service: package/window", `am start` unable to resolve
+Chrome). The private-state logic (`incognito` in a view id or description) is unchanged and still unverified on a
+device. FLAG_SECURE on API 29: the screenshot probe is API 34+ only, so every line logs `secure=n/a`; on API 29 the
+spike has no FLAG_SECURE signal at all, and private detection there rests on the id/description markers alone.
+
+### 4. Page end
+
+- Leaving Chrome with HOME: `inactive reason=left` (08:59:36, 34 s late because of a freeze).
+- **False leave found:** closing the keyboard with Back while the bar was focused gave `inactive reason=left`
+  although Chrome stayed in front; `rootInActiveWindow` is briefly null during the keyboard/window transition and the
+  poll treated null as "left". Fixed in the probe (below): a null root ends the page only when seen twice in a row
+  (2 polls, about 4 s), another app's window still ends it at once, and the line says `front=<package>|none`.
+  Returning to the tab then logged the page again (08:58:26, same tab, new `active`).
+- Screen off (`input keyevent 26`, 09:03:41): no line, because no page was active at that moment (the HOME step had
+  ended it and the return to Chrome was not processed before the screen went off during a freeze). Not verified.
+- Switching tabs: not run (same reason as incognito). The Back step above switched to the previous tab and logged
+  its page (`hash=222981a00eea`), which is the expected tab-switch behavior, but no tab-switcher test was made.
+- `uiautomator dump` side effect: on API 29 each `uiautomator dump` connects a UiAutomation, which unbinds the other
+  accessibility services for its duration (`ev=disconnected` / `ev=connected` around each dump, and a new service
+  instance with a fresh settle gate). Use the spike's own dump mode, not `uiautomator`, while measuring.
+
+```
+HLWEB ts=2026-09-29T08:55:34.766+07:00 ev=inactive browser=chrome hash=95297c3a9621 reason=left   (Back closed the keyboard; Chrome still in front: false leave)
+HLWEB ts=2026-09-29T08:58:26.472+07:00 ev=active browser=chrome ver=91.0.4472.114 api=29 host=en.wikipedia.org hash=222981a00eea host_only=false private=false via=id source=com.android.chrome:id/url_bar secure=n/a
+HLWEB ts=2026-09-29T08:59:36.733+07:00 ev=inactive browser=chrome hash=222981a00eea reason=left   (HOME)
+HLWEB ts=2026-09-29T08:25:22.663+07:00 ev=connected api=29
+HLWEB ts=2026-09-29T08:25:37.299+07:00 ev=disconnected   (uiautomator dump)
+```
+
+### 5. Dump mode (Chrome 91, API 29)
+
+Normal tab on `http://example.com/plain-http` (17 nodes):
+
+```
+FrameLayout
+  FrameLayout
+    WebView focused text_len=14
+      View text_len=156 … (7 page text nodes, redacted)
+  ImageButton id=com.android.chrome:id/home_button desc_len=4
+  FrameLayout id=com.android.chrome:id/location_bar
+    ImageButton id=com.android.chrome:id/location_bar_status_icon desc_len=60
+    EditText id=com.android.chrome:id/url_bar editable text_len=22 url=full
+  ImageButton id=com.android.chrome:id/tab_switcher_button desc_len=32
+  ImageButton id=com.android.chrome:id/menu_button desc_len=30
+```
+
+Focused bar (13 nodes): `RecyclerView` of suggestions with `id/line_1`, `id/line_2 text_len=29 url=full`, then
+`id/location_bar` › `EditText id/url_bar focused editable text_len=26` (the hint) and `id/mic_button`. No incognito
+dump (not run).
+
+### 6. Probe fixes (handlive-android `feat/phase-06-web-handoff`, pushed)
+
+- `b64a965` feat(android): add a foreground check that tolerates one missing window in the web spike — pure
+  `ForegroundCheck` + 5 unit tests (TDD: failed first, then passed).
+- `eec9d1c` fix(android): end a web spike page only when another app is in front or the window stays missing — the
+  2-s poll and the event path share it; `inactive reason=left` gains `front=`.
+- `ab06a4f` feat(android): log whether the web spike assumed the https scheme — `NormalizedUrl.schemeShown`, test
+  first; active lines gain `scheme=shown|assumed`.
+- `4658161` docs(android): describe the scheme and front fields of the web spike log (runbook).
+
+All unit tests and ktlint pass. The rebuilt APK was installed on `emulator-5590` at 10:23 and its service connected
+(10:25), but no page could be opened before the emulator's system server stalled again, so the two fixes are
+verified by unit tests only, not on the device.
+
+### Firefox and Brave
+
+Not installed: the install of the provided APKs (`fenix-156.0.1…apk`, `BraveMonoarm64.apk`) was refused by this
+session's permission policy (third-party code), so the owner has to run `adb -s emulator-5590 install -r <apk>` for
+both (or allow it), then repeat steps 1–5 per browser. With the emulator in its current state, a quiet host (or a
+cold boot of `hl-api29`) is needed first.
+
+### Chrome 91 / API 29 row (partial)
+
+| Browser (version) | API | Mode | Page found (`via`, `source`) | Full address or host only | Private detected | Typing ignored | `inactive` reasons seen | Go / no-go |
+|-------------------|-----|------|------------------------------|---------------------------|------------------|----------------|-------------------------|------------|
+| Chrome 91.0.4472.114 | 29 | normal | yes, `id`, `com.android.chrome:id/url_bar` | full path, query and fragment; scheme hidden for https **and** http | — | yes | `left` (HOME; one false `left` fixed) | go for normal tabs, pending incognito |
+| Chrome 91.0.4472.114 | 29 | incognito | not run | — | not run (`secure=n/a` below API 34) | — | — | open |
+
 ## Google Play policy (checked 2026-09-28)
 
 - [Use of the AccessibilityService API](https://support.google.com/googleplay/android-developer/answer/10964491):
