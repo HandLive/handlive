@@ -45,17 +45,18 @@ project owner in Vietnamese with diacritics.
 
 ## Next steps (handoff of 2026-09-30 — start here)
 
-0. **Real-device pairing (S25 ↔ Mac) — owner confirms it is smoother/stable (2026-09-30).** Working-tree fixes live on
-   apple/android `fix/security-scan-findings` (+ `shared` strings). Next: commit onto `fix/real-device-pairing` when
-   the owner asks, rebuild, and treat G1 pairing as informally green for this machine. Details:
+0. **README roadmap is the live progress board.** After every concrete finished task, update `README.md` /
+   `README.vi.md` (and `docs/project-roadmap*.md`, hub CHANGELOG, this handoff) in the same change set. See the
+   rule under Roadmap and progress in the hub README.
+1. **Real-device pairing (S25 ↔ Mac) — stable and on `main` (2026-09-30).** Apple/android/shared/hub merged and
+   pushed. Treat G1 pairing as informally green on this machine; formal G1 matrix still open.
    `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`.
-1. **Gates G5 and G6 (Phases 5 and 6 go before Phase 4).** Probes are built. **G6 HOME on Android 16 is fixed and
-   verified** on S25 (`fix/g6-home-android16`, `inactive reason=left front=com.sec.android.app.launcher`). Still
-   pending: owner decisions on Safari / Samsung Internet origin-only; Firefox/Edge/Brave matrix rows. G5 needs a
-   paid Apple Developer team.
-2. **Phase 4, gate G4:** HFP spike needs the S25 paired with the Mac over Bluetooth (owner) and a real call.
-3. **Rerun e2e on a quiet host** with `shared/tools/e2e` (emulator not paired with the Mac test app).
-4. **Before the first release:** G1, G2, Phase 2/3 on real devices; owner inputs in `phase-02-merge.md`.
+2. **Gates G5 and G6 (Phases 5 and 6 before Phase 4).** G6 HOME on Android 16 fixed and verified; spike code on
+   android `main`. Pending: Safari / Samsung Internet owner decisions; Firefox/Edge/Brave matrix. G5 needs a paid
+   Apple Developer team.
+3. **Phase 4, gate G4:** HFP spike needs the S25 paired with the Mac over Bluetooth (owner) and a real call.
+4. **Rerun e2e on a quiet host** with `shared/tools/e2e` (emulator not paired with the Mac test app).
+5. **Before the first release:** G1, G2, Phase 2/3 on real devices; owner inputs in `phase-02-merge.md`.
 
 ## Next steps (handoff of 2026-09-29 — archive)
 
@@ -162,6 +163,11 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 
 ## Conventions specific to this repo
 
+- **README roadmap is the live progress board.** When a concrete task finishes (phase card merge, gate close,
+  spike go/no-go, real-device fix on `main`), update in the **same** change set: `README.md` + `README.vi.md`
+  progress table and Status blurb, `docs/project-roadmap.md` + `.vi.md` snapshot, hub `CHANGELOG.md` /
+  `CHANGELOG.vi.md` when user-visible, and this file's Next steps when the agent handoff changes. A finished
+  task without a README roadmap update is incomplete.
 - **Plans** live in `plans/<YYYYMMDD>-<slug>/plan.md`. Reports go under a `reports/` subdirectory.
   Prefer updating the relevant existing plan over creating parallel ones.
 - **Message protocol wire format** (already specified — match it): JSON envelope

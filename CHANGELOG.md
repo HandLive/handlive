@@ -10,8 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Handoff (`CLAUDE.md`, `real-device-session-2026-09-29.md`): real-device QR pairing S25 Ultra ↔ Mac is stable;
-  Settings/Pair bring-forward fixed; G6 HOME on Android 16 verified (`inactive reason=left`).
+- Hub `README.md` / `README.vi.md`: live roadmap progress table vs the implementation plan, plus a hard rule to
+  update that table whenever a concrete task finishes. Matching snapshot in `docs/project-roadmap*.md`.
+- Handoff (`CLAUDE.md`, `real-device-session-2026-09-29.md`): real-device QR pairing S25 Ultra ↔ Mac is stable and
+  on `main`; Settings/Pair bring-forward fixed; G6 HOME on Android 16 verified (`inactive reason=left`).
 
 ### Fixed
 

@@ -10,8 +10,10 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Changed
 
-- Handoff (`CLAUDE.md`, `real-device-session-2026-09-29.md`): ghép QR máy thật S25 Ultra ↔ Mac ổn định;
-  cửa sổ Settings/Pair lên trước; G6 HOME trên Android 16 đã xác nhận (`inactive reason=left`).
+- Hub `README.md` / `README.vi.md`: bảng tiến độ lộ trình đối chiếu kế hoạch triển khai, kèm quy định bắt buộc
+  cập nhật bảng đó mỗi khi hoàn thành một công việc cụ thể. Ảnh chụp tương ứng trong `docs/project-roadmap*.md`.
+- Handoff (`CLAUDE.md`, `real-device-session-2026-09-29.md`): ghép QR máy thật S25 Ultra ↔ Mac ổn định và đã vào
+  `main`; cửa sổ Settings/Pair lên trước; G6 HOME trên Android 16 đã xác nhận (`inactive reason=left`).
 
 ### Fixed
 

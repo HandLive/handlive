@@ -6,7 +6,7 @@ English | [Tiếng Việt](README.vi.md)
 >
 > Design motto: *"WebSocket for data, Bluetooth for voice."*
 
-**Status:** Phase 0 (scaffold, protocol, encryption, tokens and CI), Phase 1 (clipboard sync between Android and Mac), Phase 2 (SMS, the iPhone and iPad app, the cloud relay and push notifications) and Phase 3 (call information and control) are merged into `main`. Phase 4 (taking calls on the Mac) starts with a Bluetooth hands-free spike that needs a real phone. Gates G1 (real-device checks) and G2 (Play Console) are still open, so there is no release yet. The source code lives in four separate repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
+**Status:** Phase 0–3 are merged into `main`. There is no public release yet: gates G1 (real-device matrix) and G2 (Play Console) are still open, and Phase 2/3 still need checks on a real relay, APNs and FCM. Phase 4 waits on the G4 Bluetooth HFP spike (real phone). Phases 5 and 6 run before Phase 4 finishes (owner decision 2026-09-28): G5 needs a paid Apple Developer team; G6 spike probes are on `main` with Chrome/Samsung results and the Android 16 HOME fix, but browser go/no-go decisions and product cards remain. Real-device QR pairing (Galaxy S25 Ultra ↔ Mac) is stable as of 2026-09-30. The source code lives in four repositories cloned into this folder — see Layout. The product is multilingual: English is the default language and Vietnamese the second; every document here exists in both languages (`X.md` in English, `X.vi.md` in Vietnamese).
 
 ## What HandLive solves
 
@@ -44,18 +44,33 @@ Every screen of the three apps, in English and Vietnamese, with how each was cap
 
 Details: [`docs/system-architecture.md`](docs/system-architecture.md) and [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
 
-## Roadmap
+## Roadmap and progress
 
-Built in order; each phase delivers something usable.
+Built in order; each phase delivers something usable. Exception (owner, 2026-09-28): Phases 5 and 6 proceed before Phase 4 finishes, because Phase 4 waits for the G4 HFP hardware spike. Full narrative and effort table: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards and gates: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
 
-1. **Clipboard sync** (MVP): Android and macOS over WebSocket on the local network.
-2. **SMS bridge**: adds the iOS app, the cloud relay and push notifications.
-3. **Call details and control**: public Telecom APIs (no `InCallService`, decision D9) and a floating call panel.
-4. **Call audio**: HFP/SCO, Opus fallback, echo cancellation.
-5. **Virtual camera and microphone**: CMIOExtension and AudioServerPlugin on macOS.
-6. **Continue Browsing** (proposed): the open web page moves between the phone and the Mac, iPhone or iPad; starts with the G6 spike and needs only Phase 1.
+| Phase / gate | Goal | Status (as of 2026-09-30) |
+|--------------|------|---------------------------|
+| **0** Scaffold, protocol, crypto, tokens, CI | Shared vectors and green CI | **Done** — merged |
+| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WebSocket, QR pairing | **Code done** — merged 2026-09-26. Gate **G1** (device matrix, TalkBack/VoiceOver) still open before first release. Real-device pairing S25 ↔ Mac: stable after 2026-09-30 fixes |
+| **2** SMS + iOS app + relay + push | Conversations, Rust relay, APNs/FCM | **Code done** — merged 2026-09-27. Real relay / APNs / FCM and gate **G2** (Play Console SMS declaration) still open |
+| **3** Call information and control | Telecom APIs, Mac floating panel, iOS metadata | **Code done** — merged 2026-09-28. Real-device latency and OEM checks still open |
+| **4** Call audio | HFP/SCO primary, Opus/WS fallback, AEC | **Spike G4** — `HFPSpike` ready on `feat/phase-04-call-audio`. Blocked on Bluetooth pairing of a real phone with the Mac and a live call. No other Phase 4 card until G4 |
+| **5** Virtual camera and mic | CMIOExtension + AudioServerPlugin | **Spike G5** — `CameraSpike` ready on `feat/phase-05-camera-mic`. Blocked on a paid Apple Developer Program team (System Extension). No other Phase 5 card until G5 |
+| **6** Continue Browsing | Foreground URL across devices | **Spike G6 in progress** — Android `tools/web-spike` and Apple `Tools/WebSpike` on `main` / phase-06 branches. Chrome + Samsung Internet measured on S25; HOME leave fixed on Android 16. Pending: Safari Accessibility decision, Samsung origin-only decision, Firefox/Edge/Brave rows, then product cards WEB-01…05 |
+| Gate **G0** | Test vectors green | **Done** |
+| Gate **G1** | Real-device Phase 1 matrix | **Open** (required before first release) |
+| Gate **G2** | Play Console SMS / call-log declaration | **Open** (required before first release; Plan B: F-Droid/APK) |
 
-Details: [`docs/project-roadmap.md`](docs/project-roadmap.md).
+### Rule: keep this roadmap current
+
+**Whenever a concrete piece of work finishes** (a phase card merged, a gate closed or waived, a spike go/no-go, a real-device bugfix landed on `main`), the same change set **must** update:
+
+1. The progress table in this `README.md` and `README.vi.md` (status column and the Status blurb at the top).
+2. The matching summary in [`docs/project-roadmap.md`](docs/project-roadmap.md) and [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md).
+3. The hub [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG.vi.md`](CHANGELOG.vi.md) when the change is user- or release-visible.
+4. `CLAUDE.md` Next steps when the handoff for coding agents changes.
+
+Do not leave progress only in a plan report or a chat. A finished task without a README roadmap update is incomplete.
 
 ## Layout: five repositories, one workspace
 

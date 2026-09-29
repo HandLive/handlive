@@ -2,9 +2,21 @@
 
 # HandLive: Lộ trình
 
-> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`.
+> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.md`](../README.vi.md#lộ-trình-và-tiến-độ) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
 
 HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm xong trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
+
+## Tiến độ tóm tắt (30/09/2026)
+
+| Phase | Mã trên `main` | Cổng / điểm nghẽn |
+|-------|----------------|-------------------|
+| 0 | Xong | G0 xong |
+| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026) |
+| 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở |
+| 3 | Xong (28/09/2026) | Kiểm máy thật còn mở |
+| 4 | Chỉ spike (`HFPSpike`) | G4: cần ghép BT điện thoại + cuộc gọi thật |
+| 5 | Chỉ spike (`CameraSpike`) | G5: cần Apple Developer trả phí |
+| 6 | Probe spike trên `main`; chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
 
 ## Phase 1. Đồng bộ clipboard (MVP)
 

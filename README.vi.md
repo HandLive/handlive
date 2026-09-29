@@ -6,7 +6,7 @@
 >
 > Phương châm: *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 
-**Trạng thái:** Phase 0 (khung, giao thức, mã hóa, token và CI), Phase 1 (đồng bộ clipboard giữa Android và Mac), Phase 2 (SMS, ứng dụng iPhone và iPad, cloud relay và thông báo đẩy) và Phase 3 (thông tin và điều khiển cuộc gọi) đã gộp vào `main`. Phase 4 (nghe gọi trên Mac) bắt đầu bằng một spike Bluetooth rảnh tay. Spike này cần điện thoại thật. Cổng G1 (kiểm trên máy thật) và cổng G2 (Play Console) vẫn còn mở, nên chưa có bản phát hành. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
+**Trạng thái:** Phase 0–3 đã gộp vào `main`. Chưa có bản phát hành công khai: cổng G1 (ma trận máy thật) và G2 (Play Console) vẫn mở; Phase 2/3 còn thiếu kiểm trên relay thật, APNs và FCM. Phase 4 chờ spike G4 Bluetooth HFP (điện thoại thật). Phase 5 và 6 làm trước khi Phase 4 xong (quyết định chủ dự án 28/09/2026): G5 cần tài khoản Apple Developer trả phí; probe spike G6 đã trên `main` với kết quả Chrome/Samsung và sửa HOME trên Android 16, còn quyết định go/no-go từng trình duyệt và các thẻ sản phẩm. Ghép QR máy thật (Galaxy S25 Ultra ↔ Mac) ổn định từ 30/09/2026. Mã nguồn nằm ở bốn kho riêng. Clone bốn kho vào thư mục này. Xem mục Cấu trúc. Sản phẩm có hai ngôn ngữ. Tiếng Anh là mặc định. Tiếng Việt là ngôn ngữ thứ hai. Mọi tài liệu có hai bản: `X.md` tiếng Anh, `X.vi.md` tiếng Việt.
 
 ## HandLive giải quyết gì
 
@@ -44,18 +44,33 @@ Toàn bộ màn hình của ba ứng dụng, bằng tiếng Anh và tiếng Vi�
 
 Chi tiết: [`docs/system-architecture.md`](docs/system-architecture.vi.md) và [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
 
-## Lộ trình
+## Lộ trình và tiến độ
 
-HandLive xây lần lượt. Mỗi phase là một phần dùng được.
+HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike HFP phần cứng của cổng G4. Mô tả đầy đủ và bảng công sức: [`docs/project-roadmap.md`](docs/project-roadmap.vi.md). Thẻ việc và cổng: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
 
-1. **Đồng bộ clipboard** (MVP). Android và macOS đồng bộ qua WebSocket trong mạng nội bộ.
-2. **Cầu nối SMS.** Thêm ứng dụng iOS, cloud relay và thông báo đẩy.
-3. **Thông tin và điều khiển cuộc gọi.** Dùng API Telecom công khai, không dùng `InCallService` (quyết định D9). Mac hiện bảng cuộc gọi nổi.
-4. **Âm thanh cuộc gọi.** Dùng HFP/SCO, dự phòng Opus, khử tiếng vang.
-5. **Camera và mic ảo.** Dùng CMIOExtension và AudioServerPlugin trên macOS.
-6. **Duyệt web tiếp** (đề xuất). Trang web đang mở chuyển giữa điện thoại và Mac, iPhone hoặc iPad; bắt đầu bằng spike G6 và chỉ cần Phase 1.
+| Phase / cổng | Mục tiêu | Trạng thái (tính đến 30/09/2026) |
+|--------------|----------|----------------------------------|
+| **0** Khung, giao thức, mã hóa, token, CI | Vector dùng chung và CI xanh | **Xong** — đã merge |
+| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WebSocket LAN, ghép QR | **Mã xong** — merge 26/09/2026. Cổng **G1** (ma trận máy, TalkBack/VoiceOver) vẫn mở trước bản phát hành đầu. Ghép máy thật S25 ↔ Mac: ổn định sau sửa 30/09/2026 |
+| **2** SMS + app iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** — merge 27/09/2026. Relay / APNs / FCM thật và cổng **G2** (tờ khai SMS Play Console) vẫn mở |
+| **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng nổi Mac, metadata iOS | **Mã xong** — merge 28/09/2026. Kiểm độ trễ và OEM trên máy thật vẫn mở |
+| **4** Âm thanh cuộc gọi | HFP/SCO chính, Opus/WS dự phòng, AEC | **Spike G4** — `HFPSpike` sẵn trên `feat/phase-04-call-audio`. Chờ ghép Bluetooth điện thoại thật với Mac và một cuộc gọi thật. Không mở thẻ Phase 4 khác trước G4 |
+| **5** Camera và mic ảo | CMIOExtension + AudioServerPlugin | **Spike G5** — `CameraSpike` sẵn trên `feat/phase-05-camera-mic`. Chờ tài khoản Apple Developer trả phí (System Extension). Không mở thẻ Phase 5 khác trước G5 |
+| **6** Duyệt web tiếp | URL đang mở giữa các thiết bị | **Spike G6 đang chạy** — `tools/web-spike` Android và `Tools/WebSpike` Apple trên `main` / nhánh phase-06. Đã đo Chrome + Samsung Internet trên S25; đã sửa HOME trên Android 16. Còn: quyết định Safari Accessibility, Samsung chỉ origin, hàng Firefox/Edge/Brave, rồi thẻ WEB-01…05 |
+| Cổng **G0** | Vector mã hóa xanh | **Xong** |
+| Cổng **G1** | Ma trận Phase 1 trên máy thật | **Mở** (bắt buộc trước bản phát hành đầu) |
+| Cổng **G2** | Tờ khai SMS / nhật ký cuộc gọi Play Console | **Mở** (bắt buộc trước bản phát hành đầu; phương án B: F-Droid/APK) |
 
-Chi tiết: [`docs/project-roadmap.md`](docs/project-roadmap.vi.md).
+### Quy định: luôn cập nhật lộ trình trên README
+
+**Mỗi khi hoàn thành một công việc cụ thể** (merge thẻ phase, đóng hoặc miễn cổng, go/no-go spike, sửa lỗi máy thật đã vào `main`), cùng một đợt thay đổi **phải** cập nhật:
+
+1. Bảng tiến độ trong `README.md` và `README.vi.md` (cột trạng thái và đoạn Trạng thái ở đầu file).
+2. Tóm tắt tương ứng trong [`docs/project-roadmap.md`](docs/project-roadmap.md) và [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md).
+3. [`CHANGELOG.md`](CHANGELOG.md) / [`CHANGELOG.vi.md`](CHANGELOG.vi.md) của hub khi thay đổi nhìn thấy được với người dùng hoặc bản phát hành.
+4. Mục Next steps trong `CLAUDE.md` khi handoff cho agent viết mã đổi.
+
+Không để tiến độ chỉ nằm trong báo cáo plan hoặc trong chat. Việc đã xong mà chưa cập nhật lộ trình trên README coi như chưa hoàn tất.
 
 ## Cấu trúc: năm kho, một workspace
 

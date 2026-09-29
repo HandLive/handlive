@@ -2,9 +2,21 @@ English | [Tiếng Việt](project-roadmap.vi.md)
 
 # HandLive: Roadmap
 
-> Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`.
+> Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`. **Live progress table:** hub [`README.md`](../README.md#roadmap-and-progress) (must be updated whenever a concrete task finishes).
 
 HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase. One exception to the order (project owner's decision, 2026-09-28): Phases 5 and 6 are done before Phase 4 finishes, because Phase 4 waits for the G4 Bluetooth hands-free spike on real hardware.
+
+## Progress snapshot (2026-09-30)
+
+| Phase | Code on `main` | Gate / blocker |
+|-------|----------------|----------------|
+| 0 | Done | G0 done |
+| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30) |
+| 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open |
+| 3 | Done (2026-09-28) | Real-device checks open |
+| 4 | Spike only (`HFPSpike`) | G4: need BT phone + live call |
+| 5 | Spike only (`CameraSpike`) | G5: need paid Apple Developer team |
+| 6 | Spike probes on `main`; product cards not started | G6: owner browser decisions; Firefox/Edge/Brave rows |
 
 ## Phase 1. Clipboard sync (MVP)
 
