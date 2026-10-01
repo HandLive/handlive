@@ -45,14 +45,14 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 | `system-red` | `.red` · `systemRed` | Từ chối, Kết thúc, xóa, lỗi; `badge` |
 | `system-orange` | `.orange` · `systemOrange` | Đang kết nối, cần chú ý |
 | `system-green` | `.green` · `systemGreen` | Đã kết nối; công tắc bật (mặc định của iOS) |
-| `system-yellow` | `.yellow` · `systemYellow` | Hiếm (Hỏa sinh Thổ), chỉ trong minh họa |
-| `system-pink`, `system-purple` | `.pink`, `.purple` | Avatar chữ cái, minh họa (Hỏa) |
-| `system-brown` | `.brown` | Avatar chữ cái, dùng ít (Thổ) |
+| `system-yellow` | `.yellow` · `systemYellow` | Hiếm, chỉ trong minh họa |
+| `system-pink`, `system-purple` | `.pink`, `.purple` | Avatar chữ cái, minh họa (tông ấm) |
+| `system-brown` | `.brown` | Avatar chữ cái, dùng ít |
 | `system-gray` … `system-gray-6` | `.gray` · `systemGray` … `systemGray6` | Ngoại tuyến, viền, nền nhóm |
 
 - AppKit chỉ có `systemGray`; Gray 2–6 là của iOS. Trên Mac dùng màu ngữ nghĩa (`separatorColor`,
   `controlBackgroundColor`) ở chỗ iOS dùng Gray 2–6.
-- Không dùng (Thủy khắc Hỏa): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo`
+- Không dùng (xanh dương là của hệ thống): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo`
   — không cho thương hiệu, mảng màu lớn, trạng thái hay avatar. Phần hệ thống vẽ theo lựa chọn của
   người dùng (màu nhấn, vùng chọn chữ) để nguyên.
 
@@ -77,7 +77,7 @@ Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/color
 - Liquid Glass: chỉ tô nền của một hành động chính trên lớp kính (`.buttonStyle(.glassProminent)`,
   `Glass.tint(_:)`); không tô chữ hay biểu tượng trên kính; không tô nhiều control cùng lúc. Chấm
   trạng thái trên kính được phép.
-- Lệch có chủ đích: liên kết dùng `accent` thay màu `link` xanh dương của hệ thống (Thủy khắc Hỏa);
+- Lệch có chủ đích: liên kết dùng `accent` thay màu `link` xanh dương của hệ thống, để màu riêng của HandLive vẫn là xanh lá;
   liên kết luôn nằm trong ngữ cảnh rõ ràng, không chỉ dựa vào màu.
 
 ## Trạng thái
@@ -140,4 +140,4 @@ Màu hệ thống tự đổi sang biến thể tương phản cao; màu tự đ
 | Gọi API màu ngữ nghĩa trên Apple | Chép hex `#FF383C` vào code Swift |
 | Tô màu một nút chính mỗi màn | Tô `accent-fill` cho mọi nút |
 | Chữ màu cỡ nhỏ dùng `text-*` | Chữ nhỏ màu `system-green`, `system-orange` |
-| Đỏ son chỉ ở lớp nội dung | Nút hay trạng thái màu `brand-fire` |
+| Đỏ lửa chỉ ở lớp nội dung | Nút hay trạng thái màu `brand-fire` |

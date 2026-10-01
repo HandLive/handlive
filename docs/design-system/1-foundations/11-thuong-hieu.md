@@ -3,35 +3,37 @@ English | [Tiếng Việt](11-thuong-hieu.vi.md)
 # Branding
 
 HandLive's brand lives in the content layer: the welcome screen, the pairing screen, empty states, the
-app icon, and the HandLive wordmark. Controls, status, and navigation bars keep the system's look.
-This section covers the story, the palette, the type, and the limits.
+app icon, and the HandLive logo. Controls, status, and navigation bars keep the system's look.
+This section covers how the brand shows up in the apps: the palette, the type, and the limits. The
+story, voice, messages, logo files, and promo images are in the
+[brand guidelines](../../brand-guidelines.md).
 
 HIG source: https://developer.apple.com/design/human-interface-guidelines/branding
 
 ## Story
 
-The palette is the Sơn Đầu Hỏa feng-shui palette: Sơn Đầu Hỏa, "fire on the mountaintop", is one of
-the Fire destiny elements in Vietnamese feng shui. In the past, people lit signal fires on mountaintops
-to pass messages from one station to the next; HandLive does the same between a phone and a computer.
+What happens on the phone shows up on the screen in front of you. The logo draws that as a signal
+fire on a mountaintop, in the colors of dawn: flame red, orange, and amber over a plum mountain and a
+cream sky.
 Personality: trustworthy, discreet, warm. Following the HIG, the brand makes room for content: no
 logos scattered around, no unnecessary decoration.
 
 ## Palette
 
-| Role | Token | Light / Dark | Five Elements | Used for |
-|---|---|---|---|---|
-| Identity | `brand-fire` (vermilion) | #d2381f / #ff6b4a | Fire, the destiny element's own color | The HandLive wordmark, app icon, welcome screen |
-| Deep areas | `brand-ember` (ember red) | #8a2210 / #b43a20 | Fire | Large blocks on covers, the app icon's background layer, in place of black |
-| Highlights | `brand-flame` (flame orange) | #f07a1a / #ff9a3d | Fire | Brand gradient, illustrations; never a text color |
-| Brand background | `brand-glow` (peach) | #fde9e2 / #3b1a12 | Fire | Background of the welcome and pairing screens |
-| Actions | `accent`, `accent-fill` (green) | #197934 / #3ddc6c | "Wood feeds Fire", a supporting element | AccentColor |
-| Neutral | System grays | Follows the system | Metal; Fire overcomes Metal, so it may be used | Backgrounds, text, borders |
-| Secondary accents | `system-pink`, `system-purple`; rarely `system-yellow`, `system-brown` | Follows the system | Fire; Earth | Letter avatars, illustrations |
-| Not used | Black, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Water overcomes Fire | Not for the brand or large color areas |
+| Role | Token | Light / Dark | Used for |
+|---|---|---|---|
+| Identity | `brand-fire` (flame red) | #e63d1a / #ff7448 | Large brand titles, the app icon, the welcome screen |
+| Deep areas | `brand-ember` (plum) | #33232d / #6e5463 | The mountain in the logo, large blocks on covers, in place of black |
+| Highlights | `brand-flame` (flame orange) | #ff861f / #ffa04a | The flame and signal rings, brand gradient, illustrations; never a text color |
+| Brand background | `brand-glow` (dawn cream) | #fff0e3 / #2b1e26 | Background of the welcome and pairing screens |
+| Actions | `accent`, `accent-fill` (green) | #197934 / #3ddc6c | AccentColor: the green light of a signal received |
+| Neutral | System grays | Follows the system | Backgrounds, text, borders |
+| Secondary accents | `system-pink`, `system-purple`; rarely `system-yellow`, `system-brown` | Follows the system | Letter avatars, illustrations |
+| Not for the brand | Black, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Blue belongs to the system; deep areas use `brand-ember` instead of black |
 
 The system's dark backgrounds (black on iPhone, gray on Mac) belong to Apple; HandLive adds no black or
-blue areas of its own. Every brand color has all 4 variants, including the two Increased Contrast ones
-(see Color).
+blue areas of its own, so it never reads as a system utility. Every brand color has all 4 variants,
+including the two Increased Contrast ones (see Color).
 
 ## Where brand color goes
 
@@ -44,7 +46,7 @@ blue areas of its own. Every brand color has all 4 variants, including the two I
 
 - HIG: to express the brand with color, put the color in the content layer, where it scrolls under the
   glass controls and the glass "picks up" the color; don't tint controls with the brand color.
-- Vermilion isn't used for buttons or status, so it can't be mistaken for the cancel, delete, and
+- Flame red isn't used for buttons or status, so it can't be mistaken for the cancel, delete, and
   error color (systemRed).
 - At most one brand moment per screen.
 
@@ -69,10 +71,11 @@ Per the HIG, the accent color is used sparingly on controls:
 
 ## Logo and the HandLive wordmark
 
-- There's no logo yet. Until there is, use the word "HandLive" in the `wordmark` style (Be Vietnam Pro
-  Bold 20/24), in `brand-fire` or `label`.
-- The wordmark appears only on the welcome screen and in the About window; don't scatter logos across
-  the app, and don't put one in navigation bars.
+- The logo is a signal fire on a mountaintop; the files (mark, wordmark, lockups, app icon) are in
+  `docs/brand/assets/` and their rules in the [brand guidelines](../../brand-guidelines.md).
+- In the apps, the logo appears only on the welcome screen and in the About window: as the lockup
+  image, or as the word "HandLive" in the `wordmark` style (Be Vietnam Pro Bold 20/24) in `brand-fire`
+  or `label`. Don't scatter logos across the app, and don't put one in navigation bars.
 - Don't use SF Symbols, the San Francisco font, or shapes easily mistaken for symbols in the logo or
   the app icon: Apple's license doesn't allow it.
 
@@ -102,4 +105,4 @@ Per the HIG, the accent color is used sparingly on controls:
 | Brand color on the welcome and pairing screens | Primary buttons in `brand-fire` |
 | The HandLive wordmark set in `wordmark` | A logo assembled from SF Symbols |
 | The welcome screen in `Onboarding` | A logo on the launch screen |
-| Ember red in place of black | Custom black or blue backgrounds |
+| Plum `brand-ember` in place of black | Custom black or blue backgrounds |

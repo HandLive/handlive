@@ -59,7 +59,7 @@ nền: `system-background`, `secondary-system-background`, `tertiary-system-back
 | `text-green` | 7.6–11.4 | 7.7–13.3 | Có |
 | `text-orange` | 6.9–10.4 | 7.2–12.5 | Gần đạt (6.9 trên `tertiary-system-background`) |
 | `text-red` | 4.7–7.2 | 5.4–9.4 | Chỉ trên nền đen |
-| `brand-fire` | 5.0–7.5 | 5.2–9.1 | Không; chỉ cho chữ lớn |
+| `brand-fire` | 5.2–7.8 | 5.4–9.4 | Không; chỉ cho chữ lớn |
 
 - `text-red` đạt mức tối thiểu nhưng chưa đạt mức khuyến nghị: chỉ cho nhãn ngắn luôn kèm biểu tượng
   ("Gửi lỗi"), không cho đoạn văn.
@@ -77,7 +77,7 @@ nền: `system-background`, `secondary-system-background`, `tertiary-system-back
   HandLive có bản Sáng và bản Tối; theo HIG, làm dịu nền trắng trong minh họa để không chói.
 - SF Symbols tự đổi theo giao diện. Biểu tượng tự vẽ cần bản Sáng và bản Tối, thêm viền mảnh nếu
   hình tối chìm vào nền tối.
-- Nền thương hiệu `brand-glow` đổi từ hồng đào (#fde9e2) sang nâu đỏ sẫm (#3b1a12), không dùng đen.
+- Nền thương hiệu `brand-glow` đổi từ kem bình minh (#fff0e3) sang tím sẫm (#2b1e26), không dùng đen.
 
 ## Tăng độ tương phản và Giảm độ trong suốt
 

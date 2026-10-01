@@ -15,9 +15,17 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
   của Telegram và các ứng dụng khác trên Android và gửi tới Mac; người dùng có thể trả lời, từ chối hoặc kết thúc từ
   Mac (âm thanh vẫn ở trên điện thoại ở v1). Cần quyền truy cập thông báo, một quyền đặc biệt mà người dùng bật bằng
   tay. Các cuộc gọi di động không thay đổi.
+- Bộ nhận diện thương hiệu 1.0: `docs/brand-guidelines.vi.md` (câu chuyện: ngọn lửa hiệu lúc bình minh;
+  giọng văn, thông điệp, logo, biểu tượng app, màu sắc, ảnh quảng bá) và các file trong `docs/brand/assets/`,
+  sinh bằng `tools/brand/build_brand_assets.py`. Tagline: "Không bỏ lỡ tín hiệu nào." Ảnh hero README tiếng
+  Anh và tiếng Việt.
+- Biểu tượng app từ bộ thương hiệu: bộ AppIcon macOS và iOS (apple `feat/brand-identity`) và biểu tượng
+  thích ứng Android thay cho biểu tượng xanh dương giữ chỗ (android `feat/brand-identity`).
 
 ### Changed
 
+- Bảng màu thương hiệu: các token `brand-*` nhận giá trị bình minh (handlive-shared `feat/brand-identity`,
+  token Apple đã sinh lại); các trang thương hiệu trong design system mô tả logo và bảng màu mới.
 - Đã merge các nhánh spike/fix còn lại vào `main`: apple `fix/real-device-pairing`,
   `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
   `fix/real-device-pairing`. Relay local chuyển sang `main`. Đã cập nhật lộ trình README.

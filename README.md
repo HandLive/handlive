@@ -2,7 +2,9 @@ English | [Tiếng Việt](README.vi.md)
 
 # HandLive
 
-> Ecosystem-native continuity for Android: clipboard, SMS, calls, and more, in sync with Mac, iPhone, and iPad.
+<img src="docs/brand/assets/promo/readme-hero.en.png" alt="HandLive. Never miss a signal. Clipboard, SMS and calls from your Android phone, on your Mac, iPhone and iPad." width="800">
+
+> **Never miss a signal.** Your Android phone's clipboard, SMS, and calls on your Mac, iPhone, and iPad.
 >
 > *"WebSocket for data, Bluetooth for voice."*
 

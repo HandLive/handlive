@@ -63,7 +63,7 @@ measured on 7 backgrounds: `system-background`, `secondary-system-background`,
 | `text-green` | 7.6–11.4 | 7.7–13.3 | Yes |
 | `text-orange` | 6.9–10.4 | 7.2–12.5 | Almost (6.9 on `tertiary-system-background`) |
 | `text-red` | 4.7–7.2 | 5.4–9.4 | Only on black |
-| `brand-fire` | 5.0–7.5 | 5.2–9.1 | No; large text only |
+| `brand-fire` | 5.2–7.8 | 5.4–9.4 | No; large text only |
 
 - `text-red` meets the minimum but not the recommended level: use it only for short labels that always
   come with an icon ("Not sent"), not for paragraphs.
@@ -82,8 +82,8 @@ measured on 7 backgrounds: `system-background`, `secondary-system-background`,
   so they don't glare.
 - SF Symbols adapt to the appearance on their own. Custom icons need Light and Dark versions, plus a
   thin outline if a dark shape disappears into a dark background.
-- The `brand-glow` brand background changes from peach (#fde9e2) to a deep reddish brown (#3b1a12),
-  not to black.
+- The `brand-glow` brand background changes from dawn cream (#fff0e3) to a deep plum (#2b1e26), not
+  to black.
 
 ## Increase Contrast and Reduce Transparency
 

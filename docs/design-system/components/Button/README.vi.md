@@ -39,5 +39,5 @@ nút.
 ## Nên và không nên
 
 - Nên đặt nút chính ở cạnh phải (Mac) hoặc dưới cùng trong vùng dễ với (iPhone, Android).
-- Không đặt hai nút nổi bật cạnh nhau; không dùng đỏ son `brand-fire` cho nút.
+- Không đặt hai nút nổi bật cạnh nhau; không dùng đỏ lửa `brand-fire` cho nút.
 - Không dùng "OK", "Có", "Không" làm nhãn; "Hủy" chỉ dành cho nút hủy.

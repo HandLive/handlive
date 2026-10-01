@@ -39,29 +39,30 @@ From the HIG's Design principles page, applied to HandLive:
 
 ## Brand: a signal fire on the mountaintop
 
-The palette is the **Sơn Đầu Hỏa** feng-shui palette. Sơn Đầu Hỏa — "fire on the mountaintop" — is
-one of the Fire destiny elements in Vietnamese feng shui. In the past, people lit fires on mountaintops
-to pass messages from one station to the next; HandLive does the same between a phone and a computer.
+What happens on the phone shows up on the screen in front of you; the logo draws that as a signal fire
+on a mountaintop, in the colors of dawn.
+Story, voice, logo files, and promo images: [brand guidelines](../brand-guidelines.md).
 
-| Role | Color | Five Elements |
+| Role | Color | Why |
 |---------|-----|----------|
-| Identity | Vermilion `brand-fire`, ember red `brand-ember`, flame orange `brand-flame` | Fire — the destiny element's own color |
-| Actions (AccentColor) | Green `accent`, `accent-fill` | "Wood feeds Fire" — a supporting color |
-| Brand background | Peach `brand-glow` | Fire |
-| Neutral | Apple's system grays | Metal — Fire overcomes Metal, so it may be used |
-| Not used | Black, blue, and sea blues: systemBlue, Cyan, Teal, Mint, Indigo | Water overcomes Fire |
+| Identity | Flame red `brand-fire`, flame orange `brand-flame` | The signal fire |
+| Depth | Plum `brand-ember` | The mountain; used in place of black |
+| Actions (AccentColor) | Green `accent`, `accent-fill` | The green light of a signal received |
+| Brand background | Dawn cream `brand-glow` | The sky at first light |
+| Neutral | Apple's system grays | Backgrounds, text, borders |
+| Not for the brand | Black, blue, and sea blues: systemBlue, Cyan, Teal, Mint, Indigo | Blue belongs to the system |
 
-- Vermilion appears only in the app icon, the HandLive wordmark, the welcome screen, and
-  illustrations — never on buttons or status, so it can't be mistaken for the system's cancel and
-  delete colors.
+- Flame red appears only in the app icon, the logo, the welcome screen, and illustrations — never on
+  buttons or status, so it can't be mistaken for the system's cancel and delete colors.
 - Green is the AccentColor: primary buttons, links, unread indicators, the bubbles of messages you
   send. Following the HIG, tint controls sparingly — one tinted button per screen, two at most.
 - Links and selections use green instead of Apple's default blue. On the Mac, when someone chooses an
   accent color other than Multicolor, controls follow their choice.
 - The system's dark backgrounds (black on iPhone, gray on Mac) belong to Apple; HandLive adds no black
   or blue areas of its own.
-- There's no logo yet. Until there is, use the word HandLive in the `wordmark` style. Don't use SF
-  Symbols or the San Francisco font in the logo or the app icon — Apple's license doesn't allow it.
+- The logo and app icon live in `docs/brand/assets/`; inside the apps, the word HandLive uses the
+  `wordmark` style. Don't use SF Symbols or the San Francisco font in the logo or the app icon —
+  Apple's license doesn't allow it.
 
 ## Quick summary
 
