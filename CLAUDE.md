@@ -3,24 +3,16 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 3 merged; Phases 5 and 6 start before Phase 4 (G5, G6 spikes); gates G1 and G2 open
+## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.1`; G1/G2/G4/G5/G6 open
 
-Phase 0 (scaffold, protocol, crypto, tokens, CI), the Phase 1 clipboard MVP (2026-09-26), Phase 2 (SMS, iOS
-app, relay, push; 2026-09-27) and Phase 3 (call information and control; 2026-09-28) are merged into `main`.
-Phase 3 is merged in shared, apple and android (android `3afbc39`); relay had no Phase 3 change. The
-project owner merged each phase before its gates. Still open, and required before the first release: gate G1
-(the `shared/tools/bench/README.md` device matrix, pairing Android ↔ Mac, TalkBack/VoiceOver, system setting
-names), gate G2 (Play Console) and the Phase 2 and Phase 3 checks on real devices, a real relay, APNs and FCM
-(`plans/20260925-implementation/reports/phase-02-summary.md`, `phase-03-merge.md`). Phase 4 (taking calls on
-the Mac) opened on `feat/phase-04-call-audio` in apple with the gate G4 spike: the probe
-`apple/Tools/HFPSpike` is ready and needs a real phone paired over Bluetooth and a real call
-(`phase-04-spike-d1.md`); no other Phase 4 task card starts before G4. On 2026-09-28 the project owner decided
-that Phases 5 (camera/mic) and 6 (Web Handoff, added the same day) are done before Phase 4 finishes; each starts with
-its spike (G5: `apple/Tools/CameraSpike` on `feat/phase-05-camera-mic`; G6: probes on `feat/phase-06-web-handoff` in
-android and apple). The security scan fixes of 2026-09-28 are merged (`plans/20260928-security-fixes/plan.md`,
-open points listed there). Reports:
-`plans/20260925-implementation/reports/phase-0N-*.md`, merge records `phase-01-merge.md`, `phase-02-merge.md`
-and `phase-03-merge.md`.
+Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
+**spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
+Apple `Tools/WebSpike`. First coordinated public beta: tag **`v0.1.0-beta.1`** on hub/android/apple/shared/relay
+(not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
+required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
+on a real relay / APNs / FCM, and spike gates **G4** (BT phone + live call), **G5** (paid Apple Developer team),
+**G6** (browser go/no-go). Owner decision 2026-09-28: Phases 5 and 6 proceed before Phase 4 finishes. Security
+scan fixes of 2026-09-28 are merged. Reports: `plans/20260925-implementation/reports/`.
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
@@ -29,7 +21,7 @@ lives in four repositories checked out **inside this directory** and git-ignored
 (handlive-android), `apple/` (handlive-apple), `relay/` (handlive-relay) and `shared/`
 (handlive-shared: test vectors, JSON schemas, design tokens and their tools).
 `tools/workspace.sh clone <group-url>` checks them out and `tools/workspace.sh status` shows all
-five; layout and test commands: `docs/codebase-summary.md`. Nothing is released yet. The
+five; layout and test commands: `docs/codebase-summary.md`. The
 implementation plan with per-phase task cards for coding agents is
 `plans/20260925-implementation/plan.md` (see the hand-off section below); the UI design system is
 mirrored in `docs/design-system/`. Everything below describes the *decided* design that future code
@@ -43,22 +35,49 @@ same commit (`tools/docs/check_bilingual_docs.py`). Agent reports under `plans/*
 English only; plans and reports dated before 2026-09-25 stay Vietnamese as an archive. Talk to the
 project owner in Vietnamese with diacritics.
 
-## Next steps (handoff of 2026-09-30 — start here)
+## Progress report (handoff of 2026-10-01 — start here)
 
-0. **README roadmap is the live progress board.** After every concrete finished task, update `README.md` /
-   `README.vi.md` (and `docs/project-roadmap*.md`, hub CHANGELOG, this handoff) in the same change set. See the
-   rule under Roadmap and progress in the hub README.
-0b. **First public beta `v0.1.0-beta.1` (2026-09-30).** Coordinated tags on hub, android, apple, shared, relay.
-   Not a store release: G1/G2 still open. Prefer the hub release notes for the SHA matrix.
-1. **Real-device pairing (S25 ↔ Mac) — stable and on `main` (2026-09-30).** Apple/android/shared/hub merged and
-   pushed. Treat G1 pairing as informally green on this machine; formal G1 matrix still open.
-   `plans/20260925-implementation/reports/real-device-session-2026-09-29.md`.
-2. **Gates G5 and G6 (Phases 5 and 6 before Phase 4).** G6 HOME on Android 16 fixed and verified; spike code on
-   android `main`. Pending: Safari / Samsung Internet owner decisions; Firefox/Edge/Brave matrix. G5 needs a paid
-   Apple Developer team.
-3. **Phase 4, gate G4:** HFP spike needs the S25 paired with the Mac over Bluetooth (owner) and a real call.
-4. **Rerun e2e on a quiet host** with `shared/tools/e2e` (emulator not paired with the Mac test app).
-5. **Before the first release:** G1, G2, Phase 2/3 on real devices; owner inputs in `phase-02-merge.md`.
+### Done (on `main`)
+
+| Area | What landed | Tips (approx.) |
+|------|-------------|----------------|
+| Phase 0–3 | Scaffold, clipboard, SMS, iOS, relay, call metadata/control | product on `main` since 2026-09-26…28 |
+| Real-device pairing | S25 Ultra ↔ Mac QR pairing stable; Settings/Pair bring-forward; stable Bonjour name | android `4c6db55` lineage; apple `214b4f4` lineage |
+| G6 spike (Android) | HOME leave ends page on Android 16 (`inactive reason=left`); probe on `main` | android `tools/web-spike` |
+| Phase 4–6 spikes | Merged onto `main` (2026-09-30): HFPSpike, CameraSpike, WebSpike (Apple), web-spike (Android) | apple `214b4f4` |
+| Hub docs | Live README roadmap + mandatory update rule; bilingual snapshot in `docs/project-roadmap*.md` | hub `650240e` |
+| Beta | Coordinated tag/release **`v0.1.0-beta.1`** on all five repos (prerelease, not store) | retargeted to then-current `main` |
+| CI hygiene | shared: sort `settings.check_again`; android: skip `tools/` in `UiTextSourceGuardTest` | shared `b330d4b`; android `4c6db55` |
+| Security | 2026-09-28 scan fixes merged; relay `fix/security-scan-findings` on `main` | relay `cda13bf` |
+
+**Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
+
+**Workspace tips to treat as current `main`:** hub `650240e`, android `4c6db55`, apple `214b4f4`, shared `b330d4b`, relay `cda13bf`. Confirm with `tools/workspace.sh status` before coding.
+
+### In progress / blocked (owner or gate)
+
+1. **Gate G4 (call audio spike):** run `apple/Tools/HFPSpike` with S25 paired over Bluetooth + a live cellular call; fill `reports/phase-04-spike-d1.md`; decide HFP vs Opus/WS primary (AUDIO-02 / plan D1). No other Phase 4 product card until G4.
+2. **Gate G5 (camera/mic spike):** needs a **paid Apple Developer Program team** (System Extension). Runbook: `apple/Tools/CameraSpike/README.md`. No other Phase 5 card until G5.
+3. **Gate G6 (Continue Browsing spike):** Chrome + Samsung measured on S25; HOME fix verified. Pending owner decisions: Safari Accessibility, Samsung origin-only; matrix rows Firefox/Edge/Brave; then product cards WEB-01…05.
+4. **Gate G1 (formal):** device matrix in `shared/tools/bench/README.md`, TalkBack/VoiceOver, system setting names. Pairing on this machine is informally green only.
+5. **Gate G2 + Phase 2/3 real stack:** Play Console SMS/call-log declaration; real relay host, APNs, FCM (owner inputs in `phase-02-merge.md`).
+6. **Apple CI:** `ci-apple` has been cancelled repeatedly when multiple `workflow_dispatch` runs overlap (concurrency). Prefer **one** dispatch and do not cancel/stack. Hub/android/shared/relay CI were green after the beta/CI fixes; re-check before relying on apple green.
+
+### Plan next (priority order)
+
+0. **Keep the README roadmap current** after every concrete finish (same change set as code/docs). Rule in hub README → Roadmap and progress.
+1. **Owner hardware day for G4:** BT pair S25 ↔ Mac, grant Bluetooth permission, one real call through `HFPSpike`; write `phase-04-spike-d1.md`.
+2. **Owner inputs for G5:** paid Apple Developer team; run CameraSpike; write/update `phase-05-spike-d6.md`.
+3. **Owner decisions for G6:** Safari / Samsung Internet; install Firefox/Edge/Brave for matrix; then open WEB-01…05 only after go/no-go.
+4. **Quiet-host e2e** with `shared/tools/e2e` (emulator not paired to the Mac test app): PIN pairing, late permission capability, feature list after first pairing, API 29 / 4408.
+5. **Formal G1 matrix** on ≥2 Android phones + 1 Mac (latency, a11y, setting names).
+6. **G2 + production push:** Play forms; deploy/configure relay; APNs `.p8` + FCM; logo/icon before store paths.
+7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
+
+### Archive
+
+Older handoffs (2026-09-29 pairing AUTH_FAILED open bug, spikes still on feat branches) are superseded: pairing is stable; spikes are on `main`. Details remain in
+`plans/20260925-implementation/reports/real-device-session-2026-09-29.md` and the phase spike reports.
 
 ## Next steps (handoff of 2026-09-29 — archive)
 

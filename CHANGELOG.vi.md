@@ -11,6 +11,7 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 - Đã merge các nhánh spike/fix còn lại vào `main`: apple `fix/real-device-pairing`,
   `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
   `fix/real-device-pairing`. Relay local chuyển sang `main`. Đã cập nhật lộ trình README.
+- `CLAUDE.md`: handoff báo cáo tiến độ 01/10/2026 (đã làm / đang làm / kế hoạch) cho agent viết mã.
 
 ## [0.1.0-beta.1] — 30/09/2026
 

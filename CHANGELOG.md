@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Merged remaining spike/fix branches into `main`: apple `fix/real-device-pairing`,
   `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
   `fix/real-device-pairing`. Relay local checkout moved to `main`. README roadmap updated.
+- `CLAUDE.md`: progress report handoff of 2026-10-01 (done / in progress / plan next) for coding agents.
 
 ## [0.1.0-beta.1] — 2026-09-30
 
