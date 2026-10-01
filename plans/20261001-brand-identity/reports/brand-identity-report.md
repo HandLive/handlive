@@ -2,7 +2,7 @@
 
 Date 2026-10-01. Plan: [../plan.md](../plan.md).
 
-## Commits (branch `feat/brand-identity`, local, not pushed)
+## Commits (local, not pushed; hub `feat/ckm-brand-from-start-008ce2`, others `feat/brand-identity`)
 
 | Repo | Commit | What |
 |---|---|---|

@@ -1,6 +1,7 @@
 # Brand identity 1.0 (signal fire at dawn)
 
-Status: **done** on branches `feat/brand-identity` (hub, shared, android, apple); not merged, not pushed.
+Status: **done** on hub branch `feat/ckm-brand-from-start-008ce2` and `feat/brand-identity` in shared,
+android, apple; not merged, not pushed.
 Owner sessions: 2026-10-01. Report: [reports/brand-identity-report.md](reports/brand-identity-report.md).
 
 ## Owner decisions (2026-10-01)

@@ -73,7 +73,8 @@ project owner in Vietnamese with diacritics.
 4. **Quiet-host e2e** with `shared/tools/e2e` (emulator not paired to the Mac test app): PIN pairing, late permission capability, feature list after first pairing, API 29 / 4408.
 5. **Formal G1 matrix** on ≥2 Android phones + 1 Mac (latency, a11y, setting names).
 6. **G2 + production push:** Play forms; deploy/configure relay; APNs `.p8` + FCM. Logo and app icons exist
-   (`docs/brand-guidelines.md`, branches `feat/brand-identity` in hub/shared/android/apple, 2026-10-01); still
+   (`docs/brand-guidelines.md`, hub branch `feat/ckm-brand-from-start-008ce2`,
+   `feat/brand-identity` in shared/android/apple, 2026-10-01); still
    open: an Icon Composer `.icon` for Liquid Glass and the in-app logo on the welcome/About screens.
 7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
 
