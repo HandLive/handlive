@@ -17,11 +17,11 @@ English | [Tiếng Việt](01-setup-settings.vi.md)
 | Item | Content |
 |-----|----------|
 | Name | SET-01 — Initial setup and permissions on Android |
-| Description | Two parts.<br>**Part A — first run:** a welcome screen with a short privacy explanation; create the identity keys, `device_id` and TLS certificate (0.6.1); request `POST_NOTIFICATIONS` (Android 13+); start `HandLiveService` (A-SVC) as a foreground service of type `connectedDevice` with a low-importance ongoing notification; request the battery optimization exemption (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) and show manufacturer-specific instructions for allowing autostart (Xiaomi, OPPO/realme, Samsung "Never sleeping apps"); then move on to PAIR-01.<br>**Part B — just-in-time permissions per feature:** a feature's permissions are requested only when the user turns on or uses that feature: QR scanning needs `CAMERA`; sending the clipboard automatically needs the disclosure, consent and turning on the Accessibility service (C15, CLIP-01); SMS needs `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` (`RECEIVE_SMS` is not requested); calls need `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` (C12, no `InCallService`); call audio needs `BLUETOOTH_CONNECT`, with Shizuku optional for the Opus/WS path (AUDIO-01, C13); camera streaming needs `CAMERA`, `RECORD_AUDIO`; Continue Browsing (P6) needs its own disclosure and the separate Accessibility service "HandLive Browser Pages" (WEB-01 A1–A4, C21), the same way as automatic clipboard sending.<br>A denied permission leaves that feature inactive (or partially active) and is listed in `permissions_missing`; other features are not affected. |
+| Description | Two parts.<br>**Part A — first run:** a welcome screen with a short privacy explanation; create the identity keys, `device_id` and TLS certificate (0.6.1); request `POST_NOTIFICATIONS` (Android 13+); start `HandLiveService` (A-SVC) as a foreground service of type `connectedDevice` with a low-importance ongoing notification; request the battery optimization exemption (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) and show manufacturer-specific instructions for allowing autostart (Xiaomi, OPPO/realme, Samsung "Never sleeping apps"); then move on to PAIR-01.<br>**Part B — just-in-time permissions per feature:** a feature's permissions are requested only when the user turns on or uses that feature: QR scanning needs `CAMERA`; sending the clipboard automatically needs the disclosure, consent and turning on the Accessibility service (C15, CLIP-01); SMS needs `READ_SMS`, `SEND_SMS`, `READ_CONTACTS`, `READ_PHONE_STATE` (`RECEIVE_SMS` is not requested); calls need `READ_PHONE_STATE`, `READ_CALL_LOG`, `ANSWER_PHONE_CALLS`, `READ_CONTACTS` (C12, no `InCallService`); call audio needs `BLUETOOTH_CONNECT`, with Shizuku optional for the Opus/WS path (AUDIO-01, C13); calls from other apps (CALL-05) need Notification access, a special access the user turns on by hand in the system settings after a primer (field 19), optional: without it only calls from other apps are off; camera streaming needs `CAMERA`, `RECORD_AUDIO`; Continue Browsing (P6) needs its own disclosure and the separate Accessibility service "HandLive Browser Pages" (WEB-01 A1–A4, C21), the same way as automatic clipboard sending.<br>A denied permission leaves that feature inactive (or partially active) and is listed in `permissions_missing`; other features are not affected. |
 | Actors | Primary: User (the phone's owner). System: A-UI, A-SVC, A-CLIP (`ClipboardAccessibilityService`), OS (Android's permission controller, `PowerManager`, system Settings and the manufacturer's own settings), R-API (device registration). |
 | Preconditions | **Part A:** HandLive has just been installed (Google Play, F-Droid or APK) on Android 10+ (API 29+); `setup.completed_at` is not set.<br>**Part B:** part A is done; the user taps "Scan QR Code" (PAIR-01), turns on a feature (SET-02), taps "Grant Permission" on a feature card, or taps a permission suggestion notification. |
-| Postconditions | **Part A:** the identity keys, `device_id` and TLS certificate exist; A-SVC runs in the foreground with its ongoing notification, listens on port 47800 (0.4.1) and advertises over mDNS; the battery optimization exemption has been asked for; `setup.completed_at` is written; the device is registered with the relay if `relay.enabled = true` and a network is available (or a background retry is pending); the UI moves on to PAIR-01.<br>**Part B:** each of the feature's permissions is granted or denied; `permissions_missing` and the capability sub-flags (`can_send`, `sims`, `caller_id`, `can_answer`, `can_end`, `auto_send`) match reality; every connected client has received `capability/update` if anything changed. |
-| Exceptions | E1 — `POST_NOTIFICATIONS` denied: A-SVC still runs (its service notification only appears in Android's Task Manager), but connection status, permission suggestions and camera confirmation requests (CAM-02) are not shown; the app shows the warning banner "Notifications are off, so connection status and requests from your Mac don't appear." with a button that opens the notification settings.<br>E2 — The foreground service cannot start (`ForegroundServiceStartNotAllowedException` when the app is not in the foreground and not exempt from battery optimization, or `SecurityException` because a type declaration is missing): retry when A-UI is in the foreground; still failing → show "Couldn't Start the Connection Service" with a "Try Again" button.<br>E3 — Battery optimization exemption denied or manufacturer instructions skipped: HandLive still works, but the connection may drop while the phone sleeps (CONN-02 E6); the warning stays in Settings › Permissions & Background.<br>E4 — A feature's permission is denied: the feature is inactive or partially active (for example `can_send = false`); the permission goes into `permissions_missing`.<br>E5 — Permission permanently denied (the system no longer shows the dialog): show an "Open Settings" button that goes to the App info page.<br>E6 — Accessibility disclosure declined: `clip.auto_send = false`; manual sending (a button in the notification, a Quick Settings tile, the Share menu) still works (CLIP-01 E1).<br>E7 — An install from outside Google Play on Android 13+ is blocked from turning on the Accessibility service ("Restricted setting"): guide the user to allow it in App info, then come back.<br>E8 — The user comes back from the Accessibility settings without the service turned on: keep the "Auto-send isn't on yet" status and allow another try.<br>E9 — Key generation fails (Keystore error): retry with a TEE-backed key when StrongBox is unavailable; still failing → show an error and do not continue to PAIR-01.<br>E10 — No network or relay error during device registration: skip, retry in the background (CONN-03), do not block setup. |
+| Postconditions | **Part A:** the identity keys, `device_id` and TLS certificate exist; A-SVC runs in the foreground with its ongoing notification, listens on port 47800 (0.4.1) and advertises over mDNS; the battery optimization exemption has been asked for; `setup.completed_at` is written; the device is registered with the relay if `relay.enabled = true` and a network is available (or a background retry is pending); the UI moves on to PAIR-01.<br>**Part B:** each of the feature's permissions is granted or denied; `permissions_missing` and the capability sub-flags (`can_send`, `sims`, `caller_id`, `can_answer`, `can_end`, `auto_send`, `app_calls`) match reality; every connected client has received `capability/update` if anything changed. |
+| Exceptions | E1 — `POST_NOTIFICATIONS` denied: A-SVC still runs (its service notification only appears in Android's Task Manager), but connection status, permission suggestions and camera confirmation requests (CAM-02) are not shown; the app shows the warning banner "Notifications are off, so connection status and requests from your Mac don't appear." with a button that opens the notification settings.<br>E2 — The foreground service cannot start (`ForegroundServiceStartNotAllowedException` when the app is not in the foreground and not exempt from battery optimization, or `SecurityException` because a type declaration is missing): retry when A-UI is in the foreground; still failing → show "Couldn't Start the Connection Service" with a "Try Again" button.<br>E3 — Battery optimization exemption denied or manufacturer instructions skipped: HandLive still works, but the connection may drop while the phone sleeps (CONN-02 E6); the warning stays in Settings › Permissions & Background.<br>E4 — A feature's permission is denied: the feature is inactive or partially active (for example `can_send = false`); the permission goes into `permissions_missing`.<br>E5 — Permission permanently denied (the system no longer shows the dialog): show an "Open Settings" button that goes to the App info page.<br>E6 — Accessibility disclosure declined: `clip.auto_send = false`; manual sending (a button in the notification, a Quick Settings tile, the Share menu) still works (CLIP-01 E1).<br>E7 — An install from outside Google Play on Android 13+ is blocked from turning on the Accessibility service ("Restricted setting"): guide the user to allow it in App info, then come back.<br>E8 — The user comes back from the Accessibility settings without the service turned on: keep the "Auto-send isn't on yet" status and allow another try.<br>E9 — Key generation fails (Keystore error): retry with a TEE-backed key when StrongBox is unavailable; still failing → show an error and do not continue to PAIR-01.<br>E10 — No network or relay error during device registration: skip, retry in the background (CONN-03), do not block setup.<br>E11 — Notification access not granted, or the user comes back without turning it on: `features.call.app_calls = false` and `NOTIFICATION_LISTENER` in `permissions_missing`; the "Calls from Other Apps" card shows "Needs permission" and allows another try; CALL-01…04 and the other features are not affected. |
 | Special requirements | **Google Play compliance:** submit the Permissions Declaration Form for `READ_SMS`, `SEND_SMS`, `READ_CALL_LOG` under the "Cross-device synchronization or transfer of SMS or calls" exception; do not declare `RECEIVE_SMS` (new messages are detected with a `ContentObserver`); declare use of the Accessibility API (`isAccessibilityTool = false`) with a prominent disclosure and in-app consent — the project owner has accepted the rejection risk (C15); declare the `connectedDevice` foreground service type in Play Console; use `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` on the grounds that a companion app must stay connected to its paired devices.<br>**Privacy:** no feature permissions are requested in part A; every system dialog is preceded by an explanation; each request covers the permissions of one feature only.<br>**Usability:** part A ≤ 5 screens, completed in ≤ 60 s (not counting actions in the manufacturer's settings); readable with TalkBack; every step after the welcome screen can be skipped; no ADB, USB or Shizuku needed.<br>**Compatibility:** minSdk 29, targetSdk 35 — `POST_NOTIFICATIONS` exists only from API 33; `BLUETOOTH_CONNECT` from API 31 (API 29–30 use `BLUETOOTH`, granted at install); `FOREGROUND_SERVICE_CONNECTED_DEVICE` is required from API 34.<br>**Feature independence:** a missing permission for one feature does not block the others (CONN-01 API 7). |
 
 ### 1.1.2 Screens
@@ -41,15 +41,16 @@ N/A — no approved wireframe yet.
 | 7 | Pause app activity if unused | enum{enabled\| disabled\| not_available} | Input/Output | From `PackageManagerCompat.getUnusedAppRestrictionsStatus` | Android 11+: suggest turning it off so the system does not revoke permissions automatically when the user hasn't opened HandLive on the phone for a long time (API 4) |
 | 8 | Manufacturer autostart instructions | string | Output | From `Build.MANUFACTURER` | Under the title, on every manufacturer: "Some phones stop apps that run in the background. These settings keep HandLive connected to your Mac, iPhone, and iPad." Then specific steps for Xiaomi/Redmi/POCO, OPPO/realme/OnePlus, Samsung (API 5); the steps are hidden for other manufacturers |
 | 9 | "Open Manufacturer Settings", "Done", "Skip" buttons | action | Input | — | "Open Manufacturer Settings" opens the manufacturer's screen (API 5); "Done" and "Skip" go to step 7 |
-| 10 | Feature list | array\<object> | Output | From the `feature.*` keys (0.9.5) and current permissions | Each card: feature name, status `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, missing permissions. Shown after the first PAIR-01 and in Settings › Permissions & Background<br>Card names are the SET-02 switch labels: "Auto-Send on Copy", "SMS Messages", "Calls", "Take Calls on Mac", "Use Phone as Webcam". Status texts: `ready` "On", `needs_permission` "Needs permission" (with field 11), `permanently_denied` "Permission denied" (with field 16), `off` "Off", `unsupported` "Not supported on this phone". The "Auto-Send on Copy" card takes its status from field 15: `needs_accessibility` shows "Auto-send isn't on yet" (E8) |
+| 10 | Feature list | array\<object> | Output | From the `feature.*` keys (0.9.5) and current permissions | Each card: feature name, status `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, missing permissions. Shown after the first PAIR-01 and in Settings › Permissions & Background<br>Card names are the SET-02 switch labels: "Auto-Send on Copy", "SMS Messages", "Calls", "Calls from Other Apps", "Take Calls on Mac", "Use Phone as Webcam". Status texts: `ready` "On", `needs_permission` "Needs permission" (with field 11), `permanently_denied` "Permission denied" (with field 16), `off` "Off", `unsupported` "Not supported on this phone". The "Auto-Send on Copy" card takes its status from field 15: `needs_accessibility` shows "Auto-send isn't on yet" (E8) |
 | 11 | "Grant Permission" button on a feature card | action | Input | Shown when the card is `needs_permission` | Runs part B for that feature only |
 | 12 | Explanation before the permission request | string | Output | Per feature (API 2) | SMS example: "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM."<br>Titles: SMS "Use SMS on Your Mac and iPhone", calls "See Calls on Your Mac and iPhone" (body "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts."), notifications "Get Notified About Connections and Requests", background "Run in the Background", manufacturer autostart "Keep HandLive Running", camera "Scan the Pairing Code" (body "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad.") |
 | 13 | Accessibility disclosure | string | Output | Text of CLIP-01 field 2 | Shown full screen, with the choices "Send Manually" / "Agree" per CLIP-01 field 3 |
-| 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when the install source is not Google Play (API 6, E7) |
+| 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when the install source is not Google Play for Accessibility (API 6, E7) or Notification access (SET-01 API 9, E11): guide the user to allow it in App info, then come back |
 | 15 | Automatic clipboard sending status | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` when `clip.auto_send = true`, `clip.a11y_consent_at` is set and the Accessibility service is running; `off` when `clip.auto_send = false` |
 | 16 | "Open Settings" button | action | Input | Shown when a permission is permanently denied | Opens HandLive's App info page (E5) |
 | 17 | Permission suggestion notification | string | Output | — | Posted by A-SVC when it returns `PERMISSION_MISSING` to a client: "Lan's MacBook needs SMS permission on this phone — tap to allow" (the same text whichever SMS permission is missing); for a call permission "Lan's MacBook needs call permission on this phone — tap to allow" (the same text whichever call permission is missing); at most once per feature per 24 h; channel `permission` ("Permissions", description "Suggestions to grant a permission when a Mac or iPhone needs a feature of this phone.", `IMPORTANCE_LOW`) |
-| 18 | Error message | string | Output | Empty | Text per E1–E10 |
+| 18 | Error message | string | Output | Empty | Text per E1–E11 |
+| 19 | Notification access primer | string | Output | Fixed text | Before the system Notification access page (steps N1–N2, CALL-05): title "Allow Notification Access", body "HandLive reads only call notifications from calling apps, to show them on your Mac. Other notifications are ignored and never leave your phone.", the single button "Continue" and the footer "You can change this in Settings at any time." |
 
 ### 1.1.4 Business flow
 
@@ -62,6 +63,7 @@ flowchart TB
     U8["(8) Scan QR, turn on a feature or tap Grant Permission"]
     U11["(11) Allow or deny in the system dialog"]
     U13["(13) Agree to the disclosure, turn on HandLive in Accessibility"]
+    UN2["(N2) Turn on HandLive in Notification access, come back"]
   end
   subgraph HT["System"]
     S2["(2) Create identity keys, device_id, TLS certificate"]
@@ -72,6 +74,7 @@ flowchart TB
     S10["(10) Filter missing permissions, explain, open system dialog"]
     S12["(12) Show disclosure, restricted setting instructions, open Accessibility"]
     S14["(14) Recompute permissions_missing and auto_send, send capability/update"]
+    SN1["(N1) Show the Notification access primer, open the system page"]
     X1(["End: show error, allow retry"])
   end
   U1 --> S2
@@ -89,6 +92,8 @@ flowchart TB
   U11 -- "Allow or deny (E4)" --> S14
   D9 -- "Auto-send on copy" --> S12 --> U13
   U13 -- "On, not on, or declined (E6, E7, E8)" --> S14
+  D9 -- "Calls from other apps" --> SN1 --> UN2
+  UN2 -- "On or not on (E11)" --> S14
 ```
 
 | Step | Actor | Component | Description | Exceptions / Notes |
@@ -101,12 +106,14 @@ flowchart TB
 | 6 | User | OS, A-UI | Allows background running in the system dialog; follows the manufacturer instructions and taps "Done", or taps "Skip". | Denied or skipped → E3, still goes to step 7. |
 | 7 | System | A-UI, A-SVC → R-API | Write `setup.completed_at`. If `relay.enabled = true` and the internet is available: run `POST /v1/devices` in the background (CONN-03 API 1), then register the FCM push token (CONN-04 step 2). Go to PAIR-01 (the "Pair a Device" screen with "Scan QR Code" and "Enter PIN"). | Relay error → E10. |
 | 8 | User | A-UI | Starts part B: taps "Scan QR Code" (PAIR-01 step 3), turns on a feature in SET-02, taps "Grant Permission" on a feature card (field 11) or taps a suggestion notification (field 17).<br>After the first PAIR-01, A-UI opens the feature list (field 10) so the user can grant permissions to the features that are on by default: clipboard (automatic sending), SMS, calls. "First" means the phone had no active pair when the pairing began: re-pairing the same client or adding another device does not open it, and after every device has been unpaired the next pairing does. The list opens over the Devices tab; Back returns there. | Device without `FEATURE_TELEPHONY` → the SMS and call cards are `unsupported` and the capability reports `enabled = false`; no camera (`FEATURE_CAMERA_ANY`) → the same for the camera. |
-| 9 | System | A-UI | Looks up the per-feature permission table (API 2): QR scanning, SMS, calls, call audio (only `BLUETOOTH_CONNECT`; Shizuku belongs to AUDIO-01 steps 10–11), camera → step 10; automatic clipboard sending → step 12. |  |
+| 9 | System | A-UI | Looks up the per-feature permission table (API 2): QR scanning, SMS, calls, call audio (only `BLUETOOTH_CONNECT`; Shizuku belongs to AUDIO-01 steps 10–11), camera → step 10; automatic clipboard sending → step 12; calls from other apps (Notification access) → step N1. |  |
 | 10 | System | A-UI | Filters out the permissions not yet granted (`checkSelfPermission`).<br>A permission in `perm.requested`, not granted and with `shouldShowRequestPermissionRationale = false` → permanently denied: show field 16 instead of the dialog.<br>Otherwise: show the explanation (field 12), call `RequestMultiplePermissions` for the feature's missing permissions and add them to `perm.requested`. | E5 → step 14 when the user comes back from Settings. |
 | 11 | User | OS | Allows or denies each permission group; the system groups the dialogs by permission group (SMS, Contacts, Phone, Call logs, Camera, Microphone, Nearby devices). | Denied → E4. |
 | 12 | System | A-UI | Runs CLIP-01 A2: show the disclosure (field 13); "Agree" → write `clip.a11y_consent_at`. Before opening `ACTION_ACCESSIBILITY_SETTINGS`: Android 13+ and the install source is not Google Play → show field 14 (API 6). | Declined → E6, go to step 14. |
 | 13 | User | OS | In Settings › Accessibility, selects HandLive, turns the service on, confirms the system's full-control permission dialog, then returns to HandLive. | The system reports "Restricted setting" → E7. Returns without turning it on → E8. |
-| 14 | System | A-UI, A-SVC, A-CLIP | Recomputes `permissions_missing` and the sub-flags from the API 2 table; updates fields 10 and 15.<br>Something changed and a client is connected → send `capability/update` (SET-02 API 1); both sides recompute the active features (CONN-01 API 7).<br>For QR scanning: `CAMERA` granted → open the scanner (PAIR-01 step 3); denied → PAIR-01 E9 (use the PIN). | A-SVC also recomputes at startup, on A-UI `onResume` and when the Accessibility service connects or disconnects (CLIP-01 A3). |
+| 14 | System | A-UI, A-SVC, A-CLIP | Recomputes `permissions_missing` and the sub-flags from the API 2 table; updates fields 10 and 15.<br>Something changed and a client is connected → send `capability/update` (SET-02 API 1); both sides recompute the active features (CONN-01 API 7).<br>For QR scanning: `CAMERA` granted → open the scanner (PAIR-01 step 3); denied → PAIR-01 E9 (use the PIN). | A-SVC also recomputes at startup, on A-UI `onResume` and when the Accessibility service or the notification listener connects or disconnects (CLIP-01 A3, CALL-05 API 3). |
+| N1 | System | A-UI | Calls from other apps turned on (`feature.call` and `call.app_calls` are `true`) without Notification access, or "Grant Permission" on its card: show the primer (field 19); "Continue" opens the system Notification access page for HandLive (API 9). Before opening: Android 13+ and the install source is not Google Play → show field 14 (the restricted-setting guidance). | Optional: other features never wait for it. |
+| N2 | User | OS | In Notification access, turns on HandLive, confirms the system dialog, then returns to HandLive. | The system reports "Restricted setting" → E11 (same guidance as E7). Not turned on → E11. |
 
 ### 1.1.5 API/service specification
 
@@ -122,6 +129,7 @@ flowchart TB
 | 6 | `Settings.ACTION_ACCESSIBILITY_SETTINGS`, `AccessibilityManager.getEnabledAccessibilityServiceList`, `PackageManager.getInstallSourceInfo` | Local | — | 12, 13, 14 |
 | 7 | `WS capability/update` | `/v1/ctl` (LAN, USB or relay) | S→C | 14 |
 | 8 | `POST /v1/devices` | Relay REST | A-SVC → R-API | 7 |
+| 9 | `Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS`, `NotificationManager.isNotificationListenerAccessGranted` | Local | — | N1, N2, 14 |
 
 #### API 1 — Create the identity keys and TLS certificate
 
@@ -179,6 +187,7 @@ flowchart TB
 | `clipboard` (automatic sending) | Accessibility service (API 6) | 29+ | `auto_send = false`, manual sending only | Accessibility declaration |
 | `web` (sending pages, P6) | Accessibility service "HandLive Browser Pages" (WEB-01 API 3) | 29+ | `features.web.send = false`; receiving still works | Accessibility declaration |
 | `web` (receiving pages, P6) | `POST_NOTIFICATIONS` | 33+ | `features.web.receive = false` (WEB-04 E2) | — |
+| `call` (calls from other apps, CALL-05) | Notification access, a special access (API 9), listed as `NOTIFICATION_LISTENER` | 29+ | `features.call.app_calls = false`; CALL-01…04 unaffected | Declaration of the listener's use; the primer (field 19) |
 
 - **Response:** `Map<String, Boolean>` — the result for each permission.
 - **Example:** SMS: `launch(arrayOf(READ_SMS, SEND_SMS, READ_CONTACTS, READ_PHONE_STATE))` →
@@ -189,7 +198,10 @@ flowchart TB
      missing permissions that belong to enabled features (`feature.<name>` = `true`), plus
      `POST_NOTIFICATIONS` when it is missing on Android 13+; disabled features contribute no
      permissions. An `ack` with the error `PERMISSION_MISSING` carries the full name in
-     `details.permission` (as in SMS-01 E2).
+     `details.permission` (as in SMS-01 E2). Notification access is listed as
+     `NOTIFICATION_LISTENER` while `feature.call` and `call.app_calls` are `true` and access is not
+     granted; it is never requested with `launch` (API 9) and never sent as `PERMISSION_MISSING`
+     (CALL-05 E1).
   2. Android does not say whether a permission has been permanently denied; infer it from
      `perm.requested`: asked before, not granted and `shouldShowRequestPermissionRationale = false`
      → permanent (Android 11+ blocks the dialog on its own after two denials). In that case do not
@@ -309,6 +321,8 @@ flowchart TB
 - **Example:** field 14: "If Android shows 'Restricted setting': open Settings › Apps › HandLive, tap ⋮ at
   the top, choose 'Allow restricted settings', authenticate, then come back and turn on HandLive in
   Accessibility."
+  For Notification access (N1) the text ends with "…turn on HandLive in Notification access."
+  (`setup.restricted_settings_help_notification_access`).
 - **Business logic:**
   1. Open the Accessibility settings only after `clip.a11y_consent_at` is set (consent given by an
      explicit action, never preselected); the disclosure text follows CLIP-01 field 2.
@@ -326,13 +340,34 @@ flowchart TB
 
 Specified in SET-02 API 1 (1.2.5). In SET-01, Android sends it when `permissions_missing` or a
 permission-dependent sub-flag (`can_send`, `sims`, `caller_id`, `can_answer`, `can_end`,
-`auto_send`) changes.
+`auto_send`, `app_calls`) changes.
 
 #### API 8 — `POST /v1/devices`
 
 Specified in CONN-03 API 1. Android calls it at step 7 when `relay.enabled = true`; idempotent
 (upsert). Network error or 5xx → retry in the background with `RECONNECT_BACKOFF` when a network is
 available (E10). The FCM push token is registered afterwards per CONN-04 API 1.
+
+#### API 9 — Notification access for calls from other apps
+
+- **URL:** N/A
+- **Method:** API 30+:
+  `startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, ComponentName(context, AppCallListener::class.java).flattenToString()))`;
+  API 29: `startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))`. Check with
+  `NotificationManager.isNotificationListenerAccessGranted(ComponentName(context, AppCallListener::class.java))`.
+- **Request:** the component of `AppCallListener` (CALL-05 API 3).
+- **Response:** the system page returns no result; A-UI checks the access again in `onResume` (step
+  14).
+- **Example:** `isNotificationListenerAccessGranted(...)` = `false` → field 19 → "Continue" → the
+  user turns on HandLive → `onResume` reads `true` → `features.call.app_calls = true`,
+  `NOTIFICATION_LISTENER` leaves `permissions_missing`, `capability/update`.
+- **Business logic:**
+  1. Asked only for calls from other apps, just in time (when `call.app_calls` is turned on or from
+     the card), never during part A; it is optional and never blocks another feature.
+  2. The intent is not supported (`ActivityNotFoundException`) → open
+     `Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS`.
+  3. Turning `call.app_calls` off does not revoke the access (Android has no API for an app to give
+     it back); the listener stops reading (CALL-05 API 3 logic 2).
 
 #### Query
 
@@ -350,6 +385,7 @@ dataStore.edit { it[stringSetPreferencesKey("perm.requested")] = requested + ask
 dataStore.edit { it[longPreferencesKey("clip.a11y_consent_at")] = now }             # step 12
 dataStore.edit { it[booleanPreferencesKey("clip.auto_send")] = false }              # E6
 prefs[booleanPreferencesKey("feature.sms")] ?: true                               # step 14: only permissions of enabled features count (likewise feature.call, feature.camera, feature.call_audio)
+prefs[booleanPreferencesKey("call.app_calls")] ?: true                            # steps 14, N1: NOTIFICATION_LISTENER counts only while feature.call and call.app_calls are true
 ```
 
 ---
@@ -417,6 +453,7 @@ device).
 | 35 | Send Pages from This Phone / Send Pages from This Mac (`web.send`) | bool | Input/Output | `true` | Android, Mac. **Capability** `features.web.send` (Android: also needs the service running). Off → `web/inactive` for the last page; no browser is read |
 | 36 | Page Notifications (`web.notify`) | bool | Input/Output | Android `true`, Mac `false` | Android, Mac. Android: **Capability** `features.web.receive` (WEB-04); turning it off stops showing pages from other devices on this phone (`receive = false`, so the Mac does not send them); Mac: **Local**, a notification besides the menu item (WEB-02) |
 | 37 | Browsers (`web.browsers`) | set\<string> | Input/Output | Every supported browser | Android, Mac. **Local**: one switch (Android) or checkbox (Mac) per supported browser; a browser turned off is never read, and `web/inactive` goes out if its page was the last one sent. Mac: each row shows its Automation status (WEB-03 field 3) |
+| 38 | Calls from Other Apps (`call.app_calls`) | bool | Input/Output | `true` | Android, Mac.<br>**Capability** `features.call.app_calls` (Android: also needs Notification access and `feature.call`; iOS/iPadOS always `false`). Android: turned on without Notification access → SET-01 N1–N2. Off → no calls from other apps (CALL-05): Android stops reading call notifications, the Mac closes its app-call panels. Under the "Calls" switch (Mac: a checkbox, shown dimmed while Calls is off)<br>Footer: "Show calls from apps like Telegram on your Mac. Audio stays on your phone." |
 
 ### 1.2.4 Business flow
 
@@ -462,7 +499,7 @@ flowchart TB
 | Step | Actor | Component | Description | Exceptions / Notes |
 |------|----------|-----------|-------|--------------------|
 | 1 | User | A-UI / M-APP / I-APP | Opens Settings (Android: Settings tab; Mac: menu bar › Settings; iOS: Settings tab) and flips a switch or picks a value (fields 1–22). | Turning off a feature that has a running task → ask for confirmation first (E9). |
-| 2 | System | Same as above | Keys that need an activation flow when turned **on**: `feature.call_audio` (Mac: AUDIO-01; Android: `BLUETOOTH_CONNECT`), `feature.camera` (Mac: CAM-01; Android: `CAMERA`, `RECORD_AUDIO`), `feature.sms` and `feature.call` on Android while permissions are missing (SET-01 part B), `clip.auto_send` when `clip.a11y_consent_at` is not set or the Accessibility service is not running, `feature.web` on Android (WEB-01 A1–A4: the disclosure, then the "HandLive Browser Pages" service). `web.send` on the Mac needs no flow at the switch: each browser asks for Automation the first time it is frontmost (WEB-03 step 3).<br>Other keys and every turn-off → step 4. |  |
+| 2 | System | Same as above | Keys that need an activation flow when turned **on**: `feature.call_audio` (Mac: AUDIO-01; Android: `BLUETOOTH_CONNECT`), `feature.camera` (Mac: CAM-01; Android: `CAMERA`, `RECORD_AUDIO`), `feature.sms` and `feature.call` on Android while permissions are missing (SET-01 part B), `clip.auto_send` when `clip.a11y_consent_at` is not set or the Accessibility service is not running, `feature.web` on Android (WEB-01 A1–A4: the disclosure, then the "HandLive Browser Pages" service), `call.app_calls` on Android without Notification access (SET-01 N1–N2). `web.send` on the Mac needs no flow at the switch: each browser asks for Automation the first time it is frontmost (WEB-03 step 3).<br>Other keys and every turn-off → step 4. |  |
 | 3 | System, User | Same as above | Runs the corresponding flow. AUDIO-01 and CAM-01 save `true` themselves when they complete (AUDIO-01 step 5, CAM-01 step 11). SET-01 part B: the key is saved as `true` even if the permission is denied (the feature is then inactive). Accessibility disclosure declined → `clip.auto_send = false`. | E1, E2. |
 | 4 | System | Same as above | Writes the key (Query) and applies the local effects: feature off → stop its tasks on this device (API 1, logic 4); `clip.auto_send = false` → `disableSelf()`; `relay.enabled = true` → register with the relay in the background (API 6); **Local** keys (`clip.auto_clear_s`, `cam.*`, `sms.preview`, `call.ringtone`…) apply from the next use. | Write error → E4, keep the old value. |
 | 5 | System | Same as above | Checks whether the key is marked **Capability** in 1.2.3 or changes `permissions_missing`. | No → step 8. |
@@ -510,6 +547,7 @@ flowchart TB
 | `call_audio.allow_opus_fallback` | `features.call_audio.opus_fallback` (`false` → `available = false`, `reason = "disabled"`) | Android |
 | `relay.enabled` | `features.relay.enabled` | All |
 | `feature.web`; `web.send` (Android: and the "HandLive Browser Pages" service running); Android `web.notify` and notifications allowed | `features.web.enabled`, `features.web.send`, `features.web.receive` (0.7.2) | Android, Mac; iOS/iPadOS only `enabled` (`send = false`, `receive = true`) |
+| `call.app_calls` (Android: and Notification access granted and `feature.call`) | `features.call.app_calls` (0.7.2) | Android, Mac; iOS/iPadOS always `false` |
 | Android permissions (SET-01 API 2) | `permissions_missing`, `features.sms.can_send`, `features.sms.sims`, `features.call.can_answer`, `features.call.can_end`, `features.call.caller_id` | Android |
 
 - **Response:** N/A (no ack). The receiver sends its own `capability/update` only when its own
@@ -545,6 +583,7 @@ The iPhone turns call notifications off:
 | `clipboard` | Cancel an image transfer in progress (`clipboard/cancel`); stop sending new clips to that device |
 | `sms` | Stop SMS-01 after the page being processed; `sms_outbox` rows still `pending` are kept and sent once the feature is active again |
 | `call` | Close the call panel and the call notifications currently shown on Mac/iOS |
+| `call.app_calls` (calls from other apps) | Android stops sending `call_event/app_call` to that device; the Mac closes its app-call panels (CALL-05) |
 | `call_audio` | Close the Opus/WS stream (`call_audio/close`, AUDIO-04) or return the HFP audio to the phone (AUDIO-03) |
 | `camera` | `camera/stop` for the streaming session (CAM-02) |
 | `web` | Forget the page received from that device and remove its menu item, notification or banner; stop sending pages to it (WEB-01…05) |

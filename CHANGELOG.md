@@ -6,12 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- CALL-05 (calls from other apps): `AppCallListenerService` (`NotificationListenerService`) reads Telegram and other calling apps' notifications on Android and sends them to the Mac; the user can answer, decline or end from the Mac (audio stays on the phone in v1). Requires Notification access, a special access the user enables by hand. Cellular calls unchanged.
+
 ### Changed
 
 - Merged remaining spike/fix branches into `main`: apple `fix/real-device-pairing`,
   `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
   `fix/real-device-pairing`. Relay local checkout moved to `main`. README roadmap updated.
 - `CLAUDE.md`: progress report handoff of 2026-10-01 (done / in progress / plan next) for coding agents.
+- Detailed design: CALL-05 spec (leaves 06-call-control, 00-common-specs, 01-setup-settings); capability formula for Mac app calls clarified.
+
+### Compatibility note
+
+- Versions v0.1.0-beta.1 and earlier on Mac and iOS: a new `NOTIFICATION_LISTENER` entry in `permissions_missing` will display as a generic "missing permission" hint until the app is updated to understand app calls. No action needed from the user.
 
 ## [0.1.0-beta.1] — 2026-09-30
 

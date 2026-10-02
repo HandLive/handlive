@@ -5,31 +5,40 @@ English | [Tiếng Việt](06-call-control.vi.md)
 > Common references: [`00-common-specs.md`](00-common-specs.md) — components A-CALL, A-AUD, M-APP,
 > M-HFP, I-APP, I-NSE (0.1), identifiers `call_id`, `entry_id` (0.2), data types (0.3), envelope and
 > `ack` (0.5.1), security principles (0.6.5), message type `call_event` (0.7.1), capabilities
-> `features.call`, `features.call_audio.hfp_connected` (0.7.2), error codes `CALL_*`,
-> `PERMISSION_MISSING` (0.8.1), data sources `CallLog.Calls`, `PhoneLookup` (0.9.2), tables
-> `call_log_entry`, `sync_cursor` (0.9.3), keys `feature.call`, `call.notify` (0.9.5), constant
-> `CALLLOG_SYNC_WINDOW` (0.10). Push: CONN-04. Call audio: group 7 (AUDIO-01…04).
+> `features.call`, `features.call.app_calls`, `features.call_audio.hfp_connected` (0.7.2), error
+> codes `CALL_*`, `PERMISSION_MISSING` (0.8.1), data sources `CallLog.Calls`, `PhoneLookup` (0.9.2),
+> tables `call_log_entry`, `sync_cursor` (0.9.3), keys `feature.call`, `call.notify`,
+> `call.app_calls` (0.9.5), constants `CALLLOG_SYNC_WINDOW`, `APP_CALL_LINK_WINDOW`,
+> `APP_CALL_TAP_NOTIFICATION_TTL` (0.10). Push: CONN-04. Call audio: group 7 (AUDIO-01…04). Calls
+> from other apps: CALL-05 (README §5 C22).
 >
 > Rules for the whole group:
 > - **No `InCallService`** (README §5 C12). A-CALL sees only the phone's aggregate state (`IDLE`,
 >   `RINGING`, `OFFHOOK`) through public APIs: no per-call details, no certainty when several calls
 >   exist, and the number of an outgoing call is unknown until the call log entry is written.
+>   Calls from other apps (Telegram…, CALL-05) are read from the calling apps' own call
+>   notifications through a `NotificationListenerService` and controlled with their PendingIntents —
+>   still no `InCallService` (C22).
 > - Calls are **in effect** for a pair when `feature.call = true` on both sides and Android has
 >   `READ_PHONE_STATE`. The incoming number also needs `READ_CALL_LOG` (`features.call.caller_id`);
 >   answering, declining and ending need `ANSWER_PHONE_CALLS` (`features.call.can_answer`,
 >   `can_end`); contact names need `READ_CONTACTS`.
+> - App calls are **in effect** for a session when both sides report `features.call.app_calls =
+>   true` (Android: `call.app_calls`, `feature.call` and Notification access; Mac: `call.app_calls`;
+>   iPhone/iPad never); they need no telephony permission and do not change CALL-01…04.
 > - Over WebSocket there are only `answer`, `reject`, `end`. Hold, DTMF, mute and call-waiting
 >   handling are possible only through HFP commands sent by the Mac while it is connected to the
 >   phone over Bluetooth HFP (P4, M-HFP).
 > - iOS uses no PushKit/CallKit (C7): an incoming call on iPhone/iPad is a `time-sensitive`
 >   notification or an in-app banner; iPhone/iPad can only decline, never answer.
-> - Never log phone numbers, contact names or DTMF keys; logs hold only `type`, `op`, `call_id` and
->   error codes. Errors in this group stay isolated: they never stop A-SVC and never close the
->   `/v1/ctl` session.
+> - Never log phone numbers, contact names, DTMF keys, app-call callers or the text of any
+>   notification; logs hold only `type`, `op`, `call_id` and error codes. Errors in this group stay
+>   isolated: they never stop A-SVC and never close the `/v1/ctl` session.
 > - Android checks calls per session: `call_event/action` and `call_event/log_sync` are answered
 >   with `FEATURE_DISABLED` when calls are not in effect for the session that sent them (turned off
 >   on either side, per that client's latest `capability`, or `READ_PHONE_STATE` missing), whatever
->   other sessions allow.
+>   other sessions allow; an action for an app call gets `FEATURE_DISABLED` when app calls are not in
+>   effect for that session (CALL-05 API 2).
 
 ## 6.1 CALL-01 — Incoming call notification on Mac/iOS
 
@@ -383,7 +392,11 @@ Content-Type: application/json
      turns on "Ring on Mac" (field 14); Info.plist has `NSFocusStatusUsageDescription` ("HandLive
      reads your Focus status so it doesn't ring or show calls while a Focus is on."). Not allowed
      yet (`INFocusStatusCenter.default.authorizationStatus` is not `.authorized`) → **no** ringtone
-     of its own (the safe choice for Focus); the panel still shows.
+     of its own (the safe choice for Focus); the panel still shows. A build signed without the
+     capability (for example with a personal team) cannot ask, so HandLive never appears in System
+     Settings › Privacy & Security › Focus: the Focus status is `unavailable`, M-APP alerts as with
+     Focus off (panel, ringtone when `call.ringtone = true`, passive notification) and hides the
+     Focus permission hint under "Ring on Mac".
   4. `call.notify = false` → no panel; the menu of the menu bar icon shows the call with buttons
      according to `controls` (E3).
   5. When the panel appears, VoiceOver reads "Incoming call from \<name or number>".
@@ -629,9 +642,9 @@ in B2 follows CONN-04 API 2 — no new call is introduced.
 
 | Field | Type | Required | Description |
 |--------|------|----------|-------|
-| `call_id` | uuid | Yes | Of the context the client is showing |
+| `call_id` | uuid | Yes | Of the context the client is showing: the telephony context, or a live app call (CALL-05) |
 | `action` | enum{answer\| reject\| end\| hold\| unhold\| dtmf\| mute} | Yes | Over WebSocket only `answer`, `reject`, `end` are carried out; the other values always get `CALL_HFP_REQUIRED` (0.7.1) |
-| `audio` | enum{phone\| mac} | No | Only with `answer`: where the user wants to take the call; absent → `phone` |
+| `audio` | enum{phone\| mac} | No | Only with `answer`: where the user wants to take the call; absent → `phone`; an app call takes only `phone` (CALL-05 API 2) |
 
 - **Response (`ack.data`):** `{}` when `ok = true` — Android has called the Telecom API; the actual
   result travels through `state`.
@@ -640,12 +653,14 @@ Errors (`ack.error.code`), in check order:
 
 | Code | When |
 |----|---------|
-| `FEATURE_DISABLED` | Calls are not in effect for the requesting session (`feature.call = false` on Android or on that client, or `READ_PHONE_STATE` missing) |
+| `FEATURE_DISABLED` | Calls are not in effect for the requesting session (`feature.call = false` on Android or on that client, or `READ_PHONE_STATE` missing); for the `call_id` of an app call: app calls are not in effect for that session (CALL-05) |
 | `BAD_REQUEST` | Missing field, or `action` or `audio` outside the list |
 | `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`}; `details.action` = the value sent |
 | `CALL_NOT_FOUND` | No context, a `call_id` other than the current context, or `endCall()` returns `false` when the phone is already `IDLE` |
 | `PERMISSION_MISSING` | `ANSWER_PHONE_CALLS` missing; `details.permission = "android.permission.ANSWER_PHONE_CALLS"` |
 | `CALL_ACTION_NOT_ALLOWED` | `details.state` = the current state; `details.reason` = `state` (`answer`/`reject` when not `ringing`, `end` when not `offhook`, or another command for the `call_id` within 3 s), `waiting` (a waiting call is present), `platform` (`answer` from an iPhone/iPad), `system` (Telecom refuses, for example an emergency call — CALL-03) |
+| `CALL_ROUTE_FAILED` | Only for the `call_id` of an app call: `answer` with `audio = mac` (the audio of an app call stays on the phone, CALL-05 API 2) |
+| `CALL_APP_ACTION_UNAVAILABLE` | Only for the `call_id` of an app call: the app's notification no longer offers the action, or is gone (CALL-05 API 2) |
 | `INTERNAL` | Unexpected error on Android (0.8.1), for example the Telecom method throws an exception other than `SecurityException`; the client handles it as E5, with no automatic re-send |
 
 - **Example:**
@@ -675,6 +690,12 @@ Errors (`ack.error.code`), in check order:
      M-APP shows "Answer on Mac" only when call audio is in effect on both sides.
   6. Client: `ok = false` → show field 10 for the code, unlock the buttons, apply the latest `state`;
      `ok = true` → wait up to 3 s for `state`.
+  7. **App calls (CALL-05):** A-CALL first looks the `call_id` up among the live app-call contexts; a
+     match is handled by CALL-05 API 2, which answers only `FEATURE_DISABLED`, `BAD_REQUEST`,
+     `CALL_HFP_REQUIRED`, `CALL_ROUTE_FAILED`, `CALL_APP_ACTION_UNAVAILABLE` or `INTERNAL`, in this
+     order. Every other `call_id` goes through the checks above unchanged, except that a session for
+     which app calls are in effect but calls are not gets `CALL_NOT_FOUND` instead of
+     `FEATURE_DISABLED`.
 
 #### API 2 — `TelecomManager.acceptRingingCall()`
 
@@ -1442,3 +1463,376 @@ DELETE FROM call_log_entry WHERE ts < :now - 7776000000;
 ```
 
 Writing to `push_outbox` when a push fails: see CONN-04.
+
+---
+
+## 6.5 CALL-05 — Calls from other apps on the Mac
+
+### 6.5.1 General information
+
+| Item | Content |
+|-----|----------|
+| Name | CALL-05 — Calls from other apps on the Mac |
+| Description | When a calling app on the phone rings (Telegram first; any app that posts a `CallStyle` call notification), A-CALL reads that app's call notification through a `NotificationListenerService` (`AppCallListener`) — still no `InCallService` (C12, C22) —, creates an app-call context (`call_id`) and sends `call_event/app_call` to every Mac session for which app calls are in effect.<br>The Mac shows the call panel with the app's name ("Telegram Call") and the caller; "Answer", "Decline" and "End" send `call_event/action`, which Android carries out by sending the app's own PendingIntents: the decline and answer intents of the ringing notification, the hang-up intent (or the single action) of the in-call notification.<br>Answering starts an activity of the app, which Android allows from the background only while HandLive holds a background-activity-start exemption (its Accessibility service is bound): `answer_mode = direct`. Without it (`answer_mode = tap`), "Answer" posts a "tap to answer" notification on the phone and the Mac says so.<br>In v1 the audio always stays on the phone (`audio = phone`; the Mac refuses HFP SCO, spike T3.2) and the panel says so. iPhone/iPad do not have this function: they report `features.call.app_calls = false`. |
+| Actors | Primary: User (at the Mac), Caller (calls through the app). System: A-CALL (`AppCallListener`), A-SVC, A-CLIP (its bound Accessibility service gives the exemption), OS (`NotificationManager`, `PackageManager`, `ActivityOptions`), the calling app, M-APP. |
+| Preconditions | 1.<br>A valid pair; the Mac has a `/v1/ctl` session (CONN-01 or CONN-03).<br>2.<br>App calls are in effect for the session: `feature.call` and `call.app_calls` on both sides, Notification access granted on Android (SET-01 N1–N2), so both sides report `features.call.app_calls = true`.<br>3.<br>The calling app posts a `CallStyle` notification for the incoming call (`android.callType = 1`). |
+| Postconditions | The Mac shows the app call and its panel always matches the latest `app_call`: `ringing` → the incoming panel, `ongoing` → the in-call panel, `ended` → the panel closes.<br>The context lives in A-CALL memory until `ended` has been sent, then it is forgotten; nothing is written to disk on either side; the tap-to-answer notification is removed when the call leaves `ringing` or after `APP_CALL_TAP_NOTIFICATION_TTL`.<br>Cellular calls (CALL-01…04) are unchanged. |
+| Exceptions | E1 — Notification access not granted (`permissions_missing` contains `NOTIFICATION_LISTENER`): app calls are off on the phone and the primer explains why (SET-01 E11); nothing is sent; CALL-01…04 work as before.<br>E2 — The app's notification no longer offers the action, is gone, or its PendingIntent was cancelled: `CALL_APP_ACTION_UNAVAILABLE`; the Mac applies the latest `app_call`.<br>E3 — The call is gone (`ended` already sent and the context forgotten): an action gets `CALL_NOT_FOUND`; the Mac closes the panel.<br>E4 — App calls not in effect for the session (`call.app_calls` or `feature.call` off on either side, or the Mac's latest capability says `false`): nothing is sent; an action with an app `call_id` gets `FEATURE_DISABLED`; the Mac closes its app-call panels.<br>E5 — Through the relay: best effort. `app_call` travels over a relayed session that already exists; A-SVC does not open the relay for an app call and sends no push, so a Mac waiting on the relay may miss a short call.<br>E6 — A notification with only `category = call` and no `CallStyle` (`android.callType` not set): not supported, no context, nothing sent; such a notification can only become an in-call notification by logic 3 if a `CallStyle` context exists. A per-app adapter may come later.<br>E7 — No background-activity-start exemption (`answer_mode = tap`): "Answer" posts the tap-to-answer notification and the Mac shows field 6; notifications not allowed on the phone (`POST_NOTIFICATIONS` denied or the channel `hl_app_call` blocked) → `CALL_APP_ACTION_UNAVAILABLE`.<br>E8 — The in-call notification has no hang-up intent and more than one action: `controls.end = false`; the call is ended on the phone.<br>E9 — `answer` with `audio = mac`: `CALL_ROUTE_FAILED`; the Mac never offers it for an app call.<br>E10 — The notification listener is disconnected or Notification access is revoked mid-call: every live context ends (`end_reason = unknown`, `answered_at = null` even if the call was ongoing), `capability/update` reports `app_calls = false`. |
+| Special requirements | **Performance (LAN, 95th percentile):** the Mac panel ≤ 400 ms after the app's call notification is posted (`postTime`; Android alone takes 215–232 ms to deliver it, spike T3.2), with the app name and the caller; "Decline" or "End" takes effect on the phone ≤ 500 ms after the click; "Answer" answers on the phone ≤ 1 s with `answer_mode = direct` (exempt from the target with `tap`: the user taps on the phone).<br>**Privacy:** only call notifications are parsed: the filter (API 3 logic 1) runs before anything else is read; every other notification is dropped without reading its title or text, never stored, never logged, never leaves the phone. `caller` travels only inside E2E envelopes, is never logged and never stored; logs hold `type`, `op`, `call_id`, error codes and timings. No push carries an app call.<br>**Platform:** no `InCallService` (C12); the listener is declared with `BIND_NOTIFICATION_LISTENER_SERVICE` and the user grants Notification access by hand (SET-01); PendingIntents are sent with the background-activity-start option (API 4); spike T3.2: without the exemption Android blocks the answer activity (`BAL_BLOCK`).<br>**Compliance:** Notification access is broad: strict filter, the primer (SET-01 field 19), the switch `call.app_calls` to turn it off, the Google Play declaration of the listener's use.<br>**Accessibility:** VoiceOver reads the panel title and the caller when the panel appears.<br>**Scope:** Mac only. Out of scope: iPhone/iPad, starting app calls from the Mac, an app-call log, video calls, the audio on the Mac (`audio = mac` is reserved). |
+
+### 6.5.2 Screens
+
+N/A — no approved wireframe yet.
+
+### 6.5.3 Component details
+
+| # | Field | Data type | Input/Output | Initial value | Description |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Title | string | Output | "\<app> Call" | `app.label` in the title, for example "Telegram Call"; incoming and in-call panels |
+| 2 | Caller | string | Output | `caller` | `null` → "Unknown Caller" |
+| 3 | "Answer" button | action | Input | Hidden | Mac, when `controls.answer = true`; "Answer on Phone" instead while call audio is in effect on the Mac (AUDIO-01), since the audio of an app call stays on the phone; never "Answer on Mac" → API 2 `answer` |
+| 4 | "Decline" button | action | Input | Hidden | When `controls.decline = true` → API 2 `reject` |
+| 5 | "Ignore" button | action | Input | — | Incoming panel only, as CALL-01 field 9: closes the panel and silences the ringtone on the Mac; the call keeps ringing on the phone |
+| 6 | Tap-to-answer hint | string | Output | Hidden | After a successful "Answer" with `answer_mode = tap`: "Tap the notification on your phone to answer." replaces field 3 until `state` changes; field 4 stays |
+| 7 | Timer | string (mm:ss) | Output | "00:00" | In-call panel: counts from `answered_at`, else from `started_at` (as CALL-03 field 2) |
+| 8 | Audio location | string | Output | "Audio: Phone" | In-call panel, always (`audio = phone`); no button to switch the audio |
+| 9 | "End" button | action | Input | Hidden | In-call panel, when `controls.end = true` → API 2 `end` |
+| 10 | In-progress state, error message | string | Output | Hidden | "Answering…", "Declining…" as CALL-02 field 9; errors as CALL-02 field 10 ("Couldn't send the command to the phone" on a timeout); `CALL_APP_ACTION_UNAVAILABLE` shows no message (E2) |
+| 11 | Ringtone on the Mac | audio | Output | Off | As CALL-01 field 10 (`call.notify`, `call.ringtone`, Focus) |
+| 12 | Tap-to-answer notification | string | Output | Hidden | Android (API 5): title "Answer \<app> Call", for example "Answer Telegram Call"; text: `caller` when known; channel `hl_app_call` ("Calls from Other Apps"); tapping it runs the app's answer intent |
+| 13 | "Calls from Other Apps" option | bool | Input/Output | `call.app_calls` = `true` | Settings → Calls (SET-02 field 38), Android and Mac; footer "Show calls from apps like Telegram on your Mac. Audio stays on your phone." |
+| 14 | Notification access primer | string | Output | — | Android (SET-01 field 19): "Allow Notification Access", then "HandLive reads only call notifications from calling apps, to show them on your Mac. Other notifications are ignored and never leave your phone." |
+
+### 6.5.4 Business flow
+
+```mermaid
+flowchart TB
+  subgraph ND["User"]
+    U9["(9) Sees the app and the caller, chooses Answer, Decline, Ignore or End"]
+    U12["(12) Tap mode: taps the HandLive notification on the phone"]
+  end
+  subgraph HT["System"]
+    S1["(1) The calling app posts a notification, AppCallListener receives it"]
+    D2{"(2) A CallStyle call notification?"}
+    S3["(3) Create or update the app-call context, compute controls and answer_mode"]
+    D4{"(4) App calls in effect for the session?"}
+    S5["(5) Send call_event/app_call to the session"]
+    S6["(6) Ringing notification removed: ongoing if the app posts an ongoing notification within APP_CALL_LINK_WINDOW, else ended"]
+    S7["(7) In-call notification removed: ended, then forget the context"]
+    S8["(8) Mac shows, updates or closes the panel"]
+    S10["(10) Send call_event/action"]
+    D11{"(11) Android: in effect, action still offered?"}
+    S13["(13) Send the app's PendingIntent or post the tap notification, return the ack"]
+    X1(["Ignored: nothing read or sent"])
+    X2(["Error ack, refresh from the latest app_call"])
+  end
+  S1 --> D2
+  D2 -- "No (E6)" --> X1
+  D2 -- "Yes" --> S3 --> D4
+  D4 -- "No (E1, E4)" --> X1
+  D4 -- "Yes" --> S5 --> S8 --> U9
+  U9 -- "Answer, Decline or End" --> S10 --> D11
+  D11 -- "No (E2, E3, E4, E9)" --> X2
+  D11 -- "Yes" --> S13
+  S13 -- "Tap mode (E7)" --> U12 --> S6
+  S13 -- "Decline or Answer" --> S6 --> S5
+  S13 -- "End" --> S7 --> S5
+```
+
+| Step | Actor | Component | Description | Exceptions / Notes |
+|------|----------|-----------|-------|--------------------|
+| 1 | System | OS, A-CALL | The calling app posts or updates a notification; the system calls `AppCallListener.onNotificationPosted` (API 3). | Listener not connected (no Notification access) → E1. |
+| 2 | System | A-CALL | Filter before reading anything else (API 3 logic 1): HandLive's own package is dropped; the notification is a call notification when its `extras` has `android.callType` (`CallStyle`) or its category is `call`; during a link window (step 6) an ongoing notification of the same package is also taken, reading only its flags and actions. Everything else is dropped without reading its title or text. | `callType = 3` (screening) → ignored. No `CallStyle` → E6. |
+| 3 | System | A-CALL, OS | `callType = 1` → a new `ringing` context (`call_id` UUIDv7, `started_at`) keyed by the notification key, or the update of an existing one; `callType = 2` for a key without a context → a new `ongoing` context (`answered_at = null`).<br>Read `app.package`, `app.label` (`PackageManager`), `caller` (`android.callPerson`, else `android.title`) and the intents; compute `controls` and `answer_mode` (API 1 logic 5–6). | Personal data stays in memory. |
+| 4 | System | A-SVC | For each session: app calls in effect (`features.call.app_calls = true` on both sides). | No → E1, E4 (X1). |
+| 5 | System | A-SVC | Send `call_event/app_call` (API 1) when a field differs from the version last sent to that session; a session for which app calls come into effect gets every live context after the capability exchange. Over the relay only on a relayed session that already exists. | E5. |
+| 6 | System | A-CALL | The ringing notification is removed: the same package posts an ongoing notification (`FLAG_ONGOING_EVENT`, `CallStyle` type 2 or not) within `APP_CALL_LINK_WINDOW` → `state = ongoing`, `answered_at` = its post time, and it becomes the in-call notification; otherwise `state = ended` with `end_reason` per API 1 logic 4. The tap-to-answer notification is removed when the call leaves `ringing` (API 5). |  |
+| 7 | System | A-CALL | The in-call notification is removed → `state = ended`, `end_reason = ended`, `ended_at`; after `ended` has been sent, the context is forgotten. | Listener disconnected → E10. |
+| 8 | System | M-APP | `ringing` → the incoming panel (fields 1–5, 11, API 6); `ongoing` → the in-call panel (fields 1, 2, 7–9); `ended` → close the panel, stop the ringtone. | A telephony call holds the panel → the app call waits (API 6 logic 2). `call.notify = false` or a Focus → no panel (CALL-01 E3, E4). |
+| 9 | User | M-APP | Sees "Telegram Call" and the caller; chooses "Answer", "Decline", "Ignore" (local only, field 5) or, in the in-call panel, "End". | Buttons only as `controls` allows. |
+| 10 | System | M-APP | Send `call_event/action` (API 2) `{call_id, action}`: `answer` (without `audio`), `reject` or `end`; lock the buttons until the `ack` or a new `app_call`; wait up to `REQUEST_TIMEOUT`. | Timeout → as CALL-02 E5. |
+| 11 | System | A-SVC, A-CALL | Route by `call_id` (CALL-02 API 1 logic 7), then check per API 2: app calls in effect, `action`, `audio`, the action still offered by the context's current notification. | Error `ack` → E2, E3, E4, E9 (X2). |
+| 12 | User | OS | `answer_mode = tap`: taps "Answer \<app> Call" on the phone; the app's answer intent opens the app's call screen. | Not tapped → the call keeps ringing; the notification goes after `APP_CALL_TAP_NOTIFICATION_TTL`. |
+| 13 | System | A-CALL, OS | `reject` → mark the context "declined by HandLive", send `android.declineIntent`; `end` → send the end action; `answer` → mark the context "answered by HandLive", then `direct`: send `android.answerIntent`, `tap`: post the tap-to-answer notification (API 5). PendingIntents go out with the background-activity-start option (API 4). Return `ack` `{}`; the result shows up as the app changes its notifications (steps 6, 7). | `CanceledException` → E2. Notifications not allowed → E7. |
+
+### 6.5.5 API/service specification
+
+**List of API calls**
+
+| # | API/service | Channel | Direction | Used in steps |
+|---|-------------|------|-------|-------------|
+| 1 | `WS call_event/app_call` | `/v1/ctl` (LAN or relay) | S→C | 5, 8 |
+| 2 | `WS call_event/action` with the `call_id` of an app call (main specification in CALL-02 API 1) | `/v1/ctl` (LAN or relay) | C→S, with ack | 10, 11, 13 |
+| 3 | `NotificationListenerService` `AppCallListener`: `onNotificationPosted`, `onNotificationRemoved`, `onListenerConnected`, `onListenerDisconnected` | Local (Android) | OS → A-CALL | 1, 2, 3, 6, 7 |
+| 4 | `PendingIntent.send` with `ActivityOptions.setPendingIntentBackgroundActivityStartMode` | Local (Android) | A-CALL → the calling app | 13 |
+| 5 | Tap-to-answer notification: `NotificationManagerCompat.notify` on the channel `hl_app_call` | Local (Android) | A-CALL → OS | 6, 12, 13 |
+| 6 | Call panel for an app call (the `NSPanel` of CALL-01 API 5) | Local (Mac) | — | 8, 9 |
+
+#### API 1 — `WS call_event/app_call`
+
+- **URL:** `wss://{android_host}:{port}/v1/ctl` (LAN) or via the relay `wss://{RELAY_HOST}/v1/relay`
+  with the `to` /`from` wrapper
+- **Method:** `WS call_event/app_call` (S→C), encrypted envelope, no ack (0.7.1); never in a push.
+- **Request (`data`):** every field is always present (`null` where allowed).
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `call_id` | uuid | Yes | UUIDv7, one per app call; stays the same from `ringing` to `ongoing` to `ended` |
+| `app` | object | Yes | The calling app (table below) |
+| `caller` | string(128) \| null | Yes | `android.callPerson` name, else the notification title; `null` when absent. Personal data: E2E only, never logged, never stored |
+| `state` | enum{ringing\| ongoing\| ended} | Yes | Logic 2–4 |
+| `controls` | object | Yes | Actions the Mac may send (table below) |
+| `answer_mode` | enum{direct\| tap} | Yes | `direct` when HandLive holds a background-activity-start exemption (its Accessibility service is bound); `tap` otherwise (logic 6) |
+| `audio` | enum{phone} | Yes | Constant in v1; `mac` is reserved for later |
+| `started_at` | timestamp | Yes | When the context was created (Android clock) |
+| `answered_at` | timestamp \| null | Yes | When a `ringing` context became `ongoing`; `null` while ringing, for a context created `ongoing`, and for a call that ended as `declined`, `missed` or `unknown` |
+| `ended_at` | timestamp \| null | Yes | Only when `state = ended` |
+| `end_reason` | enum{declined\| ended\| missed\| unknown} \| null | Yes | Only when `state = ended`; logic 4 |
+
+The `app` object:
+
+| Field | Type | Value |
+|--------|------|---------|
+| `package` | string(255) | Android package name of the calling app |
+| `label` | string(64) | The app's label from `PackageManager` (display only) |
+
+The `controls` object:
+
+| Field | Type | Value |
+|--------|------|---------|
+| `answer` | bool | `true` when `state = ringing` and the notification has an answer intent |
+| `decline` | bool | `true` when `state = ringing` and the notification has a decline intent |
+| `end` | bool | `true` when `state = ongoing` and an end action exists (logic 5) |
+
+- **Response:** N/A (no ack; a Mac that missed a message because of a lost connection receives the
+  live contexts when its new session exchanges capabilities — logic 7).
+- **Example:** a Telegram call ringing, answered, then ended.
+
+```json
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ringing","controls":{"answer":true,"decline":true,"end":false},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":null,"ended_at":null,"end_reason":null}}
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ongoing","controls":{"answer":false,"decline":false,"end":true},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":1727150405321,"ended_at":null,"end_reason":null}}
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ended","controls":{"answer":false,"decline":false,"end":false},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":1727150405321,"ended_at":1727150530456,"end_reason":"ended"}}
+```
+
+- **Business logic:**
+  1. **Filter (privacy):** `onNotificationPosted` drops HandLive's own package and notifications from
+     the default dialer (`TelecomManager.getDefaultDialerPackage()`), the system dialer, any package
+     implementing `android.telecom.InCallService`, `com.android.server.telecom` and `com.android.phone`
+     (cellular calls belong to CALL-01…04; otherwise the caller name would bypass `READ_CALL_LOG` and
+     duplicate events). Then takes only a notification whose `extras` has `android.callType` or whose
+     `category` is `call` (C22, E6); during a link window (logic 3) it also takes an ongoing
+     notification of the same package (not the waiting package — only the calling app), reading only its
+     `flags` and `actions`. Nothing else is read: no title, text or extras of any other notification,
+     which is never stored, never logged and never leaves the phone.
+  2. **Contexts:** keyed by the notification key (`StatusBarNotification.key`). `CallStyle`
+     `callType = 1` creates a `ringing` context; `callType = 2` for a key without a context creates
+     an `ongoing` context with `answered_at = null` (a call placed in the app, or the listener
+     connected mid-call); `callType = 3` (screening) is ignored. A `category = call` notification
+     without `CallStyle` never creates a context (E6); it can only become an in-call notification by
+     logic 3. An update of the same key reads `caller` and the intents again.
+  3. **Ringing → ongoing:** when the notification of a `ringing` context is removed, its in-call
+     notification is the first ongoing notification (`FLAG_ONGOING_EVENT`, `CallStyle` type 2 or not)
+     of the same package whose key first appeared after the context was created and whose `postTime`
+     is at most the removal time + `APP_CALL_LINK_WINDOW` (3 s). The removal time is when the listener
+     received the removal. Such a notification posted before the removal is linked at the removal;
+     otherwise A-CALL waits for the window and decides by `postTime`, so a post still queued when the
+     window closes (`APP_CALL_LINK_GRACE`, 500 ms later) counts. An ongoing notification whose key existed before the context was created (a
+     media player, a download, a foreground service) is never linked, nor are its updates. Linked:
+     `state = ongoing`, `answered_at` = its `postTime`, `caller` kept. Telegram (spike T3.2): the in-call
+     notification is not `CallStyle` — channel `Other3`, ongoing, one action.
+  4. **Ended:** the in-call notification is removed → `end_reason = ended`. No ongoing notification
+     within the window → `end_reason = declined` when HandLive sent the decline for this context,
+     `unknown` when HandLive sent the answer (directly or through the tap-to-answer notification) but
+     no in-call notification followed, or when the listener was lost (E10) — `answered_at` stays `null`
+     with `unknown`, even for a call that had become ongoing —, `missed` otherwise (nothing answered it; a call declined right
+     on the phone also ends as `missed`, as in CALL-04 E11). `ended_at` = when A-CALL decides it;
+     `ended` is sent once to each session, then the context is forgotten.
+  5. **controls:** `answer` and `decline` from `android.answerIntent` and `android.declineIntent` of
+     the ringing notification; `end` from the in-call notification: its `android.hangUpIntent`, else
+     its only action when it has exactly one, else `false` (E8). Action titles are localized and are
+     never matched as text.
+  6. **answer_mode:** `direct` while an Accessibility service of HandLive is bound (CLIP-01 A3),
+     which exempts HandLive from the background activity start limits; `tap` otherwise. Recomputed
+     when the service connects or disconnects; a change is sent like any other field.
+  7. **When to send:** as CALL-01 API 1 logic 3: whenever a field differs from the version last sent
+     to that session, and every live context to a session for which app calls come into effect (after
+     `capability/hello` or `capability/update`); never an identical version; never to iPhone/iPad
+     (they report `app_calls = false`). The Mac keeps the latest version per `call_id` by the envelope
+     `ts`; after `ended` it ignores later versions of that `call_id`.
+  8. **Limits:** `caller` is cut to 128 characters and `app.label` to 64; an empty `caller` →
+     `null`. Never log `caller`, the app label or any notification text; logs hold `type`, `op`,
+     `call_id`, error codes and timings.
+  9. **Listener lifecycle:** `onListenerConnected` → read `getActiveNotifications()` once through the
+     same filter to rebuild the live contexts; `onListenerDisconnected` or Notification access revoked
+     → every live context ends with `end_reason = unknown` (E10) and `capability/update` reports
+     `app_calls = false` with `NOTIFICATION_LISTENER` in `permissions_missing`.
+
+#### API 2 — `WS call_event/action` with the `call_id` of an app call
+
+- **URL:** as in API 1
+- **Method:** `WS call_event/action` (C→S), encrypted envelope, with ack — main specification in
+  CALL-02 API 1; A-CALL routes by `call_id` (CALL-02 API 1 logic 7).
+- **Request (`data`):**
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `call_id` | uuid | Yes | The `call_id` of a live app call |
+| `action` | enum{answer\| reject\| end} | Yes | `answer`, `reject` while `ringing`; `end` while `ongoing` |
+| `audio` | enum{phone} | No | Only with `answer`; absent → `phone`; `mac` → `CALL_ROUTE_FAILED` (E9) |
+
+- **Response (`ack.data`):** `{}` when `ok = true` — Android has sent the app's PendingIntent, or
+  posted the tap-to-answer notification; the result travels through `app_call`.
+
+Errors (`ack.error.code`), in check order:
+
+| Code | When |
+|----|---------|
+| `FEATURE_DISABLED` | App calls are not in effect for the requesting session (E4) |
+| `BAD_REQUEST` | Missing field, or `action` or `audio` outside the list |
+| `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`} (the rule of 0.7.1; the app-call panel never offers them); `details.action` = the value sent |
+| `CALL_ROUTE_FAILED` | `answer` with `audio = mac` (E9) |
+| `CALL_APP_ACTION_UNAVAILABLE` | `answer` or `reject` when the context is not `ringing` or its notification has no such intent; `end` when it is not `ongoing` or has no end action; the notification is gone or the PendingIntent was cancelled (`PendingIntent.CanceledException`); `answer` in `tap` mode when the phone cannot post notifications (E2, E7) |
+| `INTERNAL` | Unexpected error on Android (0.8.1); the client handles it as CALL-02 E5 |
+
+A `call_id` that is not a live app call follows CALL-02 API 1 (`CALL_NOT_FOUND` for an app call that
+has already ended, E3).
+
+- **Example:**
+
+```json
+{"op":"action","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","action":"answer"}}
+{"re":"0192f3f7-3d4e-7f50-9b6c-7d8e9f0a1b2c","ok":true,"data":{}}
+```
+
+```json
+{"op":"action","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","action":"end"}}
+{"re":"0192f3f7-4e5f-7061-8c7d-8e9f0a1b2c3d","ok":false,"error":{"code":"CALL_APP_ACTION_UNAVAILABLE","message":"The app's notification offers no end action"}}
+```
+
+- **Business logic:**
+  1. Check in the order of the error table; an app call never gets `CALL_ACTION_NOT_ALLOWED` or
+     `PERMISSION_MISSING` (Notification access missing means app calls are not in effect).
+  2. The `ack` is sent as soon as the PendingIntent has been sent or the tap-to-answer notification
+     posted, without waiting for the app; the Mac treats the next `app_call` as the result.
+  3. No action lock: the Mac locks its buttons until the `ack` or a new `app_call`, a re-send with the
+     same `id` gets the original `ack` (0.5.1), and a second command once the app has changed its
+     notification gets `CALL_APP_ACTION_UNAVAILABLE`.
+  4. `reject` and `answer` mark the context ("declined by HandLive", "answered by HandLive") before
+     the intent goes out, for `end_reason` (API 1 logic 4).
+  5. The Mac: `ok = false` → show CALL-02 field 10 for the code (none for
+     `CALL_APP_ACTION_UNAVAILABLE`), unlock the buttons, apply the latest `app_call`; `CALL_NOT_FOUND`
+     → close the panel; `ok = true` → with `answer_mode = tap` show field 6, otherwise wait up to 3 s
+     for the next `app_call`.
+
+#### API 3 — `NotificationListenerService` `AppCallListenerService`
+
+- **URL:** N/A
+- **Method:** declared in the manifest as
+  `<service android:name=".appcall.AppCallListenerService" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="false">`
+  with the intent filter `android.service.notification.NotificationListenerService`; callbacks
+  `onListenerConnected()`, `onListenerDisconnected()`, `onNotificationPosted(StatusBarNotification)`,
+  `onNotificationRemoved(StatusBarNotification, RankingMap, int)`; `getActiveNotifications()`.
+  Access check: `NotificationManager.isNotificationListenerAccessGranted(ComponentName)` (pass the
+  service's `ComponentName`).
+- **Request:** read only from a call notification (logic 1 of API 1): `packageName`, `key`,
+  `postTime`, `notification.flags`, `notification.category`, `notification.actions`, and the
+  `extras` `android.callType`, `android.callPerson`, `android.title`, `android.answerIntent`,
+  `android.declineIntent`, `android.hangUpIntent`.
+- **Response:** N/A (callbacks).
+- **Example:** Telegram rings: `packageName = "org.telegram.messenger"`, `category = "call"`,
+  `android.callType = 1`, `android.callPerson` set, a decline intent (broadcast) and an answer intent
+  (activity) → a `ringing` context with `controls.answer = controls.decline = true`. After "Answer",
+  the ringing notification is removed and 0.3–1.5 s later Telegram posts an ongoing notification on
+  the channel `Other3` with one action → `ongoing`, `controls.end = true`.
+- **Business logic:**
+  1. The callbacks run on the main thread; they only apply the filter and hand the call
+     notifications over to A-CALL's single thread, which processes them in order with the telephony
+     events.
+  2. The listener lives in the HandLive process and works while A-SVC runs; it is enabled only while
+     `call.app_calls` and `feature.call` are `true` (otherwise
+     `requestUnbind()`), so turning the feature off stops all reading.
+  3. Notification access is granted by the user in the system settings (SET-01 API 9); A-SVC
+     recomputes `features.call.app_calls` and `permissions_missing` when the listener connects or
+     disconnects.
+
+#### API 4 — Sending the app's PendingIntent
+
+- **URL:** N/A
+- **Method:** `pendingIntent.send(context, 0, null, null, null, null, options)` for `answer`; bare
+  `pendingIntent.send(...)` for `reject` and `end`. For `answer`, `options` =
+  `ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(<mode>).toBundle()` with
+  `<mode>` = `ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS` on API 36+ (Android 16)
+  and `ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED` (deprecated in API 36) on API 34–35;
+  API 29–33: no `options`, the sender's exemption (Accessibility service bound) applies by itself.
+  Decline and end are broadcasts or services and need no exemption.
+- **Request:** `reject` → `android.declineIntent`; `answer` (`direct`) → `android.answerIntent`;
+  `end` → `android.hangUpIntent` of the in-call notification, else the `actionIntent` of its only
+  action.
+- **Response:** none; `PendingIntent.CanceledException` → `CALL_APP_ACTION_UNAVAILABLE`.
+- **Example:** spike T3.2 on the S25 with Telegram: the ringing notification is removed 12–14 ms
+  after the decline intent is sent; the in-call notification 19–28 ms after the end action; with the
+  bound Accessibility service the answer intent removes the ringing notification after 160 ms –
+  1.5 s, without it Android blocks the activity start (`BAL_BLOCK`).
+- **Business logic:**
+  1. Decline and end are broadcasts or services in the apps seen so far and need no exemption;
+     answer starts an activity and needs it, which `answer_mode` tells the Mac in advance.
+  2. A PendingIntent is used only when its creator package equals the posting package; otherwise
+     the action is unavailable (control absent). The background-activity-start option is attached
+     only to answer (decline/end need none).
+  3. Only intents of the context's current notifications are ever sent; the intents are kept in
+     memory with the context and dropped with it.
+
+#### API 5 — Tap-to-answer notification
+
+- **URL:** N/A
+- **Method:** `NotificationManagerCompat.notify("app_call:<call_id>", 1, notification)` on the
+  channel `hl_app_call` (`IMPORTANCE_HIGH`, name "Calls from Other Apps", created with the other
+  channels at process start); `setContentIntent(<the app's answer intent>)`, `setAutoCancel(true)`,
+  `setTimeoutAfter(APP_CALL_TAP_NOTIFICATION_TTL)`, `VISIBILITY_PRIVATE` with a public version
+  that has only the title; removed with `cancel("app_call:<call_id>", 1)`.
+- **Request (notification content):**
+
+| Property | Value |
+|------------|---------|
+| Title | Field 12: "Answer \<app> Call" with `app.label` |
+| Text | `caller` when known; otherwise none |
+| Category | Not `call`, no `CallStyle`: it is not a call notification, and the listener ignores HandLive's own notifications anyway |
+
+- **Response:** the user taps it → the app's answer intent runs from the user's own tap (no
+  exemption needed); the app opens its call screen.
+- **Example:** title "Answer Telegram Call", text "Nguyễn Văn A"; tapped 4 s later → Telegram answers,
+  posts its in-call notification → `app_call` `ongoing`.
+- **Business logic:**
+  1. Posted on `answer` with `answer_mode = tap`, one per call; removed when the context leaves
+     `ringing`, after `APP_CALL_TAP_NOTIFICATION_TTL`, or when tapped.
+  2. Notifications not allowed (`POST_NOTIFICATIONS` denied, notifications off for HandLive, or the
+     channel blocked) → nothing is posted, the `ack` is `CALL_APP_ACTION_UNAVAILABLE` (E7).
+
+#### API 6 — Call panel for an app call on the Mac
+
+- **URL:** N/A
+- **Method:** the `NSPanel` of CALL-01 API 5 (non-activating, every Space, top-right corner),
+  ringtone `NSSound`, Focus status `INFocusStatusCenter`.
+- **Request (displayed data):** fields 1–11 from the latest `app_call`.
+- **Response:** "Answer", "Decline", "End" → API 2; "Ignore" → local only.
+- **Example:** the `ringing` `app_call` of the API 1 example → panel: "Telegram Call", "Nguyễn Văn A",
+  buttons "Answer", "Decline", "Ignore"; after "Answer" with `answer_mode = tap`: "Tap the
+  notification on your phone to answer." and "Decline"; then `ongoing`: "Telegram Call",
+  "Nguyễn Văn A", the timer, "Audio: Phone", "End".
+- **Business logic:**
+  1. Placement, focus, VoiceOver, `call.notify`, Focus and ringtone follow CALL-01 API 5 (logic 1–4,
+     6, 7): no panel while a Focus is on or `call.notify = false`. In v1 there is no communication
+     notification and no item in the menu of the menu bar icon for an app call.
+  2. One call panel: a telephony call (CALL-01…03) holds it while its context is not `idle`; an app
+     call ringing at that time is shown when that panel closes, if it is still live. Several live app
+     calls: the panel shows the most recent `ringing` one, else the most recent `ongoing` one.
+  3. In-call: no hold, keypad, mute or audio switch; the timer follows CALL-03 API 4 logic 1;
+     `ended` closes the panel at once.
+  4. The Mac reports `features.call.app_calls = call.app_calls`; when app calls stop being in effect
+     (E4), it closes every app-call panel of that phone.
+
+#### Query
+
+N/A — CALL-05 neither reads nor writes a database: the app-call contexts and their PendingIntents
+live in A-CALL memory and are forgotten after `ended`; the Mac keeps only the latest `app_call` in
+memory.

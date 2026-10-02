@@ -20,7 +20,7 @@ The "Component" column in the step table of every function uses the codes below.
 | A-SVC | `HandLiveService` — foreground service type `connectedDevice` | Android | WSS server (Ktor 3, Netty engine), mDNS (`NsdManager`), relay client, module orchestration |
 | A-CLIP | `ClipboardModule`, `ClipboardAccessibilityService`, `ClipboardReadActivity` (transparent), `ClipboardTileService` (Quick Settings tile), `ClipboardShareTarget` (Share target) | Android | Copy detection, reading and writing the clipboard |
 | A-SMS | `SmsModule` (`ContentObserver`, `SmsManager`) | Android | Reading, sending and observing SMS |
-| A-CALL | `CallModule` (`TelephonyCallback` / broadcast `PHONE_STATE`, `TelecomManager`) | Android | Observing and controlling calls with public APIs (no `InCallService` — see README §5 C12) |
+| A-CALL | `CallModule` (`TelephonyCallback` / broadcast `PHONE_STATE`, `TelecomManager`); `AppCallListener` (`NotificationListenerService`) for calls from other apps | Android | Observing and controlling calls with public APIs (no `InCallService` — see README §5 C12); calls from other apps through their call notifications (CALL-05, C22) |
 | A-AUD | `CallAudioModule` — interface `CallAudioRelay` with `HfpCallAudioRelay` and `OpusWsCallAudioRelay` | Android | Call audio: HFP monitoring; Opus/WS fallback path |
 | A-SHZ | Shizuku UserService (runs as the shell uid) | Android 11+ | Captures call audio (`VOICE_CALL`) and injects audio into the call for the Opus/WS path; optional, requires Shizuku |
 | A-CAM | `CameraStreamModule` (Camera2, MediaCodec, libopus JNI) | Android | Camera/microphone streaming |
@@ -421,10 +421,11 @@ Continue Browsing (Phase 6, README §5 C21).
 | `sms` | `status` | S→C | — | `/v1/ctl` | SMS-04 |
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
-| `call_event` | `action` | C→S | Yes | `/v1/ctl` | CALL-02, CALL-03 (over WS only `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` go through HFP commands — sent over WS they get `CALL_HFP_REQUIRED`) |
+| `call_event` | `action` | C→S | Yes | `/v1/ctl` | CALL-02, CALL-03, CALL-05 (over WS only `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` go through HFP commands — sent over WS they get `CALL_HFP_REQUIRED`; the `call_id` of an app call is handled by CALL-05 API 2) |
 | `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 (fields defined in AUDIO-02 API 3, `07-call-audio.md`; Phase 3 clients do not read it) |
 | `call_event` | `log_sync` | C→S | Yes (with data) | `/v1/ctl` | CALL-04 |
 | `call_event` | `log_new` | S→C | — | `/v1/ctl` | CALL-04 |
+| `call_event` | `app_call` | S→C | — | `/v1/ctl` | CALL-05: a call from another app on the phone (Mac only); latest wins per `call_id`, fire-and-forget like `call_event/state` |
 | `call_audio` | `open` | C→S | Yes | `/v1/ctl` | AUDIO-04 |
 | `call_audio` | `close` | Both ways | Yes | `/v1/ctl` | AUDIO-04 |
 | `call_audio` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/call-audio` | AUDIO-04 |
@@ -439,6 +440,13 @@ Continue Browsing (Phase 6, README §5 C21).
 | `web` | `active` | Both ways (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, the page open in the sender's foreground browser; latest wins, fire-and-forget like `call_event/state` |
 | `web` | `inactive` | Both ways (as `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, the page is no longer open in the foreground |
 | `ack` | — | Both ways | — | Every channel | Response |
+
+Payload rules of `call_event/app_call` (full specification in CALL-05 API 1): `{call_id, app: {package,
+label}, caller, state, controls: {answer, decline, end}, answer_mode, audio, started_at, answered_at,
+ended_at, end_reason}`, every field always present (null where allowed); `state` ∈ {`ringing`,
+`ongoing`, `ended`}; `ended` is sent once, then the context is forgotten. Sent only to sessions for which
+`features.call.app_calls` is in effect (0.7.2), never in a push; `caller` is personal data (E2E only,
+never logged, never stored).
 
 Payload rules of `web` (full specification in WEB-01 API 1 and API 2): `page_id` uuid (UUIDv7, new
 for each page); `url` `http` or `https` only, at most `WEB_URL_MAX` of UTF-8, as the browser shows it,
@@ -487,7 +495,7 @@ Examples in the function groups may quote only the relevant part.
     "features": {
       "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "image/png", "image/jpeg"]},
       "sms": {"enabled": true, "can_send": true, "default_sub_id": 1, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
-      "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true},
+      "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true, "app_calls": true},
       "call_audio": {"enabled": false, "bt_address": null, "hfp_connected": false,
                      "opus_fallback": {"available": false, "downlink": false, "uplink": false, "reason": "shizuku_not_running"}},
       "camera": {"enabled": true, "cameras": ["front", "back"], "max_width": 1920, "max_height": 1080, "max_fps": 30, "codecs": ["h264"]},
@@ -511,6 +519,7 @@ Examples in the function groups may quote only the relevant part.
 | `features.call.can_answer`, `can_end` | bool | Android: has the `ANSWER_PHONE_CALLS` permission |
 | `features.call.caller_id` | bool | Android: has `READ_CALL_LOG` (incoming number) |
 | `features.call.notify` | bool | iOS/iPadOS only; equals `call.notify` — Android only pushes incoming/missed calls when `true` |
+| `features.call.app_calls` | bool | Calls from other apps (CALL-05). Android: `call.app_calls` ∧ Notification access granted ∧ `feature.call`; Mac: `feature.call` ∧ `call.app_calls`; iOS/iPadOS: always `false`. In effect for a session when both sides report `true`; absent (an app version without CALL-05) → `false` |
 | `features.call_audio.bt_address` | string | Mac only: the Mac's Bluetooth address (so that Android can recognize the Mac in its list of HFP devices). Format `AA:BB:CC:DD:EE:FF`, uppercase, separated by `:`; M-APP normalizes it from `IOBluetoothDevice.addressString` (usually lowercase, with hyphens) |
 | `features.call_audio.hfp_connected` | bool | Android: the Mac is connected to the phone through the HFP profile |
 | `features.call_audio.consented` | bool | Mac only: there is a valid `consent_record` (AUDIO-01). Android rejects every call audio request with `CALL_CONSENT_REQUIRED` while the latest value is `false` |
@@ -518,7 +527,7 @@ Examples in the function groups may quote only the relevant part.
 | `features.web.enabled` | bool | From `feature.web` (P6) |
 | `features.web.send` | bool | Android: `web.send` and the "HandLive Browser Pages" Accessibility service running; Mac: `web.send`; iOS/iPadOS: always `false` |
 | `features.web.receive` | bool | Android: `web.notify` and notifications allowed (the notification is Android's only place to show a page); Mac, iOS/iPadOS: `true` |
-| `permissions_missing` | array\<string> | Android only: the missing permissions, used by the client to show guidance |
+| `permissions_missing` | array\<string> | Android only: the missing permissions, used by the client to show guidance; the special access Notification access is listed as `NOTIFICATION_LISTENER` (SET-01 API 2) |
 
 ### 0.7.3 Relay control messages (WS text frame, not E2E)
 
@@ -588,6 +597,7 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `SMS_CURSOR_INVALID` | SMS | The cursor or `page_token` cannot be read or is stale; `details.reason` ∈ {`cursor`, `page_token`} | Start again from the first page or resync everything |
 | `CALL_NOT_FOUND` | Call | `call_id` no longer exists | Refresh the UI from `call_event/state` |
 | `CALL_ACTION_NOT_ALLOWED` | Call | The state does not allow the action; `details.reason` ∈ {`state`, `waiting`, `platform`, `system`} | Refresh the UI |
+| `CALL_APP_ACTION_UNAVAILABLE` | Call | App call (CALL-05): the calling app's notification no longer offers that action, or is gone | Refresh the UI from the latest `call_event/app_call` |
 | `CALL_ROUTE_FAILED` | Audio | The audio cannot be routed | Keep the audio on the phone, tell the user |
 | `CALL_BT_NOT_CONNECTED` | Audio | The Mac is not connected to the phone over Bluetooth HFP | Guide the user to connect Bluetooth |
 | `CALL_CONSENT_REQUIRED` | Audio | The disclosure has not been accepted | Open AUDIO-01 |
@@ -917,6 +927,7 @@ SET-02 function manages these keys.
 | `call.notify` | bool | `true` | Mac, iOS | Call notifications |
 | `call.ringtone` | bool | `true` | Mac | Play a ringtone for incoming calls (respects Focus) |
 | `call.quick_replies` | array\<string> | 2 default templates | Mac | Quick replies when declining, at most 6 templates × 160 characters |
+| `call.app_calls` | bool | `true` | Android, Mac | Calls from other apps (CALL-05): Android reads the call notifications of calling apps (needs Notification access); the Mac shows them |
 | `cam.default_camera` | enum{front\| back} | `front` | Mac | Default camera |
 | `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Default quality |
 | `cam.usb_boost` | bool | `true` | Mac | Switch to USB automatically when a cable is plugged in |
@@ -956,6 +967,9 @@ SET-02 function manages these keys.
 | `CLIP_TRANSFER_IDLE_TIMEOUT` | 30 s | No new chunk → `clipboard/cancel` |
 | `CALL_REJECT_BG_TIMEOUT` | 15 s | Deadline for sending the reject command from an iOS notification |
 | `CALL_HFP_CMD_TIMEOUT` | 2 s | Waiting for the response to an HFP command |
+| `APP_CALL_LINK_WINDOW` | 3 s | After an app's ringing call notification is removed, an ongoing notification of the same app posted within this window makes the app call ongoing (CALL-05) |
+| `APP_CALL_LINK_GRACE` | 500 ms | A-CALL closes `APP_CALL_LINK_WINDOW` this much later, so a post still in its queue is decided by its `postTime` (CALL-05 API 1 logic 3) |
+| `APP_CALL_TAP_NOTIFICATION_TTL` | 60 s | The tap-to-answer notification on the phone is removed when the app call leaves `ringing` or after this (CALL-05) |
 | `CLIP_STALE_AFTER` | 120 s | Older clips are not sent on reconnect |
 | `SMS_SYNC_THREADS` | 200 most recent conversations | First sync |
 | `SMS_SYNC_PER_THREAD` | 50 messages |  |

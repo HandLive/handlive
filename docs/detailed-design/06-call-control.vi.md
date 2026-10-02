@@ -5,29 +5,39 @@
 > Tham chiếu chung: [`00-common-specs.md`](00-common-specs.vi.md) — thành phần A-CALL, A-AUD, M-APP,
 > M-HFP, I-APP, I-NSE (0.1), định danh `call_id`, `entry_id` (0.2), kiểu dữ liệu (0.3), envelope và
 > `ack` (0.5.1), nguyên tắc bảo mật (0.6.5), loại tin `call_event` (0.7.1), capability
-> `features.call`, `features.call_audio.hfp_connected` (0.7.2), mã lỗi `CALL_*`,
-> `PERMISSION_MISSING` (0.8.1), nguồn dữ liệu `CallLog.Calls`, `PhoneLookup` (0.9.2), bảng
-> `call_log_entry`, `sync_cursor` (0.9.3), khóa `feature.call`, `call.notify` (0.9.5), hằng số
-> `CALLLOG_SYNC_WINDOW` (0.10). Push: CONN-04. Âm thanh cuộc gọi: nhóm 7 (AUDIO-01…04).
+> `features.call`, `features.call.app_calls`, `features.call_audio.hfp_connected` (0.7.2), mã lỗi
+> `CALL_*`, `PERMISSION_MISSING` (0.8.1), nguồn dữ liệu `CallLog.Calls`, `PhoneLookup` (0.9.2), bảng
+> `call_log_entry`, `sync_cursor` (0.9.3), khóa `feature.call`, `call.notify`, `call.app_calls`
+> (0.9.5), hằng số `CALLLOG_SYNC_WINDOW`, `APP_CALL_LINK_WINDOW`, `APP_CALL_TAP_NOTIFICATION_TTL`
+> (0.10). Push: CONN-04. Âm thanh cuộc gọi: nhóm 7 (AUDIO-01…04). Cuộc gọi từ ứng dụng khác: CALL-05
+> (README §5 C22).
 >
 > Quy tắc chung của nhóm:
 > - **Không dùng `InCallService`** (README §5 C12). A-CALL chỉ thấy trạng thái tổng hợp của máy
 >   (`IDLE`, `RINGING`, `OFFHOOK`) qua API công khai: không có chi tiết từng cuộc gọi, không biết
 >   chắc tình huống nhiều cuộc gọi, số của cuộc gọi đi chưa biết cho tới khi nhật ký ghi xong.
+>   Cuộc gọi từ ứng dụng khác (Telegram…, CALL-05) được đọc từ chính thông báo cuộc gọi của ứng
+>   dụng gọi điện qua một `NotificationListenerService` và điều khiển bằng PendingIntent của chúng —
+>   vẫn không dùng `InCallService` (C22).
 > - Cuộc gọi **hiệu lực** với một cặp khi `feature.call = true` ở cả hai phía và Android có
 >   `READ_PHONE_STATE`. Số gọi đến cần thêm `READ_CALL_LOG` (`features.call.caller_id`); trả lời, từ
 >   chối, kết thúc cần `ANSWER_PHONE_CALLS` (`features.call.can_answer`, `can_end`); tên liên hệ cần
 >   `READ_CONTACTS`.
+> - Cuộc gọi ứng dụng **hiệu lực** với một phiên khi cả hai bên báo `features.call.app_calls =
+>   true` (Android: `call.app_calls`, `feature.call` và quyền truy cập thông báo; Mac:
+>   `call.app_calls`; iPhone/iPad không bao giờ); không cần quyền điện thoại nào và không làm đổi
+>   CALL-01…04.
 > - Qua WebSocket chỉ có `answer`, `reject`, `end`. Giữ máy, DTMF, tắt tiếng và xử lý cuộc gọi chờ
 >   chỉ làm được bằng lệnh HFP do Mac gửi khi đang nối Bluetooth HFP tới điện thoại (P4, M-HFP).
 > - iOS không dùng PushKit/CallKit (C7): cuộc gọi đến trên iPhone/iPad là thông báo `time-sensitive`
 >   hoặc banner trong ứng dụng; iPhone/iPad chỉ từ chối được, không trả lời được.
-> - Không ghi log số điện thoại, tên liên hệ, phím DTMF; log chỉ gồm `type`, `op`, `call_id`, mã
->   lỗi. Lỗi của nhóm được cô lập: không làm dừng A-SVC, không đóng phiên `/v1/ctl`.
+> - Không ghi log số điện thoại, tên liên hệ, phím DTMF, người gọi của cuộc gọi ứng dụng hay nội
+>   dung của bất kỳ thông báo nào; log chỉ gồm `type`, `op`, `call_id`, mã lỗi. Lỗi của nhóm được cô lập: không làm dừng A-SVC, không đóng phiên `/v1/ctl`.
 > - Android kiểm cuộc gọi theo từng phiên: `call_event/action` và `call_event/log_sync` được trả
 >   `FEATURE_DISABLED` khi cuộc gọi không hiệu lực với phiên đã gửi chúng (tắt ở một trong hai phía,
 >   theo `capability` mới nhất của client đó, hoặc thiếu `READ_PHONE_STATE`), bất kể các phiên khác
->   cho phép gì.
+>   cho phép gì; thao tác với cuộc gọi ứng dụng nhận `FEATURE_DISABLED` khi cuộc gọi ứng dụng không
+>   hiệu lực với phiên đó (CALL-05 API 2).
 
 ## 6.1 CALL-01 — Thông báo cuộc gọi đến trên Mac/iOS
 
@@ -368,7 +378,11 @@ Content-Type: application/json
      bật "Đổ chuông trên Mac" (trường 14); Info.plist có `NSFocusStatusUsageDescription` ("HandLive
      đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung.").
      Chưa được phép (`INFocusStatusCenter.default.authorizationStatus` khác `.authorized`) →
-     **không** phát chuông riêng (an toàn cho chế độ Tập trung); panel vẫn hiện.
+     **không** phát chuông riêng (an toàn cho chế độ Tập trung); panel vẫn hiện. Bản build ký không
+     có capability này (ví dụ ký bằng team cá nhân) không xin được quyền, nên HandLive không bao giờ
+     có trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Tập trung: trạng thái Tập trung là
+     `unavailable`, M-APP báo như khi Tập trung tắt (panel, chuông khi `call.ringtone = true`, thông
+     báo passive) và ẩn dòng gợi ý cấp quyền Tập trung dưới "Đổ chuông trên Mac".
   4. `call.notify = false` → không tạo panel; menu của biểu tượng menu bar hiện cuộc gọi kèm các nút
      theo `controls` (E3).
   5. Khi panel xuất hiện, VoiceOver đọc "Cuộc gọi đến từ <tên hoặc số>".
@@ -609,9 +623,9 @@ CONN-04 API 2 — không phát sinh lời gọi mới.
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
-| `call_id` | uuid | Có | Của ngữ cảnh client đang hiển thị |
+| `call_id` | uuid | Có | Của ngữ cảnh client đang hiển thị: ngữ cảnh cuộc gọi điện thoại, hoặc một cuộc gọi ứng dụng còn sống (CALL-05) |
 | `action` | enum{answer\| reject\| end\| hold\| unhold\| dtmf\| mute} | Có | Qua WebSocket chỉ thực hiện `answer`, `reject`, `end`; các giá trị còn lại luôn nhận `CALL_HFP_REQUIRED` (0.7.1) |
-| `audio` | enum{phone\| mac} | Không | Chỉ với `answer`: nơi người dùng muốn nghe; vắng → `phone` |
+| `audio` | enum{phone\| mac} | Không | Chỉ với `answer`: nơi người dùng muốn nghe; vắng → `phone`; cuộc gọi ứng dụng chỉ nhận `phone` (CALL-05 API 2) |
 
 - **Response (`ack.data`):** `{}` khi `ok = true` — Android đã gọi API Telecom; kết quả thật đi qua
   `state`.
@@ -620,12 +634,14 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
 
 | Mã | Khi nào |
 |----|---------|
-| `FEATURE_DISABLED` | Cuộc gọi không hiệu lực với phiên gửi yêu cầu (`feature.call = false` trên Android hoặc trên client đó, hoặc thiếu `READ_PHONE_STATE`) |
+| `FEATURE_DISABLED` | Cuộc gọi không hiệu lực với phiên gửi yêu cầu (`feature.call = false` trên Android hoặc trên client đó, hoặc thiếu `READ_PHONE_STATE`); với `call_id` của cuộc gọi ứng dụng: cuộc gọi ứng dụng không hiệu lực với phiên đó (CALL-05) |
 | `BAD_REQUEST` | Thiếu trường, `action` hoặc `audio` ngoài danh sách |
 | `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`}; `details.action` = giá trị đã gửi |
 | `CALL_NOT_FOUND` | Không có ngữ cảnh, `call_id` khác ngữ cảnh hiện tại, hoặc `endCall()` trả `false` khi máy đã `IDLE` |
 | `PERMISSION_MISSING` | Thiếu `ANSWER_PHONE_CALLS`; `details.permission = "android.permission.ANSWER_PHONE_CALLS"` |
 | `CALL_ACTION_NOT_ALLOWED` | `details.state` = trạng thái hiện tại; `details.reason` = `state` (`answer`/`reject` khi không `ringing`, `end` khi không `offhook`, hoặc đã có lệnh khác cho `call_id` trong 3 s), `waiting` (đang có cuộc gọi chờ), `platform` (`answer` từ iPhone/iPad), `system` (Telecom từ chối, ví dụ cuộc gọi khẩn cấp — CALL-03) |
+| `CALL_ROUTE_FAILED` | Chỉ với `call_id` của cuộc gọi ứng dụng: `answer` với `audio = mac` (âm thanh cuộc gọi ứng dụng ở lại điện thoại, CALL-05 API 2) |
+| `CALL_APP_ACTION_UNAVAILABLE` | Chỉ với `call_id` của cuộc gọi ứng dụng: thông báo của ứng dụng không còn thao tác đó, hoặc đã mất (CALL-05 API 2) |
 | `INTERNAL` | Lỗi không mong đợi trên Android (0.8.1), ví dụ hàm Telecom ném ngoại lệ khác `SecurityException`; client xử lý như E5, không tự gửi lại |
 
 - **Ví dụ:**
@@ -655,6 +671,12 @@ Lỗi (`ack.error.code`), theo thứ tự kiểm:
      trên Mac" khi âm thanh cuộc gọi hiệu lực ở cả hai phía.
   6. Client: `ok = false` → hiện trường 10 theo mã, mở khóa nút, áp dụng `state` mới nhất;
      `ok = true` → chờ `state` tối đa 3 s.
+  7. **Cuộc gọi ứng dụng (CALL-05):** A-CALL tìm `call_id` trong các ngữ cảnh cuộc gọi ứng dụng còn
+     sống trước; khớp thì CALL-05 API 2 xử lý, chỉ trả `FEATURE_DISABLED`, `BAD_REQUEST`,
+     `CALL_HFP_REQUIRED`, `CALL_ROUTE_FAILED`, `CALL_APP_ACTION_UNAVAILABLE` hoặc `INTERNAL`, theo thứ
+     tự này. Mọi `call_id` khác đi qua các bước kiểm ở trên không đổi, trừ việc phiên có cuộc gọi ứng
+     dụng hiệu lực nhưng cuộc gọi điện thoại không hiệu lực nhận `CALL_NOT_FOUND` thay cho
+     `FEATURE_DISABLED`.
 
 #### API 2 — `TelecomManager.acceptRingingCall()`
 
@@ -1406,3 +1428,376 @@ DELETE FROM call_log_entry WHERE ts < :now - 7776000000;
 ```
 
 Ghi `push_outbox` khi push lỗi: xem CONN-04.
+
+---
+
+## 6.5 CALL-05 — Cuộc gọi từ ứng dụng khác trên Mac
+
+### 6.5.1 Thông tin chung
+
+| Mục | Nội dung |
+|-----|----------|
+| Tên | CALL-05 — Cuộc gọi từ ứng dụng khác trên Mac |
+| Mô tả | Khi một ứng dụng gọi điện trên điện thoại đổ chuông (Telegram trước tiên; mọi ứng dụng đăng thông báo cuộc gọi `CallStyle`), A-CALL đọc thông báo cuộc gọi của ứng dụng đó qua một `NotificationListenerService` (`AppCallListener`) — vẫn không dùng `InCallService` (C12, C22) —, tạo ngữ cảnh cuộc gọi ứng dụng (`call_id`) và gửi `call_event/app_call` tới mọi phiên Mac có cuộc gọi ứng dụng hiệu lực.<br>Mac hiện panel cuộc gọi với tên ứng dụng ("Cuộc gọi Telegram") và người gọi; "Trả lời", "Từ chối" và "Kết thúc" gửi `call_event/action`, Android thực hiện bằng cách gửi chính PendingIntent của ứng dụng: intent từ chối và intent trả lời của thông báo đổ chuông, intent gác máy (hoặc thao tác duy nhất) của thông báo đang gọi.<br>Trả lời là mở một activity của ứng dụng, Android chỉ cho làm từ nền khi HandLive có miễn trừ giới hạn mở activity từ nền (dịch vụ Hỗ trợ tiếp cận của HandLive đang được bind): `answer_mode = direct`. Không có miễn trừ (`answer_mode = tap`), "Trả lời" đăng một thông báo "chạm để nghe" trên điện thoại và Mac báo điều đó.<br>Ở v1 âm thanh luôn ở trên điện thoại (`audio = phone`; Mac từ chối HFP SCO, spike T3.2) và panel báo điều đó. iPhone/iPad không có chức năng này: chúng báo `features.call.app_calls = false`. |
+| Tác nhân | Chính: Người dùng (ngồi ở Mac), Người gọi (gọi qua ứng dụng). Hệ thống: A-CALL (`AppCallListener`), A-SVC, A-CLIP (dịch vụ Hỗ trợ tiếp cận đang được bind cho miễn trừ), OS (`NotificationManager`, `PackageManager`, `ActivityOptions`), ứng dụng gọi điện, M-APP. |
+| Điều kiện trước | 1.<br>Cặp hiệu lực; Mac có phiên `/v1/ctl` (CONN-01 hoặc CONN-03).<br>2.<br>Cuộc gọi ứng dụng hiệu lực với phiên: `feature.call` và `call.app_calls` bật ở cả hai phía, Android đã được cấp quyền truy cập thông báo (SET-01 N1–N2), nên cả hai bên báo `features.call.app_calls = true`.<br>3.<br>Ứng dụng gọi điện đăng thông báo `CallStyle` cho cuộc gọi đến (`android.callType = 1`). |
+| Điều kiện sau | Mac hiện cuộc gọi ứng dụng và panel luôn khớp `app_call` mới nhất: `ringing` → panel cuộc gọi đến, `ongoing` → panel đang gọi, `ended` → panel đóng.<br>Ngữ cảnh nằm trong bộ nhớ A-CALL tới khi đã gửi `ended`, sau đó bị quên; không ghi gì xuống đĩa ở cả hai phía; thông báo chạm để nghe bị gỡ khi cuộc gọi rời `ringing` hoặc sau `APP_CALL_TAP_NOTIFICATION_TTL`.<br>Cuộc gọi di động (CALL-01…04) không đổi. |
+| Ngoại lệ | E1 — Chưa cấp quyền truy cập thông báo (`permissions_missing` có `NOTIFICATION_LISTENER`): cuộc gọi ứng dụng tắt trên điện thoại và màn giải thích nói lý do (SET-01 E11); không gửi gì; CALL-01…04 vẫn chạy như cũ.<br>E2 — Thông báo của ứng dụng không còn thao tác đó, đã mất, hoặc PendingIntent đã bị hủy: `CALL_APP_ACTION_UNAVAILABLE`; Mac áp dụng `app_call` mới nhất.<br>E3 — Cuộc gọi đã mất (đã gửi `ended` và ngữ cảnh đã bị quên): thao tác nhận `CALL_NOT_FOUND`; Mac đóng panel.<br>E4 — Cuộc gọi ứng dụng không hiệu lực với phiên (`call.app_calls` hoặc `feature.call` tắt ở một phía, hoặc capability mới nhất của Mac báo `false`): không gửi gì; thao tác với `call_id` của cuộc gọi ứng dụng nhận `FEATURE_DISABLED`; Mac đóng các panel cuộc gọi ứng dụng.<br>E5 — Qua relay: cố gắng hết mức. `app_call` đi qua phiên relay đã có sẵn; A-SVC không mở relay cho cuộc gọi ứng dụng và không gửi push, nên Mac đang chờ trên relay có thể lỡ một cuộc gọi ngắn.<br>E6 — Thông báo chỉ có `category = call` và không dùng `CallStyle` (`android.callType` không đặt): không hỗ trợ, không tạo ngữ cảnh, không gửi gì; thông báo như vậy chỉ có thể thành thông báo đang gọi theo logic 3 nếu có ngữ cảnh `CallStyle`. Bộ chuyển đổi riêng theo ứng dụng có thể làm sau.<br>E7 — Không có miễn trừ mở activity từ nền (`answer_mode = tap`): "Trả lời" đăng thông báo chạm để nghe và Mac hiện trường 6; điện thoại không được đăng thông báo (từ chối `POST_NOTIFICATIONS` hoặc kênh `hl_app_call` bị chặn) → `CALL_APP_ACTION_UNAVAILABLE`.<br>E8 — Thông báo đang gọi không có intent gác máy và có nhiều hơn một thao tác: `controls.end = false`; kết thúc cuộc gọi trên điện thoại.<br>E9 — `answer` với `audio = mac`: `CALL_ROUTE_FAILED`; Mac không bao giờ đưa lựa chọn này cho cuộc gọi ứng dụng.<br>E10 — Listener thông báo bị ngắt hoặc quyền truy cập thông báo bị thu hồi giữa cuộc gọi: mọi ngữ cảnh còn sống kết thúc (`end_reason = unknown`, `answered_at = null` kể cả khi cuộc gọi đang diễn ra), `capability/update` báo `app_calls = false`. |
+| Yêu cầu đặc biệt | **Hiệu năng (LAN, phân vị 95):** panel Mac ≤ 400 ms sau khi ứng dụng đăng thông báo cuộc gọi (`postTime`; riêng Android đã mất 215–232 ms để chuyển thông báo, spike T3.2), có tên ứng dụng và người gọi; "Từ chối" hoặc "Kết thúc" có hiệu lực trên điện thoại ≤ 500 ms sau khi bấm; "Trả lời" nghe máy trên điện thoại ≤ 1 s với `answer_mode = direct` (miễn mục tiêu khi `tap`: người dùng chạm trên điện thoại).<br>**Riêng tư:** chỉ phân tích thông báo cuộc gọi: bộ lọc (API 3 logic 1) chạy trước khi đọc bất cứ gì khác; mọi thông báo khác bị bỏ mà không đọc tiêu đề hay nội dung, không lưu, không log, không rời khỏi điện thoại. `caller` chỉ đi trong envelope E2E, không log, không lưu; log gồm `type`, `op`, `call_id`, mã lỗi và thời gian đo. Không push nào mang cuộc gọi ứng dụng.<br>**Nền tảng:** không dùng `InCallService` (C12); listener khai báo với `BIND_NOTIFICATION_LISTENER_SERVICE` và người dùng tự bật quyền truy cập thông báo (SET-01); PendingIntent được gửi kèm tùy chọn cho mở activity từ nền (API 4); spike T3.2: không có miễn trừ, Android chặn activity trả lời (`BAL_BLOCK`).<br>**Tuân thủ:** quyền truy cập thông báo rất rộng: bộ lọc chặt, màn giải thích (SET-01 trường 19), công tắc `call.app_calls` để tắt, khai báo với Google Play về việc dùng listener.<br>**Truy cập:** VoiceOver đọc tiêu đề panel và người gọi khi panel xuất hiện.<br>**Phạm vi:** chỉ Mac. Ngoài phạm vi: iPhone/iPad, gọi đi bằng ứng dụng từ Mac, nhật ký cuộc gọi ứng dụng, cuộc gọi video, âm thanh trên Mac (`audio = mac` để dành). |
+
+### 6.5.2 Màn hình
+
+N/A — chưa có wireframe được duyệt.
+
+### 6.5.3 Mô tả chi tiết các thành phần
+
+| # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Tiêu đề | string | Output | "Cuộc gọi \<ứng dụng>" | `app.label` trong tiêu đề, ví dụ "Cuộc gọi Telegram"; panel cuộc gọi đến và panel đang gọi |
+| 2 | Người gọi | string | Output | `caller` | `null` → "Không rõ số" |
+| 3 | Nút "Trả lời" | action | Input | Ẩn | Mac, khi `controls.answer = true`; thay bằng "Nghe trên điện thoại" khi âm thanh cuộc gọi đang hiệu lực trên Mac (AUDIO-01), vì âm thanh cuộc gọi ứng dụng ở lại điện thoại; không bao giờ có "Nghe trên Mac" → API 2 `answer` |
+| 4 | Nút "Từ chối" | action | Input | Ẩn | Khi `controls.decline = true` → API 2 `reject` |
+| 5 | Nút "Bỏ qua" | action | Input | — | Chỉ panel cuộc gọi đến, như CALL-01 trường 9: đóng panel và tắt chuông trên Mac; cuộc gọi vẫn đổ chuông trên điện thoại |
+| 6 | Gợi ý chạm để nghe | string | Output | Ẩn | Sau khi "Trả lời" thành công với `answer_mode = tap`: "Chạm vào thông báo trên điện thoại để nghe." thay trường 3 cho tới khi `state` đổi; trường 4 vẫn còn |
+| 7 | Đồng hồ | string (mm:ss) | Output | "00:00" | Panel đang gọi: tính từ `answered_at`, không có thì từ `started_at` (như CALL-03 trường 2) |
+| 8 | Nơi phát âm thanh | string | Output | "Âm thanh: Điện thoại" | Panel đang gọi, luôn hiện (`audio = phone`); không có nút chuyển âm thanh |
+| 9 | Nút "Kết thúc" | action | Input | Ẩn | Panel đang gọi, khi `controls.end = true` → API 2 `end` |
+| 10 | Trạng thái đang xử lý, thông báo lỗi | string | Output | Ẩn | "Đang trả lời…", "Đang từ chối…" như CALL-02 trường 9; lỗi như CALL-02 trường 10 ("Không gửi được lệnh tới điện thoại" khi hết hạn chờ); `CALL_APP_ACTION_UNAVAILABLE` không hiện thông báo (E2) |
+| 11 | Chuông trên Mac | âm thanh | Output | Tắt | Như CALL-01 trường 10 (`call.notify`, `call.ringtone`, Tập trung) |
+| 12 | Thông báo chạm để nghe | string | Output | Ẩn | Android (API 5): tiêu đề "Nghe cuộc gọi \<ứng dụng>", ví dụ "Nghe cuộc gọi Telegram"; nội dung: `caller` khi biết; kênh `hl_app_call` ("Cuộc gọi từ ứng dụng khác"); chạm vào thì chạy intent trả lời của ứng dụng |
+| 13 | Tùy chọn "Cuộc gọi từ ứng dụng khác" | bool | Input/Output | `call.app_calls` = `true` | Cài đặt → Cuộc gọi (SET-02 trường 38), Android và Mac; chú thích "Hiện cuộc gọi từ các ứng dụng như Telegram trên Mac. Âm thanh vẫn ở trên điện thoại." |
+| 14 | Màn giải thích quyền truy cập thông báo | string | Output | — | Android (SET-01 trường 19): "Cho phép truy cập thông báo", rồi "HandLive chỉ đọc thông báo cuộc gọi của các ứng dụng gọi điện để hiện trên Mac. Các thông báo khác bị bỏ qua và không bao giờ rời khỏi điện thoại." |
+
+### 6.5.4 Luồng nghiệp vụ
+
+```mermaid
+flowchart TB
+  subgraph ND["Người dùng"]
+    U9["(9) Thấy ứng dụng và người gọi, chọn Trả lời, Từ chối, Bỏ qua hoặc Kết thúc"]
+    U12["(12) Chế độ chạm: chạm thông báo HandLive trên điện thoại"]
+  end
+  subgraph HT["Hệ thống"]
+    S1["(1) Ứng dụng gọi điện đăng thông báo, AppCallListener nhận được"]
+    D2{"(2) Là thông báo cuộc gọi CallStyle?"}
+    S3["(3) Tạo hoặc cập nhật ngữ cảnh cuộc gọi ứng dụng, tính controls và answer_mode"]
+    D4{"(4) Cuộc gọi ứng dụng hiệu lực với phiên?"}
+    S5["(5) Gửi call_event/app_call tới phiên"]
+    S6["(6) Thông báo đổ chuông bị gỡ: ongoing nếu ứng dụng đăng thông báo đang diễn ra trong APP_CALL_LINK_WINDOW, ngược lại ended"]
+    S7["(7) Thông báo đang gọi bị gỡ: ended, rồi quên ngữ cảnh"]
+    S8["(8) Mac hiện, cập nhật hoặc đóng panel"]
+    S10["(10) Gửi call_event/action"]
+    D11{"(11) Android: hiệu lực, thao tác còn có?"}
+    S13["(13) Gửi PendingIntent của ứng dụng hoặc đăng thông báo chạm, trả ack"]
+    X1(["Bỏ qua: không đọc, không gửi gì"])
+    X2(["ack lỗi, làm mới theo app_call mới nhất"])
+  end
+  S1 --> D2
+  D2 -- "Không (E6)" --> X1
+  D2 -- "Có" --> S3 --> D4
+  D4 -- "Không (E1, E4)" --> X1
+  D4 -- "Có" --> S5 --> S8 --> U9
+  U9 -- "Trả lời, Từ chối hoặc Kết thúc" --> S10 --> D11
+  D11 -- "Không (E2, E3, E4, E9)" --> X2
+  D11 -- "Có" --> S13
+  S13 -- "Chế độ chạm (E7)" --> U12 --> S6
+  S13 -- "Từ chối hoặc Trả lời" --> S6 --> S5
+  S13 -- "Kết thúc" --> S7 --> S5
+```
+
+| Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
+|------|----------|-----------|-------|--------------------|
+| 1 | Hệ thống | OS, A-CALL | Ứng dụng gọi điện đăng hoặc cập nhật một thông báo; hệ thống gọi `AppCallListener.onNotificationPosted` (API 3). | Listener chưa kết nối (chưa có quyền truy cập thông báo) → E1. |
+| 2 | Hệ thống | A-CALL | Lọc trước khi đọc bất cứ gì khác (API 3 logic 1): bỏ gói của chính HandLive; là thông báo cuộc gọi khi `extras` có `android.callType` (`CallStyle`) hoặc category là `call`; trong khoảng ghép (bước 6) lấy thêm thông báo đang diễn ra của cùng gói, chỉ đọc cờ và các thao tác. Mọi thứ khác bị bỏ mà không đọc tiêu đề hay nội dung. | `callType = 3` (sàng lọc) → bỏ qua. Không có `CallStyle` → E6. |
+| 3 | Hệ thống | A-CALL, OS | `callType = 1` → ngữ cảnh `ringing` mới (`call_id` UUIDv7, `started_at`) theo khóa thông báo, hoặc cập nhật ngữ cảnh đã có; `callType = 2` với khóa chưa có ngữ cảnh → ngữ cảnh `ongoing` mới (`answered_at = null`).<br>Đọc `app.package`, `app.label` (`PackageManager`), `caller` (`android.callPerson`, không có thì `android.title`) và các intent; tính `controls` và `answer_mode` (API 1 logic 5–6). | Dữ liệu cá nhân chỉ nằm trong bộ nhớ. |
+| 4 | Hệ thống | A-SVC | Với từng phiên: cuộc gọi ứng dụng hiệu lực (`features.call.app_calls = true` ở cả hai phía). | Không → E1, E4 (X1). |
+| 5 | Hệ thống | A-SVC | Gửi `call_event/app_call` (API 1) khi có trường khác bản đã gửi gần nhất cho phiên đó; phiên vừa có cuộc gọi ứng dụng hiệu lực nhận mọi ngữ cảnh còn sống sau khi trao đổi capability. Qua relay chỉ khi đã có sẵn phiên relay. | E5. |
+| 6 | Hệ thống | A-CALL | Thông báo đổ chuông bị gỡ: cùng gói đăng thông báo đang diễn ra (`FLAG_ONGOING_EVENT`, `CallStyle` loại 2 hay không) trong `APP_CALL_LINK_WINDOW` → `state = ongoing`, `answered_at` = lúc nó được đăng, và nó thành thông báo đang gọi; ngược lại `state = ended` với `end_reason` theo API 1 logic 4. Thông báo chạm để nghe bị gỡ khi cuộc gọi rời `ringing` (API 5). |  |
+| 7 | Hệ thống | A-CALL | Thông báo đang gọi bị gỡ → `state = ended`, `end_reason = ended`, `ended_at`; sau khi đã gửi `ended`, ngữ cảnh bị quên. | Listener bị ngắt → E10. |
+| 8 | Hệ thống | M-APP | `ringing` → panel cuộc gọi đến (trường 1–5, 11, API 6); `ongoing` → panel đang gọi (trường 1, 2, 7–9); `ended` → đóng panel, dừng chuông. | Cuộc gọi điện thoại đang giữ panel → cuộc gọi ứng dụng chờ (API 6 logic 2). `call.notify = false` hoặc chế độ Tập trung → không có panel (CALL-01 E3, E4). |
+| 9 | Người dùng | M-APP | Thấy "Cuộc gọi Telegram" và người gọi; chọn "Trả lời", "Từ chối", "Bỏ qua" (chỉ cục bộ, trường 5) hoặc, ở panel đang gọi, "Kết thúc". | Nút chỉ có khi `controls` cho phép. |
+| 10 | Hệ thống | M-APP | Gửi `call_event/action` (API 2) `{call_id, action}`: `answer` (không có `audio`), `reject` hoặc `end`; khóa nút tới khi có `ack` hoặc `app_call` mới; chờ tối đa `REQUEST_TIMEOUT`. | Hết hạn → như CALL-02 E5. |
+| 11 | Hệ thống | A-SVC, A-CALL | Định tuyến theo `call_id` (CALL-02 API 1 logic 7), rồi kiểm theo API 2: cuộc gọi ứng dụng hiệu lực, `action`, `audio`, thao tác còn có trong thông báo hiện tại của ngữ cảnh. | `ack` lỗi → E2, E3, E4, E9 (X2). |
+| 12 | Người dùng | OS | `answer_mode = tap`: chạm "Nghe cuộc gọi \<ứng dụng>" trên điện thoại; intent trả lời của ứng dụng mở màn hình cuộc gọi của ứng dụng. | Không chạm → cuộc gọi vẫn đổ chuông; thông báo tự gỡ sau `APP_CALL_TAP_NOTIFICATION_TTL`. |
+| 13 | Hệ thống | A-CALL, OS | `reject` → đánh dấu ngữ cảnh "HandLive từ chối", gửi `android.declineIntent`; `end` → gửi thao tác kết thúc; `answer` → đánh dấu ngữ cảnh "HandLive trả lời", rồi `direct`: gửi `android.answerIntent`, `tap`: đăng thông báo chạm để nghe (API 5). PendingIntent được gửi kèm tùy chọn cho mở activity từ nền (API 4). Trả `ack` `{}`; kết quả thấy được khi ứng dụng đổi thông báo của nó (bước 6, 7). | `CanceledException` → E2. Không được đăng thông báo → E7. |
+
+### 6.5.5 Đặc tả API/service
+
+**Danh sách lời gọi**
+
+| # | API/service | Kênh | Chiều | Dùng ở bước |
+|---|-------------|------|-------|-------------|
+| 1 | `WS call_event/app_call` | `/v1/ctl` (LAN hoặc relay) | S→C | 5, 8 |
+| 2 | `WS call_event/action` với `call_id` của cuộc gọi ứng dụng (đặc tả chính ở CALL-02 API 1) | `/v1/ctl` (LAN hoặc relay) | C→S, có ack | 10, 11, 13 |
+| 3 | `NotificationListenerService` `AppCallListener`: `onNotificationPosted`, `onNotificationRemoved`, `onListenerConnected`, `onListenerDisconnected` | Cục bộ Android | OS → A-CALL | 1, 2, 3, 6, 7 |
+| 4 | `PendingIntent.send` với `ActivityOptions.setPendingIntentBackgroundActivityStartMode` | Cục bộ Android | A-CALL → ứng dụng gọi điện | 13 |
+| 5 | Thông báo chạm để nghe: `NotificationManagerCompat.notify` trên kênh `hl_app_call` | Cục bộ Android | A-CALL → OS | 6, 12, 13 |
+| 6 | Panel cuộc gọi cho cuộc gọi ứng dụng (`NSPanel` của CALL-01 API 5) | Cục bộ Mac | — | 8, 9 |
+
+#### API 1 — `WS call_event/app_call`
+
+- **URL:** `wss://{android_host}:{port}/v1/ctl` (LAN) hoặc qua relay `wss://{RELAY_HOST}/v1/relay`
+  với lớp bọc `to` /`from`
+- **Method:** `WS call_event/app_call` (S→C), envelope mã hóa, không ack (0.7.1); không bao giờ đi
+  trong push.
+- **Request (`data`):** mọi trường luôn có mặt (`null` ở chỗ cho phép).
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `call_id` | uuid | Có | UUIDv7, một cho mỗi cuộc gọi ứng dụng; giữ nguyên từ `ringing` tới `ongoing` tới `ended` |
+| `app` | object | Có | Ứng dụng gọi điện (bảng dưới) |
+| `caller` | string(128) \| null | Có | Tên trong `android.callPerson`, không có thì tiêu đề thông báo; `null` khi không có. Dữ liệu cá nhân: chỉ đi trong E2E, không log, không lưu |
+| `state` | enum{ringing\| ongoing\| ended} | Có | Logic 2–4 |
+| `controls` | object | Có | Thao tác Mac được gửi (bảng dưới) |
+| `answer_mode` | enum{direct\| tap} | Có | `direct` khi HandLive có miễn trừ giới hạn mở activity từ nền (dịch vụ Hỗ trợ tiếp cận của nó đang được bind); ngược lại `tap` (logic 6) |
+| `audio` | enum{phone} | Có | Hằng ở v1; `mac` để dành cho sau |
+| `started_at` | timestamp | Có | Lúc tạo ngữ cảnh (đồng hồ Android) |
+| `answered_at` | timestamp \| null | Có | Lúc ngữ cảnh `ringing` chuyển sang `ongoing`; `null` khi đang đổ chuông, với ngữ cảnh tạo ra ở `ongoing`, và với cuộc gọi kết thúc là `declined`, `missed` hoặc `unknown` |
+| `ended_at` | timestamp \| null | Có | Chỉ khi `state = ended` |
+| `end_reason` | enum{declined\| ended\| missed\| unknown} \| null | Có | Chỉ khi `state = ended`; logic 4 |
+
+Đối tượng `app`:
+
+| Trường | Kiểu | Giá trị |
+|--------|------|---------|
+| `package` | string(255) | Tên gói Android của ứng dụng gọi điện |
+| `label` | string(64) | Nhãn của ứng dụng lấy từ `PackageManager` (chỉ để hiển thị) |
+
+Đối tượng `controls`:
+
+| Trường | Kiểu | Giá trị |
+|--------|------|---------|
+| `answer` | bool | `true` khi `state = ringing` và thông báo có intent trả lời |
+| `decline` | bool | `true` khi `state = ringing` và thông báo có intent từ chối |
+| `end` | bool | `true` khi `state = ongoing` và có thao tác kết thúc (logic 5) |
+
+- **Response:** N/A (không ack; Mac lỡ tin vì mất kết nối sẽ nhận các ngữ cảnh còn sống khi phiên mới
+  trao đổi capability — logic 7).
+- **Ví dụ:** một cuộc gọi Telegram đổ chuông, được nghe, rồi kết thúc.
+
+```json
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ringing","controls":{"answer":true,"decline":true,"end":false},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":null,"ended_at":null,"end_reason":null}}
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ongoing","controls":{"answer":false,"decline":false,"end":true},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":1727150405321,"ended_at":null,"end_reason":null}}
+{"op":"app_call","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","app":{"package":"org.telegram.messenger","label":"Telegram"},"caller":"Nguyễn Văn A","state":"ended","controls":{"answer":false,"decline":false,"end":false},"answer_mode":"direct","audio":"phone","started_at":1727150400123,"answered_at":1727150405321,"ended_at":1727150530456,"end_reason":"ended"}}
+```
+
+- **Logic nghiệp vụ:**
+  1. **Bộ lọc (riêng tư):** `onNotificationPosted` bỏ gói của chính HandLive và thông báo từ điện thoại
+     mặc định (`TelecomManager.getDefaultDialerPackage()`), điện thoại hệ thống, gói nào triển khai
+     `android.telecom.InCallService`, `com.android.server.telecom` và `com.android.phone` (các cuộc gọi
+     di động thuộc CALL-01…04; ngược lại tên người gọi sẽ vượt qua `READ_CALL_LOG` và lặp sự kiện).
+     Rồi chỉ lấy thông báo có `extras` chứa `android.callType` hoặc có `category` là `call` (C22, E6);
+     trong khoảng ghép (logic 3) lấy thêm thông báo đang diễn ra của cùng gói (không phải gói đang chờ
+     — chỉ ứng dụng gọi điện), chỉ đọc `flags` và `actions`. Không đọc gì khác: không tiêu đề, nội
+     dung hay extras của bất kỳ thông báo nào khác; chúng không được lưu, không log và không rời khỏi
+     điện thoại.
+  2. **Ngữ cảnh:** theo khóa thông báo (`StatusBarNotification.key`). `CallStyle` `callType = 1`
+     tạo ngữ cảnh `ringing`; `callType = 2` với khóa chưa có ngữ cảnh tạo ngữ cảnh `ongoing` với
+     `answered_at = null` (cuộc gọi đi bấm trong ứng dụng, hoặc listener kết nối giữa cuộc gọi);
+     `callType = 3` (sàng lọc) bị bỏ qua. Thông báo `category = call` không có `CallStyle` không bao
+     giờ tạo ngữ cảnh (E6); nó chỉ có thể thành thông báo đang gọi theo logic 3. Cập nhật của cùng
+     khóa đọc lại `caller` và các intent.
+  3. **Đổ chuông → đang gọi:** khi thông báo của ngữ cảnh `ringing` bị gỡ, thông báo đang gọi của nó là
+     thông báo đang diễn ra (`FLAG_ONGOING_EVENT`, `CallStyle` loại 2 hay không) đầu tiên của cùng gói
+     có khóa xuất hiện lần đầu sau khi ngữ cảnh được tạo và có `postTime` không muộn hơn thời điểm gỡ +
+     `APP_CALL_LINK_WINDOW` (3 giây). Thời điểm gỡ là lúc listener nhận sự kiện gỡ. Thông báo như vậy
+     đăng trước khi gỡ thì được ghép ngay lúc gỡ; nếu chưa có, A-CALL chờ hết khoảng ghép và quyết định
+     theo `postTime`, nên một thông báo còn trong hàng đợi khi khoảng ghép đóng (`APP_CALL_LINK_GRACE`, muộn hơn 500 ms) vẫn được tính. Thông báo
+     đang diễn ra có khóa đã tồn tại trước khi ngữ cảnh được tạo (trình phát nhạc, tải tệp, dịch vụ
+     nền trước) và các bản cập nhật của nó không bao giờ được ghép. Khi ghép: `state = ongoing`,
+     `answered_at` = `postTime` của nó, giữ `caller`. Telegram (spike T3.2): thông báo đang gọi không
+     phải `CallStyle` — kênh `Other3`, đang diễn ra, một thao tác.
+  4. **Kết thúc:** thông báo đang gọi bị gỡ → `end_reason = ended`. Không có thông báo đang diễn ra
+     trong khoảng chờ → `end_reason = declined` khi HandLive đã gửi lệnh từ chối cho ngữ cảnh này,
+     `unknown` khi HandLive đã gửi lệnh trả lời (trực tiếp hoặc qua thông báo chạm để nghe) nhưng
+     không có thông báo đang gọi theo sau, hoặc khi listener bị mất (E10) — `answered_at` vẫn là `null`
+     với `unknown`, kể cả cuộc gọi đã thành đang gọi —, ngược lại `missed` (không ai nghe; cuộc gọi bị từ chối
+     ngay trên điện thoại cũng kết thúc là `missed`, như CALL-04 E11). `ended_at` = lúc A-CALL quyết
+     định; `ended` gửi một lần tới mỗi phiên, rồi ngữ cảnh bị quên.
+  5. **controls:** `answer` và `decline` theo `android.answerIntent` và `android.declineIntent` của
+     thông báo đổ chuông; `end` theo thông báo đang gọi: `android.hangUpIntent` của nó, không có thì
+     thao tác duy nhất khi nó có đúng một thao tác, ngược lại `false` (E8). Tiêu đề thao tác được bản
+     địa hóa và không bao giờ được so như văn bản.
+  6. **answer_mode:** `direct` khi một dịch vụ Hỗ trợ tiếp cận của HandLive đang được bind (CLIP-01
+     A3), giúp HandLive được miễn giới hạn mở activity từ nền; ngược lại `tap`. Tính lại khi dịch vụ
+     kết nối hoặc ngắt; thay đổi được gửi như mọi trường khác.
+  7. **Khi nào gửi:** như CALL-01 API 1 logic 3: mỗi khi có trường khác bản đã gửi gần nhất cho phiên
+     đó, và mọi ngữ cảnh còn sống cho phiên vừa có cuộc gọi ứng dụng hiệu lực (sau `capability/hello`
+     hoặc `capability/update`); không gửi lại bản giống hệt; không bao giờ gửi tới iPhone/iPad (chúng
+     báo `app_calls = false`). Mac giữ bản mới nhất theo `call_id` dựa trên `ts` của envelope; sau
+     `ended`, Mac bỏ qua các bản sau của `call_id` đó.
+  8. **Giới hạn:** `caller` cắt còn 128 ký tự và `app.label` còn 64; `caller` rỗng → `null`. Không
+     log `caller`, nhãn ứng dụng hay nội dung thông báo nào; log gồm `type`, `op`, `call_id`, mã lỗi
+     và thời gian đo.
+  9. **Vòng đời listener:** `onListenerConnected` → đọc `getActiveNotifications()` một lần qua cùng
+     bộ lọc để dựng lại các ngữ cảnh còn sống; `onListenerDisconnected` hoặc quyền truy cập thông báo
+     bị thu hồi → mọi ngữ cảnh còn sống kết thúc với `end_reason = unknown` (E10) và
+     `capability/update` báo `app_calls = false` kèm `NOTIFICATION_LISTENER` trong
+     `permissions_missing`.
+
+#### API 2 — `WS call_event/action` với `call_id` của cuộc gọi ứng dụng
+
+- **URL:** như API 1
+- **Method:** `WS call_event/action` (C→S), envelope mã hóa, có ack — đặc tả chính ở CALL-02 API 1;
+  A-CALL định tuyến theo `call_id` (CALL-02 API 1 logic 7).
+- **Request (`data`):**
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `call_id` | uuid | Có | `call_id` của một cuộc gọi ứng dụng còn sống |
+| `action` | enum{answer\| reject\| end} | Có | `answer`, `reject` khi `ringing`; `end` khi `ongoing` |
+| `audio` | enum{phone} | Không | Chỉ với `answer`; vắng → `phone`; `mac` → `CALL_ROUTE_FAILED` (E9) |
+
+- **Response (`ack.data`):** `{}` khi `ok = true` — Android đã gửi PendingIntent của ứng dụng, hoặc
+  đã đăng thông báo chạm để nghe; kết quả đi qua `app_call`.
+
+Lỗi (`ack.error.code`), theo thứ tự kiểm:
+
+| Mã | Khi nào |
+|----|---------|
+| `FEATURE_DISABLED` | Cuộc gọi ứng dụng không hiệu lực với phiên gửi yêu cầu (E4) |
+| `BAD_REQUEST` | Thiếu trường, `action` hoặc `audio` ngoài danh sách |
+| `CALL_HFP_REQUIRED` | `action` ∈ {`hold`, `unhold`, `dtmf`, `mute`} (quy tắc của 0.7.1; panel cuộc gọi ứng dụng không bao giờ có các nút này); `details.action` = giá trị đã gửi |
+| `CALL_ROUTE_FAILED` | `answer` với `audio = mac` (E9) |
+| `CALL_APP_ACTION_UNAVAILABLE` | `answer` hoặc `reject` khi ngữ cảnh không ở `ringing` hoặc thông báo không có intent đó; `end` khi không ở `ongoing` hoặc không có thao tác kết thúc; thông báo đã mất hoặc PendingIntent đã bị hủy (`PendingIntent.CanceledException`); `answer` ở chế độ `tap` khi điện thoại không đăng được thông báo (E2, E7) |
+| `INTERNAL` | Lỗi không mong đợi trên Android (0.8.1); client xử lý như CALL-02 E5 |
+
+`call_id` không phải cuộc gọi ứng dụng còn sống đi theo CALL-02 API 1 (`CALL_NOT_FOUND` với cuộc gọi
+ứng dụng đã kết thúc, E3).
+
+- **Ví dụ:**
+
+```json
+{"op":"action","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","action":"answer"}}
+{"re":"0192f3f7-3d4e-7f50-9b6c-7d8e9f0a1b2c","ok":true,"data":{}}
+```
+
+```json
+{"op":"action","data":{"call_id":"0192f3f6-2c3d-7e4f-8a5b-6c7d8e9f0a1b","action":"end"}}
+{"re":"0192f3f7-4e5f-7061-8c7d-8e9f0a1b2c3d","ok":false,"error":{"code":"CALL_APP_ACTION_UNAVAILABLE","message":"The app's notification offers no end action"}}
+```
+
+- **Logic nghiệp vụ:**
+  1. Kiểm theo thứ tự trong bảng lỗi; cuộc gọi ứng dụng không bao giờ nhận `CALL_ACTION_NOT_ALLOWED`
+     hay `PERMISSION_MISSING` (thiếu quyền truy cập thông báo nghĩa là cuộc gọi ứng dụng không hiệu
+     lực).
+  2. `ack` gửi ngay khi đã gửi PendingIntent hoặc đã đăng thông báo chạm để nghe, không chờ ứng
+     dụng; Mac coi `app_call` kế tiếp là kết quả.
+  3. Không có khóa thao tác: Mac khóa nút tới khi có `ack` hoặc `app_call` mới, gửi lại cùng `id`
+     nhận lại `ack` cũ (0.5.1), và lệnh thứ hai sau khi ứng dụng đã đổi thông báo nhận
+     `CALL_APP_ACTION_UNAVAILABLE`.
+  4. `reject` và `answer` đánh dấu ngữ cảnh ("HandLive từ chối", "HandLive trả lời") trước khi gửi
+     intent, để tính `end_reason` (API 1 logic 4).
+  5. Mac: `ok = false` → hiện CALL-02 trường 10 theo mã (không hiện gì với
+     `CALL_APP_ACTION_UNAVAILABLE`), mở khóa nút, áp dụng `app_call` mới nhất; `CALL_NOT_FOUND` →
+     đóng panel; `ok = true` → với `answer_mode = tap` hiện trường 6, ngược lại chờ `app_call` kế tiếp
+     tối đa 3 s.
+
+#### API 3 — `NotificationListenerService` `AppCallListenerService`
+
+- **URL:** N/A
+- **Method:** khai báo trong manifest là
+  `<service android:name=".appcall.AppCallListenerService" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="false">`
+  với intent filter `android.service.notification.NotificationListenerService`; callback
+  `onListenerConnected()`, `onListenerDisconnected()`, `onNotificationPosted(StatusBarNotification)`,
+  `onNotificationRemoved(StatusBarNotification, RankingMap, int)`; `getActiveNotifications()`. Kiểm
+  quyền: `NotificationManager.isNotificationListenerAccessGranted(ComponentName)` (truyền
+  `ComponentName` của dịch vụ).
+- **Request:** chỉ đọc từ thông báo cuộc gọi (logic 1 của API 1): `packageName`, `key`, `postTime`,
+  `notification.flags`, `notification.category`, `notification.actions`, và các `extras`
+  `android.callType`, `android.callPerson`, `android.title`, `android.answerIntent`,
+  `android.declineIntent`, `android.hangUpIntent`.
+- **Response:** N/A (callback).
+- **Ví dụ:** Telegram đổ chuông: `packageName = "org.telegram.messenger"`, `category = "call"`,
+  `android.callType = 1`, có `android.callPerson`, một intent từ chối (broadcast) và một intent trả
+  lời (activity) → ngữ cảnh `ringing` với `controls.answer = controls.decline = true`. Sau "Trả lời",
+  thông báo đổ chuông bị gỡ và 0,3–1,5 s sau Telegram đăng thông báo đang diễn ra trên kênh `Other3`
+  với một thao tác → `ongoing`, `controls.end = true`.
+- **Logic nghiệp vụ:**
+  1. Callback chạy trên main thread; chúng chỉ áp bộ lọc và chuyển thông báo cuộc gọi sang luồng
+     đơn của A-CALL, nơi xử lý tuần tự cùng các sự kiện điện thoại.
+  2. Listener sống trong tiến trình HandLive và hoạt động khi A-SVC chạy; nó chỉ được bật khi
+     `call.app_calls` và `feature.call` đều `true` (ngược lại `requestUnbind()`), nên tắt tính năng
+     là dừng mọi việc đọc.
+  3. Người dùng cấp quyền truy cập thông báo trong cài đặt hệ thống (SET-01 API 9); A-SVC tính lại
+     `features.call.app_calls` và `permissions_missing` khi listener kết nối hoặc ngắt.
+
+#### API 4 — Gửi PendingIntent của ứng dụng
+
+- **URL:** N/A
+- **Method:** `pendingIntent.send(context, 0, null, null, null, null, options)` cho `answer`; bare
+  `pendingIntent.send(...)` cho `reject` và `end`. Cho `answer`, `options` =
+  `ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(<chế độ>).toBundle()` với
+  `<chế độ>` = `ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS` trên API 36+ (Android 16)
+  và `ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED` (deprecated ở API 36) trên API 34–35;
+  API 29–33: không có `options`, miễn trừ của bên gửi (dịch vụ Hỗ trợ tiếp cận được bind) tự áp dụng.
+  Từ chối và kết thúc là broadcast hoặc service nên không cần miễn trừ.
+- **Request:** `reject` → `android.declineIntent`; `answer` (`direct`) → `android.answerIntent`;
+  `end` → `android.hangUpIntent` của thông báo đang gọi, không có thì `actionIntent` của thao tác
+  duy nhất.
+- **Response:** không có; `PendingIntent.CanceledException` → `CALL_APP_ACTION_UNAVAILABLE`.
+- **Ví dụ:** spike T3.2 trên S25 với Telegram: thông báo đổ chuông bị gỡ 12–14 ms sau khi gửi intent
+  từ chối; thông báo đang gọi bị gỡ 19–28 ms sau thao tác kết thúc; khi dịch vụ Hỗ trợ tiếp cận đang
+  được bind, intent trả lời gỡ thông báo đổ chuông sau 160 ms – 1,5 s, không có thì Android chặn mở
+  activity (`BAL_BLOCK`).
+- **Logic nghiệp vụ:**
+  1. Từ chối và kết thúc là broadcast hoặc service ở các ứng dụng đã gặp, không cần miễn trừ; trả
+     lời mở một activity nên cần miễn trừ, điều mà `answer_mode` báo trước cho Mac.
+  2. PendingIntent được dùng chỉ khi gói người tạo bằng gói đăng; ngược lại thao tác không khả dụng
+     (control vắng mặt). Tùy chọn mở activity từ nền được gắn chỉ vào trả lời (từ chối/kết thúc
+     không cần).
+  3. Chỉ gửi intent của các thông báo hiện tại của ngữ cảnh; intent được giữ trong bộ nhớ cùng ngữ
+     cảnh và bị bỏ cùng nó.
+
+#### API 5 — Thông báo chạm để nghe
+
+- **URL:** N/A
+- **Method:** `NotificationManagerCompat.notify("app_call:<call_id>", 1, notification)` trên kênh
+  `hl_app_call` (`IMPORTANCE_HIGH`, tên "Cuộc gọi từ ứng dụng khác", tạo cùng các kênh khác khi tiến
+  trình khởi động); `setContentIntent(<intent trả lời của ứng dụng>)`, `setAutoCancel(true)`,
+  `setTimeoutAfter(APP_CALL_TAP_NOTIFICATION_TTL)`, `VISIBILITY_PRIVATE` với bản công khai chỉ có
+  tiêu đề; gỡ bằng `cancel("app_call:<call_id>", 1)`.
+- **Request (nội dung thông báo):**
+
+| Thuộc tính | Giá trị |
+|------------|---------|
+| Tiêu đề | Trường 12: "Nghe cuộc gọi \<ứng dụng>" với `app.label` |
+| Nội dung | `caller` khi biết; không thì để trống |
+| Category | Không phải `call`, không `CallStyle`: đây không phải thông báo cuộc gọi, và dù sao listener cũng bỏ qua thông báo của chính HandLive |
+
+- **Response:** người dùng chạm → intent trả lời của ứng dụng chạy nhờ chính cú chạm của người dùng
+  (không cần miễn trừ); ứng dụng mở màn hình cuộc gọi.
+- **Ví dụ:** tiêu đề "Nghe cuộc gọi Telegram", nội dung "Nguyễn Văn A"; chạm sau 4 s → Telegram nghe
+  máy, đăng thông báo đang gọi → `app_call` `ongoing`.
+- **Logic nghiệp vụ:**
+  1. Đăng khi `answer` với `answer_mode = tap`, một thông báo cho mỗi cuộc gọi; gỡ khi ngữ cảnh rời
+     `ringing`, sau `APP_CALL_TAP_NOTIFICATION_TTL`, hoặc khi được chạm.
+  2. Không được đăng thông báo (từ chối `POST_NOTIFICATIONS`, tắt thông báo của HandLive, hoặc kênh bị
+     chặn) → không đăng gì, `ack` là `CALL_APP_ACTION_UNAVAILABLE` (E7).
+
+#### API 6 — Panel cuộc gọi cho cuộc gọi ứng dụng trên Mac
+
+- **URL:** N/A
+- **Method:** `NSPanel` của CALL-01 API 5 (không lấy focus, trên mọi Space, góc trên bên phải), chuông
+  `NSSound`, trạng thái Tập trung `INFocusStatusCenter`.
+- **Request (dữ liệu hiển thị):** trường 1–11 lấy từ `app_call` mới nhất.
+- **Response:** "Trả lời", "Từ chối", "Kết thúc" → API 2; "Bỏ qua" → chỉ cục bộ.
+- **Ví dụ:** `app_call` `ringing` ở ví dụ API 1 → panel: "Cuộc gọi Telegram", "Nguyễn Văn A", nút "Trả
+  lời", "Từ chối", "Bỏ qua"; sau "Trả lời" với `answer_mode = tap`: "Chạm vào thông báo trên điện thoại
+  để nghe." và "Từ chối"; rồi `ongoing`: "Cuộc gọi Telegram", "Nguyễn Văn A", đồng hồ, "Âm thanh: Điện
+  thoại", "Kết thúc".
+- **Logic nghiệp vụ:**
+  1. Vị trí, focus, VoiceOver, `call.notify`, chế độ Tập trung và chuông theo CALL-01 API 5 (logic
+     1–4, 6, 7): không có panel khi đang bật Tập trung hoặc `call.notify = false`. Ở v1 cuộc gọi ứng
+     dụng không có thông báo liên lạc và không có mục trong menu của biểu tượng menu bar.
+  2. Một panel cuộc gọi: cuộc gọi điện thoại (CALL-01…03) giữ panel khi ngữ cảnh của nó chưa `idle`;
+     cuộc gọi ứng dụng đổ chuông lúc đó được hiện khi panel kia đóng, nếu còn sống. Nhiều cuộc gọi ứng
+     dụng còn sống: panel hiện cuộc `ringing` mới nhất, không có thì cuộc `ongoing` mới nhất.
+  3. Đang gọi: không có giữ máy, bàn phím số, tắt tiếng hay chuyển âm thanh; đồng hồ theo CALL-03
+     API 4 logic 1; `ended` đóng panel ngay.
+  4. Mac báo `features.call.app_calls = call.app_calls`; khi cuộc gọi ứng dụng hết hiệu lực (E4), Mac
+     đóng mọi panel cuộc gọi ứng dụng của điện thoại đó.
+
+#### Query
+
+N/A — CALL-05 không đọc hoặc ghi cơ sở dữ liệu: ngữ cảnh cuộc gọi ứng dụng và PendingIntent của
+chúng nằm trong bộ nhớ A-CALL và bị quên sau `ended`; Mac chỉ giữ `app_call` mới nhất trong bộ nhớ.

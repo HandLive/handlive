@@ -20,7 +20,7 @@ Cột "Thành phần" trong bảng bước của mọi chức năng dùng các m
 | A-SVC | `HandLiveService` — foreground service type `connectedDevice` | Android | WSS server (Ktor 3, engine Netty), mDNS (`NsdManager`), relay client, điều phối module |
 | A-CLIP | `ClipboardModule`, `ClipboardAccessibilityService`, `ClipboardReadActivity` (trong suốt), `ClipboardTileService` (ô Cài đặt nhanh), `ClipboardShareTarget` (đích Chia sẻ) | Android | Phát hiện sao chép, đọc và ghi clipboard |
 | A-SMS | `SmsModule` (`ContentObserver`, `SmsManager`) | Android | Đọc, gửi, theo dõi SMS |
-| A-CALL | `CallModule` (`TelephonyCallback` / broadcast `PHONE_STATE`, `TelecomManager`) | Android | Theo dõi và điều khiển cuộc gọi bằng API công khai (không dùng `InCallService` — xem README §5 C12) |
+| A-CALL | `CallModule` (`TelephonyCallback` / broadcast `PHONE_STATE`, `TelecomManager`); `AppCallListener` (`NotificationListenerService`) cho cuộc gọi từ ứng dụng khác | Android | Theo dõi và điều khiển cuộc gọi bằng API công khai (không dùng `InCallService` — xem README §5 C12); cuộc gọi từ ứng dụng khác qua thông báo cuộc gọi của chúng (CALL-05, C22) |
 | A-AUD | `CallAudioModule` — interface `CallAudioRelay` với `HfpCallAudioRelay` và `OpusWsCallAudioRelay` | Android | Âm thanh cuộc gọi: theo dõi HFP; đường dự phòng Opus/WS |
 | A-SHZ | Shizuku UserService (chạy uid shell) | Android 11+ | Thu âm cuộc gọi (`VOICE_CALL`) và chèn âm vào cuộc gọi cho đường Opus/WS; tùy chọn, cần Shizuku |
 | A-CAM | `CameraStreamModule` (Camera2, MediaCodec, libopus JNI) | Android | Phát camera/micro |
@@ -414,10 +414,11 @@ tiếp (Phase 6, README §5 C21).
 | `sms` | `status` | S→C | — | `/v1/ctl` | SMS-04 |
 | `sms` | `read_changed` | S→C | — | `/v1/ctl` | SMS-05 |
 | `call_event` | `state` | S→C | — | `/v1/ctl` | CALL-01…03 |
-| `call_event` | `action` | C→S | Có | `/v1/ctl` | CALL-02, CALL-03 (qua WS chỉ `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` đi bằng lệnh HFP — gửi qua WS nhận `CALL_HFP_REQUIRED`) |
+| `call_event` | `action` | C→S | Có | `/v1/ctl` | CALL-02, CALL-03, CALL-05 (qua WS chỉ `answer`, `reject`, `end`; `hold`, `unhold`, `dtmf`, `mute` đi bằng lệnh HFP — gửi qua WS nhận `CALL_HFP_REQUIRED`; `call_id` của cuộc gọi ứng dụng do CALL-05 API 2 xử lý) |
 | `call_event` | `hfp_status` | S→C | — | `/v1/ctl` | AUDIO-02 (các trường định nghĩa ở AUDIO-02 API 3, `07-call-audio.md`; client Phase 3 không đọc tin này) |
 | `call_event` | `log_sync` | C→S | Có (kèm dữ liệu) | `/v1/ctl` | CALL-04 |
 | `call_event` | `log_new` | S→C | — | `/v1/ctl` | CALL-04 |
+| `call_event` | `app_call` | S→C | — | `/v1/ctl` | CALL-05: cuộc gọi từ ứng dụng khác trên điện thoại (chỉ Mac); bản mới nhất thắng theo `call_id`, gửi không chờ phản hồi như `call_event/state` |
 | `call_audio` | `open` | C→S | Có | `/v1/ctl` | AUDIO-04 |
 | `call_audio` | `close` | Hai chiều | Có | `/v1/ctl` | AUDIO-04 |
 | `call_audio` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/call-audio` | AUDIO-04 |
@@ -432,6 +433,13 @@ tiếp (Phase 6, README §5 C21).
 | `web` | `active` | Hai chiều (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, trang đang mở trong trình duyệt ở foreground của bên gửi; bản mới nhất thắng, gửi không chờ phản hồi như `call_event/state` |
 | `web` | `inactive` | Hai chiều (như `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, trang không còn mở ở foreground |
 | `ack` | — | Hai chiều | — | Mọi kênh | Phản hồi |
+
+Quy tắc payload của `call_event/app_call` (đặc tả đầy đủ ở CALL-05 API 1): `{call_id, app: {package,
+label}, caller, state, controls: {answer, decline, end}, answer_mode, audio, started_at, answered_at,
+ended_at, end_reason}`, mọi trường luôn có mặt (null ở chỗ cho phép); `state` ∈ {`ringing`,
+`ongoing`, `ended`}; `ended` gửi một lần rồi ngữ cảnh bị quên. Chỉ gửi tới phiên có
+`features.call.app_calls` hiệu lực (0.7.2), không bao giờ đi trong push; `caller` là dữ liệu cá nhân (chỉ
+đi trong E2E, không log, không lưu).
 
 Quy tắc payload của `web` (đặc tả đầy đủ ở WEB-01 API 1 và API 2): `page_id` uuid (UUIDv7, mới cho
 mỗi trang); `url` chỉ `http` hoặc `https`, tối đa `WEB_URL_MAX` UTF-8, như trình duyệt hiển thị, giữ
@@ -478,7 +486,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
     "features": {
       "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "image/png", "image/jpeg"]},
       "sms": {"enabled": true, "can_send": true, "default_sub_id": 1, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
-      "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true},
+      "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true, "app_calls": true},
       "call_audio": {"enabled": false, "bt_address": null, "hfp_connected": false,
                      "opus_fallback": {"available": false, "downlink": false, "uplink": false, "reason": "shizuku_not_running"}},
       "camera": {"enabled": true, "cameras": ["front", "back"], "max_width": 1920, "max_height": 1080, "max_fps": 30, "codecs": ["h264"]},
@@ -502,6 +510,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | `features.call.can_answer`, `can_end` | bool | Android: có quyền `ANSWER_PHONE_CALLS` |
 | `features.call.caller_id` | bool | Android: có `READ_CALL_LOG` (số gọi đến) |
 | `features.call.notify` | bool | Chỉ iOS/iPadOS; bằng `call.notify` — Android chỉ push cuộc gọi đến/nhỡ khi `true` |
+| `features.call.app_calls` | bool | Cuộc gọi từ ứng dụng khác (CALL-05). Android: `call.app_calls` ∧ đã cấp quyền truy cập thông báo ∧ `feature.call`; Mac: `feature.call` ∧ `call.app_calls`; iOS/iPadOS: luôn `false`. Hiệu lực với một phiên khi cả hai bên báo `true`; vắng mặt (phiên bản ứng dụng chưa có CALL-05) → `false` |
 | `features.call_audio.bt_address` | string | Chỉ Mac: địa chỉ Bluetooth của Mac (để Android nhận ra Mac trong danh sách thiết bị HFP). Dạng `AA:BB:CC:DD:EE:FF` chữ hoa, tách bằng `:`; M-APP chuẩn hóa từ `IOBluetoothDevice.addressString` (thường chữ thường, gạch ngang) |
 | `features.call_audio.hfp_connected` | bool | Android: Mac đang nối hồ sơ HFP tới điện thoại |
 | `features.call_audio.consented` | bool | Chỉ Mac: có `consent_record` hiệu lực (AUDIO-01). Android từ chối mọi yêu cầu âm thanh cuộc gọi bằng `CALL_CONSENT_REQUIRED` khi giá trị gần nhất là `false` |
@@ -509,7 +518,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
 | `features.web.enabled` | bool | Từ `feature.web` (P6) |
 | `features.web.send` | bool | Android: `web.send` và dịch vụ Hỗ trợ tiếp cận "Trang trình duyệt HandLive" đang chạy; Mac: `web.send`; iOS/iPadOS: luôn `false` |
 | `features.web.receive` | bool | Android: `web.notify` và thông báo được phép (thông báo là nơi duy nhất Android hiện trang); Mac, iOS/iPadOS: `true` |
-| `permissions_missing` | array\<string> | Chỉ Android: quyền còn thiếu, dùng để client hiển thị hướng dẫn |
+| `permissions_missing` | array\<string> | Chỉ Android: quyền còn thiếu, dùng để client hiển thị hướng dẫn; quyền truy cập đặc biệt Truy cập thông báo ghi là `NOTIFICATION_LISTENER` (SET-01 API 2) |
 
 ### 0.7.3 Tin điều khiển relay (WS text frame, không E2E)
 
@@ -578,6 +587,7 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `SMS_CURSOR_INVALID` | SMS | Con trỏ hoặc `page_token` không đọc được hoặc đã cũ; `details.reason` ∈ {`cursor`, `page_token`} | Bắt đầu lại trang đầu hoặc đồng bộ lại toàn bộ |
 | `CALL_NOT_FOUND` | Cuộc gọi | `call_id` không còn | Làm mới giao diện theo `call_event/state` |
 | `CALL_ACTION_NOT_ALLOWED` | Cuộc gọi | Trạng thái không cho phép thao tác; `details.reason` ∈ {`state`, `waiting`, `platform`, `system`} | Làm mới giao diện |
+| `CALL_APP_ACTION_UNAVAILABLE` | Cuộc gọi | Cuộc gọi ứng dụng (CALL-05): thông báo của ứng dụng gọi điện không còn thao tác đó, hoặc đã mất | Làm mới giao diện theo `call_event/app_call` mới nhất |
 | `CALL_ROUTE_FAILED` | Âm thanh | Không định tuyến được âm thanh | Giữ âm thanh ở điện thoại, báo người dùng |
 | `CALL_BT_NOT_CONNECTED` | Âm thanh | Mac chưa kết nối Bluetooth HFP tới điện thoại | Hướng dẫn kết nối Bluetooth |
 | `CALL_CONSENT_REQUIRED` | Âm thanh | Chưa chấp thuận công bố | Mở AUDIO-01 |
@@ -907,6 +917,7 @@ SET-02 quản lý các khóa này.
 | `call.notify` | bool | `true` | Mac, iOS | Thông báo cuộc gọi |
 | `call.ringtone` | bool | `true` | Mac | Phát chuông khi có cuộc gọi đến (tôn trọng chế độ Tập trung) |
 | `call.quick_replies` | array\<string> | 2 mẫu mặc định | Mac | Tin trả lời nhanh khi từ chối, tối đa 6 mẫu × 160 ký tự |
+| `call.app_calls` | bool | `true` | Android, Mac | Cuộc gọi từ ứng dụng khác (CALL-05): Android đọc thông báo cuộc gọi của các ứng dụng gọi điện (cần quyền truy cập thông báo); Mac hiển thị chúng |
 | `cam.default_camera` | enum{front\| back} | `front` | Mac | Camera mặc định |
 | `cam.default_quality` | enum{auto\| 480p\| 720p\| 1080p} | `auto` | Mac | Chất lượng mặc định |
 | `cam.usb_boost` | bool | `true` | Mac | Tự chuyển USB khi cắm cáp |
@@ -946,6 +957,9 @@ SET-02 quản lý các khóa này.
 | `CLIP_TRANSFER_IDLE_TIMEOUT` | 30 s | Không có chunk mới → `clipboard/cancel` |
 | `CALL_REJECT_BG_TIMEOUT` | 15 s | Hạn gửi lệnh từ chối từ thông báo iOS |
 | `CALL_HFP_CMD_TIMEOUT` | 2 s | Chờ phản hồi lệnh HFP |
+| `APP_CALL_LINK_WINDOW` | 3 s | Sau khi thông báo đổ chuông của một ứng dụng bị gỡ, thông báo đang diễn ra của cùng ứng dụng đăng trong khoảng này chuyển cuộc gọi ứng dụng sang đang gọi (CALL-05) |
+| `APP_CALL_LINK_GRACE` | 500 ms | A-CALL đóng `APP_CALL_LINK_WINDOW` muộn hơn chừng này, để thông báo còn trong hàng đợi được quyết định theo `postTime` (CALL-05 API 1 logic 3) |
+| `APP_CALL_TAP_NOTIFICATION_TTL` | 60 s | Thông báo chạm để nghe trên điện thoại bị gỡ khi cuộc gọi ứng dụng rời `ringing` hoặc sau khoảng này (CALL-05) |
 | `CLIP_STALE_AFTER` | 120 s | Clip cũ hơn không gửi khi kết nối lại |
 | `SMS_SYNC_THREADS` | 200 hội thoại gần nhất | Lần đồng bộ đầu |
 | `SMS_SYNC_PER_THREAD` | 50 tin |  |

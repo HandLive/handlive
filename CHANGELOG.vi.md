@@ -6,12 +6,27 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+### Added
+
+- CALL-05 (cuộc gọi từ ứng dụng khác): `AppCallListenerService` (`NotificationListenerService`) đọc thông báo cuộc gọi
+  của Telegram và các ứng dụng khác trên Android và gửi tới Mac; người dùng có thể trả lời, từ chối hoặc kết thúc từ
+  Mac (âm thanh vẫn ở trên điện thoại ở v1). Cần quyền truy cập thông báo, một quyền đặc biệt mà người dùng bật bằng
+  tay. Các cuộc gọi di động không thay đổi.
+
 ### Changed
 
 - Đã merge các nhánh spike/fix còn lại vào `main`: apple `fix/real-device-pairing`,
   `feat/phase-04-call-audio`, `feat/phase-05-camera-mic`, `feat/phase-06-web-handoff`; android
   `fix/real-device-pairing`. Relay local chuyển sang `main`. Đã cập nhật lộ trình README.
 - `CLAUDE.md`: handoff báo cáo tiến độ 01/10/2026 (đã làm / đang làm / kế hoạch) cho agent viết mã.
+- Thiết kế chi tiết: CALL-05 (leaves 06-call-control, 00-common-specs, 01-setup-settings); công thức khả năng Mac
+  cho cuộc gọi ứng dụng làm rõ.
+
+### Ghi chú tương thích
+
+- Phiên bản v0.1.0-beta.1 trở về trước trên Mac và iOS: mục `NOTIFICATION_LISTENER` mới trong `permissions_missing`
+  sẽ hiển thị gợi ý "quyền thiếu" chung cho tới khi app được cập nhật để hiểu các cuộc gọi ứng dụng. Không cần hành
+  động từ người dùng.
 
 ## [0.1.0-beta.1] — 30/09/2026
 
