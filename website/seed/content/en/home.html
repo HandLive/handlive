@@ -1,12 +1,11 @@
 <!-- wp:group {"align":"full","className":"hl-hero","layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull hl-hero"><!-- wp:columns {"align":"wide"} -->
-<div class="wp-block-columns alignwide"><!-- wp:column -->
-<div class="wp-block-column"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
-<p class="hl-eyebrow"><a href="{{post:public-beta}}">Public beta · v0.1.0-beta.1</a></p>
+<div class="wp-block-group alignfull hl-hero"><!-- wp:group {"align":"wide"} -->
+<div class="wp-block-group alignwide"><!-- wp:paragraph {"className":"hl-badge"} -->
+<p class="hl-badge"><a href="{{post:public-beta}}">Public beta · v0.1.0-beta.1</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:heading {"level":1} -->
-<h1 class="wp-block-heading">Never miss a signal.</h1>
+<h1 class="wp-block-heading">Never miss<br><span class="hl-hero__accent">a signal.</span></h1>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hl-lead"} -->
@@ -25,30 +24,81 @@
 
 <!-- wp:paragraph {"className":"hl-hero__note"} -->
 <p class="hl-hero__note">Android 10 or later · macOS 13 or later · iOS and iPadOS 16 or later</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
+<!-- /wp:paragraph -->
 
-<!-- wp:column {"className":"hl-hero__art"} -->
-<div class="wp-block-column hl-hero__art"><!-- wp:image {"id":{{id:brand/assets/logo/handlive-mark.png}},"sizeSlug":"full","linkDestination":"none"} -->
-<figure class="wp-block-image size-full"><img src="{{src:brand/assets/logo/handlive-mark.png}}" alt="" class="wp-image-{{id:brand/assets/logo/handlive-mark.png}}"/></figure>
+<!-- wp:group {"className":"hl-stats hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-stats hl-reveal"><!-- wp:group {"className":"hl-stat","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-stat"><!-- wp:paragraph {"className":"hl-stat__value"} -->
+<p class="hl-stat__value">&lt; 50 ms</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hl-stat__label"} -->
+<p class="hl-stat__label">Clipboard on the same Wi-Fi</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hl-stat","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-stat"><!-- wp:paragraph {"className":"hl-stat__value"} -->
+<p class="hl-stat__value">0</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hl-stat__label"} -->
+<p class="hl-stat__label">Accounts to create</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hl-stat","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-stat"><!-- wp:paragraph {"className":"hl-stat__value"} -->
+<p class="hl-stat__value">E2E</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hl-stat__label"} -->
+<p class="hl-stat__label">Encryption, always on</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hl-stat","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-stat"><!-- wp:paragraph {"className":"hl-stat__value"} -->
+<p class="hl-stat__value">3</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hl-stat__label"} -->
+<p class="hl-stat__label">Platforms beside Android</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hl-shot hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-shot hl-reveal"><!-- wp:image {"id":{{id:screenshots/macos/03-messages-window.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
+<figure class="wp-block-image size-full"><img src="{{src:screenshots/macos/03-messages-window.en.png}}" alt="The HandLive window on a Mac, with SMS conversations and the call log" class="wp-image-{{id:screenshots/macos/03-messages-window.en.png}}"/><figcaption class="wp-element-caption">HandLive on the Mac: texts and calls in one window</figcaption></figure>
 <!-- /wp:image --></div>
-<!-- /wp:column --></div>
-<!-- /wp:columns --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"full","className":"hl-section","layout":{"type":"constrained"}} -->
 <div id="features" class="wp-block-group alignfull hl-section"><!-- wp:group {"align":"wide"} -->
-<div class="wp-block-group alignwide"><!-- wp:heading -->
+<div class="wp-block-group alignwide"><!-- wp:group {"className":"hl-section__head hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-section__head hl-reveal"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Features</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">Your phone, right where you work</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hl-lead"} -->
 <p class="hl-lead">HandLive brings what happens on your Android phone to the screen in front of you. Everything stays private.</p>
-<!-- /wp:paragraph -->
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
 
 <!-- wp:group {"className":"hl-grid","layout":{"type":"grid","minimumColumnWidth":"20rem"}} -->
-<div class="wp-block-group hl-grid"><!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<div class="wp-block-group hl-grid"><!-- wp:group {"className":"hl-card hl-feature hl-feature--clipboard hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--clipboard hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">Clipboard</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Clipboard, both ways</h3>
 <!-- /wp:heading -->
 
@@ -57,8 +107,12 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-feature hl-feature--sms hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--sms hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">SMS</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Texts at your desk</h3>
 <!-- /wp:heading -->
 
@@ -67,8 +121,12 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-feature hl-feature--calls hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--calls hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">Calls</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Know who's calling</h3>
 <!-- /wp:heading -->
 
@@ -77,8 +135,12 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-feature hl-feature--privacy hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--privacy hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">Privacy</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Private by design</h3>
 <!-- /wp:heading -->
 
@@ -87,8 +149,12 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-feature hl-feature--setup hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--setup hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">Setup</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">No account to make</h3>
 <!-- /wp:heading -->
 
@@ -97,8 +163,12 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-feature"} -->
-<div class="wp-block-group hl-card hl-feature"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-feature hl-feature--open hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-feature hl-feature--open hl-reveal"><!-- wp:paragraph {"className":"hl-feature__tag"} -->
+<p class="hl-feature__tag">Open source</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Open and native</h3>
 <!-- /wp:heading -->
 
@@ -112,17 +182,23 @@
 
 <!-- wp:group {"align":"full","className":"hl-section hl-section--tint","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hl-section hl-section--tint"><!-- wp:group {"align":"wide"} -->
-<div class="wp-block-group alignwide"><!-- wp:heading -->
+<div class="wp-block-group alignwide"><!-- wp:group {"className":"hl-section__head hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-section__head hl-reveal"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Setup</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">Set up in three steps</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hl-lead"} -->
 <p class="hl-lead">No account, no cables.</p>
-<!-- /wp:paragraph -->
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
 
 <!-- wp:group {"className":"hl-grid hl-steps","layout":{"type":"grid","minimumColumnWidth":"20rem"}} -->
-<div class="wp-block-group hl-grid hl-steps"><!-- wp:group {"className":"hl-card hl-step"} -->
-<div class="wp-block-group hl-card hl-step"><!-- wp:heading {"level":3} -->
+<div class="wp-block-group hl-grid hl-steps"><!-- wp:group {"className":"hl-card hl-step hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-step hl-reveal"><!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Install</h3>
 <!-- /wp:heading -->
 
@@ -131,8 +207,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-step"} -->
-<div class="wp-block-group hl-card hl-step"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-step hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-step hl-reveal"><!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Pair</h3>
 <!-- /wp:heading -->
 
@@ -141,8 +217,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hl-card hl-step"} -->
-<div class="wp-block-group hl-card hl-step"><!-- wp:heading {"level":3} -->
+<!-- wp:group {"className":"hl-card hl-step hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-card hl-step hl-reveal"><!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">Carry on</h3>
 <!-- /wp:heading -->
 
@@ -156,29 +232,53 @@
 
 <!-- wp:group {"align":"full","className":"hl-section","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hl-section"><!-- wp:group {"align":"wide"} -->
-<div class="wp-block-group alignwide"><!-- wp:heading -->
+<div class="wp-block-group alignwide"><!-- wp:group {"className":"hl-section__head hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-section__head hl-reveal"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Screens</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">On every screen you use</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hl-lead"} -->
 <p class="hl-lead">Each app follows its platform's own design, in English and Vietnamese.</p>
-<!-- /wp:paragraph -->
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
 
-<!-- wp:columns {"className":"hl-shots"} -->
-<div class="wp-block-columns hl-shots"><!-- wp:column -->
-<div class="wp-block-column"><!-- wp:image {"id":{{id:screenshots/macos/03-messages-window.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
-<figure class="wp-block-image size-full"><img src="{{src:screenshots/macos/03-messages-window.en.png}}" alt="The HandLive window on a Mac, with SMS conversations and the call log" class="wp-image-{{id:screenshots/macos/03-messages-window.en.png}}"/><figcaption class="wp-element-caption">Mac: texts and calls in one window</figcaption></figure>
+<!-- wp:list {"className":"hl-chips hl-reveal"} -->
+<ul class="wp-block-list hl-chips hl-reveal"><!-- wp:list-item -->
+<li>macOS 13+</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>iOS 16+</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>iPadOS 16+</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Android 10+</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:columns {"className":"hl-shots hl-reveal"} -->
+<div class="wp-block-columns hl-shots hl-reveal"><!-- wp:column {"className":"hl-device"} -->
+<div class="wp-block-column hl-device"><!-- wp:image {"id":{{id:screenshots/macos/04-incoming-call-panel.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
+<figure class="wp-block-image size-full"><img src="{{src:screenshots/macos/04-incoming-call-panel.en.png}}" alt="A floating panel on the Mac showing an incoming call from the phone" class="wp-image-{{id:screenshots/macos/04-incoming-call-panel.en.png}}"/><figcaption class="wp-element-caption">Mac: the incoming-call panel</figcaption></figure>
 <!-- /wp:image --></div>
 <!-- /wp:column -->
 
-<!-- wp:column -->
-<div class="wp-block-column"><!-- wp:image {"id":{{id:screenshots/ios/04-sms-conversation.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
+<!-- wp:column {"className":"hl-device"} -->
+<div class="wp-block-column hl-device"><!-- wp:image {"id":{{id:screenshots/ios/04-sms-conversation.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
 <figure class="wp-block-image size-full"><img src="{{src:screenshots/ios/04-sms-conversation.en.png}}" alt="An SMS conversation from the Android phone, shown on iPhone" class="wp-image-{{id:screenshots/ios/04-sms-conversation.en.png}}"/><figcaption class="wp-element-caption">iPhone: answer your phone's texts</figcaption></figure>
 <!-- /wp:image --></div>
 <!-- /wp:column -->
 
-<!-- wp:column -->
-<div class="wp-block-column"><!-- wp:image {"id":{{id:screenshots/android/04-devices-connected.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
+<!-- wp:column {"className":"hl-device"} -->
+<div class="wp-block-column hl-device"><!-- wp:image {"id":{{id:screenshots/android/04-devices-connected.en.png}},"sizeSlug":"full","linkDestination":"none"} -->
 <figure class="wp-block-image size-full"><img src="{{src:screenshots/android/04-devices-connected.en.png}}" alt="HandLive on Android, showing a paired Mac connected over Wi-Fi" class="wp-image-{{id:screenshots/android/04-devices-connected.en.png}}"/><figcaption class="wp-element-caption">Android: paired with your Mac over Wi-Fi</figcaption></figure>
 <!-- /wp:image --></div>
 <!-- /wp:column --></div>
@@ -188,12 +288,18 @@
 
 <!-- wp:group {"align":"full","className":"hl-section hl-section--tint","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hl-section hl-section--tint"><!-- wp:group {"align":"wide"} -->
-<div class="wp-block-group alignwide"><!-- wp:heading -->
-<h2 class="wp-block-heading">What works where</h2>
-<!-- /wp:heading -->
+<div class="wp-block-group alignwide"><!-- wp:group {"className":"hl-section__head hl-reveal","layout":{"type":"default"}} -->
+<div class="wp-block-group hl-section__head hl-reveal"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Compatibility</p>
+<!-- /wp:paragraph -->
 
-<!-- wp:table {"className":"hl-table"} -->
-<figure class="wp-block-table hl-table"><table class="has-fixed-layout"><thead><tr><th>Feature</th><th>Mac</th><th>iPhone and iPad</th></tr></thead><tbody><tr><td>Two-way clipboard</td><td>Yes</td><td>Yes</td></tr><tr><td>Read and send SMS</td><td>Yes</td><td>Yes</td></tr><tr><td>Calls</td><td>Details, decline, end</td><td>Details and decline</td></tr><tr><td>Call audio on the computer</td><td>Coming</td><td>—</td></tr><tr><td>Camera and microphone for the Mac</td><td>Coming</td><td>—</td></tr><tr><td>Continue Browsing</td><td>Coming</td><td>Coming</td></tr></tbody></table></figure>
+<!-- wp:heading -->
+<h2 class="wp-block-heading">What works where</h2>
+<!-- /wp:heading --></div>
+<!-- /wp:group -->
+
+<!-- wp:table {"className":"hl-table hl-reveal"} -->
+<figure class="wp-block-table hl-table hl-reveal"><table class="has-fixed-layout"><thead><tr><th>Feature</th><th>Mac</th><th>iPhone and iPad</th></tr></thead><tbody><tr><td>Two-way clipboard</td><td>Yes</td><td>Yes</td></tr><tr><td>Read and send SMS</td><td>Yes</td><td>Yes</td></tr><tr><td>Calls</td><td>Details, decline, end</td><td>Details and decline</td></tr><tr><td>Call audio on the computer</td><td>Coming</td><td>—</td></tr><tr><td>Camera and microphone for the Mac</td><td>Coming</td><td>—</td></tr><tr><td>Continue Browsing</td><td>Coming</td><td>Coming</td></tr></tbody></table></figure>
 <!-- /wp:table -->
 
 <!-- wp:paragraph {"className":"hl-requirements"} -->
@@ -203,9 +309,13 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"full","className":"hl-section","layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull hl-section"><!-- wp:columns {"align":"wide"} -->
-<div class="wp-block-columns alignwide"><!-- wp:column -->
-<div class="wp-block-column"><!-- wp:heading -->
+<div class="wp-block-group alignfull hl-section"><!-- wp:columns {"align":"wide","className":"hl-reveal"} -->
+<div class="wp-block-columns alignwide hl-reveal"><!-- wp:column -->
+<div class="wp-block-column"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Privacy</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">Your data stays yours</h2>
 <!-- /wp:heading -->
 
@@ -247,7 +357,11 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"full","className":"hl-cta","layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull hl-cta"><!-- wp:heading -->
+<div class="wp-block-group alignfull hl-cta"><!-- wp:paragraph {"className":"hl-eyebrow"} -->
+<p class="hl-eyebrow">Beta</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">Try the public beta</h2>
 <!-- /wp:heading -->
 
