@@ -19,6 +19,8 @@ Detailed reports exist per area; this file links them and covers the rest.
 | One download page | Hub `release-collect` gathers APK/IPA/DMG with checked SHA-256 into the hub's Release; run for beta.2: 6 files | hub `21db3a8`, `c05ba9d` |
 | Website download link | Get the Beta (header, footer, hero, CTA, beta post) opens the hub's beta.2 Release; verified on a throwaway stack in en and vi | hub `9e46176`, `75ce3ef` |
 
+| Follow-ups (owner, 2026-10-05) | Home page badge reads v0.1.0-beta.2 and opens its release; new Android release key `CN=Ho Xuan Dung, O=HandLive, C=VN` re-signed the beta.2 APK (old `CN=y` key retired); signing secrets moved to the environment `release` (tags `v*` and `main` only); app calls answer directly only when Android vouches for the call | hub `aaf9ad8`, `54918b7`, `2d08c78`; android `f656287`, `9861366`; runs 37221615865, 37221982189 |
+
 ## Verification highlights
 
 - android `./gradlew check` green after the merges; CI green on hub, android, apple `main` before tagging.
@@ -28,20 +30,19 @@ Detailed reports exist per area; this file links them and covers the rest.
 
 ## Next steps
 
-1. Owner: back up `~/Documents/HandLive-keys/handlive-release.jks` and its password off the Mac; decide whether to
-   replace the key (certificate DN `CN=y, OU=y, …`) before the APK reaches real users — later replacement breaks updates.
-2. Owner: move the `ANDROID_RELEASE_*` secrets into environment `release` with a required reviewer and a `v*` tag rule.
+1. Owner: back up `~/Documents/HandLive-keys/handlive-release.jks` and `handlive-release.password` off the Mac (a
+   password manager), then delete the password file; losing the key breaks updates of installed apps.
+2. Optional: a required reviewer on the environment `release` (now limited to tags `v*` and `main`).
 3. Before the paid Apple team's secrets: split `release-apple` into sign / launch / publish jobs.
 4. On each release: website link (`docs/website.md`), then `release-collect` runs on the hub tag.
 5. Website: pin image digests (scan LOW); hero badge still reads "Public beta · v0.1.0-beta.1" (links the beta.1 post).
 
 ## Unresolved questions
 
-- Tighten app-call answering (API 34+: background start only with a real FGS/UIJ or granted full-screen intent;
-  `answer_mode = tap` below API 31)? Changes UX.
-- Replace the Android release key now (proper certificate name) or keep it?
+- None from this session; the owner decided the key name, the secret placement and app-call answering (all done).
 
-Status: DONE_WITH_CONCERNS
-Summary: v0.1.0-beta.2 is released on all five repos with every installable file on the hub's Release and the website
-pointing there; the day's fixes, CI speed-up, release pipeline and security scan are merged.
-Concerns/Blockers: owner decisions on the Android key name, secret placement and app-call answering.
+Status: DONE
+Summary: v0.1.0-beta.2 is released on all five repos with every installable file, the APK signed by the owner's new
+key, on the hub's Release and the website pointing there; the day's fixes, CI speed-up, release pipeline, security
+scan and its follow-ups are merged.
+Concerns/Blockers: none; the key backup is the owner's to do.
