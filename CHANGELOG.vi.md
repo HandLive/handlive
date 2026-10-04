@@ -6,14 +6,12 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] — 04/10/2026
+
 ### Added
 
 - Biểu tượng thương hiệu trên màn chào của app Mac, iPhone/iPad và Android (apple và android
   `feat/brand-in-app`), sinh vào cả hai kho bằng `tools/brand/build_brand_assets.py`.
-
-## [0.1.0-beta.2] — 04/10/2026
-
-### Added
 
 - `docs/deployment-guide.md` (en, vi): Bản phát hành — `release-android` chạy theo tag (APK `foss` đã ký) và
   `release-apple` (IPA iOS chưa ký; DMG Mac ký ad-hoc, hoặc ký Developer ID và notarize khi có secret của team trả
@@ -53,6 +51,24 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
   được để nguyên và ứng dụng dùng ngăn thứ hai (`*.alt`), nên quay lại bản build kia sẽ thấy lại dữ liệu của nó; với
   khóa thứ ba, tệp lạ cũ hơn nhường chỗ (giữ một thế hệ). Người dùng ghép đôi lại; định dạng SQLCipher được ghim
   (SET-03 API 1 logic 5).
+- Android: các dòng cuối của Cài đặt và các danh sách nhóm khác nằm dưới thanh tab nổi; tab Thiết bị khi chưa ghép
+  điện thoại bị crash lúc có banner trạng thái, và nút Thêm thiết bị có thể bị thanh tab che trong cửa sổ thấp.
+- Mac và iPhone/iPad: "Lần đồng bộ cuối" hiện "sau 0 giây nữa" ngay sau khi đồng bộ; nay hiện "bây giờ" khi dưới một
+  phút.
+
+### Security
+
+Quét bảo mật mọi thay đổi từ v0.1.0-beta.1 (không có lỗi nghiêm trọng hay mức cao):
+
+- Android, cuộc gọi từ ứng dụng khác: một thông báo chỉ được tính là cuộc gọi khi có template `CallStyle` của nền
+  tảng (API 31+). Trước đây, ứng dụng bất kỳ có thể giả cuộc gọi bằng extra `android.callType` trần và, khi được trả
+  lời từ Mac, được mở activity của chính nó từ nền bằng quyền miễn trừ của HandLive. Đã cập nhật CALL-05 API 3 logic 1.
+- Website: nginx chặn trình cài WordPress qua web và `setup.sh` chỉ bật nginx sau khi WP-CLI đã cài WordPress, nên
+  không ai tạo được tài khoản admin trong lần cài đầu; tên đăng nhập của admin không còn hiện trong feed hay oEmbed;
+  Polylang tự cập nhật; `docs/website.vi.md` giải thích giới hạn đăng nhập khi đứng sau reverse proxy.
+- Workflow phát hành Apple: mã đã build chỉ chạy khi không có secret (bản đã ký chạy sau khi xóa keychain ký, DMG ad
+  hoc trong job build chỉ có quyền đọc), và XcodeGen được ghim bằng checksum. Đã cập nhật
+  `docs/deployment-guide.vi.md`.
 
 ### Ghi chú tương thích
 

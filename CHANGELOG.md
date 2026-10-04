@@ -6,14 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] — 2026-10-04
+
 ### Added
 
 - The brand mark on the welcome screens of the Mac, iPhone/iPad and Android apps (apple and android
   `feat/brand-in-app`), generated into both repositories by `tools/brand/build_brand_assets.py`.
-
-## [0.1.0-beta.2] — 2026-10-04
-
-### Added
 
 - `docs/deployment-guide.md` (en, vi): Release builds — tag-driven `release-android` (signed `foss` APK) and
   `release-apple` (unsigned iOS IPA; ad-hoc signed Mac DMG, or a Developer ID notarized one once the paid team's secrets
@@ -49,6 +47,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   they are and the app uses a second slot (`*.alt`), so switching back to the other build finds its data again; with
   a third key the older foreign file gives way (one generation). The user pairs again; the SQLCipher format is pinned
   (SET-03 API 1 logic 5).
+- Android: the last rows of Settings and the other grouped lists ended under the floating tab bar; the Devices tab
+  without a paired phone crashed when a status banner showed, and its Add Device button could hide under the tab bar in
+  a short window.
+- Mac and iPhone/iPad: "Last synced" read "in 0 seconds" right after a sync; it now reads "now" under a minute.
+
+### Security
+
+Security scan of every change since v0.1.0-beta.1 (no critical or high finding):
+
+- Android, calls from other apps: a notification counts as a call only with the platform `CallStyle` template (API
+  31+). Before, any app could fake a call with the bare `android.callType` extra and, when answered from the Mac, have
+  its own activity started from the background with HandLive's exemption. CALL-05 API 3 logic 1 updated.
+- Website: nginx denies the WordPress web installer and `setup.sh` starts nginx only after WP-CLI installed WordPress,
+  so no one can create the admin during a first setup; the admin's login name no longer shows in the feed or oEmbed;
+  Polylang updates itself; `docs/website.md` explains the login limit behind a reverse proxy.
+- Apple release workflow: built code runs only without secrets (the signed app after the signing keychain is removed,
+  the ad-hoc DMG in the read-only build job), and XcodeGen is pinned by checksum. `docs/deployment-guide.md` updated.
 
 ### Compatibility note
 
