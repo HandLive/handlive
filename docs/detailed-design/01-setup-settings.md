@@ -21,7 +21,7 @@ English | [Tiếng Việt](01-setup-settings.vi.md)
 | Actors | Primary: User (the phone's owner). System: A-UI, A-SVC, A-CLIP (`ClipboardAccessibilityService`), OS (Android's permission controller, `PowerManager`, system Settings and the manufacturer's own settings), R-API (device registration). |
 | Preconditions | **Part A:** HandLive has just been installed (Google Play, F-Droid or APK) on Android 10+ (API 29+); `setup.completed_at` is not set.<br>**Part B:** part A is done; the user taps "Scan QR Code" (PAIR-01), turns on a feature (SET-02), taps "Grant Permission" on a feature card, or taps a permission suggestion notification. |
 | Postconditions | **Part A:** the identity keys, `device_id` and TLS certificate exist; A-SVC runs in the foreground with its ongoing notification, listens on port 47800 (0.4.1) and advertises over mDNS; the battery optimization exemption has been asked for; `setup.completed_at` is written; the device is registered with the relay if `relay.enabled = true` and a network is available (or a background retry is pending); the UI moves on to PAIR-01.<br>**Part B:** each of the feature's permissions is granted or denied; `permissions_missing` and the capability sub-flags (`can_send`, `sims`, `caller_id`, `can_answer`, `can_end`, `auto_send`, `app_calls`) match reality; every connected client has received `capability/update` if anything changed. |
-| Exceptions | E1 — `POST_NOTIFICATIONS` denied: A-SVC still runs (its service notification only appears in Android's Task Manager), but connection status, permission suggestions and camera confirmation requests (CAM-02) are not shown; the app shows the warning banner "Notifications are off, so connection status and requests from your Mac don't appear." with a button that opens the notification settings.<br>E2 — The foreground service cannot start (`ForegroundServiceStartNotAllowedException` when the app is not in the foreground and not exempt from battery optimization, or `SecurityException` because a type declaration is missing): retry when A-UI is in the foreground; still failing → show "Couldn't Start the Connection Service" with a "Try Again" button.<br>E3 — Battery optimization exemption denied or manufacturer instructions skipped: HandLive still works, but the connection may drop while the phone sleeps (CONN-02 E6); the warning stays in Settings › Permissions & Background.<br>E4 — A feature's permission is denied: the feature is inactive or partially active (for example `can_send = false`); the permission goes into `permissions_missing`.<br>E5 — Permission permanently denied (the system no longer shows the dialog): show an "Open Settings" button that goes to the App info page.<br>E6 — Accessibility disclosure declined: `clip.auto_send = false`; manual sending (a button in the notification, a Quick Settings tile, the Share menu) still works (CLIP-01 E1).<br>E7 — An install from outside Google Play on Android 13+ is blocked from turning on the Accessibility service ("Restricted setting"), detected per API 6 logic 2: guide the user to allow it in App info (field 14 with "Open Settings"), then come back.<br>E8 — The user comes back from the Accessibility settings without the service turned on: keep the "Auto-send isn't on yet" status; if `R` is not `none`, show field 14 once with the button of API 6 logic 2 ("Continue" while `untried`, otherwise "Open Settings"; API 6 logic 6), otherwise allow another try. Coming back from App info never opens a page by itself.<br>E9 — Key generation fails (Keystore error): retry with a TEE-backed key when StrongBox is unavailable; still failing → show an error and do not continue to PAIR-01.<br>E10 — No network or relay error during device registration: skip, retry in the background (CONN-03), do not block setup.<br>E11 — Notification access not granted, or the user comes back without turning it on: `features.call.app_calls = false` and `NOTIFICATION_LISTENER` in `permissions_missing`; the "Calls from Other Apps" card shows "Needs permission" and allows another try; coming back from Notification access without it while `R` is not `none` shows field 14 once with the same button rule as E8 (API 9 logic 4); CALL-01…04 and the other features are not affected. |
+| Exceptions | E1 — `POST_NOTIFICATIONS` denied: A-SVC still runs (its service notification only appears in Android's Task Manager), but connection status, permission suggestions and camera confirmation requests (CAM-02) are not shown; the app shows the warning banner "Notifications are off, so connection status and requests from your Mac don't appear." with a button that opens the notification settings.<br>E2 — The foreground service cannot start (`ForegroundServiceStartNotAllowedException` when the app is not in the foreground and not exempt from battery optimization, or `SecurityException` because a type declaration is missing): retry when A-UI is in the foreground; still failing → show "Couldn't Start the Connection Service" with a "Try Again" button.<br>E3 — Battery optimization exemption denied or manufacturer instructions skipped: HandLive still works, but the connection may drop while the phone sleeps (CONN-02 E6); the warning stays in Settings › Permissions & Background.<br>E4 — A feature's permission is denied: the feature is inactive or partially active (for example `can_send = false`); the permission goes into `permissions_missing`.<br>E5 — Permission permanently denied (the system no longer shows the dialog): show an "Open Settings" button that goes to the App info page.<br>E6 — Accessibility disclosure declined: `clip.auto_send = false`; manual sending (a button in the notification, a Quick Settings tile, the Share menu) still works (CLIP-01 E1).<br>E7 — An install from outside Google Play on Android 13+ is blocked from turning on the Accessibility service ("Restricted setting"); HandLive cannot read this state and treats every such install as possibly blocked (`R = likely`, API 6 logic 2): guide the user to allow it in App info (field 14), then come back.<br>E8 — The user comes back from the Accessibility settings without the service turned on: keep the "Auto-send isn't on yet" status; if `R = likely`, show field 14 once with "Open Settings" (API 6 logic 6), otherwise allow another try. Coming back from App info never opens a page by itself.<br>E9 — Key generation fails (Keystore error): retry with a TEE-backed key when StrongBox is unavailable; still failing → show an error and do not continue to PAIR-01.<br>E10 — No network or relay error during device registration: skip, retry in the background (CONN-03), do not block setup.<br>E11 — Notification access not granted, or the user comes back without turning it on: `features.call.app_calls = false` and `NOTIFICATION_LISTENER` in `permissions_missing`; the "Calls from Other Apps" card shows "Needs permission" and allows another try; coming back from Notification access without it while `R` is not `none` shows field 14 once with "Open Settings", as in E8 (API 9 logic 4); CALL-01…04 and the other features are not affected. |
 | Special requirements | **Google Play compliance:** submit the Permissions Declaration Form for `READ_SMS`, `SEND_SMS`, `READ_CALL_LOG` under the "Cross-device synchronization or transfer of SMS or calls" exception; do not declare `RECEIVE_SMS` (new messages are detected with a `ContentObserver`); declare use of the Accessibility API (`isAccessibilityTool = false`) with a prominent disclosure and in-app consent — the project owner has accepted the rejection risk (C15); declare the `connectedDevice` foreground service type in Play Console; use `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` on the grounds that a companion app must stay connected to its paired devices.<br>**Privacy:** no feature permissions are requested in part A; every system dialog is preceded by an explanation; each request covers the permissions of one feature only.<br>**Usability:** part A ≤ 5 screens, completed in ≤ 60 s (not counting actions in the manufacturer's settings); readable with TalkBack; when field 14 opens by itself on a return (API 6 logic 6), TalkBack focus starts on its title, not on its button; every step after the welcome screen can be skipped; no ADB, USB or Shizuku needed.<br>**Compatibility:** minSdk 29, targetSdk 35 — `POST_NOTIFICATIONS` exists only from API 33; `BLUETOOTH_CONNECT` from API 31 (API 29–30 use `BLUETOOTH`, granted at install); `FOREGROUND_SERVICE_CONNECTED_DEVICE` is required from API 34.<br>**Feature independence:** a missing permission for one feature does not block the others (CONN-01 API 7). |
 
 ### 1.1.2 Screens
@@ -45,7 +45,7 @@ N/A — no approved wireframe yet.
 | 11 | "Grant Permission" button on a feature card | action | Input | Shown when the card is `needs_permission` | Runs part B for that feature only |
 | 12 | Explanation before the permission request | string | Output | Per feature (API 2) | SMS example: "To view and reply to SMS messages on your Mac or iPhone, HandLive needs to read and send SMS, read your contacts to show sender names, and read the phone state to choose a SIM."<br>Titles: SMS "Use SMS on Your Mac and iPhone", calls "See Calls on Your Mac and iPhone" (body "To announce incoming calls and let you answer or decline them on your Mac, HandLive needs to read the phone state, the call log, and your contacts."), notifications "Get Notified About Connections and Requests", background "Run in the Background", manufacturer autostart "Keep HandLive Running", camera "Scan the Pairing Code" (body "HandLive uses the camera to scan the QR code on your Mac, iPhone, or iPad.") |
 | 13 | Accessibility disclosure | string | Output | Text of CLIP-01 field 2 | Shown full screen, with the choices "Send Manually" / "Agree" per CLIP-01 field 3 |
-| 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when HandLive may be blocked from a restricted setting (restriction state `R` other than `none`, API 6 logic 2), before opening Accessibility (step 12) or Notification access (step N1), and once more each time the user comes back from that page without turning HandLive on (E7, E8, E11; API 6 logic 6). Never shown when `R = none`. Guides the user to allow it in App info, then come back; the text is conditional ("If Android shows…") and the same for every `R`, because with `R = likely` Android may not block HandLive at all<br>A single button, chosen by `R` (API 6 logic 2): "Continue" (`common.continue`) opens the system page, "Open Settings" opens App info. Before opening the page: `untried` and `likely` → "Continue", `blocked` → "Open Settings". Shown again on a return: `untried` → "Continue" (App info has no "Allow restricted settings" item yet), `likely` and `blocked` → "Open Settings". "Open Settings" is the same button and string as field 16 (`common.open_settings`) |
+| 14 | "Restricted setting" instructions | string | Output | Hidden | Shown on Android 13+ when HandLive may be blocked from a restricted setting (restriction state `R = likely`, API 6 logic 2), before opening Accessibility (step 12) or Notification access (step N1), and once more each time the user comes back from that page without turning HandLive on (E7, E8, E11; API 6 logic 6). Never shown when `R = none`. Guides the user to allow it in App info, then come back; the text stays conditional ("If Android shows…") because HandLive cannot read whether Android blocks it (API 6 logic 2), and an install from outside Google Play may not be blocked at all<br>A single button: before opening the system page "Continue" (`common.continue`), which opens that page; shown again on a return "Open Settings", which opens App info. "Open Settings" is the same button and string as field 16 (`common.open_settings`) |
 | 15 | Automatic clipboard sending status | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` when `clip.auto_send = true`, `clip.a11y_consent_at` is set and the Accessibility service is running; `off` when `clip.auto_send = false` |
 | 16 | "Open Settings" button | action | Input | Shown when a permission is permanently denied, or as the button of field 14 | Opens HandLive's App info page (E5; field 14, E7, E8, E11). One button and one string (`common.open_settings`) for both uses |
 | 17 | Permission suggestion notification | string | Output | — | Posted by A-SVC when it returns `PERMISSION_MISSING` to a client: "Lan's MacBook needs SMS permission on this phone — tap to allow" (the same text whichever SMS permission is missing); for a call permission "Lan's MacBook needs call permission on this phone — tap to allow" (the same text whichever call permission is missing); at most once per feature per 24 h; channel `permission` ("Permissions", description "Suggestions to grant a permission when a Mac or iPhone needs a feature of this phone.", `IMPORTANCE_LOW`) |
@@ -309,10 +309,8 @@ flowchart TB
 - **Method:** `startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))`; check with
   `AccessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)`;
   install source: `packageManager.getInstallSourceInfo(packageName).installingPackageName` (API 30+) or
-  `getInstallerPackageName(packageName)` (API 29); restriction state (API 33+):
-  `getSystemService(AppOpsManager::class.java).unsafeCheckOpNoThrow("android:access_restricted_settings", Process.myUid(), packageName)`
-  (HandLive's own uid, no permission needed); the "Open Settings" button of the restricted setting
-  instructions opens `ACTION_APPLICATION_DETAILS_SETTINGS` with `package:<packageName>`.
+  `getInstallerPackageName(packageName)` (API 29); the "Open Settings" button of the restricted
+  setting instructions opens `ACTION_APPLICATION_DETAILS_SETTINGS` with `package:<packageName>`.
 - **Request — declaration:**
   `<service android:name=".ClipboardAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="false">`
   with the intent filter `android.accessibilityservice.AccessibilityService` and the configuration
@@ -325,42 +323,41 @@ flowchart TB
   Accessibility."
   For Notification access (N1) the text ends with "…turn on HandLive in Notification access."
   (`setup.restricted_settings_help_notification_access`).
-  Acceptance chains (one test each, the op set between resumes):
-  - fresh sideloaded install, `MODE_ERRORED` (`untried`) → field 14 "Continue" → Accessibility →
-    Back without tapping HandLive (op still `MODE_ERRORED`) → field 14 "Continue", never "Open
-    Settings";
-  - then tap HandLive → the system "Restricted setting" dialog → op `MODE_IGNORED` (`blocked`) →
-    return → field 14 "Open Settings" → App info › ⋮ › "Allow restricted settings" → op
-    `MODE_ALLOWED` (`none`) → return → nothing opens → tap the card → Accessibility opens directly
-    → turn HandLive on → "On";
-  - `MODE_DEFAULT` with a sideloaded install (`likely`, the Galaxy S25 Ultra) → field 14 "Continue"
-    → return still off → "Open Settings" → after Allow the op stays `MODE_DEFAULT` → the next tap
-    shows "Continue" once more → turn HandLive on → "On".
+  Acceptance chains (one test each):
+  - API 33+, sideloaded (`likely`), consent given, service off → tap the card → field 14
+    "Continue" → Accessibility → tap HandLive, the system "Restricted setting" dialog → Back →
+    field 14 "Open Settings" once → App info › ⋮ › "Allow restricted settings" → return → nothing
+    opens → tap the card → field 14 "Continue" → Accessibility → turn HandLive on → return → no
+    field 14, the card shows "On";
+  - known limit (logic 2): `likely` → "Continue" → Accessibility → Back without tapping HandLive →
+    field 14 "Open Settings" → App info without the Allow item → return → nothing opens → tap the
+    card → field 14 "Continue" again, never stuck on App info;
+  - installed from Google Play, or API 29–32 (`none`) → tap the card → Accessibility opens
+    directly; return with the service still off → no field 14, the card keeps "Auto-send isn't on
+    yet".
 - **Business logic:**
   1. Open the Accessibility settings only after `clip.a11y_consent_at` is set (consent given by an
      explicit action, never preselected); the disclosure text follows CLIP-01 field 2.
-  2. Restriction state `R` ∈ {`none`, `untried`, `likely`, `blocked`}, a pure function of the API level, the
-     app op mode and the installer, read again on every A-UI `onResume`. It follows how Android's
-     enhanced confirmation service reads the op (`MODE_DEFAULT` lets Android decide from the install
-     source, so it does not mean allowed; a Galaxy S25 Ultra on One UI still reads `MODE_DEFAULT`
-     after "Allow restricted settings"):
-     - API 29–32 → `none`;
-     - `MODE_ALLOWED` → `none`;
-     - `MODE_IGNORED` → `blocked`: Android blocks HandLive and the user has already seen its
-       "Restricted setting" dialog, so App info › ⋮ now offers "Allow restricted settings";
-     - `MODE_ERRORED` → `untried`: Android blocks HandLive, but the "Allow restricted settings" item
-       appears in App info only after the user has seen that dialog once (the op then turns
-       `MODE_IGNORED`), so the user must first try the system page, also after a return on which
-       the op is still `MODE_ERRORED` (the user left Accessibility without tapping HandLive);
-     - `MODE_DEFAULT`, any other value, or the read throws (`IllegalArgumentException` on a ROM
-       without the op, `SecurityException`) → `none` when `installingPackageName` is
-       `com.android.vending`, otherwise `likely` (APK, F-Droid, `adb`).
-     Field 14 and its button (before opening Accessibility with consent given / shown again by
-     logic 6 on a return with the service still off):
-     - `none` → no field 14, Accessibility opens directly / nothing;
-     - `untried` → "Continue" (opens Accessibility) / "Continue";
-     - `likely` → "Continue" / "Open Settings" (opens App info);
-     - `blocked` → "Open Settings" / "Open Settings".
+  2. Restriction state `R` ∈ {`none`, `likely`}, a pure function of the API level and the
+     installer, read again on every A-UI `onResume`:
+     - API 29–32, or `installingPackageName` is `com.android.vending` → `none`;
+     - API 33+ with any other installer (APK, F-Droid, `adb`, unknown) → `likely`.
+     HandLive does not read Android's own restriction state, and must not try again: the app op
+     `android:access_restricted_settings` is not readable by the app itself
+     (`AppOpsManager.unsafeCheckOpNoThrow` on its own uid throws `SecurityException:
+     verifyIncomingOp … does not have any of {MANAGE_APPOPS, GET_APP_OPS_STATS,
+     MANAGE_APP_OPS_MODES}`, measured on Android 15 on 2026-10-05), and `EnhancedConfirmationManager`
+     is a system API.
+     Field 14 and its button:
+     - `none` → no field 14: Accessibility opens directly, and a return shows nothing;
+     - `likely` → before opening Accessibility with consent given: field 14 with "Continue", which
+       opens it; shown again by logic 6 on a return with the service still off: "Open Settings",
+       which opens App info.
+     Known limit: Android adds "Allow restricted settings" to App info › ⋮ only after it has shown
+     its "Restricted setting" dialog once. A user who leaves Accessibility without tapping HandLive
+     gets "Open Settings" on the return and finds no such item in App info. Nothing is stuck: the
+     return from App info opens nothing, and the next tap on the card shows "Continue" again. One
+     extra screen is the price of not reading Android's state.
   3. Service connected (`onServiceConnected`) → `auto_send = true`; disconnected (`onUnbind`) →
      `false`; every change sends `capability/update` (CLIP-01 A3).
   4. An app update that widens the data scope in the disclosure → delete `clip.a11y_consent_at` so
@@ -375,15 +372,14 @@ flowchart TB
      - "still off" means HandLive's service is not in
        `AccessibilityManager.getEnabledAccessibilityServiceList` (the list of enabled services, not
        the connected state: `onServiceConnected` may arrive after `onResume`);
-     - back from Accessibility, the service still off and `R` is not `none` → show field
-       14 once, with the return button of logic 2 (E7, E8); Back on field 14 returns to the feature list and does
+     - back from Accessibility, the service still off and `R = likely` → show field
+       14 once, with "Open Settings" (E7, E8); Back on field 14 returns to the feature list and does
        not show it again; `R = none` → nothing, the card keeps "Auto-send isn't on yet";
      - back from App info → open nothing by itself, and remember nothing else: the next tap on
-       the card follows logic 2 with the current `R` (after "Allow restricted settings" Android sets
-       `MODE_ALLOWED` → `none` → Accessibility opens directly; a phone that keeps `MODE_DEFAULT`
-       stays `likely` and shows field 14 with "Continue" once more);
+       the card follows logic 2 (`likely` → field 14 with "Continue" again);
      - if the user did not allow it, Accessibility still shows HandLive greyed out and the next
-       return shows field 14 again: this loop is intended and converges;
+       return shows field 14 again: this loop is intended and converges (and covers the known limit
+       of logic 2);
      - the process ended in between → nothing is shown by itself; the card status and a tap follow
        logic 2.
   7. `clip.auto_send = false` (the user chose manual sending or turned it off): no field 14 and no
@@ -421,14 +417,15 @@ available (E10). The FCM push token is registered afterwards per CONN-04 API 1.
      `Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS`.
   3. Turning `call.app_calls` off does not revoke the access (Android has no API for an app to give
      it back); the listener stops reading (CALL-05 API 3 logic 2).
-  4. Restricted setting: the same app op guards Notification access, so API 6 logic 2, 6 and 7
+  4. Restricted setting: Android guards Notification access the same way, so API 6 logic 2, 6 and 7
      apply unchanged, with Notification access in place of Accessibility,
      `isNotificationListenerAccessGranted` = `false` as "still off", and
      `setup.restricted_settings_help_notification_access` as the text of field 14. Every "Grant
      Permission" tap, also after a return from App info, shows the primer (field 19) first (step
-     N1); then field 14 and its button follow the table of API 6 logic 2 (`none` opens the page);
-     back from Notification access without it and `R ≠ none` → field 14 once with the return
-     button of that table (E11); `feature.call` or `call.app_calls` off → no warning.
+     N1); then `none` opens the page and `likely` shows field 14 with "Continue"; back from
+     Notification access without it and `R = likely` → field 14 with "Open Settings" once (E11);
+     the known limit of API 6 logic 2 applies too; `feature.call` or `call.app_calls` off → no
+     warning.
 
 #### Query
 
