@@ -496,7 +496,7 @@ nhóm chức năng có thể chỉ trích phần liên quan.
     "os_version": "15",
     "model": "Pixel 8",
     "features": {
-      "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "image/png", "image/jpeg"]},
+      "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "text/html", "image/png", "image/jpeg"]},
       "sms": {"enabled": true, "can_send": true, "default_sub_id": 1, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
       "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true, "app_calls": true},
       "call_audio": {"enabled": false, "bt_address": null, "hfp_connected": false,
@@ -508,6 +508,8 @@ nhóm chức năng có thể chỉ trích phần liên quan.
   }
 }
 ```
+
+Khi `features.clipboard.mimes` liệt kê `"text/html"` thì bên kia chấp nhận trường `html` tùy chọn trên các push văn bản (CLIP-01 API 5).
 
 | Trường | Kiểu | Mô tả |
 |--------|------|-------|
@@ -964,6 +966,7 @@ SET-02 quản lý các khóa này.
 | `CLIP_POLL_MAC` | 500 ms |  |
 | `CLIP_CONFLICT_WINDOW` | 500 ms |  |
 | `CLIP_INLINE_MAX` | 180 KiB | Văn bản lớn hơn đi theo chunk (giữ envelope < 256 KiB sau base64) |
+| `CLIP_MAX_HTML` | 180 KiB | UTF-8 của `html` đã vệ sinh trong push văn bản |
 | `CLIP_LOOP_WINDOW` | 5 s | Bỏ qua thay đổi cục bộ trùng hash clip vừa nhận |
 | `CLIP_DETECT_DEBOUNCE` | 300 ms | Gom tín hiệu sao chép từ Accessibility |
 | `CLIP_TRANSFER_IDLE_TIMEOUT` | 30 s | Không có chunk mới → `clipboard/cancel` |

@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Clipboard HTML (CLIP-01 API 5 `html`, 0.7.2 `text/html` in `features.clipboard.mimes`, 0.10 `CLIP_MAX_HTML`): a text clip
+  carries the sanitized HTML of its text when the peer lists `text/html`, so an article copied in a browser on the phone pastes
+  in Notes, Pages, Word or Mail with its headings, links and pictures (fetched from their URLs by the pasting app). Both ends run
+  the same `HtmlClipSanitizer`, pinned by `shared/test-vectors/clipboard-html.json`; identity, loops, conflicts and the
+  sensitive-content rules still look at the plain text. Plan: `plans/20261005-clipboard-html/plan.md`.
 - `release-collect` (hub workflow): the APK, the iOS IPA and the Mac DMG of a version tag, with their SHA-256, are
   copied from the handlive-android and handlive-apple Releases into the hub's Release after a checksum check, so users
   download every platform from one page (`docs/deployment-guide.md`, Release builds). Done for `v0.1.0-beta.2`.

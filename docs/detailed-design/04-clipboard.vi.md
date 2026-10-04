@@ -70,9 +70,31 @@
 >   bên nhận ghi xong (không gồm thời gian phát hiện sao chép); ảnh 5 MB < 2 s trong LAN. Mọi thao
 >   tác chạy như nhau trong LAN và qua relay; qua relay giới hạn 2 MiB/s mỗi cặp
 >   (`RELAY_RATE_LIMIT`) và relay chỉ thấy `type = clipboard` cùng kích thước.
+> - **QC10 — Vệ sinh HTML.** Khi `html` có mặt trong một push văn bản, bên nhận vệ sinh nó trước
+>   ghi (phòng thủ sâu). Bộ vệ sinh (`HtmlClipSanitizer` trên mọi nền tảng) áp dụng cùng thuật toán,
+>   được chứng minh bằng vector dùng chung `shared/test-vectors/clipboard-html.json` (input → output,
+>   cả hai nền tảng phải trùng byte). Xóa bình luận `<!-- … -->`, `<!--` không đóng thì tới cuối;
+>   `<!…>` và `<?…>` (doctype, CDATA, chỉ thị xử lý) bỏ tới dấu `>` kế tiếp; tên thẻ và thuộc tính
+>   không phân biệt chữ hoa/thường chỉ trên chữ cái ASCII, output chữ thường. Thẻ bỏ kèm nội dung (tới thẻ đóng hoặc tới cuối khi không
+>   đóng): `script`, `style`, `iframe`, `object`, `embed`, `svg`, `math`, `template`, `noscript`,
+>   `head`, `title`, `textarea`, `select`, `button`, `form`, `input`, `video`, `audio`, `canvas`,
+>   `link`, `meta`, `base`, `applet`, `frame`, `frameset`. Thẻ giữ (chỉ thẻ và thuộc tính cho phép):
+>   `a[href]`, `abbr`, `b`, `blockquote`, `br`, `caption`, `code`, `div`, `em`, `figcaption`,
+>   `figure`, `h1`–`h6`, `hr`, `i`, `img[src alt width height]`, `li`, `ol`, `p`, `pre`, `s`,
+>   `span`, `strong`, `sub`, `sup`, `table`, `tbody`, `td[colspan rowspan]`, `tfoot`,
+>   `th[colspan rowspan]`, `thead`, `tr`, `u`, `ul`. Thẻ khác bỏ vỏ. `href` và `img src` cắt mép;
+>   `href` giữ `http`, `https`, `mailto`, `img src` giữ `http`, `https` (không phân biệt chữ
+>   hoa/thường); `img` không `src` bỏ hết. `width`, `height`, `colspan`, `rowspan` chỉ chữ số, sai
+>   thì bỏ. Khoảng trắng (cắt mép, ngăn thuộc tính) và chữ số chỉ tính ASCII: NBSP và các khoảng
+>   trắng Unicode khác là một phần giá trị, `²` không phải chữ số. Thuộc tính theo thứ tự: `href` | `src alt
+>   width height` | `colspan rowspan`; giá trị `"` thành `&quot;`, `<` `>` thành `&lt;` `&gt;`;
+>   thẻ rỗng `br` `hr` `img` phát thành `<br>`, `<hr>`, `<img …>`. Văn bản giữa các thẻ sao chép
+>   nguyên, trừ dấu `<` đứng trước `/` hoặc chữ cái ASCII mà không khép thành thẻ thì phát `&lt;`.
+>   Output không chứa `<script`,
+>   `javascript:`, hoặc thuộc tính `on…=`.
 >
 > Hằng số mới dùng trong nhóm (đề xuất bổ sung vào 0.10): `CLIP_INLINE_MAX` = 180 KiB plaintext,
-> `CLIP_LOOP_WINDOW` = 5 s, `CLIP_DETECT_DEBOUNCE` = 300 ms, `CLIP_TRANSFER_IDLE_TIMEOUT` = 30 s.
+> `CLIP_LOOP_WINDOW` = 5 s, `CLIP_DETECT_DEBOUNCE` = 300 ms, `CLIP_TRANSFER_IDLE_TIMEOUT` = 30 s, `CLIP_MAX_HTML` = 180 KiB UTF-8.
 
 ## 4.1 CLIP-01 — Gửi văn bản clipboard từ Android sang Mac/iOS
 
@@ -375,6 +397,7 @@ override fun onClick() {
 | `kind` | enum{text\| image} | Có |  |
 | `mime` | enum{text/plain\| image/png\| image/jpeg} | Có | `text/plain` luôn là UTF-8 |
 | `text` | string | Khi `kind = text` và gửi thẳng | Toàn bộ văn bản; plaintext envelope ≤ `CLIP_INLINE_MAX` |
+| `html` | string | Không | Dạng HTML vệ sinh của `text` (theo từ ngữ plan §2); chỉ với `kind = text` gửi thẳng; ≤ `CLIP_MAX_HTML`; gửi chỉ khi đối phương liệt kê `text/html` |
 | `transfer` | object | Khi `kind = image` hoặc văn bản đi theo chunk | `{transfer_id, size, sha256, chunk_size, chunk_count}` — đặc tả ở CLIP-03 API 3 |
 | `width`, `height` | int32 | Khi `kind = image` | Kích thước điểm ảnh; bắt buộc với mọi ảnh, không có với văn bản |
 | `sensitive` | bool | Có | `true` chỉ khi người dùng chọn "Vẫn gửi" (QC3) |
@@ -397,7 +420,7 @@ override fun onClick() {
 - **Ví dụ (plaintext của payload):**
 
 ```json
-{"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Mã đơn hàng: HL-240917-0042","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
+{"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Mã đơn hàng: HL-240917-0042","html":"<p>Mã đơn hàng: <b>HL-240917-0042</b></p>","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"applied"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"ignored","reason":"conflict"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Text exceeds the size limit","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
@@ -415,15 +438,16 @@ override fun onClick() {
      dùng nếu clip do thao tác thủ công, còn lại chỉ ghi log mã lỗi.
 - **Logic nghiệp vụ — bên nhận:**
   5. Kiểm hợp lệ: `kind` khớp `mime`, đúng một trong `text` /`transfer`, `text` là UTF-8 hợp lệ; sai
+     → `BAD_REQUEST`. `html` chỉ được phép với `kind = text` gửi thẳng (không `transfer`), phải ≤ `CLIP_MAX_HTML` theo UTF-8, sai
      → `BAD_REQUEST`. Clipboard không hiệu lực → `FEATURE_DISABLED`. Vượt giới hạn của mình →
      `CLIP_TOO_LARGE`; MIME không nhận → `CLIP_UNSUPPORTED_MIME`.
   6. `clip_id` đã có kết quả `applied` /`ignored` → `ignored` /`duplicate`, không ghi lại; clip từng
      bị từ chối thì được nhận lại (gửi lại sau `CLIP_CHECKSUM_MISMATCH`).
   7. Kiểm xung đột QC8 → `ignored`/`conflict` (trường hợp (a) gửi thêm API 6).
-  8. Ghi clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `sensitive = true`:
+  8. Ghi clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `html`: vệ sinh trước ghi (phòng thủ sâu); sau vệ sinh vượt `CLIP_MAX_HTML` → chỉ ghi văn bản. `sensitive = true`:
      Android thêm extra `EXTRA_IS_SENSITIVE`, Mac thêm kiểu `org.nspasteboard.ConcealedType` để
-     trình quản lý clipboard không lưu. Ghi dấu vết QC4, hẹn CLIP-05, rồi trả `applied`.
-  9. Android nhận từ client: sau logic 8 chuyển tiếp tới các client khác theo QC6 (CLIP-02 API 4).
+     trình quản lý clipboard không lưu. Ghi dấu vết QC4, hẹn CLIP-05, rồi trả `applied`. `clip_id`, SHA-256, và QC3/QC4/QC6/QC8 chỉ xét `text`; `html` là phần đính kèm của clip.
+  9. Android nhận từ client: sau logic 8 chuyển tiếp tới các client khác theo QC6 (CLIP-02 API 4); chuyển tiếp giữ `html` cho client liệt kê `text/html`, bỏ cho client khác.
   10. Không log `text`; log chỉ gồm `kind`, kích thước, trạng thái `ack`.
 
 #### API 6 — `WS clipboard/conflict`
@@ -463,6 +487,7 @@ override fun onClick() {
 | Kiểu | Giá trị | Khi nào |
 |------|---------|---------|
 | `public.utf8-plain-text` (`.string`) | Văn bản | Clip văn bản |
+| `public.html` | HTML | Clip văn bản khi có `html` |
 | `app.handlive.clip-id` | `clip_id` dạng UTF-8 | Luôn — nhận ra lần ghi của HandLive (QC4, CLIP-05) |
 | `org.nspasteboard.ConcealedType` | Dữ liệu rỗng | Khi `sensitive = true` |
 
@@ -622,6 +647,7 @@ flowchart TB
 |-----|---------|
 | Chu kỳ | `CLIP_POLL_MAC` = 500 ms, leeway 50 ms, trên hàng đợi nền |
 | Kiểu văn bản | `public.utf8-plain-text` (`.string`) |
+| Kiểu HTML | `public.html` |
 | Kiểu ảnh (CLIP-03) | `public.png`, `public.jpeg`, `public.tiff` |
 | Kiểu bỏ qua | `public.file-url` (`.fileURL`) của tệp không phải ảnh, và mọi kiểu khác |
 | Kiểu nhạy cảm (QC3) | `org.nspasteboard.ConcealedType`, `org.nspasteboard.TransientType`, `org.nspasteboard.AutoGeneratedType` |
@@ -645,7 +671,8 @@ if item.types.contains(NSPasteboard.PasteboardType("app.handlive.clip-id")) { re
 switch firstKnownKind(item.types) {                     // URL tệp trước, rồi thứ tự ưu tiên của ứng dụng nguồn
 case .imageFile(let url): imageSender.sendLocalImageFile(url)                        // CLIP-03 API 2
 case .text:  if let text = item.string(forType: .string), !text.isEmpty {            // rỗng → E3
-                 clipSender.sendLocalText(text, types: item.types)
+                 let html = item.string(forType: NSPasteboard.PasteboardType("public.html"))
+                 clipSender.sendLocalText(text, html: html, types: item.types)
              }
 case .image: imageSender.sendLocalImage(item)                                        // CLIP-03
 default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3: tệp khác, kiểu khác
@@ -693,7 +720,7 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
 #### API 3 — `ClipboardManager.setPrimaryClip` (Android ghi)
 
 - **URL:** N/A
-- **Method:** `ClipData.newPlainText(label, text)`, `ClipDescription.setExtras(PersistableBundle)`,
+- **Method:** `ClipData.newPlainText(label, text)` hoặc `ClipData.newHtmlText(label, text, html)` khi `html` có mặt, `ClipDescription.setExtras(PersistableBundle)`,
   `ClipboardManager.setPrimaryClip(clip)`; văn bản đi theo chunk: `FileProvider.getUriForFile` +
   `ClipData.newUri` (CLIP-03 API 6).
 - **Request:**
@@ -710,7 +737,11 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
 
 ```kotlin
 // [Thiết kế] A-CLIP ghi clip văn bản nhận từ client (chạy được khi HandLive ở nền)
-val clip = ClipData.newPlainText("HandLive", text)
+val clip = if (html != null) {
+    ClipData.newHtmlText("HandLive", text, html)
+} else {
+    ClipData.newPlainText("HandLive", text)
+}
 if (sensitive) clip.description.extras = PersistableBundle().apply {
     putBoolean("android.content.extra.IS_SENSITIVE", true)
 }
@@ -1224,7 +1255,7 @@ flowchart TB
 
 | Tham số | Giá trị |
 |---------|---------|
-| `items` | Văn bản: `[[UTType.utf8PlainText.identifier: text, "app.handlive.clip-id": Data(clipID.utf8)]]`; ảnh: khóa `UTType.png.identifier` hoặc `UTType.jpeg.identifier` với dữ liệu ảnh, cùng khóa `app.handlive.clip-id` |
+| `items` | Văn bản: `[[UTType.utf8PlainText.identifier: text, "app.handlive.clip-id": Data(clipID.utf8)]]` cộng `[UTType.html.identifier: html]` khi `html` có mặt; ảnh: khóa `UTType.png.identifier` hoặc `UTType.jpeg.identifier` với dữ liệu ảnh, cùng khóa `app.handlive.clip-id` |
 | `options[.localOnly]` | `true` |
 | `options[.expirationDate]` | `Date()` + `clip.auto_clear_s` giây khi > 0; không đặt khi = 0 |
 
@@ -1236,8 +1267,12 @@ flowchart TB
 var options: [UIPasteboard.OptionsKey: Any] = [.localOnly: true]
 let clearAfter = defaults.integer(forKey: "clip.auto_clear_s")
 if clearAfter > 0 { options[.expirationDate] = Date().addingTimeInterval(TimeInterval(clearAfter)) }
-UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: text,
-                                "app.handlive.clip-id": Data(clipID.utf8)]], options: options)
+var item: [String: Any] = [UTType.utf8PlainText.identifier: text,
+                           "app.handlive.clip-id": Data(clipID.utf8)]
+if let html = html {
+    item[UTType.html.identifier] = html
+}
+UIPasteboard.general.setItems([item], options: options)
 ownWriteChangeCount = UIPasteboard.general.changeCount
 defaults.set(ownWriteChangeCount, forKey: "clip.seen_change_count")
 ```

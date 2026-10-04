@@ -505,7 +505,7 @@ Examples in the function groups may quote only the relevant part.
     "os_version": "15",
     "model": "Pixel 8",
     "features": {
-      "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "image/png", "image/jpeg"]},
+      "clipboard": {"enabled": true, "auto_send": true, "max_text_bytes": 1048576, "max_image_bytes": 10485760, "mimes": ["text/plain", "text/html", "image/png", "image/jpeg"]},
       "sms": {"enabled": true, "can_send": true, "default_sub_id": 1, "sims": [{"sub_id": 1, "slot": 0, "label": "SIM 1"}]},
       "call": {"enabled": true, "can_answer": true, "can_end": true, "caller_id": true, "app_calls": true},
       "call_audio": {"enabled": false, "bt_address": null, "hfp_connected": false,
@@ -517,6 +517,8 @@ Examples in the function groups may quote only the relevant part.
   }
 }
 ```
+
+When `features.clipboard.mimes` lists `"text/html"`, the peer accepts the optional `html` field on text pushes (CLIP-01 API 5).
 
 | Field | Type | Description |
 |--------|------|-------|
@@ -974,6 +976,7 @@ SET-02 function manages these keys.
 | `CLIP_POLL_MAC` | 500 ms |  |
 | `CLIP_CONFLICT_WINDOW` | 500 ms |  |
 | `CLIP_INLINE_MAX` | 180 KiB | Larger text goes in chunks (keeps the envelope < 256 KiB after base64) |
+| `CLIP_MAX_HTML` | 180 KiB | UTF-8 of the sanitized `html` in a text push |
 | `CLIP_LOOP_WINDOW` | 5 s | Ignore local changes with the same hash as the clip just received |
 | `CLIP_DETECT_DEBOUNCE` | 300 ms | Coalesces copy signals from Accessibility |
 | `CLIP_TRANSFER_IDLE_TIMEOUT` | 30 s | No new chunk → `clipboard/cancel` |

@@ -76,9 +76,13 @@ English | [Tiếng Việt](04-clipboard.vi.md)
 >   image < 2 s on the LAN. Every operation works the same on the LAN and through the relay; through
 >   the relay the limit is 2 MiB/s per pair (`RELAY_RATE_LIMIT`) and the relay sees only
 >   `type = clipboard` and the size.
+> - **QC10 — HTML sanitization.** When `html` is present in a text push, the receiver sanitizes it
+>   before writing (defense in depth). The sanitizer (`HtmlClipSanitizer` on every platform) applies
+>   the same algorithm, proven equal by the shared vectors `shared/test-vectors/clipboard-html.json`
+>   (input → output, both platforms must match byte for byte): Comments `<!-- … -->` removed, an unclosed `<!--` to the end; `<!…>` and `<?…>` (doctype, CDATA, processing instructions) dropped up to the next `>`; tag and attribute names case-insensitive on ASCII letters only, output lowercase. Tags dropped with content (to end): `script`, `style`, `iframe`, `object`, `embed`, `svg`, `math`, `template`, `noscript`, `head`, `title`, `textarea`, `select`, `button`, `form`, `input`, `video`, `audio`, `canvas`, `link`, `meta`, `base`, `applet`, `frame`, `frameset`. Tags kept with allowed attributes only: `a[href]`, `abbr`, `b`, `blockquote`, `br`, `caption`, `code`, `div`, `em`, `figcaption`, `figure`, `h1`–`h6`, `hr`, `i`, `img[src alt width height]`, `li`, `ol`, `p`, `pre`, `s`, `span`, `strong`, `sub`, `sup`, `table`, `tbody`, `td[colspan rowspan]`, `tfoot`, `th[colspan rowspan]`, `thead`, `tr`, `u`, `ul`. Other tags unwrapped. `href` and `img src` trimmed; `href` kept for `http`, `https`, `mailto`, `img src` for `http`, `https` (case-insensitive); `img` without `src` dropped whole. `width`, `height`, `colspan`, `rowspan` digits-only, else dropped. Whitespace (trim, attribute separators) and digits are ASCII only: NBSP and other Unicode spaces are part of a value, `²` is not a digit. Attributes in order: `href` | `src alt width height` | `colspan rowspan`; values with `"` as `&quot;`, `<` `>` as `&lt;` `&gt;`; void `br` `hr` `img` emitted `<br>`, `<hr>`, `<img …>`. Text between tags copied as is, except a `<` followed by `/` or an ASCII letter that did not complete a tag, emitted `&lt;`. Output contains no `<script`, `javascript:`, or `on…=` attribute.
 >
 > New constants used in this group (proposed for addition to 0.10): `CLIP_INLINE_MAX` = 180 KiB
-> plaintext, `CLIP_LOOP_WINDOW` = 5 s, `CLIP_DETECT_DEBOUNCE` = 300 ms, `CLIP_TRANSFER_IDLE_TIMEOUT` = 30 s.
+> plaintext, `CLIP_LOOP_WINDOW` = 5 s, `CLIP_DETECT_DEBOUNCE` = 300 ms, `CLIP_TRANSFER_IDLE_TIMEOUT` = 30 s, `CLIP_MAX_HTML` = 180 KiB UTF-8.
 
 ## 4.1 CLIP-01 — Send clipboard text from Android to Mac/iOS
 
@@ -280,8 +284,7 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
   2. Take item 0: has a `uri` with MIME `image/*` → CLIP-03, copy the stream into the cache right
      away (the URI read permission is revoked when the clip changes), even when a `text` or `htmlText`
      stands beside the URI — browsers and OEM galleries put the image's URL, its alt text or an empty
-     string there, and the user copied the picture; otherwise has `text` → `coerceToText` (HTML yields
-     only the plain text; for a text URI item the system reads the stream); anything else → E3.
+     string there, and the user copied the picture; otherwise has `text` → `coerceToText`, and when `htmlText` is set, send the sanitized HTML beside the text; for a text URI item the system reads the stream; anything else → E3.
   3. `finish()` as soon as the data has been taken (image: once the copy on the IO thread is done); the
      QC3–QC5 checks and the send run in A-SVC's `ClipboardModule` (same process).
   4. Android 12+ shows the toast (field 7) once for each new clip set by another app; it is not shown
@@ -384,6 +387,7 @@ override fun onClick() {
 | `kind` | enum{text\| image} | Yes |  |
 | `mime` | enum{text/plain\| image/png\| image/jpeg} | Yes | `text/plain` is always UTF-8 |
 | `text` | string | When `kind = text` and sent inline | The whole text; envelope plaintext ≤ `CLIP_INLINE_MAX` |
+| `html` | string | No | The sanitized HTML form of `text` (plan §2 wording); only with `kind = text` sent inline; ≤ `CLIP_MAX_HTML`; sent only when the peer lists `text/html` |
 | `transfer` | object | When `kind = image` or the text goes in chunks | `{transfer_id, size, sha256, chunk_size, chunk_count}` — specified in CLIP-03 API 3 |
 | `width`, `height` | int32 | When `kind = image` | Size in pixels; required for every image, absent for text |
 | `sensitive` | bool | Yes | `true` only when the user chose "Send Anyway" (QC3) |
@@ -406,7 +410,7 @@ Exactly one of the two fields `text`, `transfer` is present.
 - **Example (payload plaintext):**
 
 ```json
-{"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Order number: HL-240917-0042","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
+{"op":"push","data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","kind":"text","mime":"text/plain","text":"Order number: HL-240917-0042","html":"<p>Order number: <b>HL-240917-0042</b></p>","sensitive":false,"origin_ts":1727150100123,"source":"auto","origin_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"applied"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":true,"data":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"ignored","reason":"conflict"}}
 {"re":"0192f3e0-5a22-7c10-8a11-223344556677","ok":false,"error":{"code":"CLIP_TOO_LARGE","message":"Text exceeds the size limit","details":{"clip_id":"0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e","status":"rejected"}}}
@@ -424,17 +428,17 @@ Exactly one of the two fields `text`, `transfer` is present.
      clip came from a manual action, otherwise only log the error code.
 - **Business logic — receiver:**
   5. Validate: `kind` matches `mime`, exactly one of `text` /`transfer`, `text` is valid UTF-8;
-     otherwise → `BAD_REQUEST`. Clipboard not active → `FEATURE_DISABLED`. Over its own limit →
+     otherwise → `BAD_REQUEST`. `html` is allowed only with `kind = text` sent inline (no `transfer`), and must be ≤ `CLIP_MAX_HTML` in UTF-8 bytes, otherwise → `BAD_REQUEST`. Clipboard not active → `FEATURE_DISABLED`. Over its own limit →
      `CLIP_TOO_LARGE`; MIME type not accepted → `CLIP_UNSUPPORTED_MIME`.
   6. A `clip_id` that already has an `applied` /`ignored` result → `ignored` /`duplicate`, not written
      again; a clip that was rejected before may be accepted again (resend after
      `CLIP_CHECKSUM_MISMATCH`).
   7. QC8 conflict check → `ignored`/`conflict` (case (a) also sends API 6).
-  8. Write the clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `sensitive = true`:
+  8. Write the clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `html`: sanitize it before writing (defense in depth); over `CLIP_MAX_HTML` after sanitizing → write the text alone. `sensitive = true`:
      Android adds the `EXTRA_IS_SENSITIVE` extra, the Mac adds the `org.nspasteboard.ConcealedType`
      type so that clipboard managers do not store it. Record the QC4 trace, schedule CLIP-05, then
-     return `applied`.
-  9. Android receiving from a client: after logic 8, forward to the other clients per QC6 (CLIP-02 API 4).
+     return `applied`. `clip_id`, SHA-256, and QC3/QC4/QC6/QC8 look at `text` only; `html` is an attachment of the clip.
+  9. Android receiving from a client: after logic 8, forward to the other clients per QC6 (CLIP-02 API 4); forwarding keeps `html` for clients listing `text/html`, drops it for others.
   10. Never log `text`; logs contain only `kind`, size, `ack` status.
 
 #### API 6 — `WS clipboard/conflict`
@@ -474,6 +478,7 @@ Exactly one of the two fields `text`, `transfer` is present.
 | Type | Value | When |
 |------|---------|---------|
 | `public.utf8-plain-text` (`.string`) | Text | Text clip |
+| `public.html` | HTML | Text clip when `html` is present |
 | `app.handlive.clip-id` | `clip_id` as UTF-8 | Always — marks HandLive's own writes (QC4, CLIP-05) |
 | `org.nspasteboard.ConcealedType` | Empty data | When `sensitive = true` |
 
@@ -487,6 +492,9 @@ let pb = NSPasteboard.general
 pb.prepareForNewContents(with: .currentHostOnly)   // clears old content like clearContents(), stays off Universal Clipboard
 let ok = pb.setString(text, forType: .string)
     && pb.setString(clipID, forType: NSPasteboard.PasteboardType("app.handlive.clip-id"))
+if let html = html {
+    pb.setString(html, forType: NSPasteboard.PasteboardType("public.html"))
+}
 if sensitive { pb.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")) }
 ownWrite = OwnWrite(changeCount: pb.changeCount, sha256: digest, at: .now)   // QC4, CLIP-05
 ```
@@ -634,6 +642,7 @@ flowchart TB
 |-----|---------|
 | Interval | `CLIP_POLL_MAC` = 500 ms, leeway 50 ms, on a background queue |
 | Text type | `public.utf8-plain-text` (`.string`) |
+| HTML type | `public.html` |
 | Image types (CLIP-03) | `public.png`, `public.jpeg`, `public.tiff` |
 | Ignored types | `public.file-url` (`.fileURL`) of a file that is not an image, and every other type |
 | Sensitive types (QC3) | `org.nspasteboard.ConcealedType`, `org.nspasteboard.TransientType`, `org.nspasteboard.AutoGeneratedType` |
@@ -657,7 +666,8 @@ if item.types.contains(NSPasteboard.PasteboardType("app.handlive.clip-id")) { re
 switch firstKnownKind(item.types) {                     // a file URL first, then the source app's order of preference
 case .imageFile(let url): imageSender.sendLocalImageFile(url)                        // CLIP-03 API 2
 case .text:  if let text = item.string(forType: .string), !text.isEmpty {            // empty → E3
-                 clipSender.sendLocalText(text, types: item.types)
+                 let html = item.string(forType: NSPasteboard.PasteboardType("public.html"))
+                 clipSender.sendLocalText(text, html: html, types: item.types)
              }
 case .image: imageSender.sendLocalImage(item)                                        // CLIP-03
 default:     log(code: "CLIP_UNSUPPORTED_MIME")                                      // E3: another file, other types
@@ -706,7 +716,7 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
 #### API 3 — `ClipboardManager.setPrimaryClip` (Android writes)
 
 - **URL:** N/A
-- **Method:** `ClipData.newPlainText(label, text)`, `ClipDescription.setExtras(PersistableBundle)`,
+- **Method:** `ClipData.newPlainText(label, text)` or `ClipData.newHtmlText(label, text, html)` when `html` is present, `ClipDescription.setExtras(PersistableBundle)`,
   `ClipboardManager.setPrimaryClip(clip)`; chunked text: `FileProvider.getUriForFile` +
   `ClipData.newUri` (CLIP-03 API 6).
 - **Request:**
@@ -723,7 +733,11 @@ default:     log(code: "CLIP_UNSUPPORTED_MIME")                                 
 
 ```kotlin
 // [Design] A-CLIP writes a text clip received from a client (works while HandLive is in the background)
-val clip = ClipData.newPlainText("HandLive", text)
+val clip = if (html != null) {
+    ClipData.newHtmlText("HandLive", text, html)
+} else {
+    ClipData.newPlainText("HandLive", text)
+}
 if (sensitive) clip.description.extras = PersistableBundle().apply {
     putBoolean("android.content.extra.IS_SENSITIVE", true)
 }
@@ -1245,7 +1259,7 @@ flowchart TB
 
 | Parameter | Value |
 |---------|---------|
-| `items` | Text: `[[UTType.utf8PlainText.identifier: text, "app.handlive.clip-id": Data(clipID.utf8)]]`; image: key `UTType.png.identifier` or `UTType.jpeg.identifier` with the image data, plus the `app.handlive.clip-id` key |
+| `items` | Text: `[[UTType.utf8PlainText.identifier: text, "app.handlive.clip-id": Data(clipID.utf8)]]` plus `[UTType.html.identifier: html]` when `html` is present; image: key `UTType.png.identifier` or `UTType.jpeg.identifier` with the image data, plus the `app.handlive.clip-id` key |
 | `options[.localOnly]` | `true` |
 | `options[.expirationDate]` | `Date()` + `clip.auto_clear_s` seconds when > 0; not set when = 0 |
 
@@ -1257,8 +1271,12 @@ flowchart TB
 var options: [UIPasteboard.OptionsKey: Any] = [.localOnly: true]
 let clearAfter = defaults.integer(forKey: "clip.auto_clear_s")
 if clearAfter > 0 { options[.expirationDate] = Date().addingTimeInterval(TimeInterval(clearAfter)) }
-UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: text,
-                                "app.handlive.clip-id": Data(clipID.utf8)]], options: options)
+var item: [String: Any] = [UTType.utf8PlainText.identifier: text,
+                           "app.handlive.clip-id": Data(clipID.utf8)]
+if let html = html {
+    item[UTType.html.identifier] = html
+}
+UIPasteboard.general.setItems([item], options: options)
 ownWriteChangeCount = UIPasteboard.general.changeCount
 defaults.set(ownWriteChangeCount, forKey: "clip.seen_change_count")
 ```
@@ -1318,7 +1336,7 @@ defaults.set(ownWriteChangeCount, forKey: "clip.seen_change_count")
 // [Design] The "Send Clipboard to Phone" card in I-APP
 PasteButton(supportedContentTypes: acceptedTypes) { providers in
     guard let provider = providers.first else { return }
-    Task { await clipSender.sendFromPaste(provider) }   // text/URL → text; image → PNG/JPEG → CLIP-03
+    Task { await clipSender.sendFromPaste(provider) }   // text/URL → text; image → PNG/JPEG → CLIP-03; also loads html when offered
 }
 .disabled(!session.isConnected)
 ```
@@ -1328,10 +1346,11 @@ PasteButton(supportedContentTypes: acceptedTypes) { providers in
      Paste" dialog.
   2. Pick the kind by the type order of the first item: image (when allowed) → text → URL (sent as text
      via `absoluteString`).
-  3. HEIC or other image types are converted to PNG with ImageIO; PNG and JPEG are kept as is (as in
+  3. When the first item is text or URL, also load the `UTType.html` representation if offered.
+  4. HEIC or other image types are converted to PNG with ImageIO; PNG and JPEG are kept as is (as in
      CLIP-03 API 2).
-  4. Only the first item is taken; several items (for example several images) → the first item is sent.
-  5. QC3 does not apply; QC5 still does.
+  5. Only the first item is taken; several items (for example several images) → the first item is sent.
+  6. QC3 does not apply; QC5 still does.
 
 #### API 4 — `WS clipboard/push` (iOS ↔ Android)
 

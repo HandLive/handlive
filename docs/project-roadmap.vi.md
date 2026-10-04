@@ -13,7 +13,7 @@ HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như
 | Phase | Mã trên `main` | Cổng / điểm nghẽn |
 |-------|----------------|-------------------|
 | 0 | Xong | G0 xong |
-| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026) |
+| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026); clip chữ mang kèm HTML (05/10/2026) |
 | 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở |
 | 3 | Xong (28/09/2026) | Kiểm máy thật còn mở |
 | 4 | Spike trên `main` (`HFPSpike`, merge 30/09/2026) | G4: cần ghép BT điện thoại + cuộc gọi thật |

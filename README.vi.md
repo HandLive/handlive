@@ -27,7 +27,7 @@ Bản beta dành cho người thử sớm. Chưa phải bản trên App Store / 
 
 | Tính năng | macOS | iOS / iPadOS |
 |-----------|:-----:|:------------:|
-| Clipboard hai chiều | Có | Có |
+| Clipboard hai chiều (chữ giữ dạng HTML nên bài báo dán ra kèm ảnh; mỗi lần một ảnh) | Có | Có |
 | SMS nhận và gửi | Có | Có |
 | Thông tin và điều khiển cuộc gọi (nghe, từ chối, kết thúc; giữ máy/DTMF qua HFP sau) | Có | Chỉ thông tin và từ chối (không âm thanh) |
 | Âm thanh cuộc gọi trên máy tính | Dự kiến (Phase 4) | Không (Apple không mở API HFP phía tai nghe) |
@@ -68,7 +68,7 @@ Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md
 | Phase / cổng | Mục tiêu | Trạng thái (05/10/2026) |
 |--------------|----------|-------------------------|
 | **0** Khung, giao thức, mã hóa, CI | Vector dùng chung, CI xanh | **Xong** |
-| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); ảnh sao chép kèm chữ bên cạnh URI được gửi như ảnh, mất quyền URI được báo khi bấm Gửi bảng nhớ tạm, e2e kiểm ảnh điện thoại → Mac (05/10/2026) |
+| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); ảnh sao chép kèm chữ bên cạnh URI được gửi như ảnh, mất quyền URI được báo khi bấm Gửi bảng nhớ tạm, e2e kiểm ảnh điện thoại → Mac (05/10/2026) · clip chữ giữ dạng HTML (capability `text/html`, CLIP-01 API 5 `html`, 05/10/2026) |
 | **2** SMS + iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · G2 và push thật còn mở |
 | **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, metadata iOS | **Mã xong** · kiểm máy thật còn mở |
 | **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |
