@@ -7,7 +7,12 @@ icons straight into the app repositories of the workspace:
     python3 tools/brand/build_brand_assets.py \
         [--font BeVietnamPro-Bold.ttf] \
         [--android-res android/app/src/main/res] \
-        [--apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset]
+        [--apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset] \
+        [--android-design-res android/core/design/src/main/res] \
+        [--apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets]
+
+The last two write the in-app brand mark (welcome screens): an Android vector drawable with a night
+variant, and an Apple image set with light and dark PDFs.
 
 Needs rsvg-convert and ImageMagick (`brew install librsvg imagemagick`); --font needs fontTools and is only
 required when a text string changed (outlines are cached in tools/brand/text-outlines.json).
@@ -22,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import brand_compositions as comp  # noqa: E402
 import platform_icon_writers as plat  # noqa: E402
+import platform_mark_writers as marks  # noqa: E402
 import text_outlines  # noqa: E402
 
 HUB = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -122,6 +128,8 @@ def main():
     ap.add_argument("--font", help="Be Vietnam Pro Bold TTF, to (re)outline text")
     ap.add_argument("--android-res", help="Android res/ directory to receive the adaptive icon")
     ap.add_argument("--apple-iconset", help="AppIcon.appiconset directory to (re)write")
+    ap.add_argument("--android-design-res", help="Android res/ directory to receive the in-app brand mark drawable")
+    ap.add_argument("--apple-imageset", help="Asset catalog (.xcassets) to receive the brand-mark image set")
     args = ap.parse_args()
     for tool in ("rsvg-convert", "magick"):
         if not shutil.which(tool):
@@ -135,6 +143,11 @@ def main():
     if args.apple_iconset:
         build_apple(args.apple_iconset)
         print("apple ", args.apple_iconset)
+    if args.android_design_res:
+        for rel in marks.write_android_mark(args.android_design_res):
+            print("android", rel)
+    if args.apple_imageset:
+        print("apple ", marks.write_apple_mark_imageset(args.apple_imageset))
 
 
 if __name__ == "__main__":

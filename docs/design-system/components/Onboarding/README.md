@@ -11,6 +11,7 @@ branding on the launch screen; this screen is the right place for it.
 | Part | Specification |
 |------|---------|
 | Background | `system-background` with a `brand-glow` halo at the top (the brand color lives in the content layer) |
+| Mark | The brand mark (the signal fire on its mountain) above the title, 72 pt/dp tall, with light and dark versions: `HLBrandMark` on Apple platforms, the `HLBrandMark` composable on Android. Decorative for screen readers; the title names the app |
 | Title | "Welcome to HandLive", `brand-large-title`; the word "HandLive" in `brand-fire` |
 | Three or four feature rows | An SF Symbol in `brand-fire` + a bold title + one sentence. Mac: clipboard, messages and calls, webcam, privacy. iPhone/iPad: clipboard, messages, call notifications, privacy. Android: syncing with Apple devices, privacy |
 | Link | "HandLive and Your Privacy" (opens `docs/privacy.md` or `docs/privacy.vi.md` in the display language) |
