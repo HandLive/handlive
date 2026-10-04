@@ -48,6 +48,12 @@ Rerun with the largeHeap APK (`e2e.py setup clipboard`, fresh state): **setup 25
 
 Live events while attached (03:08–03:30): the owner's copies on the Mac were text (4, 11 and 4 bytes); each went `copy_detected → clip_read → clip_sent` on the Mac and `clip_received → clip_applied → ack_sent applied` on the S25 within the same second. No image copy was made in that window, so the S25 image hypothesis (One UI clipboard, system-uid URI grants) is still open; the owner's check in CLAUDE.md item 8 stands. One `Connected → Idle → … → Connected` cycle at 03:14:43 matched a macOS sleep attempt that powerd reverted.
 
+## 6. The S25 answer (03:51)
+
+The owner copied an image on the S25 with the diagnostics build attached: **no HLBENCH line at all** — no `copy_detected`, no read. `settings get secure enabled_accessibility_services` lists only the web spike's service and Link to Windows; `dumpsys accessibility` shows HandLive's `ClipboardAccessibilityService` installed but **not enabled**; `appops get … ACCESS_RESTRICTED_SETTINGS` says `default; rejectTime=+5d…` — Android 13+ refused to turn the service on because the APK is sideloaded (`installerPackageName=null`, SET-01 E7 "Restricted setting"), about five days earlier. So automatic sending on copy has never been active on this phone; every phone → Mac clip tonight went through the manual button, and an image copied without pressing it does nothing by design (CLIP-01 E1). The one `copy_detected` at 03:29:47 came from the in-app listener (HandLive in the foreground), after which the read found nothing to send on that clip.
+
+Owner steps: Settings › Apps › HandLive › ⋮ › Allow restricted settings (authenticate), then Settings › Accessibility › HandLive › On (the app's RestrictedSettingScreen already says this, SET-01 field 14); meanwhile the manual path (notification button, tile) works for images too, as the emulator e2e shows. The One UI URI-grant hypothesis stays untested until the service is on or the button is pressed with an image on the clipboard.
+
 ## Unresolved questions
 
 1. The 3 MB phone → Mac e2e step skipped once because Chrome showed no "Copy image" in its long-press menu; make the step retry the long-press or fall back to Google Photos.
