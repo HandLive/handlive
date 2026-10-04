@@ -55,8 +55,11 @@ Pull requests: android HandLive/handlive-android#1 · shared HandLive/handlive-s
 
 Final e2e run (fixed APK, fixed fake Mac, API 35 emulator): `clipboard` PASS 17, SKIP 1 (the Accessibility auto-send step, by design). Review and merge results are recorded on the PRs.
 
+Independent review (`review-clipboard-image-fix-2026-10-05.md`): no Critical; Important I1–I3 fixed before merging (the normalize-stage E3 also writes `clip_read_failed` with `stage=normalize`; the fake Mac records a failed answer as a violation and still publishes the event; the self-test now sends a text push, a 2-chunk image and a corrupted transfer from the fake phone). Minor fixes taken: the log carries the authority of `content:` URIs only, stale "skipped silently" wording, out-of-order chunks → `BAD_REQUEST` and `clip_id` in the mismatch details, the PNG server binds loopback and closes its socket. Left open: M1 (`getType` vs `ClipDescription` precedence needs a spec decision), M4, M7, M8, Samsung Notes rich selections.
+
 ## Unresolved questions
 
+0. Review M1: when a provider's `getType` says `text/*` but the `ClipDescription` lists `image/*`, which wins? The code trusts the description; the spec says "or".
 1. Which direction failed for the owner, and does the S25 show `clip_read_failed … authority=…` or no `clip_read` at all?
 2. `apple/iOS/Info.plist`: restore the deleted purpose string, or was the deletion intended for the personal-team build?
 3. release-apple: add a fourth build-only job without the `release` environment (full secret isolation), and a test path for unprotected branches?
