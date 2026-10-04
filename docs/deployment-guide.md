@@ -153,16 +153,23 @@ hand: GitHub › Actions › `release-android` or `release-apple` › Run workfl
 (`publish=false` keeps the files as workflow artifacts and leaves the Release alone; a file already attached is
 replaced only with `replace=true`).
 
-**Who holds the keys:** each workflow builds in a job with read-only rights and no secret, then signs and publishes in
-a separate job of the environment `release` that runs only the platform's signing tools and `gh`: third-party build
-code never runs next to a signing key or a token that can write Releases. The Mac app is signed ad hoc and launched once
-in the build job; a Developer ID build is launched in the release job only after its signing keychain and notary key
-are removed, in a step without secrets (the job still holds them in memory: split it into sign, launch and publish
-jobs before adding the macOS secrets). The Apple builds generate the Xcode project with a pinned, checksum-verified
-XcodeGen (`apple/Tools/fetch-xcodegen.sh`). Keep the signing secrets in that environment
-(Settings › Environments › `release` › Environment secrets), add yourself as a required reviewer and limit it to tags
-`v*`, and protect the tags with a ruleset (Settings › Rules › Rulesets › Tag, `v*`, restrict creation, update and
-deletion).
+**Who holds the keys:** third-party build code never runs next to a signing key or a token that can write Releases.
+`release-android` builds in a job with read-only rights and no secret, then signs and publishes in a separate job of
+the environment `release`. `release-apple` has three jobs:
+
+| Job | Environment, rights | Does |
+|---|---|---|
+| `sign` (iOS and macOS in parallel) | `release`, `contents: read` | Builds with the pinned XcodeGen and `xcodebuild`, packs the IPA, signs the Mac app (ad hoc, or Developer ID and notarization with the secrets), writes each file's SHA-256. The only job that reads the macOS secrets, and each only in the environment of its own step |
+| `launch` | none, `permissions: {}` | Downloads the files and checks them read-only: the IPA is a sound archive with the app inside, the Mac DMG mounts and its app is still running after ten seconds. The only job that runs the built app; it has no secret, no environment and a token without rights |
+| `publish` | `release`, `contents: write` | Needs `sign` and `launch`, checks every file against its SHA-256, keeps them as the workflow artifact `apple-<version>` and attaches them to the Release. Runs no built code and checks out none |
+
+The files pass between the jobs as the workflow artifact `build-<platform>-<version>`. The Apple builds generate the
+Xcode project with a pinned, checksum-verified XcodeGen (`apple/Tools/fetch-xcodegen.sh`). Because `sign` uses the
+environment, only tags `v*` and `main` can run `release-apple`, by hand too. Keep the signing secrets in that
+environment (Settings › Environments › `release` › Environment secrets), add yourself as a required reviewer and limit
+it to tags `v*`, and protect the tags with a ruleset (Settings › Rules › Rulesets › Tag, `v*`, restrict creation, update
+and deletion). Adding the seven macOS secrets below needs no workflow change: set them in `release` and `sign` takes the
+Developer ID path; a new step that needs a secret belongs in `sign`, never in `launch` or `publish`.
 
 **Android signing (owner, once):** the APK is signed after the build with `apksigner`; without the secrets the sign job
 stops (the unsigned build stays a workflow artifact) rather than publish an APK nobody can install or update. Create
@@ -198,8 +205,8 @@ time-sensitive. A tag older than this login-keychain fallback (`v0.1.0-beta.1`) 
 Developer ID, since its app needs the data-protection keychain. With all seven secrets below the workflow publishes
 `HandLive-<version>-macos.dmg` instead (with some but not all it fails): it signs the universal Release build inside
 out (embedded `SQLCipher.framework`, then the app with `macOS/HandLive.entitlements`, the hardened runtime and a
-secure timestamp), puts it in a DMG signed with the same identity, notarizes the DMG with `notarytool`, staples it and
-checks that the app still runs after ten seconds. Before signing it checks that the profile is a Developer ID profile of
+secure timestamp), puts it in a DMG signed with the same identity, notarizes the DMG with `notarytool` and
+staples it (the `launch` job then checks that the app still runs after ten seconds). Before signing it checks that the profile is a Developer ID profile of
 `app.handlive.mac` made for the certificate and granting the three capabilities. The virtual camera and microphone of
 Phase 5 will need this signed build. Secrets of handlive-apple:
 
