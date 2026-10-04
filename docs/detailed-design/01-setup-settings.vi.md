@@ -676,7 +676,8 @@ ký lại push token (CONN-04 API 1). Lỗi → thử lại nền, không chặn
     `context.deleteSharedPreferences("hl_keys")`; xóa tệp PKCS#12;
     `context.deleteDatabase("handlive.db")`; `dataStore.edit { it.clear() }`.
   - Mac/iOS: `SecItemDelete` theo service `app.handlive.keys` (xóa `ik_sig`, `ik_dh`, `db_key` và
-    mọi `PRK`); đóng `DatabasePool` rồi xóa `handlive.sqlite`, `-wal`, `-shm`;
+    mọi `PRK`); đóng `DatabasePool` rồi xóa `handlive.sqlite`, `-wal`, `-shm`, cả hai ngăn của
+    kho cặp và của cơ sở dữ liệu (SET-03 API 1 logic 5, `*.alt`);
     `UserDefaults.standard.removePersistentDomain(forName: "app.handlive.mac")` (Mac) hoặc
     `UserDefaults(suiteName: "group.app.handlive")?.removePersistentDomain(forName: "group.app.handlive")`
     (iOS); `UNUserNotificationCenter.current().removeAllDeliveredNotifications()` và
@@ -902,6 +903,19 @@ flowchart TB
   3. `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)) (0.2), tính lại mỗi lần khởi động, không lưu riêng.
   4. Mở `handlive.sqlite` bằng `db_key` (Query) rồi chạy migration tạo lược đồ 0.9.3; M-APP, I-APP
      nạp khóa vào bộ nhớ khi khởi động (0.6.1).
+  5. Kho cặp và `handlive.sqlite` mỗi thứ có một ngăn thứ hai (`paired-devices.bin.alt`;
+     `handlive.sqlite.alt` cùng `-wal` và `-shm`). Tệp mà `db_key` hiện tại không mở được — thẻ
+     XChaCha20-Poly1305 không khớp, hoặc SQLCipher trả `SQLITE_NOTADB` — đã được niêm phong bằng khóa
+     mà bản cài này không có: khóa được tạo lại sau khi Keychain mất chúng, hoặc một bản build ký bởi
+     team khác đọc keychain access group khác. Mỗi lần khởi động, dùng tệp chính khi nó mở được bằng
+     `db_key`; khi nó không có hoặc được niêm phong bằng khóa khác, dùng ngăn thứ hai khi ngăn đó mở
+     được bằng `db_key` hoặc chưa có (tạo tệp rỗng mới ở đó), và để nguyên tệp của khóa kia, nên quay
+     lại bản build kia sẽ thấy lại dữ liệu của nó. Khi cả hai ngăn đều chứa tệp của khóa khác, xóa
+     tệp sửa đổi lâu nhất (giữ một thế hệ) và bắt đầu rỗng ở chỗ đó. Không làm vậy thì ứng dụng hiện
+     như chưa ghép đôi trong khi mọi cặp mới đều không lưu được (điện thoại đã xong PAIR-01, thành
+     ghép đôi một phía) và SMS tắt mà không báo gì. Người dùng ghép đôi lại; các bảng SMS đồng bộ lại
+     từ điện thoại. Lỗi khác (I/O, bảo vệ tệp, cơ sở dữ liệu đang khóa) không đổi ngăn nào. Xóa tất
+     cả (SET-02 API 7) xóa cả hai ngăn.
 
 #### API 2 — Chuyển ứng dụng vào `/Applications` (Mac)
 
@@ -1042,6 +1056,7 @@ SecItemCopyMatching([... kSecAttrAccount: "db_key", kSecReturnData: true])      
 ```sql
 -- [Thiết kế] Mac/iOS, bước 2: mở handlive.sqlite bằng khóa thô 32 byte (SQLCipher qua GRDB), rồi chạy lược đồ 0.9.3
 PRAGMA key = "x'<64 ký tự hex của db_key>'";
+PRAGMA cipher_compatibility = 4;   -- ghim định dạng SQLCipher 4: nâng cấp không được thành NOTADB (logic 5)
 
 -- [Thiết kế] Mac/iOS, bước 13: xác nhận chưa có cặp hiệu lực trước khi mở PAIR-01
 SELECT COUNT(*) AS active_pairs FROM paired_device WHERE revoked_at IS NULL;

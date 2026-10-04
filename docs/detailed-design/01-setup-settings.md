@@ -699,7 +699,8 @@ background; the switch is not blocked.
     `context.deleteSharedPreferences("hl_keys")`; delete the PKCS#12 file;
     `context.deleteDatabase("handlive.db")`; `dataStore.edit { it.clear() }`.
   - Mac/iOS: `SecItemDelete` for the service `app.handlive.keys` (deletes `ik_sig`, `ik_dh`, `db_key`
-    and every `PRK`); close the `DatabasePool`, then delete `handlive.sqlite`, `-wal`, `-shm`;
+    and every `PRK`); close the `DatabasePool`, then delete `handlive.sqlite`, `-wal`, `-shm`, both
+    slots of the pair store and of the database (SET-03 API 1 logic 5, `*.alt`);
     `UserDefaults.standard.removePersistentDomain(forName: "app.handlive.mac")` (Mac) or
     `UserDefaults(suiteName: "group.app.handlive")?.removePersistentDomain(forName: "group.app.handlive")`
     (iOS); `UNUserNotificationCenter.current().removeAllDeliveredNotifications()` and
@@ -931,6 +932,20 @@ flowchart TB
      separately.
   4. Open `handlive.sqlite` with `db_key` (Query), then run the migration that creates the 0.9.3
      schema; M-APP and I-APP load the keys into memory at launch (0.6.1).
+  5. The pair store and `handlive.sqlite` each have a second slot (`paired-devices.bin.alt`;
+     `handlive.sqlite.alt` with its `-wal` and `-shm`). A file the current `db_key` cannot open —
+     the XChaCha20-Poly1305 tag does not verify, or SQLCipher returns `SQLITE_NOTADB` — was sealed
+     with a key this install does not have: the keys were recreated after the Keychain lost them,
+     or a build signed by another team reads another keychain access group. At every launch use the
+     main file when it opens with `db_key`; when it is missing or sealed with another key, use the
+     second slot when that one opens with `db_key` or is missing (a new empty file there), and leave
+     the other key's file where it is, so switching back to the other build finds its data again.
+     When both slots hold another key's file, delete the one modified longest ago (one generation is
+     kept) and start empty in its place. Without this the app shows no pair while every new pair
+     fails to save (the phone has already finished PAIR-01, a one-sided pair) and SMS stays off
+     without a word. The user pairs again; the SMS tables sync again from the phone. Any other error
+     (I/O, file protection, a locked database) changes no slot. Delete All (SET-02 API 7) deletes
+     both slots.
 
 #### API 2 — Move the app to `/Applications` (Mac)
 
@@ -1076,6 +1091,7 @@ SecItemCopyMatching([... kSecAttrAccount: "db_key", kSecReturnData: true])      
 ```sql
 -- [Design] Mac/iOS, step 2: open handlive.sqlite with the raw 32-byte key (SQLCipher via GRDB), then run the 0.9.3 schema
 PRAGMA key = "x'<64 ký tự hex của db_key>'";   -- placeholder: the 64 hex characters of db_key
+PRAGMA cipher_compatibility = 4;   -- pin the SQLCipher 4 format: an update must not turn into NOTADB (logic 5)
 
 -- [Design] Mac/iOS, step 13: confirm that there is no active pair yet before opening PAIR-01
 SELECT COUNT(*) AS active_pairs FROM paired_device WHERE revoked_at IS NULL;
