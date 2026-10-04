@@ -82,8 +82,10 @@
 >   `figure`, `h1`–`h6`, `hr`, `i`, `img[src alt width height]`, `li`, `ol`, `p`, `pre`, `s`,
 >   `span`, `strong`, `sub`, `sup`, `table`, `tbody`, `td[colspan rowspan]`, `tfoot`,
 >   `th[colspan rowspan]`, `thead`, `tr`, `u`, `ul`. Thẻ khác bỏ vỏ. `href` và `img src` cắt mép;
->   giữ chỉ `http`, `https` (không phân biệt chữ hoa/thường); `img` không `src` bỏ hết. `width`,
->   `height`, `colspan`, `rowspan` chỉ chữ số, sai thì bỏ. Thuộc tính theo thứ tự: `href` | `src alt
+>   `href` giữ `http`, `https`, `mailto`, `img src` giữ `http`, `https` (không phân biệt chữ
+>   hoa/thường); `img` không `src` bỏ hết. `width`, `height`, `colspan`, `rowspan` chỉ chữ số, sai
+>   thì bỏ. Khoảng trắng (cắt mép, ngăn thuộc tính) và chữ số chỉ tính ASCII: NBSP và các khoảng
+>   trắng Unicode khác là một phần giá trị, `²` không phải chữ số. Thuộc tính theo thứ tự: `href` | `src alt
 >   width height` | `colspan rowspan`; giá trị `"` thành `&quot;`, `<` `>` thành `&lt;` `&gt;`;
 >   thẻ rỗng `br` `hr` `img` phát thành `<br>`, `<hr>`, `<img …>`. Output không chứa `<script`,
 >   `javascript:`, hoặc thuộc tính `on…=`.
