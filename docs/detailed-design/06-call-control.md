@@ -1620,7 +1620,11 @@ The `controls` object:
      implementing `android.telecom.InCallService`, `com.android.server.telecom` and `com.android.phone`
      (cellular calls belong to CALL-01…04; otherwise the caller name would bypass `READ_CALL_LOG` and
      duplicate events). Then takes only a notification whose `extras` has `android.callType` or whose
-     `category` is `call` (C22, E6); during a link window (logic 3) it also takes an ongoing
+     `category` is `call` (C22, E6). From API 31 `android.callType` counts only with the platform
+     template `android.template = android.app.Notification$CallStyle`, which Android accepts only with a
+     foreground service, a user-initiated job or a full-screen intent: any app can add the bare extra to an
+     ordinary notification, and its answer intent would then be sent with HandLive's background-start
+     exemption (below API 31 there is no platform `CallStyle` to check); during a link window (logic 3) it also takes an ongoing
      notification of the same package (not the waiting package — only the calling app), reading only its
      `flags` and `actions`. Nothing else is read: no title, text or extras of any other notification,
      which is never stored, never logged and never leaves the phone.
