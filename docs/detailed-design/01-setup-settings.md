@@ -526,7 +526,7 @@ flowchart TB
 | 4 | `WS pair/revoke` | `/v1/ctl` (LAN, USB) | Both directions | A4 |
 | 5 | Relay op `pair_revoked` | `wss://{RELAY_HOST}/v1/relay` (text) | R-API → device | A3 |
 | 6 | `POST /v1/devices`, `POST /v1/pairs` | Relay REST | Device → R-API | 4 (turning on `relay.enabled`) |
-| 7 | Operating system services that delete keys and data: `disableSelf`, `KeyStore.deleteEntry`, `SecItemDelete`, `removePersistentDomain`, `removeAllDeliveredNotifications`, `SMAppService.mainApp.unregister` | Local | — | 4, A4, A5 |
+| 7 | Operating system services that delete keys and data: `disableSelf`, `KeyStore.deleteEntry`, `SecItemDelete`, `SecKeychainItemDelete` (Mac login keychain), `removePersistentDomain`, `removeAllDeliveredNotifications`, `SMAppService.mainApp.unregister` | Local | — | 4, A4, A5 |
 
 #### API 1 — `WS capability/update`
 
@@ -699,7 +699,9 @@ background; the switch is not blocked.
     `context.deleteSharedPreferences("hl_keys")`; delete the PKCS#12 file;
     `context.deleteDatabase("handlive.db")`; `dataStore.edit { it.clear() }`.
   - Mac/iOS: `SecItemDelete` for the service `app.handlive.keys` (deletes `ik_sig`, `ik_dh`, `db_key`
-    and every `PRK`); close the `DatabasePool`, then delete `handlive.sqlite`, `-wal`, `-shm`, both
+    and every `PRK`); the Mac deletes the service in both keychains, the one this build uses first: the
+    data-protection keychain (`kSecUseDataProtectionKeychain = true`) and the login keychain
+    (`SecKeychainItemDelete` on each item, 0.6.1) (logic 6); close the `DatabasePool`, then delete `handlive.sqlite`, `-wal`, `-shm`, both
     slots of the pair store and of the database (SET-03 API 1 logic 5, `*.alt`);
     `UserDefaults.standard.removePersistentDomain(forName: "app.handlive.mac")` (Mac) or
     `UserDefaults(suiteName: "group.app.handlive")?.removePersistentDomain(forName: "group.app.handlive")`
@@ -707,11 +709,15 @@ background; the switch is not blocked.
     `removeAllPendingNotificationRequests()`; Mac: `try SMAppService.mainApp.unregister()`.
 - **Request:** N/A.
 - **Response:** the result code of each call; `errSecItemNotFound` or a file that does not exist
-  counts as success; other errors are retried once, then reported.
-- **Example:** Mac:
-  `SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys"])` →
-  `errSecSuccess`; then `handlive.sqlite` is deleted; the next launch runs SET-03 and generates a new
-  `device_id`.
+  counts as success, and so does `errSecMissingEntitlement` (-34018) from the keychain the Mac build
+  does not use (logic 6); other errors are retried once, then reported.
+- **Example:** Mac, team-signed build:
+  `SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
+  kSecUseDataProtectionKeychain: true])` → `errSecSuccess`; then the login keychain:
+  `SecItemCopyMatching([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
+  kSecMatchSearchList: <search list>, kSecMatchLimit: kSecMatchLimitAll, kSecReturnRef: true])` → the
+  four items an ad-hoc build left → `SecKeychainItemDelete` on each → `errSecSuccess`; then
+  `handlive.sqlite` is deleted; the next launch runs SET-03 and generates a new `device_id`.
 - **Business logic:**
   1. Order: every step that needs the keys runs first (A2 signs the challenge with `ik_sig`, A4
      encrypts `pair/revoke` with the session key derived from `PRK`) → delete the keys → delete the
@@ -726,6 +732,16 @@ background; the switch is not blocked.
   4. Do not uninstall M-CAMX, M-MIC; do not revoke operating system permissions already granted.
   5. Remove from server only: only tidy up the pairs (Query, A4) and write `relay.enabled = false`;
      do not call the APIs that delete keys and settings.
+  6. Mac, both keychains: a user who ran both the ad-hoc signed download (login keychain) and a
+     team-signed build (data-protection keychain) has one set of keys in each (0.6.1). Delete All
+     deletes the service in both, so the other build's `ik_sig`, `ik_dh`, `db_key` and `PRK` do not
+     survive it; login-keychain items are not tied to the device and travel in a Time Machine backup
+     or through Migration Assistant. An ad-hoc build cannot reach the data-protection keychain
+     (`errSecMissingEntitlement`): a team build's keys stay there, device-only, until a team build
+     deletes them. The other build's pairs are not revoked: its `device_id` differs and its keys are
+     gone, so it can never connect again, but the phone and the relay keep its pair until it is removed
+     there (PAIR-03). The fresh-install cleanup (SET-03 API 1 logic 1) deletes only this build's
+     keychain.
 
 #### Query
 
@@ -890,7 +906,7 @@ flowchart TB
 
 | # | API/service | Channel | Direction | Used in step |
 |---|-------------|------|-------|-------------|
-| 1 | Create keys and store them in the Keychain: CryptoKit `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`, `SecRandomCopyBytes`, `SecItemAdd`, `SecItemDelete` | Local | — | 2 |
+| 1 | Create keys and store them in the Keychain: CryptoKit `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`, `SecRandomCopyBytes`, `SecItemAdd`, `SecItemDelete`, `SecKeychainItemDelete` (Mac login keychain) | Local | — | 2 |
 | 2 | Move the app to `/Applications`: `FileManager.copyItem`, `NSWorkspace.openApplication` | Local | — | 5 |
 | 3 | `SMAppService.mainApp.register()`, `status`, `SMAppService.openSystemSettingsLoginItems()` | Local | — | 6 |
 | 4 | `UNUserNotificationCenter.requestAuthorization`, `getNotificationSettings` | Local | — | 7, 8 |
@@ -904,7 +920,7 @@ flowchart TB
 - **URL:** N/A
 - **Method:** `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`,
   `SecRandomCopyBytes(kSecRandomDefault, 32, &bytes)`; `SecItemAdd`, `SecItemCopyMatching`,
-  `SecItemDelete`.
+  `SecItemDelete`; `SecKeychainItemDelete` for the login keychain (0.6.1).
 - **Request — Keychain item attributes:**
 
 | Attribute | Value |
@@ -925,7 +941,10 @@ flowchart TB
   1. Fresh install (no `setup.started_at`) → `SecItemDelete` for the service `app.handlive.keys`
      before creating anything: the iOS/macOS Keychain keeps items after the app is removed; without
      this cleanup a reinstall would keep the old `device_id` and the `PRK` of pairs that no longer
-     exist, contrary to 0.2.
+     exist, contrary to 0.2. On the Mac only in the keychain this build uses (the login keychain with
+     `SecKeychainItemDelete`, 0.6.1): the other keychain keeps what a build signed the other way stored
+     there, so switching back to that build finds its keys again (like logic 5); only Delete All clears
+     both (SET-02 API 7 logic 6).
   2. The keys are created while the app is in the foreground (the device is unlocked), so
      `WhenUnlockedThisDeviceOnly` does not get in the way; error → E1.
   3. `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)) (0.2), recomputed at every launch and never stored
@@ -1082,6 +1101,8 @@ defaults.set(now, forKey: "setup.completed_at")                                 
 ```text
 # [Design] Keychain, service "app.handlive.keys"
 SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys"])   # step 2, fresh install only
+# Mac login keychain (ad-hoc build): SecItemCopyMatching([... kSecMatchLimit: kSecMatchLimitAll, kSecReturnRef: true])
+# then SecKeychainItemDelete(item) for each item found (0.6.1)
 SecItemAdd([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
             kSecAttrAccount: "ik_sig", kSecValueData: <32 bytes>,
             kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly])               # step 2; likewise "ik_dh", "db_key"

@@ -280,7 +280,13 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
   `kSecUseDataProtectionKeychain` và không có lớp truy cập: khóa không còn gắn với máy này (bản sao lưu
   hay Migration Assistant có thể mang chúng sang Mac khác), và macOS hỏi một lần cho mỗi bản build mới
   xem app có được đọc chúng không. App chọn keychain theo entitlement của chính nó khi khởi động; bản
-  đã ký luôn dùng data-protection keychain. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động
+  đã ký luôn dùng data-protection keychain. Xóa ở login keychain thì tìm các mục bằng
+  `SecItemCopyMatching` (`kSecReturnRef`, `kSecMatchLimitAll`, `kSecMatchSearchList` = danh sách
+  keychain tìm kiếm của người dùng) rồi xóa từng mục bằng `SecKeychainItemDelete`: `SecItemDelete` trả
+  `errSecInvalidOwnerEdit` (-25244) với mục do một chữ ký mã khác tạo (một bản ad-hoc trước đó, hoặc
+  bản ad-hoc nhìn từ bản ký team; đo trên macOS 27), nên bản cập nhật không xóa được khóa của bản
+  trước (SET-03 API 1 logic 1, PAIR-03 bước 7, SET-02 API 7). Cả hai lời gọi đều không hiện hộp
+  thoại. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động
   lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình
   khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem
   CONN-04).
