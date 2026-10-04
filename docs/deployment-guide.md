@@ -165,12 +165,14 @@ same key.
 
 ```sh
 keytool -genkeypair -v -keystore handlive-release.jks -alias handlive -keyalg RSA -keysize 4096 -validity 10000
-base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
+test -s handlive-release.jks && base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
 gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --repo HandLive/handlive-android
 gh secret set ANDROID_RELEASE_KEY_ALIAS --repo HandLive/handlive-android --body handlive
 ```
 
-`gh secret set` without `--body` asks for the value, so the password stays out of the shell history; add
+Run the `base64` line in the folder that holds the keystore: without the file `base64` prints nothing and `gh` stores an
+empty secret (`test -s` stops it). `gh secret set` without `--body` asks for the value, so the password stays out of the
+shell history; add
 `--env release` to keep the secrets in the environment. `keytool` writes a PKCS12 keystore, whose key password is the
 store password; `ANDROID_RELEASE_KEY_PASSWORD` is needed only for an older JKS keystore with a separate key password. The repository
 variables `HANDLIVE_RELAY_HOST` and `HANDLIVE_RELAY_EXTRA_PINS` (Settings › Secrets and variables › Variables)

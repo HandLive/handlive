@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.1`; G1/G2/G4/G5/G6 open
+## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.2`; G1/G2/G4/G5/G6 open
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
-Apple `Tools/WebSpike`. First coordinated public beta: tag **`v0.1.0-beta.1`** on hub/android/apple/shared/relay
+Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`** and **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) on hub/android/apple/shared/relay
 (not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
 required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
 on a real relay / APNs / FCM, and spike gates **G4** (BT phone + live call), **G5** (paid Apple Developer team),
@@ -47,9 +47,9 @@ project owner in Vietnamese with diacritics.
 | G6 spike (Android) | HOME leave ends page on Android 16 (`inactive reason=left`); probe on `main` | android `tools/web-spike` |
 | Phase 4–6 spikes | Merged onto `main` (2026-09-30): HFPSpike, CameraSpike, WebSpike (Apple), web-spike (Android) | apple `214b4f4` |
 | Hub docs | Live README roadmap + mandatory update rule; bilingual snapshot in `docs/project-roadmap*.md` | hub `650240e` |
-| Beta | Coordinated tag/release **`v0.1.0-beta.1`** on all five repos (prerelease, not store) | retargeted to then-current `main` |
+| Beta | Coordinated tags/releases **`v0.1.0-beta.1`** and **`v0.1.0-beta.2`** on all five repos (prerelease, not store); beta.2 attaches the iOS IPA and the ad-hoc Mac DMG, the Android APK once its keystore secret is set | beta.2: hub `9eb0766`, android `45d067b`, apple `c40d918` |
 | CI hygiene | shared: sort `settings.check_again`; android: skip `tools/` in `UiTextSourceGuardTest` | shared `b330d4b`; android `4c6db55` |
-| Security | 2026-09-28 scan fixes merged; relay `fix/security-scan-findings` on `main` | relay `cda13bf` |
+| Security | 2026-09-28 scan fixes merged; 2026-10-04 scan of everything since beta.1: PASS, 6 of 8 findings fixed (`reports/security-scan-beta2-2026-10-04.md`) | relay `cda13bf`; beta.2 tips |
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
@@ -63,7 +63,7 @@ project owner in Vietnamese with diacritics.
 4. **Gate G1 (formal):** device matrix in `shared/tools/bench/README.md`, TalkBack/VoiceOver, system setting names. Pairing on this machine is informally green only.
 5. **Gate G2 + Phase 2/3 real stack:** Play Console SMS/call-log declaration; real relay host, APNs, FCM (owner inputs in `phase-02-merge.md`).
 6. **Apple CI:** `ci-apple` has been cancelled repeatedly when multiple `workflow_dispatch` runs overlap (concurrency). Prefer **one** dispatch and do not cancel/stack. Hub/android/shared/relay CI were green after the beta/CI fixes; re-check before relying on apple green. (2026-10-04: `ci-apple` now runs four parallel lanes, ~3–4 min.)
-7. **Release files (2026-10-04):** tag-driven `release-android` / `release-apple` attach the APK, the iOS IPA and the notarized Mac app to a tag's Release (`docs/deployment-guide.md`, Release builds). Owner inputs: the Android release keystore secrets (then rerun for `v0.1.0-beta.1`; the first run found `ANDROID_RELEASE_KEYSTORE_BASE64` empty). macOS ships an ad-hoc signed DMG (login keychain, 0.6.1) from the next tag on; the paid Apple Developer team's seven secrets switch it to a notarized DMG, a path that has not run yet.
+7. **Release files (2026-10-04):** tag-driven `release-android` / `release-apple` attach the APK, the iOS IPA and the Mac DMG to a tag's Release (`docs/deployment-guide.md`, Release builds). `v0.1.0-beta.2` has the IPA and the ad-hoc signed DMG; its Android sign job stopped because `ANDROID_RELEASE_KEYSTORE_BASE64` is empty (set again from the keystore's folder, then `gh run rerun 37210387723 --repo HandLive/handlive-android --failed`). The Android secrets are repository secrets; the guide asks for environment `release` ones. macOS turns notarized with the paid team's seven secrets; split `release-apple` into sign / launch / publish jobs before adding them (scan report). Open owner decision: tighten app-call answering (background start only with a real FGS/UIJ or granted full-screen intent on API 34+, `answer_mode = tap` below API 31).
 
 ### Plan next (priority order)
 
