@@ -61,6 +61,12 @@ mới khi chưa có; tag có hậu tố như `-beta.1` thành bản pre-release)
 |---|---|---|
 | handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: flavor `foss`, ký bằng khóa release |
 | handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos-unsigned.dmg` (ad-hoc), hoặc `HandLive-<version>-macos.dmg` (Developer ID, đã notarize) khi đã có secret macOS |
+| handlive (hub) | `release-collect` | Tất cả các tệp trên kèm SHA-256, chép từ hai Release sau khi kiểm từng checksum: trang duy nhất người dùng cần vào để tải |
+
+`release-collect` của hub chạy khi push tag của hub, chờ tối đa 60 phút cho APK, IPA và DMG, rồi đính chúng vào Release
+của hub; muốn gom lại sau khi chạy lại workflow của một nền tảng, chạy bằng tay:
+`gh workflow run release-collect.yml --repo HandLive/handlive -f tag=v0.1.0-beta.2` (`replace=true` thay các tệp đã
+đính).
 
 **Ra một bản phát hành:** đặt phiên bản ở mọi kho (Android: `versionName` và một `versionCode` lớn hơn trong
 `app/build.gradle.kts`; Apple: `MARKETING_VERSION`, phần số không có hậu tố, và `CURRENT_PROJECT_VERSION` trong

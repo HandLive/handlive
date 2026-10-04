@@ -14,7 +14,7 @@ HandLive is open source (Apache-2.0). This repository is the **documentation hub
 
 | | |
 |--|--|
-| **Latest release** | [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (2026-10-04): the first with installable files from the tag-driven release workflows: Mac DMG signed ad hoc (Open Anyway once), iOS IPA (unsigned, for sideloading), Android APK (`foss`, signed); every change since beta.1 passed a security scan ([deployment guide](docs/deployment-guide.md)) |
+| **Latest release** | [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (2026-10-04): the first with installable files, all on that one page: Mac DMG signed ad hoc (Open Anyway once), iOS IPA (unsigned, for sideloading), Android APK (`foss`, signed); every change since beta.1 passed a security scan ([deployment guide](docs/deployment-guide.md)) |
 | **Phases on `main`** | 0–3 product code; Phase 4–6 **spike probes** also on `main` (2026-09-30) |
 | **Still open before 1.0** | Gates **G1** (real-device matrix) and **G2** (Play Console); real relay / APNs / FCM checks |
 | **In progress** | G4/G5/G6 hardware and browser decisions; product cards for Phases 4–6 not started |

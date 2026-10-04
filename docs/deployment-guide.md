@@ -135,6 +135,12 @@ A version tag builds the installable files and attaches them, each with a `.sha2
 |---|---|---|
 | handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: the `foss` flavor, signed with the release key |
 | handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos-unsigned.dmg` (ad hoc), or `HandLive-<version>-macos.dmg` (Developer ID, notarized) once the macOS secrets exist |
+| handlive (hub) | `release-collect` | All of the above with their SHA-256, copied from the two Releases after checking each checksum: the one page users download from |
+
+The hub's `release-collect` starts with the hub tag, waits up to 60 minutes for the APK, the IPA and the DMG, and
+attaches them to the hub's Release; to collect again after a platform rerun, run it by hand:
+`gh workflow run release-collect.yml --repo HandLive/handlive -f tag=v0.1.0-beta.2` (`replace=true` replaces files
+already attached).
 
 **Cutting a release:** set the version in every repository (Android `versionName` and a higher `versionCode` in
 `app/build.gradle.kts`; Apple `MARKETING_VERSION`, the version core without the suffix, and `CURRENT_PROJECT_VERSION`
