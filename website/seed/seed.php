@@ -215,7 +215,10 @@ function hl_resolve( string $content, string $lang, array $ids, array $links ): 
 					return $links[ $m[1] ];
 				case 'post':
 				case 'page':
-					return (string) get_permalink( $ids[ $m[1] ][ $m[2] ][ $lang ] );
+					// get_permalink() has no language context under WP-CLI, so build the URL from the
+					// language's home ("/" or "/vi/") and the slug.
+					$slug = (string) get_post_field( 'post_name', $ids[ $m[1] ][ $m[2] ][ $lang ] );
+					return trailingslashit( pll_home_url( $lang ) ) . $slug . '/';
 				case 'id':
 					return (string) hl_media( $m[2] )['id'];
 				default:
