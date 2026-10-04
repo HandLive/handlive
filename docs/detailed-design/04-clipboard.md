@@ -277,9 +277,11 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
 - **Business logic:**
   1. Read only in `onWindowFocusChanged(true)`: reading in `onCreate` /`onResume` may return `null`
      because the window has no focus yet. Wait at most 1 s for focus, then close (E3).
-  2. Take item 0: has `text` → `coerceToText` (HTML yields only the plain text; for a text URI item
-     the system reads the stream); has a `uri` with MIME `image/*` → CLIP-03, copy the stream into the
-     cache right away (the URI read permission is revoked when the clip changes); anything else → E3.
+  2. Take item 0: has a `uri` with MIME `image/*` → CLIP-03, copy the stream into the cache right
+     away (the URI read permission is revoked when the clip changes), even when a `text` or `htmlText`
+     stands beside the URI — browsers and OEM galleries put the image's URL, its alt text or an empty
+     string there, and the user copied the picture; otherwise has `text` → `coerceToText` (HTML yields
+     only the plain text; for a text URI item the system reads the stream); anything else → E3.
   3. `finish()` as soon as the data has been taken (image: once the copy on the IO thread is done); the
      QC3–QC5 checks and the send run in A-SVC's `ClipboardModule` (same process).
   4. Android 12+ shows the toast (field 7) once for each new clip set by another app; it is not shown
@@ -920,7 +922,8 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
 
 - **Business logic:**
   1. Only item 0 is considered; it is an image when `ClipDescription.hasMimeType("image/*")` or
-     `getType(uri)` starts with `image/`.
+     `getType(uri)` starts with `image/`, whatever `text` or `htmlText` the item also carries (CLIP-01
+     API 2 logic 2).
   2. Copy right inside `ClipboardReadActivity`, because the URI read permission granted by the
      clipboard is revoked when the clip changes; the activity closes when the copy finishes (usually
      < 200 ms for a 5 MB image).

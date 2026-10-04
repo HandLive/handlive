@@ -271,9 +271,11 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
 - **Logic nghiệp vụ:**
   1. Chỉ đọc trong `onWindowFocusChanged(true)`: đọc ở `onCreate` /`onResume` có thể trả `null` vì
      cửa sổ chưa có focus. Chờ focus tối đa 1 s rồi đóng (E3).
-  2. Lấy item 0: có `text` → `coerceToText` (HTML chỉ lấy chữ thuần; item là URI văn bản thì hệ
-     thống đọc luồng); có `uri` với MIME `image/*` → CLIP-03, sao chép luồng vào cache ngay (quyền
-     đọc URI bị thu hồi khi clip đổi); còn lại → E3.
+  2. Lấy item 0: có `uri` với MIME `image/*` → CLIP-03, sao chép luồng vào cache ngay (quyền đọc
+     URI bị thu hồi khi clip đổi), kể cả khi item còn kèm `text` hay `htmlText` — trình duyệt và
+     thư viện ảnh của OEM hay đặt URL ảnh, chữ thay thế hoặc chuỗi rỗng bên cạnh URI, mà người dùng
+     đã sao chép bức ảnh; không thì có `text` → `coerceToText` (HTML chỉ lấy chữ thuần; item là URI
+     văn bản thì hệ thống đọc luồng); còn lại → E3.
   3. `finish()` ngay khi lấy xong dữ liệu (ảnh: sau khi sao chép xong trên luồng IO); kiểm QC3–QC5
      và gửi chạy trong `ClipboardModule` của A-SVC (cùng tiến trình).
   4. Android 12+ hiện toast (trường 7) một lần cho mỗi clip mới do ứng dụng khác đặt; không hiện khi
@@ -904,7 +906,7 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
 
 - **Logic nghiệp vụ:**
   1. Chỉ xét item 0; là ảnh khi `ClipDescription.hasMimeType("image/*")` hoặc `getType(uri)` bắt đầu
-     bằng `image/`.
+     bằng `image/`, bất kể item còn kèm `text` hay `htmlText` nào (CLIP-01 API 2 logic 2).
   2. Sao chép ngay trong `ClipboardReadActivity` vì quyền đọc URI do clipboard cấp bị thu hồi khi
      clip đổi; activity đóng khi sao chép xong (thường < 200 ms với ảnh 5 MB).
   3. Nguồn > 10 MiB → E2 (v1 không thu nhỏ ảnh). Ảnh động lấy khung đầu.
