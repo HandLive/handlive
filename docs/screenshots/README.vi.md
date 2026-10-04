@@ -4,6 +4,8 @@
 
 Các màn hình của ứng dụng HandLive tính đến 27/09/2026 (Phase 3 đang làm, android `e495907`, apple `2edd00c`; danh sách Tin nhắn trên iPhone và Tin nhắn mới trên cả hai nền tảng: apple `2fd87b3`). Mỗi màn có bản tiếng Anh và tiếng Việt: tên file kết thúc bằng `.en.png` hoặc `.vi.png`. Mọi tên, số điện thoại và thiết bị đều là giả (+1 201 555 01xx, "E2E Test Mac").
 
+Ba màn chào được chụp lại ngày 04/10/2026 với biểu tượng thương hiệu (android `41f13c3`, apple `8ecd350`).
+
 ## Android
 
 Ứng dụng thật trên emulator Android 15, ghép nối với Mac giả của `shared/tools/e2e`. Ứng dụng Android không có màn SMS hay cuộc gọi: SMS và cuộc gọi hiện trên Mac và iPhone, cuộc gọi đến trên điện thoại dùng trình quay số của Android.

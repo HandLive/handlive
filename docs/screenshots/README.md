@@ -4,6 +4,8 @@ English | [Tiếng Việt](README.vi.md)
 
 Screens of the HandLive apps as of 2026-09-27 (Phase 3 in progress, android `e495907`, apple `2edd00c`; iPhone Messages list and New Message on both platforms: apple `2fd87b3`). Every screen exists in English and Vietnamese: files end in `.en.png` or `.vi.png`. All names, numbers and devices are fictional (+1 201 555 01xx, "E2E Test Mac").
 
+The three welcome screens were captured again on 2026-10-04 with the brand mark (android `41f13c3`, apple `8ecd350`).
+
 ## Android
 
 Real app on an Android 15 emulator, paired with the fake Mac of `shared/tools/e2e`. The Android app has no SMS or call screens: SMS and calls are shown on the Mac and iPhone, and a ringing call uses Android's own dialer.
