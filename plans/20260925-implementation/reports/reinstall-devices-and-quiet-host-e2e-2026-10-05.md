@@ -29,7 +29,7 @@ API 35 emulator `hl-claude-api35` (google_apis, headless), APK of `main`, fresh 
 | sms | 36 PASS, 1 SKIP, 1 INFO | late permission grant → new capability reflects it; sync paging, history, send with `sms/status`, read_changed, revoked `READ_SMS`. SKIP: the emulator cannot deliver an SMS to itself |
 | calls | 35 PASS, 1 SKIP, 2 INFO | answer/decline/end from the Mac, log_new, log_sync; bench: state LAN p95 92 ms (target 200), answer → offhook 200 ms (target 500), answer/decline back on client p95 234 ms (target 500). SKIP: waiting call (emulator modem) |
 
-API 29 emulator `hl-api29`: see §5.
+API 29 emulator `hl-api29`: two findings and a green rerun, see §5.
 
 Timings on an emulator on this host are trends only (gate G1 needs real devices); the two targets above the line (text 61 vs 50 ms, 5 MB image 2063 vs 2000 ms) were within 20 % on a host that was also building.
 
@@ -44,7 +44,7 @@ Two findings, one in the harness and one in the app:
 1. **Harness:** on this image `uiautomator dump` shows only HandLive's window while the system dialog `com.android.settings/.fuelgauge.RequestIgnoreBatteryOptimizations` is the resumed activity (ActivityTaskManager logged its start on Continue). The harness never found `android:id/button1`, never tapped Allow, and every later setup step failed behind the dialog. Fix: when the button is missing and that dialog is resumed, grant with `dumpsys deviceidle whitelist +app.handlive.android`, press BACK and record an INFO line (shared `fix/e2e-api29-battery-dialog` → HandLive/handlive-shared#2, merged `aac5f4d`).
 2. **App (HandLive/handlive-android#2):** with the dialog out of the way, PIN pairing died twice with `OutOfMemoryError "Failed to allocate a 67108880 byte allocation … growth limit 50331648"` on the pairing dispatcher: the pure-Kotlin Argon2id keeps `K_pin`'s 64 MiB (0.6.2, fixed by the spec) in one Java array, and the app's heap growth limit is 48 MB on this emulator (`dalvik.vm.heapgrowthlimit`; 256 MB on the S25, 128–192 MB on low-end phones). The fake Mac saw close 1006 and the phone stayed on "Pairing…". Fix: `android:largeHeap="true"` with a manifest comment (android `fix/pin-pairing-large-heap`); moving the Argon2 memory off the heap stays open in the issue.
 
-Rerun with the largeHeap APK: _(result line below)_
+Rerun with the largeHeap APK (`e2e.py setup clipboard`, fresh state): **setup 25 PASS, 2 INFO** — PIN pairing completes (8844 ms on this slow image), **4408 after 5008 ms** (target 5000), **4411 after 45 349 ms** (target 45 000); clipboard 15 PASS, 3 SKIP (Chrome on Android 10 offers no "Copy image" long-press entry, so both phone → Mac image steps skip with that reason; the Accessibility auto path by design). Android PR: `fix/pin-pairing-large-heap`.
 
 Live events while attached (03:08–03:30): the owner's copies on the Mac were text (4, 11 and 4 bytes); each went `copy_detected → clip_read → clip_sent` on the Mac and `clip_received → clip_applied → ack_sent applied` on the S25 within the same second. No image copy was made in that window, so the S25 image hypothesis (One UI clipboard, system-uid URI grants) is still open; the owner's check in CLAUDE.md item 8 stands. One `Connected → Idle → … → Connected` cycle at 03:14:43 matched a macOS sleep attempt that powerd reverted.
 
@@ -54,5 +54,5 @@ Live events while attached (03:08–03:30): the owner's copies on the Mac were t
 2. The S25 image copy still needs the owner's action while a monitor is attached.
 
 Status: DONE_WITH_CONCERNS
-Summary: Both devices run the fixed builds without re-pairing and are connected; the quiet-host e2e on API 35 passed every step that the emulator can run; the API 29 result and any live image-copy events are in §5.
+Summary: Both devices run the fixed builds without re-pairing and are connected; the quiet-host e2e passed every step the emulators can run on API 35 and, after a harness fix and the largeHeap fix, on API 29; the S25 image copy was not exercised by the owner while attached.
 Concerns/Blockers: none blocking; the Chrome-driving flake of the new e2e step is a follow-up.

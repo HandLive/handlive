@@ -1,6 +1,6 @@
 # Reinstall the fixed builds on the owner's devices, then the quiet-host e2e (2026-10-05, run 2)
 
-**Status:** in progress · **Route:** feature (operations + roadmap item 4) · **Ship mode:** beta · **Repos:** hub (plan, report, roadmap), shared/android only if the e2e finds a bug
+**Status:** done except the owner's image copy on the S25 (PRs: shared #2 merged, android largeHeap PR, hub PR) · **Route:** feature (operations + roadmap item 4) · **Ship mode:** beta · **Repos:** hub (plan, report, roadmap), shared/android only if the e2e finds a bug
 
 ## Scope
 
@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] S25 shows `versionName` of `main` with `pkgFlags DEBUGGABLE`, the pair survives (Devices tab lists the Mac, no re-pairing).
-- [ ] The Mac runs the new Debug build (`Identifier=app.handlive.mac.localtest`, same team), connects to the phone without re-pairing (an `ev=state … to=Connected` HLBENCH line).
-- [ ] `e2e.py all` on API 35: every step PASS or a known SKIP; failures investigated (bug → separate fix branch).
-- [ ] API 29: the 4408 step (a connection that never sends `session/hello` is closed) PASS.
+- [x] S25 shows `versionName` of `main` with `pkgFlags DEBUGGABLE`, the pair survives (Devices tab lists the Mac, no re-pairing).
+- [x] The Mac runs the new Debug build (`Identifier=app.handlive.mac.localtest`, same team), connects to the phone without re-pairing (an `ev=state … to=Connected` HLBENCH line).
+- [x] `e2e.py all` on API 35: every step PASS or a known SKIP; failures investigated (bug → separate fix branch).
+- [x] API 29: the 4408 step (a connection that never sends `session/hello` is closed) PASS.
 - [ ] Report written; hub PR merged; CI green.
 
 ## Validation and red-team (inline: unattended run)
