@@ -1,0 +1,76 @@
+{
+	"languages": [
+		{ "slug": "en", "name": "English", "locale": "en_US", "flag": "us" },
+		{ "slug": "vi", "name": "Tiếng Việt", "locale": "vi", "flag": "vn" }
+	],
+	"links": {
+		"release": "https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1",
+		"github": "https://github.com/HandLive"
+	},
+	"category": { "en": "News", "vi": "Tin tức" },
+	"posts": [
+		{
+			"key": "public-beta",
+			"date": "2026-09-30 10:00:00",
+			"en": {
+				"title": "HandLive's first public beta",
+				"slug": "handlive-public-beta",
+				"excerpt": "v0.1.0-beta.1 brings your Android phone's clipboard, texts, and calls to the Mac, iPhone, and iPad for early testers.",
+				"file": "en/post-public-beta.html",
+				"cover": "brand/assets/promo/release-banner-beta.en.png"
+			},
+			"vi": {
+				"title": "Bản beta công khai đầu tiên của HandLive",
+				"slug": "handlive-ban-beta-cong-khai",
+				"excerpt": "v0.1.0-beta.1 đưa bảng nhớ tạm, tin nhắn và cuộc gọi của điện thoại Android lên Mac, iPhone và iPad cho người dùng thử sớm.",
+				"file": "vi/post-public-beta.html",
+				"cover": "brand/assets/promo/release-banner-beta.vi.png"
+			}
+		},
+		{
+			"key": "new-look",
+			"date": "2026-10-04 09:00:00",
+			"en": {
+				"title": "A new look for HandLive",
+				"slug": "a-new-look-for-handlive",
+				"excerpt": "A logo, an app icon, and a voice: a signal fire on a mountaintop, in the colors of dawn.",
+				"file": "en/post-new-look.html",
+				"cover": "brand/assets/promo/readme-hero.en.png"
+			},
+			"vi": {
+				"title": "Diện mạo mới của HandLive",
+				"slug": "dien-mao-moi-cua-handlive",
+				"excerpt": "Logo, biểu tượng app và giọng văn: ngọn lửa hiệu trên đỉnh núi, trong màu bình minh.",
+				"file": "vi/post-new-look.html",
+				"cover": "brand/assets/promo/readme-hero.vi.png"
+			}
+		}
+	],
+	"pages": [
+		{
+			"key": "home",
+			"en": { "title": "Home", "slug": "home", "file": "en/home.html" },
+			"vi": { "title": "Trang chủ", "slug": "trang-chu", "file": "vi/home.html" }
+		},
+		{
+			"key": "privacy",
+			"en": {
+				"title": "Privacy",
+				"slug": "privacy",
+				"file": "../generated/privacy.en.html",
+				"excerpt": "What data HandLive handles, where it goes, and what you control."
+			},
+			"vi": {
+				"title": "Quyền riêng tư",
+				"slug": "quyen-rieng-tu",
+				"file": "../generated/privacy.vi.html",
+				"excerpt": "HandLive xử lý dữ liệu nào, dữ liệu đi đâu, và bạn kiểm soát những gì."
+			}
+		},
+		{
+			"key": "blog",
+			"en": { "title": "Blog", "slug": "blog" },
+			"vi": { "title": "Blog", "slug": "bai-viet" }
+		}
+	]
+}
