@@ -58,7 +58,8 @@ của GitHub, hoặc ảnh đại diện của bài viết).
 
 - Màu, chữ và giọng văn theo [hướng dẫn thương hiệu](brand-guidelines.vi.md): nền bình minh, chữ tím than,
   tiêu đề Be Vietnam Pro (Black cho tiêu đề lớn, Bold cho thẻ), chữ thân dùng font hệ thống, font mono hệ
-  thống cho nhãn mục và thẻ phân loại, nút xanh lá; có diện mạo sáng và tối.
+  thống cho nhãn mục và thẻ phân loại, nút xanh lá. Diện mạo sáng và tối: website theo hệ thống, và có nút
+  trên header để người xem tự chọn; lựa chọn được nhớ trong trình duyệt (`localStorage`).
 - Bố cục trang chủ: hero căn giữa với tagline làm tiêu đề hai tông, hàng số liệu và một ảnh chụp thật trong
   khung; các mục có nhãn mono phía trên, thẻ tính năng có ô icon và nhãn phân loại, bước đánh số, chip nền
   tảng, bảng tương thích và checklist quyền riêng tư. Các mục hiện dần khi cuộn (`.hl-reveal`; tắt khi bật

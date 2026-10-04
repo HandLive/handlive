@@ -27,6 +27,31 @@
     });
   }
 
+  // Appearance toggle: flips the effective appearance (system or chosen) and remembers it; the inline script in
+  // <head> applies the stored choice before the first paint.
+  var themeToggle = document.querySelector('.hl-theme-toggle');
+  if (themeToggle) {
+    var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+    var effective = function () {
+      return document.documentElement.getAttribute('data-theme') || (systemDark.matches ? 'dark' : 'light');
+    };
+    var reflect = function () {
+      var dark = effective() === 'dark';
+      themeToggle.setAttribute('aria-pressed', String(dark));
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+        meta.setAttribute('content', dark ? '#140c11' : '#fff6ee');
+      });
+    };
+    themeToggle.addEventListener('click', function () {
+      var next = effective() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('hl-theme', next); } catch (e) { /* private mode: the choice lasts for this page only */ }
+      reflect();
+    });
+    systemDark.addEventListener('change', reflect);
+    reflect();
+  }
+
   // Sections and cards fade up as they scroll into view; people who prefer reduced motion see them at once.
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var targets = document.querySelectorAll('.hl-reveal');

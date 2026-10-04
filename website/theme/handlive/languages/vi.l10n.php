@@ -20,6 +20,7 @@ return array(
 		'Privacy'                      => 'Quyền riêng tư',
 		'Blog'                         => 'Blog',
 		'Get the Beta'                 => 'Tải bản beta',
+		'Dark Mode'                    => 'Chế độ tối',
 		'Never miss a signal.'         => 'Không bỏ lỡ tín hiệu nào.',
 		'All posts'                    => 'Tất cả bài viết',
 		'News, releases, and notes from the people building HandLive.' => 'Tin tức, bản phát hành và ghi chép từ những người làm HandLive.',
