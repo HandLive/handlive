@@ -287,13 +287,17 @@ phụ màu tím nhạt hơn (#6b5562); biểu tượng cỡ lớn tràn ra góc 
 ```bash
 python3 tools/brand/build_brand_assets.py \
   --android-res android/app/src/main/res \
-  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset
+  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset \
+  --android-design-res android/core/design/src/main/res \
+  --apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets
 ```
 
 - Cần `rsvg-convert` và ImageMagick (`brew install librsvg imagemagick`).
 - Đường nét chữ được lưu sẵn ở `tools/brand/text-outlines.json`. Sau khi đổi một chuỗi chữ, chạy lại với
   `--font BeVietnamPro-Bold.ttf` (cần fontTools); bản thân file font không được commit.
-- File của từng nền tảng được ghi thẳng vào kho app; commit ở kho đó, mỗi commit một kho.
+- File của từng nền tảng được ghi thẳng vào kho app; commit ở kho đó, mỗi commit một kho. Hai cờ cuối ghi
+  biểu tượng trong app cho màn chào (`HLBrandMark` trên Apple, composable `HLBrandMark` trên Android): vector
+  drawable có bản đêm, và bộ ảnh PDF có diện mạo sáng và tối.
 
 ## Lịch sử thay đổi
 

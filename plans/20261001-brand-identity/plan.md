@@ -31,8 +31,8 @@ Owner sessions: 2026-10-01. Report: [reports/brand-identity-report.md](reports/b
 ## Follow-ups (not started)
 
 1. Icon Composer `.icon` from `docs/brand/assets/app-icon/icon-composer/` for Liquid Glass on macOS/iOS 26+.
-2. Show the logo (lockup image) on the welcome screen and in the About window (apps still show the text
-   wordmark in `brand-fire`).
+2. ~~Show the logo on the welcome screen~~: done 2026-10-04 (`HLBrandMark` on Apple, Android; the Mac About
+   panel shows the app icon). The pairing screens keep the text wordmark.
 3. Republish the "HandLive Design System" artifact from `docs/design-system/`.
 4. Upload `github-social-preview.png` as the social preview of each GitHub repository; attach the beta banner
    to the `v0.1.0-beta.1` release notes.

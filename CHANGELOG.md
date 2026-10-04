@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- The brand mark on the welcome screens of the Mac, iPhone/iPad and Android apps (apple and android
+  `feat/brand-in-app`), generated into both repositories by `tools/brand/build_brand_assets.py`.
+
 ## [0.1.0-beta.2] — 2026-10-04
 
 ### Added

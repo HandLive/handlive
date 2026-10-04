@@ -6,6 +6,11 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+### Added
+
+- Biểu tượng thương hiệu trên màn chào của app Mac, iPhone/iPad và Android (apple và android
+  `feat/brand-in-app`), sinh vào cả hai kho bằng `tools/brand/build_brand_assets.py`.
+
 ## [0.1.0-beta.2] — 04/10/2026
 
 ### Added

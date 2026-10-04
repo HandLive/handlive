@@ -290,13 +290,17 @@ lines in a softer plum (#6b5562); the mark large, bleeding off the bottom right.
 ```bash
 python3 tools/brand/build_brand_assets.py \
   --android-res android/app/src/main/res \
-  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset
+  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset \
+  --android-design-res android/core/design/src/main/res \
+  --apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets
 ```
 
 - Needs `rsvg-convert` and ImageMagick (`brew install librsvg imagemagick`).
 - Text outlines are cached in `tools/brand/text-outlines.json`. After changing a text string, rerun with
   `--font BeVietnamPro-Bold.ttf` (needs fontTools); the font file itself is not committed.
-- Platform files are written into the app repositories; commit them there, one repository per commit.
+- Platform files are written into the app repositories; commit them there, one repository per commit. The last
+  two flags write the in-app mark of the welcome screens (`HLBrandMark` on Apple, the `HLBrandMark` composable
+  on Android): a vector drawable with a night variant, and a PDF image set with light and dark appearances.
 
 ## Changelog
 
