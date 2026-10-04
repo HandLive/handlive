@@ -93,9 +93,10 @@ The colors are those of dawn: warm and calm. HandLive should feel like a lamp le
 | Item | English | Vietnamese |
 |---|---|---|
 | Tagline | Never miss a signal. | Không bỏ lỡ tín hiệu nào. |
-| One-liner | Your Android phone's clipboard, SMS, and calls on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi của điện thoại Android, ngay trên Mac, iPhone và iPad. |
-| App Store subtitle (≤ 30) | Your phone's texts and calls | Tin nhắn, cuộc gọi của điện thoại |
+| One-liner | Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại Android, ngay trên Mac, iPhone và iPad. |
+| App Store subtitle (≤ 30) | Your phone's texts and calls | Tin nhắn, gọi từ điện thoại |
 | Play short description (≤ 80) | Clipboard, SMS, and calls from your phone on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại lên Mac, iPhone và iPad. |
+| Store description, first paragraph | Your Android phone, within reach. HandLive brings clipboard, SMS, and calls to your Mac, iPhone, and iPad — end-to-end encrypted, no account needed, open source. | Điện thoại Android, ngay trong tầm tay. HandLive đưa bảng nhớ tạm, SMS và cuộc gọi lên Mac, iPhone và iPad — mã hóa đầu cuối, không cần tài khoản, mã nguồn mở. |
 
 ### Elevator pitch
 

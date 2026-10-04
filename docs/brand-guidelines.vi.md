@@ -93,9 +93,10 @@ Màu sắc là màu bình minh: ấm và điềm tĩnh. HandLive nên giống ng
 | Mục | Tiếng Anh | Tiếng Việt |
 |---|---|---|
 | Tagline | Never miss a signal. | Không bỏ lỡ tín hiệu nào. |
-| Câu giới thiệu | Your Android phone's clipboard, SMS, and calls on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi của điện thoại Android, ngay trên Mac, iPhone và iPad. |
-| Phụ đề App Store (≤ 30) | Your phone's texts and calls | Tin nhắn, cuộc gọi của điện thoại |
+| Câu giới thiệu | Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại Android, ngay trên Mac, iPhone và iPad. |
+| Phụ đề App Store (≤ 30) | Your phone's texts and calls | Tin nhắn, gọi từ điện thoại |
 | Mô tả ngắn Play (≤ 80) | Clipboard, SMS, and calls from your phone on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại lên Mac, iPhone và iPad. |
+| Đoạn đầu mô tả trên store | Your Android phone, within reach. HandLive brings clipboard, SMS, and calls to your Mac, iPhone, and iPad — end-to-end encrypted, no account needed, open source. | Điện thoại Android, ngay trong tầm tay. HandLive đưa bảng nhớ tạm, SMS và cuộc gọi lên Mac, iPhone và iPad — mã hóa đầu cuối, không cần tài khoản, mã nguồn mở. |
 
 ### Giới thiệu trong 30 giây
 
@@ -121,8 +122,8 @@ chạy trong Wi-Fi của chính bạn mà không cần tài khoản, và mã ngu
 
 ### Đoạn giới thiệu chuẩn
 
-HandLive là app mã nguồn mở giữ điện thoại Android đồng nhịp với Mac, iPhone và iPad: bảng nhớ tạm, SMS
-và cuộc gọi, mã hóa đầu cuối, không cần tài khoản. Đây là phần mềm tự do theo giấy phép Apache-2.0.
+HandLive là ứng dụng mã nguồn mở giữ điện thoại Android đồng nhịp với Mac, iPhone và iPad: bảng nhớ tạm,
+SMS và cuộc gọi, mã hóa đầu cuối, không cần tài khoản. Đây là phần mềm tự do theo giấy phép Apache-2.0.
 
 ## 5. Logo
 
