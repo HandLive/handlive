@@ -39,9 +39,13 @@
 	--hl-wide: 1120px;
 	color-scheme: light dark;
 }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
+/* Dark tokens apply when the system is dark and the visitor hasn't chosen light, or when they chose dark
+   (the header toggle sets data-theme on <html>; the same values appear twice because CSS has no mixins). */
 @media (prefers-color-scheme: dark) {
-	:root {
+	:root:not([data-theme="light"]) {
 		--hl-bg: #140c11;
 		--hl-bg-2: #1a1016;
 		--hl-surface: #1f141b;
@@ -64,6 +68,29 @@
 		--hl-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.35);
 		--hl-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.5), 0 40px 80px -20px rgba(0, 0, 0, 0.7);
 	}
+}
+:root[data-theme="dark"] {
+	--hl-bg: #140c11;
+	--hl-bg-2: #1a1016;
+	--hl-surface: #1f141b;
+	--hl-tint: #261a22;
+	--hl-text: #fff6ee;
+	--hl-text-2: #c9b8c2;
+	--hl-text-3: #8c7a85;
+	--hl-line: rgba(255, 246, 238, 0.1);
+	--hl-line-2: rgba(255, 246, 238, 0.18);
+	--hl-accent: #3ddc6c;
+	--hl-accent-fill: #238636;
+	--hl-accent-tint: rgba(61, 220, 108, 0.12);
+	--hl-fire: #ff7448;
+	--hl-flame: #ffa04a;
+	--hl-amber: #ffc46b;
+	--hl-glow-fire: rgba(255, 134, 31, 0.16);
+	--hl-glow-accent: rgba(61, 220, 108, 0.08);
+	--hl-dot: rgba(255, 246, 238, 0.09);
+	--hl-footer: #0d0609;
+	--hl-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.35);
+	--hl-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.5), 0 40px 80px -20px rgba(0, 0, 0, 0.7);
 }
 
 @media (min-width: 640px) { :root { --hl-gutter: 24px; } }
@@ -147,6 +174,21 @@ p { margin: 0 0 1em; }
 .hl-lang a { padding-inline: 8px; font-family: var(--hl-font-mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--hl-text-2); }
 .hl-lang a[aria-current] { color: var(--hl-text); font-weight: 700; }
 .hl-menu-toggle { display: none; }
+/* Two lockups; the dark one shows when the dark tokens apply. */
+.hl-brand__logo--dark { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hl-brand__logo--light { display: none; } :root:not([data-theme="light"]) .hl-brand__logo--dark { display: block; } }
+:root[data-theme="dark"] .hl-brand__logo--light { display: none; }
+:root[data-theme="dark"] .hl-brand__logo--dark { display: block; }
+.hl-theme-toggle {
+	display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+	border: 1px solid var(--hl-line-2); border-radius: 999px; background: var(--hl-surface); color: var(--hl-text); cursor: pointer; padding: 0;
+}
+.hl-theme-toggle:hover { border-color: var(--hl-text-3); }
+.hl-theme-toggle svg { width: 18px; height: 18px; }
+.hl-theme-toggle__moon { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hl-theme-toggle__sun { display: none; } :root:not([data-theme="light"]) .hl-theme-toggle__moon { display: block; } }
+:root[data-theme="dark"] .hl-theme-toggle__sun { display: none; }
+:root[data-theme="dark"] .hl-theme-toggle__moon { display: block; }
 
 @media (max-width: 859px) {
 	.hl-js .hl-menu-toggle {
@@ -164,6 +206,7 @@ p { margin: 0 0 1em; }
 	.hl-nav__list { flex-direction: column; }
 	.hl-nav__list a { padding: 12px; font-size: 1.0625rem; }
 	.hl-lang { border-left: 0; padding-left: 4px; }
+	.hl-theme-toggle { align-self: flex-start; }
 }
 
 /* Landing page sections (block content: full-width groups with the hl-* classes) */

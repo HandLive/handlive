@@ -70,18 +70,29 @@ remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 remove_action( 'wp_print_styles', 'print_emoji_styles' );
 
 /**
- * The brand lockup as a picture that follows the light and dark appearance.
+ * The brand lockup in both versions; site.css shows the one that matches the appearance (system or chosen).
  *
- * @param string $class Extra class for the img element.
+ * @param string $class Extra class for both img elements.
  */
 function handlive_lockup( string $class = '' ): void {
-	printf(
-		'<picture><source srcset="%1$s" media="(prefers-color-scheme: dark)"><img class="%3$s" src="%2$s" alt="HandLive" width="160" height="36"></picture>',
-		esc_url( get_theme_file_uri( 'assets/img/lockup-on-dark.svg' ) ),
-		esc_url( get_theme_file_uri( 'assets/img/lockup.svg' ) ),
-		esc_attr( $class )
-	);
+	foreach ( array( 'light' => 'lockup.svg', 'dark' => 'lockup-on-dark.svg' ) as $variant => $file ) {
+		printf(
+			'<img class="%1$s %1$s--%2$s" src="%3$s" alt="HandLive" width="160" height="36">',
+			esc_attr( $class ),
+			esc_attr( $variant ),
+			esc_url( get_theme_file_uri( "assets/img/$file" ) )
+		);
+	}
 }
+
+// The visitor's appearance choice is applied before the first paint, so the page never flashes the other one.
+add_action(
+	'wp_head',
+	function () {
+		echo '<script>try{var t=localStorage.getItem("hl-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>' . "\n";
+	},
+	1
+);
 
 /**
  * The footer lockup: the footer is always plum, so it always uses the on-dark version.
