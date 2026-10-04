@@ -57,7 +57,8 @@ Mỗi kho có một workflow GitHub Actions trong `.github/workflows/` của kho
 
 - `ci-android` chạy `./gradlew check`.
 - `ci-apple` chạy bốn lane macOS song song: test các package lõi; test các package tính năng rồi build app Mac; build
-  app iOS; SwiftLint và các công cụ dev. Mỗi lane test build các package của nó một lần qua một scheme chung của
+  app iOS; và lane công cụ gồm SwiftLint, kiểm import của package nằm trong dependency đã khai báo, build app Mac cho
+  Intel (x86_64) và các công cụ dev. Mỗi lane test build các package của nó một lần qua một scheme chung của
   `HandLive.xcworkspace`.
 - `ci-relay` chạy fmt, clippy và test. Test tích hợp dùng PostgreSQL 16 và Redis 7.
 - `ci-shared` kiểm vector, vector sinh lại, và schema đối chiếu ví dụ trong tài liệu.
