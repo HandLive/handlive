@@ -62,8 +62,10 @@ của GitHub, hoặc ảnh đại diện của bài viết).
   trên header để người xem tự chọn; lựa chọn được nhớ trong trình duyệt (`localStorage`).
 - Bố cục trang chủ: hero căn giữa với tagline làm tiêu đề hai tông, hàng số liệu và một ảnh chụp thật trong
   khung; các mục có nhãn mono phía trên, thẻ tính năng có ô icon và nhãn phân loại, bước đánh số, chip nền
-  tảng, bảng tương thích và checklist quyền riêng tư. Các mục hiện dần khi cuộn (`.hl-reveal`; tắt khi bật
-  giảm chuyển động).
+  tảng, thư viện ảnh chụp màn hình (mỗi nền tảng một dải cuộn ngang có điểm dừng, lấy từ `docs/screenshots/`;
+  hai màn hình có bản tối sẽ đổi theo diện mạo), bảng tương thích và checklist quyền riêng tư. Các mục hiện dần
+  khi cuộn (`.hl-reveal`; tắt khi bật giảm chuyển động) và có nền nhẹ: vòng sóng tín hiệu (`hl-section--rings`),
+  lưới chấm (`hl-section--grid`) hoặc quầng sáng trôi chậm (`hl-section--glow`).
 - Không gọi tới bên thứ ba: font và ảnh do chính website phục vụ, không có công cụ thống kê.
 
 ## Đưa lên mạng

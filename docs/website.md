@@ -62,8 +62,11 @@ Polylang adds `hreflang` links between translations; the theme adds the descript
   toggle in the header lets the visitor choose; the choice is remembered in the browser (`localStorage`).
 - Landing page layout: centered hero with the tagline as a two-tone title, a stats row and a framed real
   screenshot; sections with a monospace eyebrow, feature cards with icon tiles and category tags, numbered
-  steps, platform chips, the compatibility table and the privacy checklist. Sections fade in on scroll
-  (`.hl-reveal`; off with reduced motion).
+  steps, platform chips, a screenshot gallery (one snap-scrolling strip per platform, built from
+  `docs/screenshots/`; the two screens that exist in a dark version swap with the appearance), the compatibility
+  table and the privacy checklist. Sections fade in on scroll (`.hl-reveal`; off with reduced motion) and carry
+  quiet backgrounds: signal rings (`hl-section--rings`), a dot grid (`hl-section--grid`) or drifting glows
+  (`hl-section--glow`).
 - No third-party requests: fonts and images are served by the site itself, and there are no analytics.
 
 ## Going live
