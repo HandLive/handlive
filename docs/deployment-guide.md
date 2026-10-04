@@ -171,15 +171,16 @@ same key.
 
 ```sh
 keytool -genkeypair -v -keystore handlive-release.jks -alias handlive -keyalg RSA -keysize 4096 -validity 10000
-test -s handlive-release.jks && base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
-gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --repo HandLive/handlive-android
-gh secret set ANDROID_RELEASE_KEY_ALIAS --repo HandLive/handlive-android --body handlive
+test -s handlive-release.jks && base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --env release --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --env release --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEY_ALIAS --env release --repo HandLive/handlive-android --body handlive
 ```
 
 Run the `base64` line in the folder that holds the keystore: without the file `base64` prints nothing and `gh` stores an
 empty secret (`test -s` stops it). `gh secret set` without `--body` asks for the value, so the password stays out of the
-shell history; add
-`--env release` to keep the secrets in the environment. `keytool` writes a PKCS12 keystore, whose key password is the
+shell history. The secrets live in the environment `release`, which only tags `v*` and `main` may use (Settings ›
+Environments › `release` › Deployment branches and tags), so a workflow on any other branch cannot read them; keep no
+copy as a repository secret. `keytool` writes a PKCS12 keystore, whose key password is the
 store password; `ANDROID_RELEASE_KEY_PASSWORD` is needed only for an older JKS keystore with a separate key password. The repository
 variables `HANDLIVE_RELAY_HOST` and `HANDLIVE_RELAY_EXTRA_PINS` (Settings › Secrets and variables › Variables)
 configure the relay of release builds; without them a release has no relay.

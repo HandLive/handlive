@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   copied from the handlive-android and handlive-apple Releases into the hub's Release after a checksum check, so users
   download every platform from one page (`docs/deployment-guide.md`, Release builds). Done for `v0.1.0-beta.2`.
 
+### Changed
+
+- Website: the home page badge names `v0.1.0-beta.2` and opens its release; `docs/website.md` lists it among the
+  places to change on each release.
+
 ### Fixed
 
 - Delete All on the Mac deletes HandLive's keys in both keychains (SET-02 API 7 logic 6, en and vi), so a user who ran
@@ -21,6 +26,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `SecItemDelete` answers errSecInvalidOwnerEdit (-25244) for items another code signature created, which also kept an
   updated ad-hoc build from erasing or starting over; SET-03 API 1 logic 1 keeps the fresh-install cleanup to this
   build's keychain; PAIR-03 names the call. Code: apple `fix/erase-both-keychains`.
+
+### Security
+
+- Calls from other apps (CALL-05 API 1 logic 6): "Answer" from the Mac starts the app from the background only for a
+  call Android vouches for (from Android 14: a foreground service, a user-initiated job or a granted full-screen
+  intent; Android 12–13: any `CallStyle` notification; Android 10–11: never); any other call is answered through the
+  phone's "tap to answer" notification.
+- Android release signing: the secrets moved to the environment `release`, limited to tags `v*` and `main`; a new
+  release key (`CN=Ho Xuan Dung, O=HandLive, C=VN`) replaced the first one before any user installed it.
 
 ## [0.1.0-beta.2] — 2026-10-04
 
