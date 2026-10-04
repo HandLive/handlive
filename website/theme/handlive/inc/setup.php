@@ -48,10 +48,13 @@ function handlive_asset_version( string $path ): string {
 add_action(
 	'wp_head',
 	function () {
-		printf(
-			'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
-			esc_url( get_theme_file_uri( 'assets/fonts/be-vietnam-pro-bold.woff2' ) )
-		);
+		// The two weights every page uses above the fold: Black for titles, Bold for card headings.
+		foreach ( array( 'black', 'bold' ) as $weight ) {
+			printf(
+				'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+				esc_url( get_theme_file_uri( "assets/fonts/be-vietnam-pro-$weight.woff2" ) )
+			);
+		}
 		if ( ! has_site_icon() ) {
 			printf( '<link rel="icon" href="%s" type="image/svg+xml">' . "\n", esc_url( get_theme_file_uri( 'assets/img/favicon.svg' ) ) );
 			printf( '<link rel="apple-touch-icon" href="%s">' . "\n", esc_url( get_theme_file_uri( 'assets/img/apple-touch-icon.png' ) ) );

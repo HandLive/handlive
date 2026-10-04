@@ -21,6 +21,13 @@ Runbook: [docs/website.md](../../docs/website.md). Report: [reports/website-repo
 - No external requests (self-hosted font and images, no analytics); WordPress core language packs are not
   installed (Vietnamese dates are numeric).
 
+## Layout revision (2026-10-04, evening)
+
+Owner found the first layout dull and pointed to xermius.com. Decisions: keep automatic light/dark (no
+dark-first), download Be Vietnam Pro ExtraBold and Black (OFL) for display titles, real screenshots only (no
+HTML mockups). Result: centered hero with two-tone title, stats row, framed screenshot, monospace eyebrows and
+tags, icon tiles, numbered steps, platform chips, scroll reveal.
+
 ## Follow-ups (not started)
 
 1. Deploy to `handlive.app`: host, TLS, backups (runbook "Going live").
