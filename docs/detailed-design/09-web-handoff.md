@@ -116,7 +116,7 @@ flowchart TB
 | Step | Actor | Component | Description | Exceptions / Notes |
 |------|----------|-----------|-------|--------------------|
 | A1 | User | A-UI | Turns on "Continue Browsing" (field 1), reads the disclosure (fields 2, 3) and chooses "Agree" (field 4). | "Not Now" → E2. |
-| A2 | System | A-UI | Writes `feature.web = true` and `web.a11y_consent_at`; Android 13+ with an install source other than Google Play → shows the restricted setting instructions (SET-01 field 14); opens `ACTION_ACCESSIBILITY_SETTINGS` (API 3). | E3. |
+| A2 | System | A-UI | Writes `feature.web = true` and `web.a11y_consent_at`; before opening, follows SET-01 API 6 logic 2 (the restricted setting instructions, SET-01 field 14, when `R` is `likely` or `blocked`) and SET-01 API 6 logic 6 on return; opens `ACTION_ACCESSIBILITY_SETTINGS` (API 3). | E3. |
 | A3 | User | OS | Selects "HandLive Browser Pages" (field 5), turns it on, confirms the system dialog, comes back. | Not turned on → E3. |
 | A4 | System | A-WEB, A-SVC | `onServiceConnected` → `features.web.send` becomes `true` (when `web.send = true`); A-SVC sends `capability/update` (SET-02 API 1) to every session. `onUnbind` → `send = false`, update again. |  |
 | 1 | User | OS (browser) | Opens a page, switches tabs, or brings the browser back to the foreground. |  |
