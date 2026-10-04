@@ -1,6 +1,6 @@
 # Clipboard image sync: debug and fix (2026-10-05)
 
-**Status:** in progress · **Route:** bugfix · **Ship mode:** beta · **Repos:** android (code), hub (spec, docs, reports), shared (e2e coverage, separate branch)
+**Status:** implemented, PRs open (android #1, shared #1, apple #1, hub #2) · **Route:** bugfix · **Ship mode:** beta · **Repos:** android (code), hub (spec, docs, reports), shared (e2e coverage, separate branch)
 
 ## Problem
 
@@ -26,11 +26,11 @@ Owner report (2026-10-05): copying an image does not sync between the Galaxy S25
 
 ## Acceptance criteria
 
-- [ ] `:feature:clipboard` unit tests green, the five new `ClipReaderTest` cases included.
-- [ ] `python3 tools/docs/validate_design_docs.py` prints `problems=0`; `check_bilingual_docs.py` green.
-- [ ] e2e `clipboard` scenario on the API 35 emulator still fully PASS with the new APK.
+- [x] `:feature:clipboard` unit tests green (115, 0 failures), the three new `ClipReaderTest` cases and the `LocalClipSendTest` update included.
+- [x] `python3 tools/docs/validate_design_docs.py` prints `problems=0`; `check_bilingual_docs.py` green.
+- [x] e2e `clipboard` scenario on the API 35 emulator fully PASS with the new APK (17 PASS, 1 SKIP), the two phone → Mac image steps included.
 - [ ] Android PR reviewed, labeled, merged (`--ship --beta`); hub docs PR merged; CI green.
-- [ ] Report lists what is proven, what is still a hypothesis, and the exact device check for the owner.
+- [x] Report lists what is proven, what is still a hypothesis, and the exact device check for the owner (`reports/clipboard-image-sync-debug-2026-10-05.md`).
 
 ## Validation and red-team (inline; the interactive `/ck:plan validate` and `red-team` gates would block on owner questions in this unattended run)
 

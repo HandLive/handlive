@@ -51,7 +51,9 @@ Fake-Mac race found while rerunning: `wait()` returned a push before the fake Ma
 - apple `ci/release-apple-split-jobs`: `6836366` → HandLive/handlive-apple#1
 - hub `feat/check-progress-image-copy-debug-906617`: `8a6548c` spec precedence + plan, `2f9876b` spec E10 + research note, `776c65a`/`9a40ada` website, `1394276`/`d3b3082` release-apple docs, `5379ccd` roadmap + changelog, this report and CLAUDE.md → PR below
 
-PR numbers of shared and hub, review and merge results: appended at the end of the run.
+Pull requests: android HandLive/handlive-android#1 · shared HandLive/handlive-shared#1 (`4c655b2` race fix included) · apple HandLive/handlive-apple#1 · hub HandLive/handlive#2 (closes #1).
+
+Final e2e run (fixed APK, fixed fake Mac, API 35 emulator): `clipboard` PASS 17, SKIP 1 (the Accessibility auto-send step, by design). Review and merge results are recorded on the PRs.
 
 ## Unresolved questions
 
