@@ -37,9 +37,16 @@ Timings on an emulator on this host are trends only (gate G1 needs real devices)
 
 Monitors on both sides ran from 03:08 (S25 `adb logcat -s HLBENCH:I`, Mac `/usr/bin/log stream --info`). Owner's own logcat showed one `clip_read kind=text source=manual` at 02:55 (before the reinstall). Image copy events seen while attached: see §5.
 
-## 5. API 29 and live events
+## 5. API 29 (Android 10, `hl-api29`, google_apis, headless) and live events
 
-_(filled at the end of the run)_
+Two findings, one in the harness and one in the app:
+
+1. **Harness:** on this image `uiautomator dump` shows only HandLive's window while the system dialog `com.android.settings/.fuelgauge.RequestIgnoreBatteryOptimizations` is the resumed activity (ActivityTaskManager logged its start on Continue). The harness never found `android:id/button1`, never tapped Allow, and every later setup step failed behind the dialog. Fix: when the button is missing and that dialog is resumed, grant with `dumpsys deviceidle whitelist +app.handlive.android`, press BACK and record an INFO line (shared `fix/e2e-api29-battery-dialog` → HandLive/handlive-shared#2, merged `aac5f4d`).
+2. **App (HandLive/handlive-android#2):** with the dialog out of the way, PIN pairing died twice with `OutOfMemoryError "Failed to allocate a 67108880 byte allocation … growth limit 50331648"` on the pairing dispatcher: the pure-Kotlin Argon2id keeps `K_pin`'s 64 MiB (0.6.2, fixed by the spec) in one Java array, and the app's heap growth limit is 48 MB on this emulator (`dalvik.vm.heapgrowthlimit`; 256 MB on the S25, 128–192 MB on low-end phones). The fake Mac saw close 1006 and the phone stayed on "Pairing…". Fix: `android:largeHeap="true"` with a manifest comment (android `fix/pin-pairing-large-heap`); moving the Argon2 memory off the heap stays open in the issue.
+
+Rerun with the largeHeap APK: _(result line below)_
+
+Live events while attached (03:08–03:30): the owner's copies on the Mac were text (4, 11 and 4 bytes); each went `copy_detected → clip_read → clip_sent` on the Mac and `clip_received → clip_applied → ack_sent applied` on the S25 within the same second. No image copy was made in that window, so the S25 image hypothesis (One UI clipboard, system-uid URI grants) is still open; the owner's check in CLAUDE.md item 8 stands. One `Connected → Idle → … → Connected` cycle at 03:14:43 matched a macOS sleep attempt that powerd reverted.
 
 ## Unresolved questions
 
