@@ -37,6 +37,15 @@ add_action(
 	1
 );
 
+// oEmbed responses name the author and link the author archive; drop both.
+add_filter(
+	'oembed_response_data',
+	function ( array $data ): array {
+		unset( $data['author_name'], $data['author_url'] );
+		return $data;
+	}
+);
+
 // No users sitemap for the same reason.
 add_filter(
 	'wp_sitemaps_add_provider',
