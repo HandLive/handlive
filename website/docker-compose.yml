@@ -1,0 +1,77 @@
+# HandLive website: nginx in front of PHP-FPM (WordPress) and MariaDB.
+# Local use: bin/setup.sh (creates .env, starts the stack, installs and seeds WordPress).
+name: handlive-web
+
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: ${DB_NAME}
+  WORDPRESS_DB_USER: ${DB_USER}
+  WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+  SITE_URL: ${SITE_URL}
+  WORDPRESS_CONFIG_EXTRA: |
+    define('WP_HOME', getenv_docker('SITE_URL', 'http://localhost:8080'));
+    define('WP_SITEURL', WP_HOME);
+    define('WP_ENVIRONMENT_TYPE', getenv_docker('WP_ENVIRONMENT_TYPE', 'local'));
+    define('DISALLOW_FILE_EDIT', true);
+    define('WP_POST_REVISIONS', 20);
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 30
+
+  php:
+    image: wordpress:php8.3-fpm-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *wp-env
+      WP_ENVIRONMENT_TYPE: ${WP_ENVIRONMENT_TYPE:-local}
+    volumes:
+      - wordpress:/var/www/html
+      - ./theme/handlive:/var/www/html/wp-content/themes/handlive:ro
+      - ./php/handlive.ini:/usr/local/etc/php/conf.d/zz-handlive.ini:ro
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - php
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - wordpress:/var/www/html:ro
+      - ./theme/handlive:/var/www/html/wp-content/themes/handlive:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # One-off WP-CLI runs: docker compose run --rm wpcli wp <command>
+  wpcli:
+    image: wordpress:cli-php8.3
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *wp-env
+    volumes:
+      - wordpress:/var/www/html
+      - ./theme/handlive:/var/www/html/wp-content/themes/handlive:ro
+      - ./seed:/seed:ro
+      - ../docs:/hub-docs:ro
+
+volumes:
+  db:
+  wordpress:

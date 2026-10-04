@@ -1,0 +1,15 @@
+/*
+Theme Name: HandLive
+Theme URI: https://handlive.app
+Author: The HandLive Authors
+Author URI: https://github.com/HandLive
+Description: Product site and blog for HandLive, in English and Vietnamese (Polylang). Dawn brand palette, Be Vietnam Pro headings, light and dark appearance.
+Version: 1.0.0
+Requires at least: 6.5
+Requires PHP: 8.1
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: handlive
+*/
+
+/* Styles live in assets/css/site.css (enqueued by inc/setup.php). */

@@ -15,6 +15,10 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
   của Telegram và các ứng dụng khác trên Android và gửi tới Mac; người dùng có thể trả lời, từ chối hoặc kết thúc từ
   Mac (âm thanh vẫn ở trên điện thoại ở v1). Cần quyền truy cập thông báo, một quyền đặc biệt mà người dùng bật bằng
   tay. Các cuộc gọi di động không thay đổi.
+- Website sản phẩm và blog (`website/`, `docs/website.vi.md`): WordPress trên nginx + PHP-FPM + MariaDB trong
+  Docker, tiếng Anh ở `/` và tiếng Việt ở `/vi/` qua Polylang, theme màu bình minh của thương hiệu với diện mạo
+  sáng và tối, trang chủ, trang Quyền riêng tư sinh từ `docs/privacy.vi.md`, và hai bài blog mỗi ngôn ngữ.
+  `website/` theo GPL-2.0-or-later.
 - Bộ nhận diện thương hiệu 1.0: `docs/brand-guidelines.vi.md` (câu chuyện: ngọn lửa hiệu lúc bình minh;
   giọng văn, thông điệp, logo, biểu tượng app, màu sắc, ảnh quảng bá) và các file trong `docs/brand/assets/`,
   sinh bằng `tools/brand/build_brand_assets.py`. Tagline: "Không bỏ lỡ tín hiệu nào." Ảnh hero README tiếng

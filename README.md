@@ -4,7 +4,7 @@ English | [Tiếng Việt](README.vi.md)
 
 <img src="docs/brand/assets/promo/readme-hero.en.png" alt="HandLive. Never miss a signal. Clipboard, SMS and calls from your Android phone, on your Mac, iPhone and iPad." width="800">
 
-> **Never miss a signal.** Your Android phone's clipboard, SMS, and calls on your Mac, iPhone, and iPad.
+> **Never miss a signal.** Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad.
 >
 > *"WebSocket for data, Bluetooth for voice."*
 
@@ -19,6 +19,7 @@ HandLive is open source (Apache-2.0). This repository is the **documentation hub
 | **Still open before 1.0** | Gates **G1** (real-device matrix) and **G2** (Play Console); real relay / APNs / FCM checks |
 | **In progress** | G4/G5/G6 hardware and browser decisions; product cards for Phases 4–6 not started |
 | **Languages** | English (default) and Vietnamese; every hub doc has `X.md` + `X.vi.md` |
+| **Website** | WordPress product site and blog in `website/`, English and Vietnamese; runs locally, not deployed yet ([guide](docs/website.md)) |
 
 Beta builds are for early testers. They are not App Store / Play Store releases yet.
 

@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": false,
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1120px"
+		},
+		"color": {
+			"custom": false,
+			"customGradient": false,
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"palette": [
+				{ "slug": "ember", "name": "Plum (brand-ember)", "color": "#33232d" },
+				{ "slug": "fire", "name": "Flame red (brand-fire)", "color": "#e63d1a" },
+				{ "slug": "flame", "name": "Flame orange (brand-flame)", "color": "#ff861f" },
+				{ "slug": "glow", "name": "Dawn cream (brand-glow)", "color": "#fff0e3" },
+				{ "slug": "accent", "name": "Green (accent)", "color": "#197934" },
+				{ "slug": "white", "name": "White", "color": "#ffffff" }
+			]
+		},
+		"typography": {
+			"customFontSize": false,
+			"defaultFontSizes": false,
+			"fontFamilies": [
+				{ "slug": "heading", "name": "Be Vietnam Pro", "fontFamily": "\"Be Vietnam Pro\", system-ui, sans-serif" },
+				{ "slug": "body", "name": "System", "fontFamily": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif" }
+			],
+			"fontSizes": [
+				{ "slug": "small", "name": "Small", "size": "0.9375rem" },
+				{ "slug": "medium", "name": "Body", "size": "1.0625rem" },
+				{ "slug": "large", "name": "Lead", "size": "1.25rem" },
+				{ "slug": "x-large", "name": "Title", "size": "2rem" }
+			]
+		},
+		"spacing": {
+			"units": ["px", "rem", "%"]
+		}
+	}
+}

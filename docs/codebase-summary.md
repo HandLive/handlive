@@ -22,6 +22,7 @@ HandLive/                          # hub repository "handlive"
 ├── CLAUDE.md, README.md (+ README.vi.md)
 ├── docs/                          # every page as X.md (English) + X.vi.md (Vietnamese): detailed-design/, design-system/, privacy, PDR…
 ├── plans/20260925-implementation/ # Implementation plan, phase-00…05 (both languages), reports/ (English)
+├── website/                       # WordPress product site and blog (nginx + PHP-FPM + MariaDB, EN/VI via Polylang; GPL-2.0-or-later) — docs/website.md
 ├── tools/brand/                   # build_brand_assets.py: logo, app icons, promo images from one geometry (docs/brand-guidelines.md)
 ├── tools/docs/                    # validate_design_docs.py, check_bilingual_docs.py, apple_diacritics.py, build_design_html.py
 ├── tools/workspace.sh             # clone | status | run | remotes | push | hooks for every repository
