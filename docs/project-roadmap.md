@@ -13,7 +13,7 @@ HandLive brings ecosystem-native features, such as Apple Handoff, to Android. Th
 | Phase | Code on `main` | Gate / blocker |
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
-| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30) |
+| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04) |
 | 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open |
 | 3 | Done (2026-09-28) | Real-device checks open |
 | 4 | Spike on `main` (`HFPSpike`, merged 2026-09-30) | G4: need BT phone + live call |

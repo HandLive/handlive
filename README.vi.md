@@ -65,7 +65,7 @@ Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md
 | Phase / cổng | Mục tiêu | Trạng thái (30/09/2026) |
 |--------------|----------|-------------------------|
 | **0** Khung, giao thức, mã hóa, CI | Vector dùng chung, CI xanh | **Xong** |
-| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định |
+| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026) |
 | **2** SMS + iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · G2 và push thật còn mở |
 | **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, metadata iOS | **Mã xong** · kiểm máy thật còn mở |
 | **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |

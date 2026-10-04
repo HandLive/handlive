@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `CLAUDE.md`: progress report handoff of 2026-10-01 (done / in progress / plan next) for coding agents.
 - Detailed design: CALL-05 spec (leaves 06-call-control, 00-common-specs, 01-setup-settings); capability formula for Mac app calls clarified.
 
+### Fixed
+
+- Mac and iPhone/iPad: after the Keychain lost HandLive's keys (or a build signed by another team was run), the app
+  made new keys but kept its pair store and SMS database sealed with the old key, so it showed no phone while every
+  new pairing failed to save (the phone said paired: a one-sided pair) and SMS stayed off. Such files now stay where
+  they are and the app uses a second slot (`*.alt`), so switching back to the other build finds its data again; with
+  a third key the older foreign file gives way (one generation). The user pairs again; the SQLCipher format is pinned
+  (SET-03 API 1 logic 5).
+
 ### Compatibility note
 
 - Versions v0.1.0-beta.1 and earlier on Mac and iOS: a new `NOTIFICATION_LISTENER` entry in `permissions_missing` will display as a generic "missing permission" hint until the app is updated to understand app calls. No action needed from the user.

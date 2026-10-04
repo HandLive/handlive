@@ -22,6 +22,15 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 - Thiết kế chi tiết: CALL-05 (leaves 06-call-control, 00-common-specs, 01-setup-settings); công thức khả năng Mac
   cho cuộc gọi ứng dụng làm rõ.
 
+### Fixed
+
+- Mac và iPhone/iPad: sau khi Keychain mất khóa của HandLive (hoặc chạy một bản build ký bởi team khác), ứng dụng tạo
+  khóa mới nhưng vẫn giữ kho cặp và cơ sở dữ liệu SMS niêm phong bằng khóa cũ, nên hiện như chưa có điện thoại trong
+  khi mọi lần ghép đôi mới đều không lưu được (điện thoại báo đã ghép: ghép đôi một phía) và SMS tắt. Nay các tệp đó
+  được để nguyên và ứng dụng dùng ngăn thứ hai (`*.alt`), nên quay lại bản build kia sẽ thấy lại dữ liệu của nó; với
+  khóa thứ ba, tệp lạ cũ hơn nhường chỗ (giữ một thế hệ). Người dùng ghép đôi lại; định dạng SQLCipher được ghim
+  (SET-03 API 1 logic 5).
+
 ### Ghi chú tương thích
 
 - Phiên bản v0.1.0-beta.1 trở về trước trên Mac và iOS: mục `NOTIFICATION_LISTENER` mới trong `permissions_missing`
