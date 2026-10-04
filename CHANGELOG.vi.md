@@ -6,6 +6,8 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] — 04/10/2026
+
 ### Added
 
 - `docs/deployment-guide.md` (en, vi): Bản phát hành — `release-android` chạy theo tag (APK `foss` đã ký) và

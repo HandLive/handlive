@@ -8,7 +8,7 @@ HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như
 
 ## Tiến độ tóm tắt (30/09/2026)
 
-**Tag mới nhất:** [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (beta công khai đầu tiên). Bảng sống: [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ).
+**Tag mới nhất:** [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (beta thứ hai, bản đầu tiên có tệp cài đặt). Bảng sống: [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ).
 
 | Phase | Mã trên `main` | Cổng / điểm nghẽn |
 |-------|----------------|-------------------|
