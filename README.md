@@ -65,10 +65,10 @@ Phases ship in order, each as a usable slice. Exception (owner, 2026-09-28): Pha
 
 Full narrative: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
 
-| Phase / gate | Goal | Status (2026-09-30) |
+| Phase / gate | Goal | Status (2026-10-05) |
 |--------------|------|---------------------|
 | **0** Scaffold, protocol, crypto, CI | Shared vectors, green CI | **Done** |
-| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable; one-sided pair after a key reset fixed (2026-10-04) |
+| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable; one-sided pair after a key reset fixed (2026-10-04); an image copied with a text beside its URI is sent as the image, a lost URI grant is told on Send Clipboard, e2e covers phone → Mac images (2026-10-05) |
 | **2** SMS + iOS + relay + push | Conversations, Rust relay, APNs/FCM | **Code done** · G2 and real push still open |
 | **3** Call info and control | Telecom APIs, Mac panel, iOS metadata | **Code done** · real-device checks open |
 | **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike on `main`** (`HFPSpike`) · G4 needs BT phone + live call |

@@ -6,14 +6,14 @@
 
 HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
 
-## Tiến độ tóm tắt (30/09/2026)
+## Tiến độ tóm tắt (05/10/2026)
 
 **Tag mới nhất:** [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (beta thứ hai, bản đầu tiên có tệp cài đặt). Bảng sống: [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ).
 
 | Phase | Mã trên `main` | Cổng / điểm nghẽn |
 |-------|----------------|-------------------|
 | 0 | Xong | G0 xong |
-| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026) |
+| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026) |
 | 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở |
 | 3 | Xong (28/09/2026) | Kiểm máy thật còn mở |
 | 4 | Spike trên `main` (`HFPSpike`, merge 30/09/2026) | G4: cần ghép BT điện thoại + cuộc gọi thật |

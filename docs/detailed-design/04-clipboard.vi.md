@@ -271,9 +271,11 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
 - **Logic nghiệp vụ:**
   1. Chỉ đọc trong `onWindowFocusChanged(true)`: đọc ở `onCreate` /`onResume` có thể trả `null` vì
      cửa sổ chưa có focus. Chờ focus tối đa 1 s rồi đóng (E3).
-  2. Lấy item 0: có `text` → `coerceToText` (HTML chỉ lấy chữ thuần; item là URI văn bản thì hệ
-     thống đọc luồng); có `uri` với MIME `image/*` → CLIP-03, sao chép luồng vào cache ngay (quyền
-     đọc URI bị thu hồi khi clip đổi); còn lại → E3.
+  2. Lấy item 0: có `uri` với MIME `image/*` → CLIP-03, sao chép luồng vào cache ngay (quyền đọc
+     URI bị thu hồi khi clip đổi), kể cả khi item còn kèm `text` hay `htmlText` — trình duyệt và
+     thư viện ảnh của OEM hay đặt URL ảnh, chữ thay thế hoặc chuỗi rỗng bên cạnh URI, mà người dùng
+     đã sao chép bức ảnh; không thì có `text` → `coerceToText` (HTML chỉ lấy chữ thuần; item là URI
+     văn bản thì hệ thống đọc luồng); còn lại → E3.
   3. `finish()` ngay khi lấy xong dữ liệu (ảnh: sau khi sao chép xong trên luồng IO); kiểm QC3–QC5
      và gửi chạy trong `ClipboardModule` của A-SVC (cùng tiến trình).
   4. Android 12+ hiện toast (trường 7) một lần cho mỗi clip mới do ứng dụng khác đặt; không hiện khi
@@ -791,7 +793,7 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # bước 10: h�
 | Tác nhân | Chính: Người dùng. Hệ thống: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1.<br>Clipboard hiệu lực và ảnh được phép theo QC1 (`clip.send_images = true` ở bên gửi, `mimes` của bên nhận có MIME ảnh).<br>2.<br>Android: ảnh được đọc qua đường tự động hoặc thủ công của CLIP-01 (đích Chia sẻ chỉ nhận văn bản).<br>Mac: hỏi vòng CLIP-02 đang chạy và được phép đọc (C10).<br>3.<br>Bên nhận còn chỗ cho tệp tạm. |
 | Điều kiện sau | **Thành công:** clipboard bên nhận chứa ảnh (Android: URI `content://` của HandLive trỏ tới tệp trong `cache/clip/`; Mac: dữ liệu PNG hoặc JPEG); bên nhận đã ghi dấu vết QC4, hẹn CLIP-05; tệp tạm của lần truyền đã xóa (Android giữ tệp của clip đang nằm trên clipboard); Android chuyển tiếp tới client khác (QC6).<br>**Thất bại hoặc hủy:** không bên nào đổi clipboard; tệp tạm bị xóa. |
-| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: quyền đọc URI mất trước khi sao chép xong (clip đã đổi): bỏ qua. |
+| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: không đọc được URI (quyền mất vì clip đã đổi, hoặc clipboard chưa từng cấp quyền): bỏ qua ở đường tự động; đường thủ công báo "Không đọc được ảnh". Bản debug ghi `clip_read_failed` kèm lý do và authority của URI. |
 | Yêu cầu đặc biệt | **Hiệu năng:** ảnh 5 MB < 2 s trong LAN (80 khối); qua relay giới hạn 2 MiB/s mỗi cặp nên ảnh 10 MiB mất ≥ 5 s.<br>Hiện tiến trình khi ảnh > 1 MiB.<br>**Tài nguyên:** bên nhận ghi khối thẳng vào tệp và băm SHA-256 dần, không giữ cả ảnh trong bộ nhớ; tối đa một lần truyền đến từ mỗi đối phương; tối đa 4 khối chờ trong bộ đệm gửi của WebSocket để envelope khác (cuộc gọi, SMS) được chen trước.<br>**Bảo mật:** mỗi khối là một envelope mã hóa; relay chỉ thấy `type = clipboard` và kích thước; tệp tạm nằm trong vùng riêng của ứng dụng; `FileProvider` chỉ lộ thư mục `cache/clip/`, ứng dụng dán được hệ thống cấp quyền đọc tạm thời. |
 
 ### 4.3.2 Màn hình
@@ -904,7 +906,7 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
 
 - **Logic nghiệp vụ:**
   1. Chỉ xét item 0; là ảnh khi `ClipDescription.hasMimeType("image/*")` hoặc `getType(uri)` bắt đầu
-     bằng `image/`.
+     bằng `image/`, bất kể item còn kèm `text` hay `htmlText` nào (CLIP-01 API 2 logic 2).
   2. Sao chép ngay trong `ClipboardReadActivity` vì quyền đọc URI do clipboard cấp bị thu hồi khi
      clip đổi; activity đóng khi sao chép xong (thường < 200 ms với ảnh 5 MB).
   3. Nguồn > 10 MiB → E2 (v1 không thu nhỏ ảnh). Ảnh động lấy khung đầu.

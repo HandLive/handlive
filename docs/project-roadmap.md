@@ -6,14 +6,14 @@ English | [Tiếng Việt](project-roadmap.vi.md)
 
 HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase. One exception to the order (project owner's decision, 2026-09-28): Phases 5 and 6 are done before Phase 4 finishes, because Phase 4 waits for the G4 Bluetooth hands-free spike on real hardware.
 
-## Progress snapshot (2026-09-30)
+## Progress snapshot (2026-10-05)
 
 **Latest tag:** [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (second beta, the first with installable files). Live table: hub [`README.md`](../README.md#roadmap-and-progress).
 
 | Phase | Code on `main` | Gate / blocker |
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
-| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04) |
+| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05) |
 | 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open |
 | 3 | Done (2026-09-28) | Real-device checks open |
 | 4 | Spike on `main` (`HFPSpike`, merged 2026-09-30) | G4: need BT phone + live call |

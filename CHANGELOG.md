@@ -19,6 +19,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Clipboard, CLIP-01 API 2 logic 2 and CLIP-03 API 1 logic 1 (en and vi): an Android item whose URI is an image is the
+  copied image even when the source app put the image's URL, its alt text or an empty string beside it; the text rule
+  came first before, so such copies went out as text or were dropped. CLIP-03 E10: a URI the clipboard never let the
+  phone read is told on Send Clipboard ("Couldn't read the image") and logged as `clip_read_failed` in debug builds.
+  Code: android `fix/clipboard-image-item-precedence`; e2e coverage for phone → Mac images: shared
+  `feat/e2e-phone-to-mac-image`. Investigation: `plans/20261005-clipboard-image-sync-fix/plan.md`.
 - Delete All on the Mac deletes HandLive's keys in both keychains (SET-02 API 7 logic 6, en and vi), so a user who ran
   both the ad-hoc signed download (login keychain) and a team-signed build (data-protection keychain) keeps neither
   build's `ik_sig`, `ik_dh`, `db_key` or pair keys; login-keychain items travel in backups and Migration Assistant

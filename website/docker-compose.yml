@@ -1,5 +1,6 @@
 # HandLive website: nginx in front of PHP-FPM (WordPress) and MariaDB.
 # Local use: bin/setup.sh (creates .env, starts the stack, installs and seeds WordPress).
+# Every image is pinned to a multi-arch digest; refresh: docs/website.md, "Pinned images and how to update them".
 name: handlive-web
 
 x-wp-env: &wp-env
@@ -17,7 +18,7 @@ x-wp-env: &wp-env
 
 services:
   db:
-    image: mariadb:10.11
+    image: mariadb:10.11@sha256:7db29378d4fdab73f8123bbc2b48905c90d1a4b00cf848b028f1e81e623257f2
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: ${DB_NAME}
@@ -32,7 +33,7 @@ services:
       retries: 30
 
   php:
-    image: wordpress:php8.3-fpm-alpine
+    image: wordpress:php8.3-fpm-alpine@sha256:0163efd355d714a19b86fe438d7c2f3d580fd375d03831da704a9cd87232c680
     restart: unless-stopped
     depends_on:
       db:
@@ -46,7 +47,7 @@ services:
       - ./php/handlive.ini:/usr/local/etc/php/conf.d/zz-handlive.ini:ro
 
   nginx:
-    image: nginx:alpine
+    image: nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
     restart: unless-stopped
     depends_on:
       - php
@@ -59,7 +60,7 @@ services:
 
   # One-off WP-CLI runs: docker compose run --rm wpcli wp <command>
   wpcli:
-    image: wordpress:cli-php8.3
+    image: wordpress:cli-php8.3@sha256:36243da432a0f0a3b56dc3240ecee9b159108d71305e7c064d987a20a465bfde
     profiles: ["tools"]
     depends_on:
       db:

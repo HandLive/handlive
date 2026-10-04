@@ -79,15 +79,23 @@ của tag trước. Để build lại tệp của một tag đã có, chạy wor
 (`publish=false` giữ tệp làm artifact của workflow và không đụng tới Release; tệp đã gắn chỉ bị thay khi có
 `replace=true`).
 
-**Ai giữ khóa:** mỗi workflow build trong một job chỉ có quyền đọc và không có secret, rồi ký và phát hành trong một job
-riêng thuộc environment `release`, job này chỉ chạy công cụ ký của nền tảng và `gh`: mã build của bên thứ ba không bao
-giờ chạy cạnh khóa ký hay token ghi được Release. Ứng dụng Mac ký ad hoc và được chạy thử một lần ngay trong job build;
-bản ký Developer ID chỉ được chạy thử trong job release sau khi keychain ký và khóa notary đã bị xóa, trong một bước
-không có secret (job vẫn giữ chúng trong bộ nhớ: tách thành các job ký, chạy thử và phát hành trước khi thêm secret
-macOS). Các bản build Apple tạo project Xcode bằng XcodeGen đã ghim phiên bản và kiểm SHA-256
-(`apple/Tools/fetch-xcodegen.sh`). Giữ các secret ký trong environment đó (Settings › Environments ›
-`release` › Environment secrets), thêm chính mình làm người duyệt bắt buộc và giới hạn cho tag `v*`, và bảo vệ tag bằng
-một ruleset (Settings › Rules › Rulesets › Tag, `v*`, hạn chế tạo, sửa và xóa).
+**Ai giữ khóa:** mã build của bên thứ ba không bao giờ chạy cạnh khóa ký hay token ghi được Release. `release-android`
+build trong một job chỉ có quyền đọc và không có secret, rồi ký và phát hành trong một job riêng thuộc environment
+`release`. `release-apple` có ba job:
+
+| Job | Environment, quyền | Việc làm |
+|---|---|---|
+| `sign` (iOS và macOS chạy song song) | `release`, `contents: read` | Build bằng XcodeGen đã ghim phiên bản và `xcodebuild`, đóng gói IPA, ký ứng dụng Mac (ad hoc, hoặc Developer ID và notarization khi có secret), ghi SHA-256 của từng tệp. Là job duy nhất đọc secret macOS, mỗi secret chỉ nằm trong môi trường của bước dùng nó |
+| `launch` | không có, `permissions: {}` | Tải các tệp về và kiểm tra chỉ đọc: IPA là tệp nén hợp lệ có ứng dụng bên trong, DMG của Mac mount được và ứng dụng vẫn chạy sau mười giây. Là job duy nhất chạy ứng dụng đã build; không có secret, không có environment và token không có quyền nào |
+| `publish` | `release`, `contents: write` | Cần `sign` và `launch`, kiểm từng tệp với SHA-256 của nó, giữ chúng làm workflow artifact `apple-<version>` và đính kèm vào Release. Không chạy mã đã build và không checkout mã nào |
+
+Các tệp đi giữa các job dưới dạng workflow artifact `build-<platform>-<version>`. Các bản build Apple tạo project Xcode
+bằng XcodeGen đã ghim phiên bản và kiểm SHA-256 (`apple/Tools/fetch-xcodegen.sh`). Vì `sign` dùng environment, chỉ tag
+`v*` và `main` chạy được `release-apple`, kể cả chạy tay. Giữ các secret ký trong environment đó (Settings ›
+Environments › `release` › Environment secrets), thêm chính mình làm người duyệt bắt buộc và giới hạn cho tag `v*`, và
+bảo vệ tag bằng một ruleset (Settings › Rules › Rulesets › Tag, `v*`, hạn chế tạo, sửa và xóa). Thêm bảy secret macOS
+bên dưới không cần sửa workflow: đặt chúng trong `release` là `sign` đi theo đường Developer ID; bước mới cần secret
+thì đặt trong `sign`, không bao giờ trong `launch` hay `publish`.
 
 **Ký Android (chủ dự án, một lần):** APK được ký sau khi build bằng `apksigner`; thiếu secret thì job ký dừng (bản build
 chưa ký vẫn là artifact của workflow) thay vì phát hành một APK không cài hay cập nhật được. Tạo khóa và cất keystore
@@ -122,7 +130,7 @@ phải loại nhạy cảm thời gian. Tag cũ hơn cơ chế login keychain n�
 Developer ID, vì app của nó cần data-protection keychain. Có đủ bảy secret dưới đây thì workflow phát hành
 `HandLive-<version>-macos.dmg` thay thế (có một phần thì báo lỗi): nó ký bản Release universal từ trong ra ngoài
 (`SQLCipher.framework` nhúng kèm, rồi app với `macOS/HandLive.entitlements`, hardened runtime và dấu thời gian an
-toàn), đặt vào một DMG ký cùng danh tính, notarize DMG bằng `notarytool`, staple rồi kiểm app vẫn chạy sau mười giây.
+toàn), đặt vào một DMG ký cùng danh tính, notarize DMG bằng `notarytool`, staple (job `launch` rồi kiểm app vẫn chạy sau mười giây).
 Trước khi ký, nó kiểm profile là profile Developer ID của `app.handlive.mac`, làm cho đúng chứng chỉ đó và cấp đủ ba
 capability. Camera và micro ảo của Phase 5 sẽ cần bản đã ký này. Secret của handlive-apple:
 

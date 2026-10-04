@@ -19,7 +19,7 @@ Verdict PASS: 0 critical, 0 high, 2 medium, 6 low.
 | L | android `AppNotificationReader.kt:26` | BROKEN-ACCESS-CONTROL | bare `android.callType` extra = fake call; Answer lends HandLive's BAL exemption | Fixed: API 31+ requires the platform `CallStyle` template; test red on old code |
 | L | hub `inc/hardening.php:29` | VERBOSE-ERROR-DEBUG-MODE | admin login name in RSS `dc:creator` and oEmbed | Fixed: public name HandLive, oEmbed author fields dropped (verified) |
 | L | hub `nginx/default.conf:4` | BRUTE-FORCE | behind a proxy the login limit is one shared bucket (owner lockout) | Documented in `docs/website.md` Going live |
-| L | hub `docker-compose.yml:35` | OUTDATED-DEPENDENCY | floating image tags; Polylang unpinned, no updates | Partial: Polylang auto-updates; image digests open |
+| L | hub `docker-compose.yml:35` | OUTDATED-DEPENDENCY | floating image tags; Polylang unpinned, no updates | Fixed: Polylang auto-updates; images pinned to digests 2026-10-05 (`website-image-digests-2026-10-05.md`) |
 | L | apple `KeychainSecretStore.swift:80` | WEAK-PASSWORD-HASHING | Erase All Data clears only the current build's keychain | Fixed on `fix/erase-both-keychains` (apple, hub; not merged): both keychains, `SecKeychainItemDelete` for the login keychain; cross-signature test, no dialog (`erase-both-keychains-2026-10-04.md`) |
 | L | apple `release-apple.yml:143` | OUTDATED-DEPENDENCY | unpinned `brew install xcodegen` | Fixed: XcodeGen 2.46.0 by SHA-256 (`Tools/fetch-xcodegen.sh`), byte-identical project |
 
@@ -59,7 +59,7 @@ step idempotent; rerun tested). Wording corrected for M1/M3 (residual risk docum
   full-screen intent; `answer_mode = tap` below API 31)? Changes UX.
 - Owner: split `release-apple` into sign / launch / publish jobs before adding the macOS signing secrets.
 - Owner: the `ANDROID_RELEASE_*` secrets are repository secrets; the guide asks for environment `release` secrets.
-- Open LOWs: website image digests (erase both keychains: fixed on `fix/erase-both-keychains`, waiting for merge).
+- Open LOWs: website image digests fixed 2026-10-05; remaining: (erase both keychains: fixed on `fix/erase-both-keychains`, waiting for merge).
 
 Status: DONE_WITH_CONCERNS
 Summary: Scan PASS (0 critical/high); 6 of 8 findings fixed and verified, 2 low open with follow-ups.

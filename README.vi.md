@@ -65,10 +65,10 @@ HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoạ
 
 Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md). Thẻ việc: [`plans/20260925-implementation/plan.vi.md`](plans/20260925-implementation/plan.vi.md).
 
-| Phase / cổng | Mục tiêu | Trạng thái (30/09/2026) |
+| Phase / cổng | Mục tiêu | Trạng thái (05/10/2026) |
 |--------------|----------|-------------------------|
 | **0** Khung, giao thức, mã hóa, CI | Vector dùng chung, CI xanh | **Xong** |
-| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026) |
+| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); ảnh sao chép kèm chữ bên cạnh URI được gửi như ảnh, mất quyền URI được báo khi bấm Gửi bảng nhớ tạm, e2e kiểm ảnh điện thoại → Mac (05/10/2026) |
 | **2** SMS + iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · G2 và push thật còn mở |
 | **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, metadata iOS | **Mã xong** · kiểm máy thật còn mở |
 | **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |
