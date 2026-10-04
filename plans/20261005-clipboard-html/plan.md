@@ -1,6 +1,6 @@
 # Clipboard HTML: a text clip keeps its rich form (2026-10-05)
 
-**Status:** in progress · **Route:** feature · **Ship mode:** beta · **Owner decision:** 2026-10-05 04:04 ("làm luôn tính năng clip HTML")
+**Status:** code done, shipping (2026-10-05 05:00: shared PR #4 merged, android PR #5 and apple PR #3 open with `ready to ship beta`, hub PR follows; owner live test pending) · **Route:** feature · **Ship mode:** beta · **Owner decision:** 2026-10-05 04:04 ("làm luôn tính năng clip HTML")
 **Repos:** shared (schema, vectors, e2e) → android, apple in parallel → hub (spec en + vi, docs). Contract first: this file is the contract until the spec lands.
 
 ## Why
@@ -36,11 +36,11 @@ Copying an article (text with pictures) on the phone and pasting it in Notes or 
 
 ## Acceptance
 
-- [ ] Vectors: Kotlin and Swift sanitizers reproduce every case of `clipboard-html.json`.
-- [ ] Unit tests green on android (`:feature:clipboard`, `:core:protocol`) and apple (HLProtocol, HLAppCore, HLMacUI, HLiOSUI).
-- [ ] e2e `clipboard` on the API 35 emulator: the new html step PASS, all earlier steps PASS.
-- [ ] Live: an article copied in Samsung Internet on the S25 pastes with its pictures in Notes on the Mac (owner).
-- [ ] Spec en + vi updated, `validate_design_docs.py` problems=0; README roadmap row, CHANGELOG, handoff.
+- [x] Vectors: Kotlin and Swift sanitizers reproduce every case of `clipboard-html.json` (41 cases, byte for byte).
+- [x] Unit tests green on android (`:core:protocol` 58, `:feature:clipboard` 127, `:feature:connection` 44) and apple (HLProtocol, HLAppCore, HLMacUI, HLiOSUI; 302 before the review fixes, 209 on the two changed packages after).
+- [x] e2e `clipboard` on the API 35 emulator: the html steps PASS, all earlier steps PASS (setup 27, clipboard 21 PASS / 1 SKIP, 0 FAIL, final APK).
+- [ ] Live: an article copied in Samsung Internet on the S25 pastes with its pictures in Notes on the Mac (owner; both devices run the new builds since 04:51 / 04:56).
+- [x] Spec en + vi updated, `validate_design_docs.py` problems=0; README roadmap row, CHANGELOG, handoff.
 
 ## Validation and red-team (inline, unattended)
 
