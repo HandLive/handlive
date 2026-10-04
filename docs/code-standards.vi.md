@@ -46,7 +46,8 @@
 - Bọc mọi `IOBluetooth*` call trong protocol abstraction (API legacy, rủi ro deprecate).
 - CMIOExtension / AudioServerPlugin ký Developer ID (bắt buộc; ad-hoc bị reject).
 - Key vào Keychain với `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; macOS dùng data-protection
-  keychain (`kSecUseDataProtectionKeychain`) và entitlement `keychain-access-groups`.
+  keychain (`kSecUseDataProtectionKeychain`) và entitlement `keychain-access-groups`, trừ bản build ký
+  ad-hoc không có entitlement đó, vốn dùng login keychain (0.6.1).
 
 ## Bản địa hóa (C20, `docs/detailed-design/00-common-specs.md` 0.12)
 

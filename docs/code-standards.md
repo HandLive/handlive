@@ -47,7 +47,8 @@ English | [Tiếng Việt](code-standards.vi.md)
 - Wrap every `IOBluetooth*` call in a protocol abstraction (legacy API, deprecation risk).
 - CMIOExtension / AudioServerPlugin are signed with Developer ID (mandatory; ad-hoc signing is rejected).
 - Keys go into the Keychain with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; macOS uses the
-  data-protection keychain (`kSecUseDataProtectionKeychain`) and the `keychain-access-groups` entitlement.
+  data-protection keychain (`kSecUseDataProtectionKeychain`) and the `keychain-access-groups` entitlement,
+  except an ad-hoc signed build without that entitlement, which uses the login keychain (0.6.1).
 
 ## Localization (C20, `docs/detailed-design/00-common-specs.md` 0.12)
 

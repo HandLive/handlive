@@ -915,7 +915,7 @@ flowchart TB
 | `kSecValueData` | the private key's 32-byte `rawRepresentation`; `db_key` is 32 random bytes |
 | `kSecAttrAccessible` | `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` |
 | `kSecAttrAccessGroup` | iOS/iPadOS: the group shared with I-NSE; Mac: the app's default group |
-| `kSecUseDataProtectionKeychain` | Mac: `true` (needed to use the `WhenUnlockedThisDeviceOnly` protection class on macOS) |
+| `kSecUseDataProtectionKeychain` | Mac: `true` (needed to use the `WhenUnlockedThisDeviceOnly` protection class on macOS); an ad-hoc signed Mac build without `keychain-access-groups` leaves it and `kSecAttrAccessible` out and uses the login keychain (0.6.1) |
 
 - **Response:** `errSecSuccess`; `errSecDuplicateItem` → read the existing item (setup is running
   again); `errSecInteractionNotAllowed` or `errSecMissingEntitlement` → E1.

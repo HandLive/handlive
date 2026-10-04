@@ -278,7 +278,13 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
   `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (per `docs/code-standards.md`). macOS uses the
   data-protection keychain (`kSecUseDataProtectionKeychain = true`) so that this attribute takes
   effect as on iOS; the app must be signed with the `keychain-access-groups` entitlement
-  (`docs/deployment-guide.md`); unsigned test processes use an in-memory key store. M-APP and I-APP
+  (`docs/deployment-guide.md`); unsigned test processes use an in-memory key store. A Mac build without
+  that entitlement (the ad-hoc signed download made without the paid Apple Developer team) cannot reach
+  the data-protection keychain (`errSecMissingEntitlement`, -34018) and uses the login keychain
+  instead, the same items without `kSecUseDataProtectionKeychain` and without an accessibility class:
+  the keys are no longer tied to this device (a backup or Migration Assistant can carry them to another
+  Mac), and macOS asks once per new build whether the app may read them. The app picks the keychain from
+  its own entitlements at launch; a signed build always uses the data-protection keychain. M-APP and I-APP
   load `PRK` into memory at launch while the device is unlocked and keep it for the whole process
   lifetime, so they can still reconnect while the screen is locked. I-NSE cannot read the key while
   the iPhone is locked → shows generic content (see CONN-04).

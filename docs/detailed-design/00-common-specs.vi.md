@@ -274,7 +274,13 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
   `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (theo `docs/code-standards.md`). macOS dùng
   data-protection keychain (`kSecUseDataProtectionKeychain = true`) để thuộc tính này có hiệu lực
   như iOS; app phải ký với entitlement `keychain-access-groups` (`docs/deployment-guide.md`); tiến
-  trình test không ký dùng kho khóa trong bộ nhớ. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động
+  trình test không ký dùng kho khóa trong bộ nhớ. Bản build Mac không có entitlement đó (bản tải về
+  ký ad-hoc, làm khi chưa có team Apple Developer trả phí) không vào được data-protection keychain
+  (`errSecMissingEntitlement`, -34018) và dùng login keychain thay thế, cùng các mục nhưng không có
+  `kSecUseDataProtectionKeychain` và không có lớp truy cập: khóa không còn gắn với máy này (bản sao lưu
+  hay Migration Assistant có thể mang chúng sang Mac khác), và macOS hỏi một lần cho mỗi bản build mới
+  xem app có được đọc chúng không. App chọn keychain theo entitlement của chính nó khi khởi động; bản
+  đã ký luôn dùng data-protection keychain. M-APP và I-APP nạp `PRK` vào bộ nhớ khi khởi động
   lúc máy đang mở khóa và giữ trong suốt vòng đời tiến trình, nên vẫn kết nối lại được khi màn hình
   khóa. I-NSE không đọc được khóa khi iPhone đang khóa → hiển thị nội dung chung chung (xem
   CONN-04).

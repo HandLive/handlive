@@ -888,7 +888,7 @@ flowchart TB
 | `kSecValueData` | `rawRepresentation` 32 byte của khóa riêng; `db_key` 32 byte ngẫu nhiên |
 | `kSecAttrAccessible` | `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` |
 | `kSecAttrAccessGroup` | iOS/iPadOS: nhóm dùng chung với I-NSE; Mac: nhóm mặc định của ứng dụng |
-| `kSecUseDataProtectionKeychain` | Mac: `true` (cần để dùng lớp bảo vệ `WhenUnlockedThisDeviceOnly` trên macOS) |
+| `kSecUseDataProtectionKeychain` | Mac: `true` (cần để dùng lớp bảo vệ `WhenUnlockedThisDeviceOnly` trên macOS); bản build Mac ký ad-hoc không có `keychain-access-groups` bỏ thuộc tính này và `kSecAttrAccessible`, dùng login keychain (0.6.1) |
 
 - **Response:** `errSecSuccess`; `errSecDuplicateItem` → đọc mục sẵn có (thiết lập chạy lại);
   `errSecInteractionNotAllowed` hoặc `errSecMissingEntitlement` → E1.
