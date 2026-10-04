@@ -57,7 +57,12 @@ Polylang adds `hreflang` links between translations; the theme adds the descript
 ## Design
 
 - Colors, type, and voice follow the [brand guidelines](brand-guidelines.md): dawn background, plum text,
-  Be Vietnam Pro Bold headings, system font for body text, green buttons; light and dark appearance.
+  Be Vietnam Pro headings (Black for titles, Bold for cards), system font for body text, the system monospace
+  for section labels and tags, green buttons; light and dark appearance.
+- Landing page layout: centered hero with the tagline as a two-tone title, a stats row and a framed real
+  screenshot; sections with a monospace eyebrow, feature cards with icon tiles and category tags, numbered
+  steps, platform chips, the compatibility table and the privacy checklist. Sections fade in on scroll
+  (`.hl-reveal`; off with reduced motion).
 - No third-party requests: fonts and images are served by the site itself, and there are no analytics.
 
 ## Going live

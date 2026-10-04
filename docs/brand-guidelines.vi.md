@@ -247,7 +247,8 @@ Trạng thái giữ màu hệ thống (`system-red` cho lỗi và thao tác hủ
 ```
 
 - Be Vietnam Pro Bold: chữ HandLive, `brand-large-title`, `brand-title` và tiêu đề ảnh quảng bá. Thiết kế
-  cho tiếng Việt nên dấu vẫn rõ ở cỡ lớn. Đóng gói theo giấy phép SIL OFL 1.1.
+  cho tiếng Việt nên dấu vẫn rõ ở cỡ lớn. Đóng gói theo giấy phép SIL OFL 1.1. Website dùng thêm ExtraBold và
+  Black cho tiêu đề lớn, ép chữ sát (−0,03 đến −0,04 em).
 - Mọi chữ khác dùng font hệ thống: San Francisco trên nền tảng Apple, Inter trên Android; website dùng bộ font
   hệ thống của máy người đọc.
 - San Francisco và SF Symbols không bao giờ có mặt trong logo, biểu tượng app hay ảnh quảng bá (giấy
