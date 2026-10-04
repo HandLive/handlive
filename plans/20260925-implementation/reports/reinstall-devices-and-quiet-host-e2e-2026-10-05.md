@@ -54,6 +54,10 @@ The owner copied an image on the S25 with the diagnostics build attached: **no H
 
 Owner steps: Settings › Apps › HandLive › ⋮ › Allow restricted settings (authenticate), then Settings › Accessibility › HandLive › On (the app's RestrictedSettingScreen already says this, SET-01 field 14); meanwhile the manual path (notification button, tile) works for images too, as the emulator e2e shows. The One UI URI-grant hypothesis stays untested until the service is on or the button is pressed with an image on the clipboard.
 
+## 7. Resolved (03:57)
+
+The owner allowed the restricted setting and turned HandLive on in Accessibility (`ACCESS_RESTRICTED_SETTINGS` rejectTime reset to seconds ago; `enabled_accessibility_services` now lists `ClipboardAccessibilityService`). The next image copy in Samsung Gallery went through in 0.5 s: S25 `copy_detected 03:57:44.216 → clip_read kind=image bytes=171108 source=auto → clip_sent`; Mac `clip_received kind=image → clip_applied → ack_sent applied`; S25 `ack_received applied` at 03:57:44.719. **Root cause of "image copy fails" on the S25: Android 13+'s restricted-settings rule kept the sideloaded app's Accessibility service off, so no copy was ever detected; the sync code was sound.** The night's code changes still stand on their own merits (image URI precedence, lost-grant message, `largeHeap`, diagnostics). Mac → S25 image: not yet exercised by the owner.
+
 ## Unresolved questions
 
 1. The 3 MB phone → Mac e2e step skipped once because Chrome showed no "Copy image" in its long-press menu; make the step retry the long-press or fall back to Google Photos.
