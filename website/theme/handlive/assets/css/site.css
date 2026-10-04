@@ -392,3 +392,67 @@ p { margin: 0 0 1em; }
 
 .hl-notfound { text-align: center; }
 .hl-notfound .hl-lead { margin-inline: auto; }
+
+/* Screenshot gallery: one horizontal, snap-scrolling strip per platform; images keep their own proportions. */
+.hl-gallery-row { margin-top: clamp(28px, 4vw, 44px); }
+.hl-gallery__title { font-family: var(--hl-font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hl-text-2); margin: 0 0 14px; display: flex; align-items: center; gap: 12px; }
+.hl-gallery__title::after { content: ""; flex: 1; height: 1px; background: var(--hl-line); }
+.hl-gallery {
+	display: flex; gap: 16px; overflow-x: auto; padding: 4px 20px 16px; margin-inline: -20px;
+	scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--hl-line-2) transparent;
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+	mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+}
+.hl-gallery > .wp-block-image, .hl-gallery__item { flex: none; scroll-snap-align: start; margin: 0; }
+.hl-gallery figure { margin: 0; }
+.hl-gallery img {
+	display: block; height: clamp(300px, 44vw, 460px); width: auto; max-width: none;
+	border-radius: 16px; border: 1px solid var(--hl-line-2); box-shadow: var(--hl-shadow);
+}
+.hl-gallery figcaption { font-family: var(--hl-font-mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--hl-text-3); margin-top: 10px; max-width: 32ch; text-align: left; }
+/* Two versions of the same screen: the dark one shows when the dark tokens apply. */
+.hl-gallery__item--swap .hl-img--dark { display: none; }
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .hl-gallery__item--swap .hl-img--light { display: none; }
+	:root:not([data-theme="light"]) .hl-gallery__item--swap .hl-img--dark { display: block; }
+}
+:root[data-theme="dark"] .hl-gallery__item--swap .hl-img--light { display: none; }
+:root[data-theme="dark"] .hl-gallery__item--swap .hl-img--dark { display: block; }
+
+/* Section backgrounds: rings (the signal motif), a dot grid, or drifting glows; all behind the content. */
+.hl-section { isolation: isolate; overflow: hidden; }
+.hl-section::before, .hl-section::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hl-section::after { content: none; }
+.hl-section--rings::before {
+	background: repeating-radial-gradient(circle at 92% 12%, var(--hl-line) 0 1px, transparent 1px 56px);
+	-webkit-mask-image: radial-gradient(60% 70% at 92% 12%, #000, transparent 70%);
+	mask-image: radial-gradient(60% 70% at 92% 12%, #000, transparent 70%);
+	animation: hl-rings 9s ease-in-out infinite alternate;
+}
+.hl-section--rings-left::before {
+	background: repeating-radial-gradient(circle at 6% 85%, var(--hl-line) 0 1px, transparent 1px 56px);
+	-webkit-mask-image: radial-gradient(55% 70% at 6% 85%, #000, transparent 70%);
+	mask-image: radial-gradient(55% 70% at 6% 85%, #000, transparent 70%);
+}
+.hl-section--rings::after {
+	content: ""; background: radial-gradient(40% 40% at 92% 12%, var(--hl-glow-fire), transparent 70%); opacity: 0.5;
+}
+.hl-section--rings-left::after { background: radial-gradient(40% 40% at 6% 85%, var(--hl-glow-accent), transparent 70%); }
+.hl-section--grid::before {
+	background:
+		linear-gradient(to bottom, var(--hl-bg-2), transparent 30%, transparent 70%, var(--hl-bg-2)),
+		radial-gradient(var(--hl-dot) 1px, transparent 1.5px) 0 0 / 28px 28px;
+}
+.hl-section--grid::after { content: ""; background: radial-gradient(50% 60% at 50% 100%, var(--hl-glow-accent), transparent 70%); }
+.hl-section--glow::before {
+	background:
+		radial-gradient(35% 45% at 12% 30%, var(--hl-glow-fire), transparent 70%),
+		radial-gradient(35% 45% at 88% 70%, var(--hl-glow-accent), transparent 70%);
+	opacity: 0.55;
+	animation: hl-drift 16s ease-in-out infinite alternate;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hl-section--glow::before { opacity: 1; } }
+:root[data-theme="dark"] .hl-section--glow::before { opacity: 1; }
+@keyframes hl-rings { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes hl-drift { from { transform: translate3d(-2%, -1%, 0) scale(1); } to { transform: translate3d(2%, 2%, 0) scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .hl-section--rings::before, .hl-section--glow::before { animation: none; } }
