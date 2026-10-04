@@ -61,7 +61,8 @@ project owner in Vietnamese with diacritics.
 3. **Gate G6 (Continue Browsing spike):** Chrome + Samsung measured on S25; HOME fix verified. Pending owner decisions: Safari Accessibility, Samsung origin-only; matrix rows Firefox/Edge/Brave; then product cards WEB-01…05.
 4. **Gate G1 (formal):** device matrix in `shared/tools/bench/README.md`, TalkBack/VoiceOver, system setting names. Pairing on this machine is informally green only.
 5. **Gate G2 + Phase 2/3 real stack:** Play Console SMS/call-log declaration; real relay host, APNs, FCM (owner inputs in `phase-02-merge.md`).
-6. **Apple CI:** `ci-apple` has been cancelled repeatedly when multiple `workflow_dispatch` runs overlap (concurrency). Prefer **one** dispatch and do not cancel/stack. Hub/android/shared/relay CI were green after the beta/CI fixes; re-check before relying on apple green.
+6. **Apple CI:** `ci-apple` has been cancelled repeatedly when multiple `workflow_dispatch` runs overlap (concurrency). Prefer **one** dispatch and do not cancel/stack. Hub/android/shared/relay CI were green after the beta/CI fixes; re-check before relying on apple green. (2026-10-04: `ci-apple` now runs four parallel lanes, ~3–4 min.)
+7. **Release files (2026-10-04):** tag-driven `release-android` / `release-apple` attach the APK, the iOS IPA and the notarized Mac app to a tag's Release (`docs/deployment-guide.md`, Release builds). Owner inputs: the Android release keystore secrets (then rerun for `v0.1.0-beta.1`), and the paid Apple Developer team's seven macOS secrets; the macOS signing path has not run yet.
 
 ### Plan next (priority order)
 
