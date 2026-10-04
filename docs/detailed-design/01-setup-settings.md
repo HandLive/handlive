@@ -32,7 +32,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive connects this phone to your Mac, iPhone, and iPad. Data is end-to-end encrypted and travels only between devices you've paired; the server can't read it. No account needed." With the link "HandLive and Your Privacy", which opens the page in the display language: https://github.com/HandLive/handlive/blob/main/docs/privacy.md (English), https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (Vietnamese) |
+| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive connects this phone to your Mac, iPhone, and iPad. Data is end-to-end encrypted and travels only between devices you've paired; the server can't read it. No account needed." With the link "HandLive and Your Privacy", which opens the page in the display language: https://github.com/HandLive/handlive/blob/main/docs/privacy.md (English), https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (Vietnamese)<br>Above the title: the brand mark (`HLBrandMark`, Onboarding README), decorative (TalkBack skips it). |
 | 2 | "Get Started" button | action | Input | — | Goes to step 3 |
 | 3 | Notification permission | enum{granted\| denied\| not_required} | Input/Output | `not_required` (API 29–32) or from `checkSelfPermission` | Android 13+ asks at step 3; `denied` shows a warning banner and an "Open Notification Settings" button (E1) |
 | 4 | Connection service status | enum{running\| stopped\| failed} | Output | `stopped` | `running` after step 5; `failed` per E2 |
@@ -813,7 +813,7 @@ N/A — no approved wireframe yet.
 
 | # | Field | Data type | Input/Output | Initial value | Description |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive brings the clipboard, SMS messages, and calls from your Android phone to this device. Data is end-to-end encrypted and travels only between your devices; the server can't read it. No account needed." |
+| 1 | Introduction and privacy | string | Output | Fixed text | "HandLive brings the clipboard, SMS messages, and calls from your Android phone to this device. Data is end-to-end encrypted and travels only between your devices; the server can't read it. No account needed."<br>Above the title: the brand mark (`HLBrandMark`, Onboarding README), decorative (VoiceOver skips it); on the Mac, HandLive › About HandLive shows the standard About panel with the app icon. |
 | 2 | "Get Started" button | action | Input | — | Goes to step 4 |
 | 3 | Open HandLive at Login | bool | Input/Output | `true` | Mac. Checkbox on the welcome screen; `true` → `SMAppService.mainApp.register()` at step 6 |
 | 4 | App location | enum{applications\| other\| translocated} | Output | From `Bundle.main.bundleURL` | Mac. `other`, `translocated` show field 5 |

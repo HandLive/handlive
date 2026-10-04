@@ -69,9 +69,10 @@ Theo HIG, màu nhấn dùng tiết chế trên control:
 
 - Logo là ngọn lửa hiệu trên đỉnh núi; các file (biểu tượng, chữ HandLive, bộ ghép, biểu tượng app)
   nằm ở `docs/brand/assets/`, quy tắc dùng ở [hướng dẫn thương hiệu](../../brand-guidelines.vi.md).
-- Trong app, logo chỉ có ở màn chào và cửa sổ Giới thiệu: dạng ảnh bộ ghép, hoặc chữ "HandLive" kiểu
-  `wordmark` (Be Vietnam Pro Bold 20/24) màu `brand-fire` hay `label`. Không rải logo khắp app, không
-  đặt trên thanh điều hướng.
+- Trong app, logo chỉ có ở màn chào và cửa sổ Giới thiệu. Màn chào đặt logo phía trên tiêu đề có tên app
+  (`HLBrandMark`, xem Onboarding); cửa sổ Giới thiệu trên Mac là bảng chuẩn, có biểu tượng app. Ở chỗ khác, tên
+  app là chữ "HandLive" kiểu `wordmark` (Be Vietnam Pro Bold 20/24) màu `brand-fire` hoặc `label`. Không rải logo
+  khắp app, không đặt logo trên thanh điều hướng.
 - Không dùng SF Symbols, font San Francisco hay hình dễ lẫn với symbol trong logo và biểu tượng app:
   giấy phép của Apple không cho phép.
 

@@ -73,9 +73,11 @@ Per the HIG, the accent color is used sparingly on controls:
 
 - The logo is a signal fire on a mountaintop; the files (mark, wordmark, lockups, app icon) are in
   `docs/brand/assets/` and their rules in the [brand guidelines](../../brand-guidelines.md).
-- In the apps, the logo appears only on the welcome screen and in the About window: as the lockup
-  image, or as the word "HandLive" in the `wordmark` style (Be Vietnam Pro Bold 20/24) in `brand-fire`
-  or `label`. Don't scatter logos across the app, and don't put one in navigation bars.
+- In the apps, the logo appears only on the welcome screen and in the About window. The welcome screen
+  shows the mark above the title that names the app (`HLBrandMark`, see Onboarding); the Mac's About
+  window is the standard panel, with the app icon. Elsewhere the name is the word "HandLive" in the
+  `wordmark` style (Be Vietnam Pro Bold 20/24) in `brand-fire` or `label`. Don't scatter logos across the
+  app, and don't put one in navigation bars.
 - Don't use SF Symbols, the San Francisco font, or shapes easily mistaken for symbols in the logo or
   the app icon: Apple's license doesn't allow it.
 

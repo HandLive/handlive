@@ -76,7 +76,7 @@ project owner in Vietnamese with diacritics.
 6. **G2 + production push:** Play forms; deploy/configure relay; APNs `.p8` + FCM. Logo and app icons exist
    (`docs/brand-guidelines.md`, hub branch `feat/ckm-brand-from-start-008ce2`,
    `feat/brand-identity` in shared/android/apple, 2026-10-01); still
-   open: an Icon Composer `.icon` for Liquid Glass and the in-app logo on the welcome/About screens.
+   open: an Icon Composer `.icon` for Liquid Glass (the mark on the welcome screens landed 2026-10-04).
 7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
 
 ### Archive

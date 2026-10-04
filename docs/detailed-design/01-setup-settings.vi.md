@@ -31,7 +31,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive nối điện thoại này với Mac, iPhone, iPad của bạn. Dữ liệu được mã hóa đầu-cuối và chỉ đi giữa các thiết bị bạn đã ghép; máy chủ không đọc được nội dung. Không cần tài khoản." Kèm liên kết "HandLive và quyền riêng tư của bạn" mở trang theo ngôn ngữ đang hiển thị: https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (tiếng Việt), https://github.com/HandLive/handlive/blob/main/docs/privacy.md (tiếng Anh) |
+| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive nối điện thoại này với Mac, iPhone, iPad của bạn. Dữ liệu được mã hóa đầu-cuối và chỉ đi giữa các thiết bị bạn đã ghép; máy chủ không đọc được nội dung. Không cần tài khoản." Kèm liên kết "HandLive và quyền riêng tư của bạn" mở trang theo ngôn ngữ đang hiển thị: https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md (tiếng Việt), https://github.com/HandLive/handlive/blob/main/docs/privacy.md (tiếng Anh)<br>Phía trên tiêu đề: logo (`HLBrandMark`, README Onboarding), chỉ để trang trí (TalkBack bỏ qua). |
 | 2 | Nút "Bắt đầu" | action | Input | — | Sang bước 3 |
 | 3 | Quyền thông báo | enum{granted\| denied\| not_required} | Input/Output | `not_required` (API 29–32) hoặc theo `checkSelfPermission` | Android 13+ hỏi ở bước 3; `denied` hiện dải cảnh báo và nút "Mở cài đặt thông báo" (E1) |
 | 4 | Trạng thái dịch vụ kết nối | enum{running\| stopped\| failed} | Output | `stopped` | `running` sau bước 5; `failed` theo E2 |
@@ -786,7 +786,7 @@ N/A — chưa có wireframe được duyệt.
 
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
-| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive đưa bảng nhớ tạm, tin nhắn SMS và cuộc gọi từ điện thoại Android lên máy này. Dữ liệu được mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn; máy chủ không đọc được nội dung. Không cần tài khoản." |
+| 1 | Giới thiệu và quyền riêng tư | string | Output | Nội dung cố định | "HandLive đưa bảng nhớ tạm, tin nhắn SMS và cuộc gọi từ điện thoại Android lên máy này. Dữ liệu được mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn; máy chủ không đọc được nội dung. Không cần tài khoản."<br>Phía trên tiêu đề: logo (`HLBrandMark`, README Onboarding), chỉ để trang trí (VoiceOver bỏ qua); trên Mac, HandLive › Giới thiệu về HandLive mở bảng Giới thiệu chuẩn có biểu tượng app. |
 | 2 | Nút "Bắt đầu" | action | Input | — | Sang bước 4 |
 | 3 | Mở HandLive khi đăng nhập | bool | Input/Output | `true` | Mac. Hộp chọn trên màn hình chào mừng; `true` → `SMAppService.mainApp.register()` ở bước 6 |
 | 4 | Vị trí ứng dụng | enum{applications\| other\| translocated} | Output | Theo `Bundle.main.bundleURL` | Mac. `other`, `translocated` hiện trường 5 |
