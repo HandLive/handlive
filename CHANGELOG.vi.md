@@ -19,6 +19,12 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Fixed
 
+- Bảng nhớ tạm, CLIP-01 API 2 logic 2 và CLIP-03 API 1 logic 1 (en và vi): item Android có URI là ảnh thì là bức
+  ảnh đã sao chép, kể cả khi ứng dụng nguồn đặt URL ảnh, chữ thay thế hay chuỗi rỗng bên cạnh; trước đây luật văn
+  bản đứng trước nên các bản sao như vậy bị gửi thành chữ hoặc bị bỏ. CLIP-03 E10: URI mà clipboard không cho điện
+  thoại đọc được báo khi bấm Gửi bảng nhớ tạm ("Không đọc được ảnh") và ghi `clip_read_failed` ở bản debug. Mã:
+  android `fix/clipboard-image-item-precedence`; e2e cho ảnh điện thoại → Mac: shared `feat/e2e-phone-to-mac-image`.
+  Điều tra: `plans/20261005-clipboard-image-sync-fix/plan.md`.
 - Xóa tất cả trên Mac xóa khóa HandLive ở cả hai keychain (SET-02 API 7 logic 6, en và vi), nên người dùng đã chạy cả
   bản tải về ký ad-hoc (login keychain) lẫn bản ký team (data-protection keychain) không còn `ik_sig`, `ik_dh`,
   `db_key` hay khóa cặp của bản nào; mục trong login keychain đi theo bản sao lưu và Migration Assistant (quét bảo
