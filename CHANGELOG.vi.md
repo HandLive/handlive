@@ -12,6 +12,11 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
   Release của handlive-android và handlive-apple sang Release của hub sau khi kiểm checksum, để người dùng tải mọi
   nền tảng ở một trang (`docs/deployment-guide.vi.md`, Bản phát hành). Đã làm cho `v0.1.0-beta.2`.
 
+### Changed
+
+- Website: huy hiệu trang chủ ghi `v0.1.0-beta.2` và mở trang phát hành của nó; `docs/website.vi.md` thêm nó vào các
+  chỗ cần đổi mỗi lần phát hành.
+
 ### Fixed
 
 - Xóa tất cả trên Mac xóa khóa HandLive ở cả hai keychain (SET-02 API 7 logic 6, en và vi), nên người dùng đã chạy cả
@@ -21,6 +26,15 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
   errSecInvalidOwnerEdit (-25244) với mục do chữ ký mã khác tạo, lỗi này cũng khiến bản ad-hoc đã cập nhật không xóa
   được dữ liệu hay cài đặt lại; SET-03 API 1 logic 1 giữ bước dọn khi cài mới trong keychain của bản build này;
   PAIR-03 nêu lời gọi. Mã: apple `fix/erase-both-keychains`.
+
+### Security
+
+- Cuộc gọi từ ứng dụng khác (CALL-05 API 1 logic 6): "Trả lời" từ Mac chỉ mở ứng dụng từ nền với cuộc gọi mà Android
+  bảo đảm (từ Android 14: foreground service, user-initiated job hoặc full-screen intent đã được cấp; Android 12–13:
+  mọi thông báo `CallStyle`; Android 10–11: không bao giờ); cuộc gọi khác được trả lời qua thông báo "chạm để nghe"
+  trên điện thoại.
+- Ký bản phát hành Android: các secret chuyển vào environment `release`, chỉ cho tag `v*` và `main`; khóa phát hành
+  mới (`CN=Ho Xuan Dung, O=HandLive, C=VN`) thay khóa đầu tiên trước khi có người dùng cài.
 
 ## [0.1.0-beta.2] — 04/10/2026
 
