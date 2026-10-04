@@ -9,8 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - `docs/deployment-guide.md` (en, vi): Release builds — tag-driven `release-android` (signed `foss` APK) and
-  `release-apple` (unsigned iOS IPA; Developer ID notarized Mac app once the paid team's secrets exist), how to cut a
-  release, rebuild an existing tag, and the secrets the owner creates.
+  `release-apple` (unsigned iOS IPA; ad-hoc signed Mac DMG, or a Developer ID notarized one once the paid team's secrets
+  exist); Mac builds without a team signature keep their keys in the login keychain (0.6.1); how to cut a release,
+  rebuild an existing tag, and the secrets the owner creates.
 - CALL-05 (calls from other apps): `AppCallListenerService` (`NotificationListenerService`) reads Telegram and other calling apps' notifications on Android and sends them to the Mac; the user can answer, decline or end from the Mac (audio stays on the phone in v1). Requires Notification access, a special access the user enables by hand. Cellular calls unchanged.
 - Product website and blog (`website/`, `docs/website.md`): WordPress on nginx + PHP-FPM + MariaDB in Docker,
   English at `/` and Vietnamese at `/vi/` with Polylang, a theme in the brand's dawn colors with light and dark

@@ -14,7 +14,7 @@ HandLive là mã nguồn mở (Apache-2.0). Kho này là **hub tài liệu**. M�
 
 | | |
 |--|--|
-| **Bản phát hành mới nhất** | [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (beta công khai đầu tiên, 30/09/2026); tệp cài đặt do các workflow phát hành chạy theo tag tạo ra: IPA iOS (chưa ký, để sideload), APK Android khi đã có khóa release, macOS khi có team Apple Developer trả phí để ký ([hướng dẫn phân phối](docs/deployment-guide.vi.md)) |
+| **Bản phát hành mới nhất** | [`v0.1.0-beta.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1) (beta công khai đầu tiên, 30/09/2026); tệp cài đặt do các workflow phát hành chạy theo tag tạo ra: IPA iOS (chưa ký, để sideload), APK Android khi đã có khóa release, DMG macOS ký ad-hoc (bấm Open Anyway một lần) từ tag kế tiếp ([hướng dẫn phân phối](docs/deployment-guide.vi.md)) |
 | **Phase trên `main`** | 0–3 mã sản phẩm; spike Phase 4–6 cũng trên `main` (30/09/2026) |
 | **Còn mở trước 1.0** | Cổng **G1** (ma trận máy thật) và **G2** (Play Console); kiểm relay / APNs / FCM thật |
 | **Đang làm** | Quyết định phần cứng/trình duyệt G4/G5/G6; chưa mở thẻ sản phẩm Phase 4–6 |

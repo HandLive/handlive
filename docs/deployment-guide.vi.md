@@ -60,7 +60,7 @@ mới khi chưa có; tag có hậu tố như `-beta.1` thành bản pre-release)
 | Kho | Workflow | Tệp |
 |---|---|---|
 | handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: flavor `foss`, ký bằng khóa release |
-| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos.zip` (Developer ID, đã notarize) khi đã có secret macOS |
+| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos-unsigned.dmg` (ad-hoc), hoặc `HandLive-<version>-macos.dmg` (Developer ID, đã notarize) khi đã có secret macOS |
 
 **Ra một bản phát hành:** đặt phiên bản ở mọi kho (Android: `versionName` và một `versionCode` lớn hơn trong
 `app/build.gradle.kts`; Apple: `MARKETING_VERSION`, phần số không có hậu tố, và `CURRENT_PROJECT_VERSION` trong
@@ -100,12 +100,18 @@ bản phát hành; không có chúng thì bản phát hành không có relay.
 sideload ký lại bằng Apple ID của người cài. TestFlight và App Store cần team Apple Developer Program trả phí (ký, mã
 định danh App Group và Keychain Sharing, `aps-environment` = production).
 
-**macOS (cần team Apple Developer Program trả phí):** app Mac không ký hoặc ký ad-hoc không mở được data-protection
-Keychain (`errSecMissingEntitlement`, -34018) và dừng ở bước tạo khóa, nên workflow chỉ phát hành app Mac khi có đủ
-bảy secret; không có secret nào thì chỉ biên dịch, có một phần thì báo lỗi. Nó ký bản Release universal từ trong ra ngoài (`SQLCipher.framework` nhúng
-kèm, rồi app với `macOS/HandLive.entitlements`, hardened runtime và dấu thời gian an toàn), notarize bằng
-`notarytool`, staple, kiểm app vẫn chạy sau mười giây rồi nén zip. Trước khi ký, nó kiểm profile là profile Developer ID
-của `app.handlive.mac`, làm cho đúng chứng chỉ đó và cấp đủ ba capability. Secret của handlive-apple:
+**macOS:** chưa có Developer ID thì workflow phát hành `HandLive-<version>-macos-unsigned.dmg`, app universal ký
+ad-hoc, như nhiều app mã nguồn mở trên Mac. Gatekeeper chặn lần mở đầu tiên cho tới khi người dùng cho phép một lần ở
+System Settings › Privacy & Security › Open Anyway (hoặc chạy `xattr -dr com.apple.quarantine /Applications/HandLive.app`).
+Bản build này không mang entitlement bị hạn chế nào: nó giữ khóa trong login keychain (0.6.1; macOS hỏi một lần cho
+mỗi bản build mới xem app có được đọc chúng không), không đọc được trạng thái Tập trung, và thông báo cuộc gọi không
+phải loại nhạy cảm thời gian. Tag cũ hơn cơ chế login keychain này (`v0.1.0-beta.1`) không phát hành app Mac khi chưa có
+Developer ID, vì app của nó cần data-protection keychain. Có đủ bảy secret dưới đây thì workflow phát hành
+`HandLive-<version>-macos.dmg` thay thế (có một phần thì báo lỗi): nó ký bản Release universal từ trong ra ngoài
+(`SQLCipher.framework` nhúng kèm, rồi app với `macOS/HandLive.entitlements`, hardened runtime và dấu thời gian an
+toàn), đặt vào một DMG ký cùng danh tính, notarize DMG bằng `notarytool`, staple rồi kiểm app vẫn chạy sau mười giây.
+Trước khi ký, nó kiểm profile là profile Developer ID của `app.handlive.mac`, làm cho đúng chứng chỉ đó và cấp đủ ba
+capability. Camera và micro ảo của Phase 5 sẽ cần bản đã ký này. Secret của handlive-apple:
 
 | Secret | Nội dung |
 |---|---|

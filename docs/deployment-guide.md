@@ -134,7 +134,7 @@ A version tag builds the installable files and attaches them, each with a `.sha2
 | Repository | Workflow | Files |
 |---|---|---|
 | handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: the `foss` flavor, signed with the release key |
-| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos.zip` (Developer ID, notarized) once the macOS secrets exist |
+| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos-unsigned.dmg` (ad hoc), or `HandLive-<version>-macos.dmg` (Developer ID, notarized) once the macOS secrets exist |
 
 **Cutting a release:** set the version in every repository (Android `versionName` and a higher `versionCode` in
 `app/build.gradle.kts`; Apple `MARKETING_VERSION`, the version core without the suffix, and `CURRENT_PROJECT_VERSION`
@@ -176,13 +176,19 @@ configure the relay of release builds; without them a release has no relay.
 sideloading tools re-sign it with the installer's own Apple ID. TestFlight and the App Store need the paid Apple
 Developer Program team (signing, the App Group and Keychain Sharing identifiers, `aps-environment` = production).
 
-**macOS (needs the paid Apple Developer Program team):** an unsigned or ad-hoc signed Mac app cannot open its
-data-protection Keychain (`errSecMissingEntitlement`, -34018) and stops at key creation, so the workflow publishes the
-Mac app only when all seven secrets exist; with none it only compiles the app, and with some but not all it fails. It signs the universal Release build inside
+**macOS:** without Developer ID the workflow publishes `HandLive-<version>-macos-unsigned.dmg`, the universal app
+signed ad hoc, like many open-source Mac apps. Gatekeeper blocks its first launch until the user allows it once in
+System Settings › Privacy & Security › Open Anyway (or runs `xattr -dr com.apple.quarantine /Applications/HandLive.app`).
+Such a build carries no restricted entitlements: it keeps its keys in the login keychain (0.6.1; macOS asks once per
+new build whether the app may read them), cannot read the Focus status, and its call notifications are not
+time-sensitive. A tag older than this login-keychain fallback (`v0.1.0-beta.1`) publishes no Mac app without
+Developer ID, since its app needs the data-protection keychain. With all seven secrets below the workflow publishes
+`HandLive-<version>-macos.dmg` instead (with some but not all it fails): it signs the universal Release build inside
 out (embedded `SQLCipher.framework`, then the app with `macOS/HandLive.entitlements`, the hardened runtime and a
-secure timestamp), notarizes it with `notarytool`, staples it, checks that it still runs after ten seconds, and zips
-it. Before signing it checks that the profile is a Developer ID profile of `app.handlive.mac` made for the certificate
-and granting the three capabilities. Secrets of handlive-apple:
+secure timestamp), puts it in a DMG signed with the same identity, notarizes the DMG with `notarytool`, staples it and
+checks that the app still runs after ten seconds. Before signing it checks that the profile is a Developer ID profile of
+`app.handlive.mac` made for the certificate and granting the three capabilities. The virtual camera and microphone of
+Phase 5 will need this signed build. Secrets of handlive-apple:
 
 | Secret | Content |
 |---|---|
