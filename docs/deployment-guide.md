@@ -127,7 +127,8 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 ## CI
 
 One GitHub Actions workflow per repository, in that repository's `.github/workflows/`: `ci-android` (`./gradlew
-check`), `ci-apple` (`xcodebuild test` per package, SwiftLint, app build), `ci-relay` (fmt, clippy,
+check`), `ci-apple` (four parallel macOS lanes: core package tests, feature package tests + Mac app build, iOS app build,
+SwiftLint + dev tools; each test lane builds its packages once through a shared scheme of `HandLive.xcworkspace`), `ci-relay` (fmt, clippy,
 test; PostgreSQL 16 and Redis 7 services for integration tests), `ci-shared` (vector check, regenerated
 vectors, schemas checked against the doc examples) and `ci-docs` in the hub (doc templates, schemas). Each
 workflow rebuilds the workspace layout with `actions/checkout`: the hub at the root (checked out first when

@@ -56,7 +56,9 @@ Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 tr�
 Mỗi kho có một workflow GitHub Actions trong `.github/workflows/` của kho đó.
 
 - `ci-android` chạy `./gradlew check`.
-- `ci-apple` chạy `xcodebuild test` từng package, SwiftLint, rồi build app.
+- `ci-apple` chạy bốn lane macOS song song: test các package lõi; test các package tính năng rồi build app Mac; build
+  app iOS; SwiftLint và các công cụ dev. Mỗi lane test build các package của nó một lần qua một scheme chung của
+  `HandLive.xcworkspace`.
 - `ci-relay` chạy fmt, clippy và test. Test tích hợp dùng PostgreSQL 16 và Redis 7.
 - `ci-shared` kiểm vector, vector sinh lại, và schema đối chiếu ví dụ trong tài liệu.
 - `ci-docs` ở hub kiểm khuôn tài liệu và schema.
