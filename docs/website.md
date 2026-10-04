@@ -47,6 +47,9 @@ Polylang adds `hreflang` links between translations; the theme adds the descript
 
 - Blog posts: write them in the admin (Posts → Add New), set the language in the Languages box, then use
   the + next to the other language to create the translation. Use the "News" / "Tin tức" category.
+- Download link ("Get the Beta"): the hub's Release of the latest tag, which holds every platform's files
+  (`release-collect`). On a new release, change it in `website/seed/content/site.json` (`release`, used by the
+  pages) and `HANDLIVE_RELEASE_URL` in `website/theme/handlive/inc/setup.php` (header and footer), then rerun the seed.
 - Theme text (menu, footer, buttons): English in the PHP templates, Vietnamese in
   `website/theme/handlive/languages/vi.l10n.php`; add a line there for every new string.
 - Vietnamese copy follows the brand guidelines: Apple-style diacritics and the design system's terms
