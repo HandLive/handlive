@@ -74,6 +74,9 @@ Polylang adds `hreflang` links between translations; the theme adds the descript
 Not deployed yet. Before going live on `handlive.app`:
 
 1. A host with Docker; set `SITE_URL=https://handlive.app` and `WP_ENVIRONMENT_TYPE=production` in `.env`.
-2. TLS in front of nginx (a reverse proxy such as Caddy, or certificates mounted into nginx).
+2. TLS in front of nginx (a reverse proxy such as Caddy, or certificates mounted into nginx). Behind a proxy, the
+   login limit (10 per minute per address) sees only the proxy's address, so one visitor could lock the owner out:
+   add `set_real_ip_from <the proxy's address>;` and `real_ip_header X-Forwarded-For;` to `nginx/default.conf`,
+   trusting that address alone, and have the proxy replace `X-Forwarded-For` rather than append to it.
 3. Backups of the `db` and `wordpress` volumes.
 4. Run `website/bin/setup.sh` once, then manage content in the admin; rerun the seed only on purpose.

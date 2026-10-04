@@ -28,6 +28,7 @@ $langs = array_column( $site['languages'], 'slug' );
 hl_languages( $site['languages'] );
 hl_polylang_options();
 hl_remove_sample_content();
+hl_public_author();
 $news = hl_category( $site['category'] );
 
 // Pass 1: every post and page exists with its language and translation links, so links can be resolved.
@@ -145,6 +146,24 @@ function hl_remove_sample_content(): void {
 		}
 	}
 	update_option( 'wp_page_for_privacy_policy', 0 );
+}
+
+/**
+ * The admin's public name. `wp core install` makes the login name the display name and the author slug,
+ * which feeds (`dc:creator`) would print; the site speaks as HandLive.
+ */
+function hl_public_author(): void {
+	$updated = wp_update_user(
+		array(
+			'ID'            => get_current_user_id(),
+			'display_name'  => 'HandLive',
+			'nickname'      => 'HandLive',
+			'user_nicename' => 'handlive',
+		)
+	);
+	if ( is_wp_error( $updated ) ) {
+		WP_CLI::error( 'Could not set the public author name: ' . $updated->get_error_message() );
+	}
 }
 
 /**
