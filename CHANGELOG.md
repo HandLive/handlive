@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Delete All on the Mac deletes HandLive's keys in both keychains (SET-02 API 7 logic 6, en and vi), so a user who ran
+  both the ad-hoc signed download (login keychain) and a team-signed build (data-protection keychain) keeps neither
+  build's `ik_sig`, `ik_dh`, `db_key` or pair keys; login-keychain items travel in backups and Migration Assistant
+  (security scan of 2026-10-04, LOW). 0.6.1: the login keychain is deleted with `SecKeychainItemDelete`, since
+  `SecItemDelete` answers errSecInvalidOwnerEdit (-25244) for items another code signature created, which also kept an
+  updated ad-hoc build from erasing or starting over; SET-03 API 1 logic 1 keeps the fresh-install cleanup to this
+  build's keychain; PAIR-03 names the call. Code: apple `fix/erase-both-keychains`.
+
 ## [0.1.0-beta.2] — 2026-10-04
 
 ### Added

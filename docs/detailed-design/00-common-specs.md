@@ -284,7 +284,13 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
   instead, the same items without `kSecUseDataProtectionKeychain` and without an accessibility class:
   the keys are no longer tied to this device (a backup or Migration Assistant can carry them to another
   Mac), and macOS asks once per new build whether the app may read them. The app picks the keychain from
-  its own entitlements at launch; a signed build always uses the data-protection keychain. M-APP and I-APP
+  its own entitlements at launch; a signed build always uses the data-protection keychain. Deleting from
+  the login keychain finds the items with `SecItemCopyMatching` (`kSecReturnRef`, `kSecMatchLimitAll`,
+  `kSecMatchSearchList` = the user's keychain search list) and deletes each one with
+  `SecKeychainItemDelete`: `SecItemDelete` answers `errSecInvalidOwnerEdit` (-25244) for an item that
+  another code signature created (an earlier ad-hoc build, or the ad-hoc build seen from a team build;
+  measured on macOS 27), so an updated build could not delete its predecessor's keys (SET-03 API 1
+  logic 1, PAIR-03 step 7, SET-02 API 7). Neither call shows a dialog. M-APP and I-APP
   load `PRK` into memory at launch while the device is unlocked and keep it for the whole process
   lifetime, so they can still reconnect while the screen is locked. I-NSE cannot read the key while
   the iPhone is locked → shows generic content (see CONN-04).

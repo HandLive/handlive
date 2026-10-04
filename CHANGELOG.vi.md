@@ -6,6 +6,16 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+### Fixed
+
+- Xóa tất cả trên Mac xóa khóa HandLive ở cả hai keychain (SET-02 API 7 logic 6, en và vi), nên người dùng đã chạy cả
+  bản tải về ký ad-hoc (login keychain) lẫn bản ký team (data-protection keychain) không còn `ik_sig`, `ik_dh`,
+  `db_key` hay khóa cặp của bản nào; mục trong login keychain đi theo bản sao lưu và Migration Assistant (quét bảo
+  mật ngày 04/10/2026, mức LOW). 0.6.1: login keychain được xóa bằng `SecKeychainItemDelete`, vì `SecItemDelete` trả
+  errSecInvalidOwnerEdit (-25244) với mục do chữ ký mã khác tạo, lỗi này cũng khiến bản ad-hoc đã cập nhật không xóa
+  được dữ liệu hay cài đặt lại; SET-03 API 1 logic 1 giữ bước dọn khi cài mới trong keychain của bản build này;
+  PAIR-03 nêu lời gọi. Mã: apple `fix/erase-both-keychains`.
+
 ## [0.1.0-beta.2] — 04/10/2026
 
 ### Added

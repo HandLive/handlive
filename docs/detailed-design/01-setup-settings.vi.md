@@ -513,7 +513,7 @@ flowchart TB
 | 4 | `WS pair/revoke` | `/v1/ctl` (LAN, USB) | Hai chiều | A4 |
 | 5 | Relay op `pair_revoked` | `wss://{RELAY_HOST}/v1/relay` (text) | R-API → thiết bị | A3 |
 | 6 | `POST /v1/devices`, `POST /v1/pairs` | REST relay | Thiết bị → R-API | 4 (bật `relay.enabled`) |
-| 7 | Dịch vụ hệ điều hành xóa khóa và dữ liệu: `disableSelf`, `KeyStore.deleteEntry`, `SecItemDelete`, `removePersistentDomain`, `removeAllDeliveredNotifications`, `SMAppService.mainApp.unregister` | Cục bộ | — | 4, A4, A5 |
+| 7 | Dịch vụ hệ điều hành xóa khóa và dữ liệu: `disableSelf`, `KeyStore.deleteEntry`, `SecItemDelete`, `SecKeychainItemDelete` (login keychain của Mac), `removePersistentDomain`, `removeAllDeliveredNotifications`, `SMAppService.mainApp.unregister` | Cục bộ | — | 4, A4, A5 |
 
 #### API 1 — `WS capability/update`
 
@@ -676,7 +676,9 @@ ký lại push token (CONN-04 API 1). Lỗi → thử lại nền, không chặn
     `context.deleteSharedPreferences("hl_keys")`; xóa tệp PKCS#12;
     `context.deleteDatabase("handlive.db")`; `dataStore.edit { it.clear() }`.
   - Mac/iOS: `SecItemDelete` theo service `app.handlive.keys` (xóa `ik_sig`, `ik_dh`, `db_key` và
-    mọi `PRK`); đóng `DatabasePool` rồi xóa `handlive.sqlite`, `-wal`, `-shm`, cả hai ngăn của
+    mọi `PRK`); Mac xóa service ở cả hai keychain, keychain bản build này dùng trước: data-protection
+    keychain (`kSecUseDataProtectionKeychain = true`) và login keychain (`SecKeychainItemDelete` từng
+    mục, 0.6.1) (logic 6); đóng `DatabasePool` rồi xóa `handlive.sqlite`, `-wal`, `-shm`, cả hai ngăn của
     kho cặp và của cơ sở dữ liệu (SET-03 API 1 logic 5, `*.alt`);
     `UserDefaults.standard.removePersistentDomain(forName: "app.handlive.mac")` (Mac) hoặc
     `UserDefaults(suiteName: "group.app.handlive")?.removePersistentDomain(forName: "group.app.handlive")`
@@ -684,10 +686,15 @@ ký lại push token (CONN-04 API 1). Lỗi → thử lại nền, không chặn
     `removeAllPendingNotificationRequests()`; Mac: `try SMAppService.mainApp.unregister()`.
 - **Request:** N/A.
 - **Response:** mã kết quả từng lời gọi; `errSecItemNotFound` hoặc tệp không tồn tại coi như thành
-  công; lỗi khác thử lại một lần rồi báo.
-- **Ví dụ:** Mac:
-  `SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys"])` →
-  `errSecSuccess`; sau đó `handlive.sqlite` bị xóa; lần mở sau chạy SET-03 và sinh `device_id` mới.
+  công, `errSecMissingEntitlement` (-34018) từ keychain mà bản build Mac không dùng cũng vậy (logic 6);
+  lỗi khác thử lại một lần rồi báo.
+- **Ví dụ:** Mac, bản ký team:
+  `SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
+  kSecUseDataProtectionKeychain: true])` → `errSecSuccess`; rồi login keychain:
+  `SecItemCopyMatching([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
+  kSecMatchSearchList: <danh sách tìm kiếm>, kSecMatchLimit: kSecMatchLimitAll, kSecReturnRef: true])`
+  → bốn mục bản ad-hoc để lại → `SecKeychainItemDelete` từng mục → `errSecSuccess`; sau đó
+  `handlive.sqlite` bị xóa; lần mở sau chạy SET-03 và sinh `device_id` mới.
 - **Logic nghiệp vụ:**
   1. Thứ tự: mọi bước cần khóa chạy trước (A2 ký challenge bằng `ik_sig`, A4 mã hóa `pair/revoke`
      bằng khóa phiên dẫn từ `PRK`) → xóa khóa → xóa cơ sở dữ liệu (SQL ở Query, rồi xóa tệp) → xóa
@@ -699,6 +706,15 @@ ký lại push token (CONN-04 API 1). Lỗi → thử lại nền, không chặn
   4. Không gỡ M-CAMX, M-MIC; không thu hồi quyền hệ điều hành đã cấp.
   5. Chỉ xóa khỏi máy chủ: chỉ dọn cặp (Query, A4) và ghi `relay.enabled = false`; không gọi các API
      xóa khóa và cài đặt.
+  6. Mac, cả hai keychain: người dùng đã chạy cả bản tải về ký ad-hoc (login keychain) lẫn bản ký team
+     (data-protection keychain) có một bộ khóa ở mỗi nơi (0.6.1). Xóa tất cả xóa service ở cả hai, nên
+     `ik_sig`, `ik_dh`, `db_key` và `PRK` của bản kia không còn sót; mục trong login keychain không gắn
+     với máy và đi theo bản sao lưu Time Machine hay Migration Assistant. Bản ad-hoc không vào được
+     data-protection keychain (`errSecMissingEntitlement`): khóa của bản ký team nằm lại đó, chỉ trên
+     máy này, đến khi một bản ký team xóa. Các cặp của bản kia không bị thu hồi: `device_id` của nó
+     khác và khóa đã mất nên nó không bao giờ kết nối lại được, nhưng điện thoại và relay vẫn giữ cặp
+     đó đến khi người dùng gỡ ở đó (PAIR-03). Bước dọn khi cài mới (SET-03 API 1 logic 1) chỉ xóa
+     keychain của bản build này.
 
 #### Query
 
@@ -863,7 +879,7 @@ flowchart TB
 
 | # | API/service | Kênh | Chiều | Dùng ở bước |
 |---|-------------|------|-------|-------------|
-| 1 | Tạo khóa và lưu Keychain: CryptoKit `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`, `SecRandomCopyBytes`, `SecItemAdd`, `SecItemDelete` | Cục bộ | — | 2 |
+| 1 | Tạo khóa và lưu Keychain: CryptoKit `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`, `SecRandomCopyBytes`, `SecItemAdd`, `SecItemDelete`, `SecKeychainItemDelete` (login keychain của Mac) | Cục bộ | — | 2 |
 | 2 | Chuyển ứng dụng vào `/Applications`: `FileManager.copyItem`, `NSWorkspace.openApplication` | Cục bộ | — | 5 |
 | 3 | `SMAppService.mainApp.register()`, `status`, `SMAppService.openSystemSettingsLoginItems()` | Cục bộ | — | 6 |
 | 4 | `UNUserNotificationCenter.requestAuthorization`, `getNotificationSettings` | Cục bộ | — | 7, 8 |
@@ -877,7 +893,7 @@ flowchart TB
 - **URL:** N/A
 - **Method:** `Curve25519.Signing.PrivateKey()`, `Curve25519.KeyAgreement.PrivateKey()`,
   `SecRandomCopyBytes(kSecRandomDefault, 32, &bytes)`; `SecItemAdd`, `SecItemCopyMatching`,
-  `SecItemDelete`.
+  `SecItemDelete`; `SecKeychainItemDelete` cho login keychain (0.6.1).
 - **Request — thuộc tính mục Keychain:**
 
 | Thuộc tính | Giá trị |
@@ -897,7 +913,10 @@ flowchart TB
 - **Logic nghiệp vụ:**
   1. Cài mới (không có `setup.started_at`) → `SecItemDelete` theo service `app.handlive.keys` trước
      khi tạo: Keychain của iOS/macOS còn giữ mục sau khi gỡ ứng dụng; không dọn thì bản cài lại giữ
-     `device_id` cũ và `PRK` của cặp không còn, trái 0.2.
+     `device_id` cũ và `PRK` của cặp không còn, trái 0.2. Trên Mac chỉ xóa ở keychain bản build này
+     dùng (login keychain thì bằng `SecKeychainItemDelete`, 0.6.1): keychain còn lại giữ những gì một
+     bản ký kiểu kia đã lưu, nên quay lại bản đó vẫn thấy khóa của nó (như logic 5); chỉ Xóa tất cả mới
+     dọn cả hai (SET-02 API 7 logic 6).
   2. Tạo khóa khi ứng dụng ở foreground (máy đang mở khóa) nên `WhenUnlockedThisDeviceOnly` không
      cản; lỗi → E1.
   3. `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)) (0.2), tính lại mỗi lần khởi động, không lưu riêng.
@@ -1047,6 +1066,8 @@ defaults.set(now, forKey: "setup.completed_at")                                 
 ```text
 # [Thiết kế] Keychain, service "app.handlive.keys"
 SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys"])   # bước 2, chỉ khi cài mới
+# Login keychain của Mac (bản ad-hoc): SecItemCopyMatching([... kSecMatchLimit: kSecMatchLimitAll, kSecReturnRef: true])
+# rồi SecKeychainItemDelete(item) cho từng mục tìm được (0.6.1)
 SecItemAdd([kSecClass: kSecClassGenericPassword, kSecAttrService: "app.handlive.keys",
             kSecAttrAccount: "ik_sig", kSecValueData: <32 byte>,
             kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly])               # bước 2; tương tự "ik_dh", "db_key"

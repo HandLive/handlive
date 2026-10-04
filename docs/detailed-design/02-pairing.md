@@ -678,7 +678,7 @@ flowchart TB
 | 4 | System | Same as above | Sends `pair/revoke` `{pair_id, reason: "user"}` (encrypted envelope). |  |
 | 5 | System | Same as above | Waits up to 10 s for the `ack`. | Timeout → E2, flow B. |
 | 6 | System | Peer device | Returns the `ack`, then cleans up on its side as in step 7; shows field 5; sends `session/bye` and closes with 1000. |  |
-| 7 | System | Initiator | Deletes `PRK` (Keychain `SecItemDelete` / clears the `prk_enc` column), deletes the pair's synced data (client) and sets `revoked_at`; Android re-registers mDNS without the pair's hint. |  |
+| 7 | System | Initiator | Deletes `PRK` (Keychain `SecItemDelete`, Mac login keychain `SecKeychainItemDelete` (0.6.1) / clears the `prk_enc` column), deletes the pair's synced data (client) and sets `revoked_at`; Android re-registers mDNS without the pair's hint. |  |
 | 8 | System | Initiator, R-API | If the pair is registered with the relay: sign the statement `HLREVOKE1` (0.6.2) with `revoked_at` = now and send `POST /v1/pairs/{pair_id}/revoke` `{revoked_at, sig}`. A retry after E3 signs a new statement with the current time. | No network → E3, keep the tombstone, retry in the background. The relay reports it as already revoked → E4. |
 | 9 | System | R-API, R-KV | The relay stores the statement (`revoked_at`, `revoked_by`, `revoke_sig`) and stops forwarding and pushing; if the peer is connected to the relay, it sends the `pair_revoked` op with the statement so the peer cleans up right away after checking the signature. The initiator deletes the tombstone record for good. | Peer offline: it receives `pair_revoked` when it connects to the relay, or sees the revocation through `GET /v1/pairs` (PAIR-02), or Android rejects its `session/hello` with `PAIR_UNKNOWN` on the LAN. |
 | 10 | User | Same as above | Sees the result `done` or `done_pending_remote`. |  |
@@ -693,7 +693,7 @@ flowchart TB
 | 2 | `WS session/bye` | `/v1/ctl` | Both directions | 6 |
 | 3 | `POST /v1/pairs/{pair_id}/revoke` | Relay REST | Device → R-API | 8 |
 | 4 | Relay op `pair_revoked` | `wss://{RELAY_HOST}/v1/relay` (text) | R-API → device | 9 |
-| 5 | Operating system services: `SecItemDelete` (Keychain), `NsdManager.unregisterService` + `registerService` | Local | — | 7 |
+| 5 | Operating system services: `SecItemDelete` (Keychain; `SecKeychainItemDelete` for the Mac login keychain, 0.6.1), `NsdManager.unregisterService` + `registerService` | Local | — | 7 |
 
 #### API 1 — `WS pair/revoke`
 

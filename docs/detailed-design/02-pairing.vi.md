@@ -666,7 +666,7 @@ flowchart TB
 | 4 | Hệ thống | như trên | Gửi `pair/revoke` `{pair_id, reason: "user"}` (envelope mã hóa). |  |
 | 5 | Hệ thống | như trên | Chờ `ack` tối đa 10 s. | Hết hạn → E2, luồng B. |
 | 6 | Hệ thống | Thiết bị đối phương | Trả `ack`, rồi dọn như bước 7 phía mình; hiển thị trường 5; gửi `session/bye` và đóng 1000. |  |
-| 7 | Hệ thống | Bên khởi tạo | Xóa `PRK` (Keychain `SecItemDelete` / xóa cột `prk_enc`), xóa dữ liệu đồng bộ của cặp (client), đặt `revoked_at`; Android đăng ký lại mDNS không còn hint của cặp. |  |
+| 7 | Hệ thống | Bên khởi tạo | Xóa `PRK` (Keychain `SecItemDelete`, login keychain của Mac `SecKeychainItemDelete` (0.6.1) / xóa cột `prk_enc`), xóa dữ liệu đồng bộ của cặp (client), đặt `revoked_at`; Android đăng ký lại mDNS không còn hint của cặp. |  |
 | 8 | Hệ thống | Bên khởi tạo, R-API | Nếu cặp đã đăng ký relay: ký tuyên bố `HLREVOKE1` (0.6.2) với `revoked_at` = hiện tại và gửi `POST /v1/pairs/{pair_id}/revoke` `{revoked_at, sig}`. Lần thử lại sau E3 ký tuyên bố mới với thời điểm hiện tại. | Không có mạng → E3, giữ bia mộ, thử lại nền. Relay trả đã thu hồi → E4. |
 | 9 | Hệ thống | R-API, R-KV | Relay lưu tuyên bố (`revoked_at`, `revoked_by`, `revoke_sig`), ngừng chuyển tiếp và push; nếu đối phương đang nối relay, gửi op `pair_revoked` kèm tuyên bố để nó kiểm chữ ký rồi dọn ngay. Bên khởi tạo xóa hẳn bản ghi bia mộ. | Đối phương offline: sẽ nhận `pair_revoked` khi kết nối relay, hoặc thấy qua `GET /v1/pairs` (PAIR-02), hoặc bị Android từ chối `session/hello` với `PAIR_UNKNOWN` trong LAN. |
 | 10 | Người dùng | như trên | Thấy kết quả `done` hoặc `done_pending_remote`. |  |
@@ -681,7 +681,7 @@ flowchart TB
 | 2 | `WS session/bye` | `/v1/ctl` | Hai chiều | 6 |
 | 3 | `POST /v1/pairs/{pair_id}/revoke` | REST relay | Thiết bị → R-API | 8 |
 | 4 | Relay op `pair_revoked` | `wss://{RELAY_HOST}/v1/relay` (text) | R-API → thiết bị | 9 |
-| 5 | Dịch vụ hệ điều hành: `SecItemDelete` (Keychain), `NsdManager.unregisterService` + `registerService` | Cục bộ | — | 7 |
+| 5 | Dịch vụ hệ điều hành: `SecItemDelete` (Keychain; `SecKeychainItemDelete` cho login keychain của Mac, 0.6.1), `NsdManager.unregisterService` + `registerService` | Cục bộ | — | 7 |
 
 #### API 1 — `WS pair/revoke`
 
