@@ -20,8 +20,8 @@
 | Tác nhân | Chính: Người dùng (chủ điện thoại). Hệ thống: A-UI, A-SVC, A-CLIP (`ClipboardAccessibilityService`), OS (trình cấp quyền của Android, `PowerManager`, Cài đặt hệ thống và cài đặt riêng của hãng), R-API (đăng ký thiết bị). |
 | Điều kiện trước | **Phần A:** HandLive vừa được cài (Google Play, F-Droid hoặc APK) trên Android 10+ (API 29+); chưa có `setup.completed_at`.<br>**Phần B:** phần A đã xong; người dùng bấm "Quét mã QR" (PAIR-01), bật một tính năng (SET-02), bấm "Cấp quyền" trên thẻ tính năng, hoặc chạm thông báo gợi ý cấp quyền. |
 | Điều kiện sau | **Phần A:** có khóa định danh, `device_id`, chứng chỉ TLS; A-SVC chạy foreground với thông báo thường trực, lắng nghe cổng 47800 (0.4.1) và quảng bá mDNS; miễn tối ưu pin đã được hỏi; `setup.completed_at` được ghi; thiết bị đã đăng ký relay nếu `relay.enabled = true` và có mạng (hoặc chờ thử lại nền); giao diện chuyển sang PAIR-01.<br>**Phần B:** mỗi quyền của tính năng ở trạng thái cấp hoặc từ chối; `permissions_missing` và các cờ con của capability (`can_send`, `sims`, `caller_id`, `can_answer`, `can_end`, `auto_send`, `app_calls`) khớp thực tế; mọi client đang kết nối đã nhận `capability/update` nếu có thay đổi. |
-| Ngoại lệ | E1 — Từ chối `POST_NOTIFICATIONS`: A-SVC vẫn chạy (thông báo dịch vụ chỉ còn trong Trình quản lý tác vụ của Android) nhưng không hiện trạng thái kết nối, gợi ý cấp quyền và yêu cầu xác nhận camera (CAM-02); ứng dụng hiện dải cảnh báo "Thông báo đang tắt: không thấy trạng thái kết nối và yêu cầu từ Mac." kèm nút mở cài đặt thông báo.<br>E2 — Không khởi động được foreground service (`ForegroundServiceStartNotAllowedException` khi ứng dụng không ở foreground và chưa được miễn tối ưu pin, hoặc `SecurityException` do thiếu khai báo type): thử lại khi A-UI ở foreground; vẫn lỗi → báo "Không khởi động được dịch vụ kết nối", nút "Thử lại".<br>E3 — Từ chối miễn tối ưu pin hoặc bỏ qua hướng dẫn hãng: vẫn dùng được nhưng kết nối có thể bị ngắt khi máy ngủ (CONN-02 E6); cảnh báo giữ trong Cài đặt › Quyền và chạy nền.<br>E4 — Quyền của một tính năng bị từ chối: tính năng không hiệu lực hoặc hiệu lực một phần (ví dụ `can_send = false`), quyền vào `permissions_missing`.<br>E5 — Quyền bị từ chối vĩnh viễn (hệ thống không hiện hộp thoại nữa): hiện nút "Mở cài đặt" tới trang Thông tin ứng dụng.<br>E6 — Không đồng ý công bố Hỗ trợ tiếp cận: `clip.auto_send = false`; gửi thủ công (nút trên thông báo, ô Cài đặt nhanh, menu Chia sẻ) vẫn hoạt động (CLIP-01 E1).<br>E7 — Bản cài ngoài Google Play trên Android 13+ bị chặn bật dịch vụ Hỗ trợ tiếp cận ("Chế độ cài đặt bị hạn chế"): hướng dẫn cho phép trong Thông tin ứng dụng rồi quay lại.<br>E8 — Quay lại từ cài đặt Hỗ trợ tiếp cận mà dịch vụ chưa bật: giữ trạng thái "Chưa bật tự gửi", cho thử lại.<br>E9 — Tạo khóa thất bại (Keystore lỗi): thử lại với khóa trong TEE khi StrongBox không khả dụng; vẫn lỗi → báo lỗi, không cho sang PAIR-01.<br>E10 — Không có mạng hoặc relay lỗi khi đăng ký thiết bị: bỏ qua, thử lại nền (CONN-03), không chặn thiết lập.<br>E11 — Chưa cấp quyền truy cập thông báo, hoặc người dùng quay lại mà chưa bật: `features.call.app_calls = false` và `NOTIFICATION_LISTENER` trong `permissions_missing`; thẻ "Cuộc gọi từ ứng dụng khác" hiện "Cần cấp quyền" và cho thử lại; CALL-01…04 và các tính năng khác không bị ảnh hưởng. |
-| Yêu cầu đặc biệt | **Tuân thủ Google Play:** nộp Permissions Declaration Form cho `READ_SMS`, `SEND_SMS`, `READ_CALL_LOG` theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls"; không khai báo `RECEIVE_SMS` (tin mới phát hiện bằng `ContentObserver`); khai báo dùng Accessibility API (`isAccessibilityTool = false`) kèm công bố nổi bật và đồng ý trong ứng dụng — rủi ro bị từ chối đã được chủ dự án chấp nhận (C15); khai báo foreground service type `connectedDevice` trong Play Console; dùng `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` với lý do ứng dụng đồng hành phải giữ kết nối với thiết bị đã ghép.<br>**Quyền riêng tư:** không xin quyền tính năng trong phần A; mỗi hộp thoại hệ thống đi sau một câu giải thích; mỗi lần chỉ xin quyền của một tính năng.<br>**Khả dụng:** phần A ≤ 5 màn hình, hoàn tất ≤ 60 s (không tính thao tác trong cài đặt của hãng); đọc được bằng TalkBack; mọi bước sau màn hình chào mừng đều bỏ qua được; không cần ADB, USB hay Shizuku.<br>**Tương thích:** minSdk 29, targetSdk 35 — `POST_NOTIFICATIONS` chỉ có từ API 33; `BLUETOOTH_CONNECT` từ API 31 (API 29–30 dùng `BLUETOOTH` cấp lúc cài); `FOREGROUND_SERVICE_CONNECTED_DEVICE` bắt buộc từ API 34.<br>**Độc lập tính năng:** thiếu quyền một tính năng không chặn tính năng khác (CONN-01 API 7). |
+| Ngoại lệ | E1 — Từ chối `POST_NOTIFICATIONS`: A-SVC vẫn chạy (thông báo dịch vụ chỉ còn trong Trình quản lý tác vụ của Android) nhưng không hiện trạng thái kết nối, gợi ý cấp quyền và yêu cầu xác nhận camera (CAM-02); ứng dụng hiện dải cảnh báo "Thông báo đang tắt: không thấy trạng thái kết nối và yêu cầu từ Mac." kèm nút mở cài đặt thông báo.<br>E2 — Không khởi động được foreground service (`ForegroundServiceStartNotAllowedException` khi ứng dụng không ở foreground và chưa được miễn tối ưu pin, hoặc `SecurityException` do thiếu khai báo type): thử lại khi A-UI ở foreground; vẫn lỗi → báo "Không khởi động được dịch vụ kết nối", nút "Thử lại".<br>E3 — Từ chối miễn tối ưu pin hoặc bỏ qua hướng dẫn hãng: vẫn dùng được nhưng kết nối có thể bị ngắt khi máy ngủ (CONN-02 E6); cảnh báo giữ trong Cài đặt › Quyền và chạy nền.<br>E4 — Quyền của một tính năng bị từ chối: tính năng không hiệu lực hoặc hiệu lực một phần (ví dụ `can_send = false`), quyền vào `permissions_missing`.<br>E5 — Quyền bị từ chối vĩnh viễn (hệ thống không hiện hộp thoại nữa): hiện nút "Mở cài đặt" tới trang Thông tin ứng dụng.<br>E6 — Không đồng ý công bố Hỗ trợ tiếp cận: `clip.auto_send = false`; gửi thủ công (nút trên thông báo, ô Cài đặt nhanh, menu Chia sẻ) vẫn hoạt động (CLIP-01 E1).<br>E7 — Bản cài ngoài Google Play trên Android 13+ bị chặn bật dịch vụ Hỗ trợ tiếp cận ("Chế độ cài đặt bị hạn chế"); HandLive không đọc được trạng thái này nên coi mọi bản cài như vậy là có thể bị chặn (`R = likely`, API 6 logic 2): hướng dẫn cho phép trong Thông tin ứng dụng (trường 14) rồi quay lại.<br>E8 — Quay lại từ cài đặt Hỗ trợ tiếp cận mà dịch vụ chưa bật: giữ trạng thái "Chưa bật tự gửi"; nếu `R = likely` thì hiện trường 14 một lần với nút "Mở cài đặt" (API 6 logic 6), còn lại cho thử lại. Quay về từ Thông tin ứng dụng thì không tự mở trang nào.<br>E9 — Tạo khóa thất bại (Keystore lỗi): thử lại với khóa trong TEE khi StrongBox không khả dụng; vẫn lỗi → báo lỗi, không cho sang PAIR-01.<br>E10 — Không có mạng hoặc relay lỗi khi đăng ký thiết bị: bỏ qua, thử lại nền (CONN-03), không chặn thiết lập.<br>E11 — Chưa cấp quyền truy cập thông báo, hoặc người dùng quay lại mà chưa bật: `features.call.app_calls = false` và `NOTIFICATION_LISTENER` trong `permissions_missing`; thẻ "Cuộc gọi từ ứng dụng khác" hiện "Cần cấp quyền" và cho thử lại; quay về từ Truy cập thông báo mà chưa bật trong khi `R` khác `none` thì hiện trường 14 một lần với nút "Mở cài đặt", như E8 (API 9 logic 4); CALL-01…04 và các tính năng khác không bị ảnh hưởng. |
+| Yêu cầu đặc biệt | **Tuân thủ Google Play:** nộp Permissions Declaration Form cho `READ_SMS`, `SEND_SMS`, `READ_CALL_LOG` theo ngoại lệ "Cross-device synchronization or transfer of SMS or calls"; không khai báo `RECEIVE_SMS` (tin mới phát hiện bằng `ContentObserver`); khai báo dùng Accessibility API (`isAccessibilityTool = false`) kèm công bố nổi bật và đồng ý trong ứng dụng — rủi ro bị từ chối đã được chủ dự án chấp nhận (C15); khai báo foreground service type `connectedDevice` trong Play Console; dùng `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` với lý do ứng dụng đồng hành phải giữ kết nối với thiết bị đã ghép.<br>**Quyền riêng tư:** không xin quyền tính năng trong phần A; mỗi hộp thoại hệ thống đi sau một câu giải thích; mỗi lần chỉ xin quyền của một tính năng.<br>**Khả dụng:** phần A ≤ 5 màn hình, hoàn tất ≤ 60 s (không tính thao tác trong cài đặt của hãng); đọc được bằng TalkBack; khi trường 14 tự hiện lúc quay về (API 6 logic 6), TalkBack đặt tiêu điểm vào tiêu đề trước, không vào nút; mọi bước sau màn hình chào mừng đều bỏ qua được; không cần ADB, USB hay Shizuku.<br>**Tương thích:** minSdk 29, targetSdk 35 — `POST_NOTIFICATIONS` chỉ có từ API 33; `BLUETOOTH_CONNECT` từ API 31 (API 29–30 dùng `BLUETOOTH` cấp lúc cài); `FOREGROUND_SERVICE_CONNECTED_DEVICE` bắt buộc từ API 34.<br>**Độc lập tính năng:** thiếu quyền một tính năng không chặn tính năng khác (CONN-01 API 7). |
 
 ### 1.1.2 Màn hình
 
@@ -40,13 +40,13 @@ N/A — chưa có wireframe được duyệt.
 | 7 | Tạm dừng hoạt động nếu không dùng | enum{enabled\| disabled\| not_available} | Input/Output | Theo `PackageManagerCompat.getUnusedAppRestrictionsStatus` | Android 11+: gợi ý tắt để hệ thống không tự thu hồi quyền khi người dùng lâu không mở HandLive trên điện thoại (API 4) |
 | 8 | Hướng dẫn tự khởi chạy theo hãng | string | Output | Theo `Build.MANUFACTURER` | Dưới tiêu đề, với mọi hãng: "Một số điện thoại dừng các ứng dụng chạy nền. Các cài đặt này giúp HandLive luôn kết nối với Mac, iPhone và iPad." Sau đó là các bước riêng cho Xiaomi/Redmi/POCO, OPPO/realme/OnePlus, Samsung (API 5); các bước ẩn với hãng khác |
 | 9 | Nút "Mở cài đặt của hãng", "Đã xong", "Bỏ qua" | action | Input | — | "Mở cài đặt của hãng" mở màn hình của hãng (API 5); "Đã xong" và "Bỏ qua" sang bước 7 |
-| 10 | Danh sách tính năng | array\<object> | Output | Theo khóa `feature.*` (0.9.5) và quyền hiện có | Mỗi thẻ: tên tính năng, trạng thái `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, quyền còn thiếu. Hiện sau PAIR-01 lần đầu và ở Cài đặt › Quyền và chạy nền<br>Tên thẻ là nhãn công tắc của SET-02: "Tự gửi khi sao chép", "Tin nhắn SMS", "Cuộc gọi", "Cuộc gọi từ ứng dụng khác", "Nghe gọi trên Mac", "Dùng điện thoại làm webcam". Chữ trạng thái: `ready` "Bật", `needs_permission` "Cần cấp quyền" (kèm trường 11), `permanently_denied` "Quyền bị từ chối" (kèm trường 16), `off` "Tắt", `unsupported` "Điện thoại này không hỗ trợ". Thẻ "Tự gửi khi sao chép" lấy trạng thái từ trường 15: `needs_accessibility` hiện "Chưa bật tự gửi" (E8) |
+| 10 | Danh sách tính năng | array\<object> | Output | Theo khóa `feature.*` (0.9.5) và quyền hiện có | Mỗi thẻ: tên tính năng, trạng thái `ready` \| `needs_permission` \| `permanently_denied` \| `off` \| `unsupported`, quyền còn thiếu. Hiện sau PAIR-01 lần đầu và ở Cài đặt › Quyền và chạy nền<br>Tên thẻ là nhãn công tắc của SET-02: "Tự gửi khi sao chép", "Tin nhắn SMS", "Cuộc gọi", "Cuộc gọi từ ứng dụng khác", "Nghe gọi trên Mac", "Dùng điện thoại làm webcam". Chữ trạng thái: `ready` "Bật", `needs_permission` "Cần cấp quyền" (kèm trường 11), `permanently_denied` "Quyền bị từ chối" (kèm trường 16), `off` "Tắt", `unsupported` "Điện thoại này không hỗ trợ". Thẻ "Tự gửi khi sao chép" lấy trạng thái từ trường 15: `needs_accessibility` hiện "Chưa bật tự gửi" (E8)<br>Bấm thẻ "Tự gửi khi sao chép" khi đã có `clip.a11y_consent_at` thì không bao giờ hiện lại công bố (bước 12) |
 | 11 | Nút "Cấp quyền" trên thẻ tính năng | action | Input | Hiện khi thẻ ở `needs_permission` | Chạy phần B cho đúng tính năng đó |
 | 12 | Giải thích trước khi xin quyền | string | Output | Theo tính năng (API 2) | Ví dụ SMS: "Để xem và trả lời SMS trên Mac hoặc iPhone, HandLive cần đọc và gửi SMS, đọc danh bạ để hiện tên người gửi và đọc trạng thái điện thoại để chọn SIM."<br>Tiêu đề: SMS "Dùng SMS trên Mac và iPhone", cuộc gọi "Xem cuộc gọi trên Mac và iPhone" (nội dung "Để báo cuộc gọi đến và cho bạn trả lời, từ chối trên Mac, HandLive cần đọc trạng thái điện thoại, nhật ký cuộc gọi và danh bạ."), thông báo "Nhận thông báo về kết nối và yêu cầu", chạy nền "Chạy trong nền", tự khởi chạy của hãng "Giữ HandLive luôn chạy", camera "Quét mã ghép nối" (nội dung "HandLive dùng camera để quét mã QR trên Mac, iPhone hoặc iPad.") |
 | 13 | Công bố Hỗ trợ tiếp cận | string | Output | Văn bản CLIP-01 trường 2 | Hiện toàn màn hình, lựa chọn "Gửi thủ công" / "Đồng ý" theo CLIP-01 trường 3 |
-| 14 | Hướng dẫn "Chế độ cài đặt bị hạn chế" | string | Output | Ẩn | Hiện khi Android 13+ và nguồn cài không phải Google Play (API 6, E7) |
+| 14 | Hướng dẫn "Chế độ cài đặt bị hạn chế" | string | Output | Ẩn | Hiện trên Android 13+ khi HandLive có thể bị chặn bật một cài đặt hạn chế (trạng thái hạn chế `R = likely`, API 6 logic 2), trước khi mở Hỗ trợ tiếp cận (bước 12) hoặc Truy cập thông báo (bước N1, SET-01 API 9), và hiện lại một lần mỗi khi người dùng quay về từ trang đó mà chưa bật HandLive (E7, E8, E11; API 6 logic 6). Không bao giờ hiện khi `R = none`. Hướng dẫn cho phép trong Thông tin ứng dụng rồi quay lại; câu chữ giữ dạng điều kiện ("Nếu Android báo…") vì HandLive không đọc được Android có chặn hay không (API 6 logic 2), và bản cài ngoài Google Play có thể hoàn toàn không bị chặn<br>Một nút duy nhất: trước khi mở trang hệ thống là "Tiếp tục" (`common.continue`), mở trang đó; khi hiện lại lúc quay về là "Mở cài đặt", mở Thông tin ứng dụng. "Mở cài đặt" là cùng nút và cùng chuỗi với trường 16 (`common.open_settings`) |
 | 15 | Trạng thái tự gửi clipboard | enum{on\| off\| needs_accessibility} | Output | `needs_accessibility` | `on` khi `clip.auto_send = true`, đã có `clip.a11y_consent_at` và dịch vụ Hỗ trợ tiếp cận đang chạy; `off` khi `clip.auto_send = false` |
-| 16 | Nút "Mở cài đặt" | action | Input | Hiện khi có quyền bị từ chối vĩnh viễn | Mở trang Thông tin ứng dụng của HandLive (E5) |
+| 16 | Nút "Mở cài đặt" | action | Input | Hiện khi có quyền bị từ chối vĩnh viễn, hoặc làm nút của trường 14 | Mở trang Thông tin ứng dụng của HandLive (E5; trường 14, E7, E8, E11). Một nút và một chuỗi (`common.open_settings`) cho cả hai chỗ |
 | 17 | Thông báo gợi ý cấp quyền | string | Output | — | A-SVC đăng khi trả `PERMISSION_MISSING` cho client: "MacBook của Lan cần quyền SMS trên điện thoại — chạm để cho phép" (cùng một câu dù thiếu quyền SMS nào); với quyền cuộc gọi: "MacBook của Lan cần quyền cuộc gọi trên điện thoại — chạm để cho phép" (cùng một câu dù thiếu quyền cuộc gọi nào); tối đa 1 lần mỗi tính năng mỗi 24 h; kênh `permission` ("Quyền", mô tả "Gợi ý cấp quyền khi Mac hoặc iPhone cần một tính năng trên điện thoại.", `IMPORTANCE_LOW`) |
 | 18 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E11 |
 | 19 | Màn giải thích quyền truy cập thông báo | string | Output | Văn bản cố định | Trước trang Truy cập thông báo của hệ thống (bước N1–N2, CALL-05): tiêu đề "Cho phép truy cập thông báo", nội dung "HandLive chỉ đọc thông báo cuộc gọi của các ứng dụng gọi điện để hiện trên Mac. Các thông báo khác bị bỏ qua và không bao giờ rời khỏi điện thoại.", một nút duy nhất "Tiếp tục" và chú thích "Bạn có thể đổi lại trong Cài đặt bất cứ lúc nào." |
@@ -108,11 +108,11 @@ flowchart TB
 | 9 | Hệ thống | A-UI | Tra bảng quyền theo tính năng (API 2): quét QR, SMS, cuộc gọi, âm thanh cuộc gọi (chỉ `BLUETOOTH_CONNECT`; Shizuku thuộc AUDIO-01 bước 10–11), camera → bước 10; tự gửi clipboard → bước 12; cuộc gọi từ ứng dụng khác (quyền truy cập thông báo) → bước N1. |  |
 | 10 | Hệ thống | A-UI | Lọc quyền chưa cấp (`checkSelfPermission`).<br>Quyền có trong `perm.requested`, chưa cấp và `shouldShowRequestPermissionRationale = false` → từ chối vĩnh viễn: hiện trường 16 thay cho hộp thoại.<br>Còn lại: hiện giải thích (trường 12), gọi `RequestMultiplePermissions` cho các quyền còn thiếu của tính năng, thêm chúng vào `perm.requested`. | E5 → bước 14 khi người dùng quay lại từ cài đặt. |
 | 11 | Người dùng | OS | Cho phép hoặc từ chối từng nhóm quyền; hệ thống gộp hộp thoại theo nhóm (SMS, Danh bạ, Điện thoại, Nhật ký cuộc gọi, Camera, Micro, Thiết bị ở gần). | Từ chối → E4. |
-| 12 | Hệ thống | A-UI | Chạy CLIP-01 A2: hiện công bố (trường 13); "Đồng ý" → ghi `clip.a11y_consent_at`. Trước khi mở `ACTION_ACCESSIBILITY_SETTINGS`: Android 13+ và nguồn cài không phải Google Play → hiện trường 14 (API 6). | "Không" → E6, sang bước 14. |
+| 12 | Hệ thống | A-UI | Chưa có `clip.a11y_consent_at` → chạy CLIP-01 A2: hiện công bố (trường 13); "Đồng ý" → ghi `clip.a11y_consent_at`. Đã có → bỏ qua công bố (chỉ hỏi đồng ý một lần, CLIP-01 A1). Trước khi mở `ACTION_ACCESSIBILITY_SETTINGS`: `R` khác `none` → hiện trường 14 (API 6 logic 2–3); `none` → mở thẳng. | "Không" → E6, sang bước 14. |
 | 13 | Người dùng | OS | Trong Cài đặt › Hỗ trợ tiếp cận chọn HandLive, bật dịch vụ, xác nhận hộp thoại cấp quyền kiểm soát của hệ thống, rồi quay lại HandLive. | Hệ thống báo "Chế độ cài đặt bị hạn chế" → E7. Quay lại mà chưa bật → E8. |
 | 14 | Hệ thống | A-UI, A-SVC, A-CLIP | Tính lại `permissions_missing` và các cờ con theo bảng API 2; cập nhật trường 10, 15.<br>Có thay đổi và có client đang kết nối → gửi `capability/update` (SET-02 API 1); hai bên tính lại tính năng hiệu lực (CONN-01 API 7).<br>Với quét QR: có `CAMERA` → mở khung quét (PAIR-01 bước 3); bị từ chối → PAIR-01 E9 (dùng PIN). | A-SVC cũng tính lại khi khởi động, khi A-UI `onResume` và khi dịch vụ Hỗ trợ tiếp cận hoặc listener thông báo nối/ngắt (CLIP-01 A3, CALL-05 API 3). |
-| N1 | Hệ thống | A-UI | Bật cuộc gọi từ ứng dụng khác (`feature.call` và `call.app_calls` đều `true`) khi chưa có quyền truy cập thông báo, hoặc bấm "Cấp quyền" trên thẻ của nó: hiện màn giải thích (trường 19); "Tiếp tục" mở trang Truy cập thông báo của hệ thống cho HandLive (API 9). | Không bắt buộc: tính năng khác không bao giờ phải chờ. |
-| N2 | Người dùng | OS | Trong Truy cập thông báo, bật HandLive, xác nhận hộp thoại của hệ thống, rồi quay lại HandLive. | Chưa bật → E11. |
+| N1 | Hệ thống | A-UI | Bật cuộc gọi từ ứng dụng khác (`feature.call` và `call.app_calls` đều `true`) khi chưa có quyền truy cập thông báo, hoặc bấm "Cấp quyền" trên thẻ của nó: hiện màn giải thích (trường 19); "Tiếp tục" mở trang Truy cập thông báo của hệ thống cho HandLive (API 9). Trước khi mở: `R` khác `none` → hiện trường 14 (hướng dẫn cài đặt hạn chế, API 9 logic 4). | Không bắt buộc: tính năng khác không bao giờ phải chờ. |
+| N2 | Người dùng | OS | Trong Truy cập thông báo, bật HandLive, xác nhận hộp thoại của hệ thống, rồi quay lại HandLive. | Hệ thống báo "Chế độ cài đặt bị hạn chế" → E11 (cùng hướng dẫn như E7). Chưa bật → E11. |
 
 ### 1.1.5 Đặc tả API/service
 
@@ -301,8 +301,8 @@ flowchart TB
 - **Method:** `startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))`; kiểm bằng
   `AccessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)`;
   nguồn cài: `packageManager.getInstallSourceInfo(packageName).installingPackageName` (API 30+) hoặc
-  `getInstallerPackageName(packageName)` (API 29); hướng dẫn hạn chế mở
-  `ACTION_APPLICATION_DETAILS_SETTINGS`.
+  `getInstallerPackageName(packageName)` (API 29); nút "Mở cài đặt" của hướng dẫn hạn chế mở
+  `ACTION_APPLICATION_DETAILS_SETTINGS` với `package:<packageName>`.
 - **Request — khai báo:**
   `<service android:name=".ClipboardAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="false">`
   với intent-filter `android.accessibilityservice.AccessibilityService` và cấu hình
@@ -314,17 +314,64 @@ flowchart TB
   HandLive, chạm ⋮ ở góc trên, chọn 'Cho phép chế độ cài đặt bị hạn chế', xác thực, rồi quay lại bật
   HandLive trong Hỗ trợ tiếp cận." Với quyền truy cập thông báo (N1), câu kết thúc bằng "…bật HandLive
   trong Truy cập thông báo." (`setup.restricted_settings_help_notification_access`).
+  Chuỗi nghiệm thu (mỗi chuỗi một test):
+  - API 33+, cài ngoài (`likely`), đã đồng ý, dịch vụ tắt → bấm thẻ → trường 14 "Tiếp tục" → Hỗ
+    trợ tiếp cận → chạm HandLive, hộp thoại "Chế độ cài đặt bị hạn chế" của hệ thống → Back →
+    trường 14 "Mở cài đặt" một lần → Thông tin ứng dụng › ⋮ › "Cho phép chế độ cài đặt bị hạn chế"
+    → quay về → không tự mở gì → bấm thẻ → trường 14 "Tiếp tục" → Hỗ trợ tiếp cận → bật HandLive →
+    quay về → không có trường 14, thẻ hiện "Bật";
+  - giới hạn đã biết (logic 2): `likely` → "Tiếp tục" → Hỗ trợ tiếp cận → Back mà chưa chạm
+    HandLive → trường 14 "Mở cài đặt" → Thông tin ứng dụng chưa có mục cho phép → quay về → không tự
+    mở gì → bấm thẻ → lại là trường 14 "Tiếp tục", không bao giờ kẹt ở Thông tin ứng dụng;
+  - cài từ Google Play, hoặc API 29–32 (`none`) → bấm thẻ → mở thẳng Hỗ trợ tiếp cận; quay về mà
+    dịch vụ vẫn tắt → không có trường 14, thẻ giữ "Chưa bật tự gửi".
 - **Logic nghiệp vụ:**
   1. Chỉ mở cài đặt Hỗ trợ tiếp cận sau khi có `clip.a11y_consent_at` (đồng ý bằng thao tác chủ
      động, không chọn sẵn); nội dung công bố theo CLIP-01 trường 2.
-  2. Android 13+ và `installingPackageName` khác `com.android.vending` (APK, F-Droid) → hiện trường
-     14 trước khi mở. Quay lại mà dịch vụ chưa bật → hiện lại hướng dẫn (E7, E8).
+  2. Trạng thái hạn chế `R` ∈ {`none`, `likely`}, một hàm thuần theo mức API và nguồn cài, đọc lại
+     mỗi lần A-UI `onResume`:
+     - API 29–32, hoặc `installingPackageName` là `com.android.vending` → `none`;
+     - API 33+ với nguồn cài khác (APK, F-Droid, `adb`, không rõ) → `likely`.
+     HandLive không đọc trạng thái hạn chế của chính Android, và đừng thử lại: ứng dụng không tự đọc
+     được app op `android:access_restricted_settings` (`AppOpsManager.unsafeCheckOpNoThrow` trên uid
+     của chính nó văng `SecurityException: verifyIncomingOp … does not have any of {MANAGE_APPOPS,
+     GET_APP_OPS_STATS, MANAGE_APP_OPS_MODES}`, đo trên Android 15 ngày 2026-10-05), còn
+     `EnhancedConfirmationManager` là API hệ thống.
+     Trường 14 và nút của nó:
+     - `none` → không có trường 14: mở thẳng Hỗ trợ tiếp cận, quay về thì không hiện gì;
+     - `likely` → trước khi mở Hỗ trợ tiếp cận khi đã có đồng ý: trường 14 với nút "Tiếp tục", mở
+       trang đó; hiện lại theo logic 6 khi quay về mà dịch vụ vẫn tắt: nút "Mở cài đặt", mở Thông
+       tin ứng dụng.
+     Giới hạn đã biết: Android chỉ thêm mục "Cho phép chế độ cài đặt bị hạn chế" vào Thông tin ứng
+     dụng › ⋮ sau khi đã hiện hộp thoại "Chế độ cài đặt bị hạn chế" một lần. Người dùng rời Hỗ trợ
+     tiếp cận mà chưa chạm HandLive sẽ gặp "Mở cài đặt" khi quay về và không thấy mục đó trong Thông
+     tin ứng dụng. Không bị kẹt: quay về từ Thông tin ứng dụng không tự mở gì, và lần bấm thẻ tiếp
+     theo lại hiện "Tiếp tục". Thêm một màn là cái giá của việc không đọc được trạng thái Android.
   3. Dịch vụ nối (`onServiceConnected`) → `auto_send = true`, ngắt (`onUnbind`) → `false`; mỗi lần
      đổi gửi `capability/update` (CLIP-01 A3).
   4. Bản cập nhật ứng dụng mở rộng phạm vi dữ liệu trong công bố → xóa `clip.a11y_consent_at` để hỏi
      lại.
   5. Người dùng tắt "Tự gửi khi sao chép" (SET-02) → dịch vụ gọi `disableSelf()` để trả lại quyền Hỗ
      trợ tiếp cận.
+  6. Lúc quay về: A-UI nhớ trang hệ thống cuối cùng do chính nó mở (Hỗ trợ tiếp cận, Truy cập thông
+     báo hoặc Thông tin ứng dụng), giữ trong trạng thái đã lưu của màn hình, nên còn sau một thay đổi cấu hình (người dùng hay đổi
+      cỡ chữ trong Hỗ trợ tiếp cận) và sau khi tiến trình khởi động lại rồi khôi phục màn hình; lần mở
+      ứng dụng mới thì không có dấu này. Ở `onResume` đầu tiên, A-UI xóa dấu này **trước** khi
+     xử lý, nên mỗi lần quay về chỉ xử lý tối đa một lần (`onResume` lần hai, xoay màn hình hay kéo
+     thanh thông báo không chồng thêm màn):
+     - "vẫn tắt" nghĩa là dịch vụ của HandLive không có trong
+       `AccessibilityManager.getEnabledAccessibilityServiceList` (danh sách dịch vụ đã bật, không
+       phải trạng thái đã nối: `onServiceConnected` có thể tới sau `onResume`);
+     - về từ Hỗ trợ tiếp cận, dịch vụ vẫn tắt và `R = likely` → hiện trường 14 một
+       lần, với nút "Mở cài đặt" (E7, E8); Back trên trường 14 về danh sách tính năng và không hiện
+       lại; `R = none` → không làm gì, thẻ giữ "Chưa bật tự gửi";
+     - về từ Thông tin ứng dụng → không tự mở trang nào và không nhớ gì thêm: lần bấm thẻ tiếp theo
+       theo logic 2 (`likely` → lại là trường 14 với nút "Tiếp tục");
+     - nếu người dùng chưa cho phép, Hỗ trợ tiếp cận vẫn hiện HandLive bị mờ và lần quay về sau lại
+       hiện trường 14: vòng này là chủ ý và tự hội tụ (và bao luôn giới hạn đã biết ở logic 2);
+     - ứng dụng được mở mới giữa chừng (tác vụ đã bị đóng) → không tự hiện gì; trạng thái thẻ và lần bấm theo logic 2.
+  7. `clip.auto_send = false` (người dùng chọn gửi thủ công hoặc đã tắt): không có trường 14, không
+     cảnh báo, bất kể `R`.
 
 #### API 7 — `WS capability/update`
 
@@ -357,6 +404,14 @@ mạng hoặc 5xx → thử lại nền theo `RECONNECT_BACKOFF` khi có mạng 
      `Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS`.
   3. Tắt `call.app_calls` không thu hồi quyền (Android không có API để ứng dụng tự trả lại quyền
      này); listener ngừng đọc (CALL-05 API 3 logic 2).
+  4. Cài đặt hạn chế: Android chặn Truy cập thông báo theo cùng cách, nên API 6 logic 2, 6 và 7 áp
+     dụng nguyên vẹn, thay Hỗ trợ tiếp cận bằng Truy cập thông báo, "vẫn tắt" là
+     `isNotificationListenerAccessGranted` = `false`, và dùng
+     `setup.restricted_settings_help_notification_access` làm nội dung trường 14. Mỗi lần bấm "Cấp
+     quyền", kể cả sau khi về từ Thông tin ứng dụng, đều hiện màn giải thích (trường 19) trước (bước
+     N1); sau đó `none` mở trang, `likely` hiện trường 14 với nút "Tiếp tục"; về từ Truy cập thông
+     báo mà chưa bật và `R = likely` → trường 14 với nút "Mở cài đặt" một lần (E11); giới hạn đã biết
+     ở API 6 logic 2 cũng áp dụng; `feature.call` hoặc `call.app_calls` tắt → không cảnh báo.
 
 #### Query
 
@@ -404,7 +459,7 @@ Cột Mô tả ghi nền tảng có khóa, rồi **Capability** (trường capab
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Đồng bộ bảng nhớ tạm (`feature.clipboard`) | bool | Input/Output | `true` | Tất cả.<br>**Capability** `features.clipboard.enabled`. Tắt → ngừng theo dõi và gửi clipboard, hủy truyền ảnh đang dở (`clipboard/cancel`); `clipboard/*` đến bị trả `FEATURE_DISABLED`<br>Mô tả dưới công tắc (Android): "Sao chép trên một thiết bị, dán trên các thiết bị khác." |
-| 2 | Tự gửi khi sao chép (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= khóa này và dịch vụ Hỗ trợ tiếp cận đang chạy). Bật khi chưa có đồng ý hoặc dịch vụ chưa chạy → CLIP-01 A1–A3 (SET-01 bước 12–14). Tắt → dịch vụ gọi `disableSelf()`<br>Mô tả dưới công tắc (Android): "Gửi ngay nội dung vừa sao chép, qua một dịch vụ Hỗ trợ tiếp cận." |
+| 2 | Tự gửi khi sao chép (`clip.auto_send`) | bool | Input/Output | `true` | Android.<br>**Capability** `features.clipboard.auto_send` (= khóa này và dịch vụ Hỗ trợ tiếp cận đang chạy). Bật khi chưa có đồng ý (chưa có `clip.a11y_consent_at`) → CLIP-01 A1–A3 (SET-01 bước 12–14). Đã đồng ý nhưng dịch vụ chưa chạy → SET-01 bước 12 không hiện công bố: trường 14 hoặc mở thẳng Hỗ trợ tiếp cận (API 6 logic 2). Tắt → dịch vụ gọi `disableSelf()`<br>Mô tả dưới công tắc (Android): "Gửi ngay nội dung vừa sao chép, qua một dịch vụ Hỗ trợ tiếp cận." |
 | 3 | Thời điểm đồng ý công bố (`clip.a11y_consent_at`) | timestamp | Output | Rỗng | Android. "Đã đồng ý lúc 14:05, 24/09/2026"; chỉ luồng công bố ghi khóa này |
 | 4 | Đồng bộ ảnh (`clip.send_images`) | bool | Input/Output | `true` | Tất cả. **Capability** `features.clipboard.mimes`: `false` → bỏ `image/png`, `image/jpeg`, chỉ còn `text/plain` (CLIP QC1)<br>Mô tả dưới công tắc (Android): "Gửi cả ảnh đã sao chép, tối đa 10 MB." |
 | 5 | Chặn nội dung nhạy cảm (`clip.block_sensitive`) | bool | Input/Output | `true` | Tất cả, có tác dụng ở bên gửi Android và Mac. **Cục bộ** (CLIP QC3)<br>Mô tả dưới công tắc (Android): "Nội dung có vẻ là mật khẩu hoặc số thẻ chỉ được gửi khi bạn chọn Vẫn gửi." |

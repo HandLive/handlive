@@ -24,6 +24,14 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Fixed
 
+- Thiết lập, SET-01 (en và vi): điện thoại Android 13+ cài HandLive ngoài Google Play không còn im lặng khi chế độ cài
+  đặt hạn chế của Android giữ dịch vụ Hỗ trợ tiếp cận (tự gửi bảng nhớ tạm) hoặc Truy cập thông báo (cuộc gọi từ ứng
+  dụng khác) ở trạng thái tắt. Người dùng quay về từ trang hệ thống đó mà chưa bật HandLive sẽ thấy lại trường 14, mỗi
+  lượt quay về một lần, với nút Mở cài đặt tới Thông tin ứng dụng; lời giải thích chỉ hỏi đồng ý một lần (SET-02
+  trường 2, CLIP-01 A1), và lần Đồng ý đầu tiên không còn bị mất khi màn giải thích đóng. HandLive không đọc được kết
+  luận của Android (app op cần `GET_APP_OPS_STATS`, Android 15 trả `SecurityException`), nên quy tắc vẫn dựa vào nguồn
+  cài. Mã: android #6. Báo cáo:
+  `plans/20260925-implementation/reports/restricted-settings-detect-2026-10-05.md`.
 - Bảng nhớ tạm, CLIP-01 API 2 logic 2 và CLIP-03 API 1 logic 1 (en và vi): item Android có URI là ảnh thì là bức
   ảnh đã sao chép, kể cả khi ứng dụng nguồn đặt URL ảnh, chữ thay thế hay chuỗi rỗng bên cạnh; trước đây luật văn
   bản đứng trước nên các bản sao như vậy bị gửi thành chữ hoặc bị bỏ. CLIP-03 E10: URI mà clipboard không cho điện

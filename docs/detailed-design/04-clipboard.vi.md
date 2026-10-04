@@ -187,7 +187,7 @@ flowchart TB
 | 10 | Hệ thống | M-APP / I-APP | Chống trùng theo `clip_id`; kiểm xung đột (QC8); Mac ghi `NSPasteboard` (API 7), iOS ghi `UIPasteboard` (CLIP-04 API 1); ghi dấu vết QC4; hẹn CLIP-05; trả `ack`. | Xung đột → E7 (API 6). Lỗi ghi → `INTERNAL` (E8). |
 | 11 | Hệ thống | A-SVC, A-UI | Xử lý `ack`: `applied` → xong (đường thủ công hiện "Đã gửi tới <tên>"); nhận `clipboard/conflict` → hiện trường 12, 13; hết 10 s → E8; `FEATURE_DISABLED` → E10. |  |
 | 12 | Người dùng | M-APP / I-APP (ứng dụng bất kỳ) | Dán nội dung (⌘V trên Mac, menu Dán trên iPhone/iPad). | Tự xóa sau `clip.auto_clear_s` (CLIP-05). |
-| A1 | Người dùng | A-UI | Bật "Tự gửi khi sao chép" lần đầu (SET-01 hoặc SET-02). |  |
+| A1 | Người dùng | A-UI | Bật "Tự gửi khi sao chép" lần đầu (SET-01 hoặc SET-02). | Công bố (A2) chỉ hiện khi chưa có `clip.a11y_consent_at`. Đã đồng ý nhưng dịch vụ chưa chạy → không hiện công bố: SET-01 bước 12 đi thẳng tới trường 14 hoặc Hỗ trợ tiếp cận (SET-01 API 6 logic 2). |
 | A2 | Hệ thống | A-UI | Hiện công bố (trường 2) toàn màn hình, chỉ tiếp tục khi người dùng chọn "Đồng ý" (trường 3): lưu `clip.a11y_consent_at`, mở `Settings.ACTION_ACCESSIBILITY_SETTINGS` kèm hướng dẫn chọn HandLive. | Chọn "Gửi thủ công" → `clip.auto_send = false` (E1). |
 | A3 | Hệ thống | A-CLIP, A-SVC | Hệ thống gắn dịch vụ (`onServiceConnected`) → `features.clipboard.auto_send = true`, gửi `capability/update`; dịch vụ bị tắt (`onUnbind`) → `false`, gửi `capability/update`. Client cập nhật trường 14. |  |
 

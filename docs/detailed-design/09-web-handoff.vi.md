@@ -115,7 +115,7 @@ flowchart TB
 | Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
 |------|----------|-----------|-------|--------------------|
 | A1 | Người dùng | A-UI | Bật "Duyệt web tiếp" (trường 1), đọc công bố (trường 2, 3) và chọn "Đồng ý" (trường 4). | "Để sau" → E2. |
-| A2 | Hệ thống | A-UI | Ghi `feature.web = true` và `web.a11y_consent_at`; Android 13+ với nguồn cài khác Google Play → hiện hướng dẫn cài đặt bị hạn chế (SET-01 trường 14); mở `ACTION_ACCESSIBILITY_SETTINGS` (API 3). | E3. |
+| A2 | Hệ thống | A-UI | Ghi `feature.web = true` và `web.a11y_consent_at`; trước khi mở, theo SET-01 API 6 logic 2 (hiện hướng dẫn cài đặt bị hạn chế, SET-01 trường 14, khi `R` khác `none`) và SET-01 API 6 logic 6 lúc quay về; mở `ACTION_ACCESSIBILITY_SETTINGS` (API 3). | E3. |
 | A3 | Người dùng | OS | Chọn "Trang trình duyệt HandLive" (trường 5), bật, xác nhận hộp thoại hệ thống, quay lại. | Không bật → E3. |
 | A4 | Hệ thống | A-WEB, A-SVC | `onServiceConnected` → `features.web.send` thành `true` (khi `web.send = true`); A-SVC gửi `capability/update` (SET-02 API 1) tới mọi phiên. `onUnbind` → `send = false`, cập nhật lại. |  |
 | 1 | Người dùng | OS (trình duyệt) | Mở một trang, chuyển tab, hoặc đưa trình duyệt trở lại foreground. |  |

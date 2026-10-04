@@ -13,7 +13,7 @@ HandLive brings ecosystem-native features, such as Apple Handoff, to Android. Th
 | Phase | Code on `main` | Gate / blocker |
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
-| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05); text clips carry their HTML (2026-10-05) |
+| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05); text clips carry their HTML (2026-10-05); restricted-setting guidance shown again on return, consent asked once (2026-10-05, android #6) |
 | 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open |
 | 3 | Done (2026-09-28) | Real-device checks open |
 | 4 | Spike on `main` (`HFPSpike`, merged 2026-09-30) | G4: need BT phone + live call |

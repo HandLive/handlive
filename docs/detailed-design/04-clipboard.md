@@ -175,7 +175,7 @@ flowchart TB
 | 10 | System | M-APP / I-APP | De-duplicate by `clip_id`; check for conflicts (QC8); the Mac writes `NSPasteboard` (API 7), iOS writes `UIPasteboard` (CLIP-04 API 1); record the QC4 trace; schedule CLIP-05; return the `ack`. | Conflict → E7 (API 6). Write error → `INTERNAL` (E8). |
 | 11 | System | A-SVC, A-UI | Handle the `ack`: `applied` → done (the manual path shows "Sent to \<name>"); `clipboard/conflict` received → show fields 12, 13; 10 s elapsed → E8; `FEATURE_DISABLED` → E10. |  |
 | 12 | User | M-APP / I-APP (any app) | Paste the content (⌘V on the Mac, the Paste menu on iPhone/iPad). | Auto-cleared after `clip.auto_clear_s` (CLIP-05). |
-| A1 | User | A-UI | Turn on "Auto-Send on Copy" for the first time (SET-01 or SET-02). |  |
+| A1 | User | A-UI | Turn on "Auto-Send on Copy" for the first time (SET-01 or SET-02). | The disclosure (A2) is shown only while `clip.a11y_consent_at` is not set. Consent already given but the service not running → no disclosure: SET-01 step 12 goes straight to field 14 or Accessibility (SET-01 API 6 logic 2). |
 | A2 | System | A-UI | Show the disclosure (field 2) full screen and continue only when the user chooses "Agree" (field 3): save `clip.a11y_consent_at`, open `Settings.ACTION_ACCESSIBILITY_SETTINGS` with instructions to select HandLive. | Choosing "Send Manually" → `clip.auto_send = false` (E1). |
 | A3 | System | A-CLIP, A-SVC | The system binds the service (`onServiceConnected`) → `features.clipboard.auto_send = true`, send `capability/update`; the service is turned off (`onUnbind`) → `false`, send `capability/update`. Clients update field 14. |  |
 
