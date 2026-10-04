@@ -19,6 +19,7 @@ HandLive là mã nguồn mở (Apache-2.0). Kho này là **hub tài liệu**. M�
 | **Còn mở trước 1.0** | Cổng **G1** (ma trận máy thật) và **G2** (Play Console); kiểm relay / APNs / FCM thật |
 | **Đang làm** | Quyết định phần cứng/trình duyệt G4/G5/G6; chưa mở thẻ sản phẩm Phase 4–6 |
 | **Ngôn ngữ** | Tiếng Anh (mặc định) và tiếng Việt; mọi tài liệu hub có `X.md` + `X.vi.md` |
+| **Website** | Website sản phẩm và blog WordPress ở `website/`, tiếng Anh và tiếng Việt; chạy trên máy, chưa triển khai ([hướng dẫn](docs/website.vi.md)) |
 
 Bản beta dành cho người thử sớm. Chưa phải bản trên App Store / Play Store.
 

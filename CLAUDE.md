@@ -16,7 +16,8 @@ scan fixes of 2026-09-28 are merged. Reports: `plans/20260925-implementation/rep
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
-spec under `docs/detailed-design/` and the documentation tools under `tools/docs/`. The code
+spec under `docs/detailed-design/`, the documentation tools under `tools/docs/`, and the WordPress product
+site under `website/` (`docs/website.md`). The app code
 lives in four repositories checked out **inside this directory** and git-ignored here: `android/`
 (handlive-android), `apple/` (handlive-apple), `relay/` (handlive-relay) and `shared/`
 (handlive-shared: test vectors, JSON schemas, design tokens and their tools).
@@ -212,7 +213,9 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
   Vietnamese UI strings use Apple-style diacritics (hủy, xóa, tùy, mã hóa) and the design system's
   terminology ("bảng nhớ tạm", not "clipboard").
 
-- **License and commits:** every repository is Apache-2.0 (`LICENSE`). New third-party code or assets must be
+- **License and commits:** every repository is Apache-2.0 (`LICENSE`), except the hub's `website/` (WordPress theme
+  and site tooling), which is GPL-2.0-or-later as WordPress requires (owner decision 2026-10-04; WordPress and
+  Polylang are installed at setup, never committed). New third-party code or assets must be
   Apache-2.0-compatible (Apache, MIT, BSD, ISC, MPL-2.0; OFL for fonts — never GPL, LGPL or AGPL) and bundled
   assets are listed in that repo's `NOTICE`. Commits carry a real person's name and a DCO sign-off
   (`git commit -s`); `.githooks/commit-msg` and the `commit-policy` CI job reject AI identities and co-author

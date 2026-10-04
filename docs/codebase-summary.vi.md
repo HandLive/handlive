@@ -22,6 +22,7 @@ HandLive/                          # kho hub "handlive"
 ├── CLAUDE.md, README.md (+ README.vi.md)
 ├── docs/                          # mọi trang có X.md (tiếng Anh) + X.vi.md (tiếng Việt): detailed-design/, design-system/, privacy, PDR…
 ├── plans/20260925-implementation/ # Kế hoạch triển khai, phase-00…05 (hai ngôn ngữ), reports/ (tiếng Anh)
+├── website/                       # Website sản phẩm và blog WordPress (nginx + PHP-FPM + MariaDB, EN/VI qua Polylang; GPL-2.0-or-later) — docs/website.vi.md
 ├── tools/brand/                   # build_brand_assets.py: logo, biểu tượng app, ảnh quảng bá từ một hình học (docs/brand-guidelines.vi.md)
 ├── tools/docs/                    # validate_design_docs.py, check_bilingual_docs.py, apple_diacritics.py, build_design_html.py
 ├── tools/workspace.sh             # clone | status | run | remotes | push | hooks cho mọi kho

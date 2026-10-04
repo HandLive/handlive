@@ -250,7 +250,8 @@ delete or cancel.
 
 - Be Vietnam Pro Bold: the wordmark, `brand-large-title`, `brand-title`, and promo headlines. Designed
   for Vietnamese, so diacritics stay clear at large sizes. Bundled under the SIL OFL 1.1.
-- Everything else uses the system font: San Francisco on Apple platforms, Inter on Android and the web.
+- Everything else uses the system font: San Francisco on Apple platforms, Inter on Android; the website
+  uses the reader's system font stack.
 - San Francisco and SF Symbols never appear in the logo, the icon, or marketing images (Apple's
   license allows them only in interfaces running on Apple platforms).
 
