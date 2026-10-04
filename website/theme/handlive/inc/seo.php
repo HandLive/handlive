@@ -17,7 +17,7 @@ function handlive_meta_description(): string {
 			return wp_strip_all_tags( get_the_excerpt( $post ) );
 		}
 	}
-	return __( 'Your Android phone\'s clipboard, SMS, and calls on your Mac, iPhone, and iPad. End-to-end encrypted, no account, open source.', 'handlive' );
+	return __( 'Your Android phone\'s clipboard, SMS, and calls, on your Mac, iPhone, and iPad. End-to-end encrypted, no account, open source.', 'handlive' );
 }
 
 // Document titles in the reader's language: the tagline on front pages, and the not-found title
