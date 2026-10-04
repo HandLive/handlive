@@ -95,14 +95,16 @@ cùng mật khẩu ở nơi an toàn ngoài máy: ứng dụng đã cài chỉ n
 
 ```sh
 keytool -genkeypair -v -keystore handlive-release.jks -alias handlive -keyalg RSA -keysize 4096 -validity 10000
-test -s handlive-release.jks && base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
-gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --repo HandLive/handlive-android
-gh secret set ANDROID_RELEASE_KEY_ALIAS --repo HandLive/handlive-android --body handlive
+test -s handlive-release.jks && base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --env release --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --env release --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEY_ALIAS --env release --repo HandLive/handlive-android --body handlive
 ```
 
 Chạy dòng `base64` trong thư mục chứa keystore: thiếu tệp thì `base64` không in gì và `gh` lưu một secret rỗng (`test -s`
-chặn việc đó). `gh secret set` không có `--body` sẽ hỏi giá trị, nên mật khẩu không nằm trong lịch sử shell; thêm `--env release` để
-giữ secret trong environment. `keytool` tạo keystore PKCS12, có mật khẩu key trùng mật khẩu keystore;
+chặn việc đó). `gh secret set` không có `--body` sẽ hỏi giá trị, nên mật khẩu không nằm trong lịch sử shell. Các secret
+nằm trong environment `release`, chỉ tag `v*` và nhánh `main` được dùng (Settings › Environments › `release` ›
+Deployment branches and tags), nên workflow ở nhánh khác không đọc được; không giữ bản sao ở mức secret của kho.
+`keytool` tạo keystore PKCS12, có mật khẩu key trùng mật khẩu keystore;
 `ANDROID_RELEASE_KEY_PASSWORD` chỉ cần cho keystore JKS cũ có mật khẩu key riêng. Biến kho
 `HANDLIVE_RELAY_HOST` và `HANDLIVE_RELAY_EXTRA_PINS` (Settings › Secrets and variables › Variables) cấu hình relay cho
 bản phát hành; không có chúng thì bản phát hành không có relay.
