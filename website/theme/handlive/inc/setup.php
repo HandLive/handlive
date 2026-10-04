@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 const HANDLIVE_VERSION     = '1.0.0';
 const HANDLIVE_GITHUB_URL  = 'https://github.com/HandLive';
-const HANDLIVE_RELEASE_URL = 'https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.1';
+const HANDLIVE_RELEASE_URL = 'https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2';
 
 add_action(
 	'after_setup_theme',

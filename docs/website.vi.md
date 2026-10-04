@@ -47,6 +47,10 @@ của GitHub, hoặc ảnh đại diện của bài viết).
 
 - Bài blog: viết trong trang quản trị (Bài viết → Viết bài mới), chọn ngôn ngữ ở hộp Languages, rồi bấm dấu +
   cạnh ngôn ngữ kia để tạo bản dịch. Dùng chuyên mục "News" / "Tin tức".
+- Link tải ("Tải bản beta"): Release của hub ở tag mới nhất, nơi có tệp của mọi nền tảng (`release-collect`).
+  Khi có bản phát hành mới, đổi nó ở `website/seed/content/site.json` (`release`, dùng trong các trang) và
+  `HANDLIVE_RELEASE_URL` trong `website/theme/handlive/inc/setup.php` (đầu trang và chân trang), rồi chạy lại phần
+  nạp nội dung.
 - Chữ của theme (menu, chân trang, nút): tiếng Anh trong template PHP, tiếng Việt trong
   `website/theme/handlive/languages/vi.l10n.php`; mỗi chuỗi mới thêm một dòng ở đó.
 - Câu chữ tiếng Việt theo hướng dẫn thương hiệu: dấu kiểu Apple và thuật ngữ của design system
