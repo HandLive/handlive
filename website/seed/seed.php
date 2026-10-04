@@ -153,7 +153,7 @@ function hl_remove_sample_content(): void {
  * which feeds (`dc:creator`) would print; the site speaks as HandLive.
  */
 function hl_public_author(): void {
-	wp_update_user(
+	$updated = wp_update_user(
 		array(
 			'ID'            => get_current_user_id(),
 			'display_name'  => 'HandLive',
@@ -161,6 +161,9 @@ function hl_public_author(): void {
 			'user_nicename' => 'handlive',
 		)
 	);
+	if ( is_wp_error( $updated ) ) {
+		WP_CLI::error( 'Could not set the public author name: ' . $updated->get_error_message() );
+	}
 }
 
 /**
