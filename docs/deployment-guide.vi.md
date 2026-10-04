@@ -75,7 +75,10 @@ của tag trước. Để build lại tệp của một tag đã có, chạy wor
 
 **Ai giữ khóa:** mỗi workflow build trong một job chỉ có quyền đọc và không có secret, rồi ký và phát hành trong một job
 riêng thuộc environment `release`, job này chỉ chạy công cụ ký của nền tảng và `gh`: mã build của bên thứ ba không bao
-giờ chạy cạnh khóa ký hay token ghi được Release. Giữ các secret ký trong environment đó (Settings › Environments ›
+giờ chạy cạnh khóa ký hay token ghi được Release. Ứng dụng Mac ký ad hoc và được chạy thử một lần ngay trong job build;
+bản ký Developer ID chỉ được chạy thử trong job release sau khi keychain ký và khóa notary đã bị xóa, trong một bước
+không có secret. Các bản build Apple tạo project Xcode bằng XcodeGen đã ghim phiên bản và kiểm SHA-256
+(`apple/Tools/fetch-xcodegen.sh`). Giữ các secret ký trong environment đó (Settings › Environments ›
 `release` › Environment secrets), thêm chính mình làm người duyệt bắt buộc và giới hạn cho tag `v*`, và bảo vệ tag bằng
 một ruleset (Settings › Rules › Rulesets › Tag, `v*`, hạn chế tạo, sửa và xóa).
 
