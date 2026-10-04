@@ -1,0 +1,5 @@
+.env
+# The template has placeholders only; bin/setup.sh fills .env from it.
+!.env.example
+# Written by bin/build_privacy_content.py from docs/privacy*.md
+seed/generated/
