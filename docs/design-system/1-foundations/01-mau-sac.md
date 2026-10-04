@@ -45,14 +45,14 @@ HIG source: https://developer.apple.com/design/human-interface-guidelines/color
 | `system-red` | `.red` · `systemRed` | Decline, End, delete, errors; `badge` |
 | `system-orange` | `.orange` · `systemOrange` | Connecting, needs attention |
 | `system-green` | `.green` · `systemGreen` | Connected; switch on (the iOS default) |
-| `system-yellow` | `.yellow` · `systemYellow` | Rare ("Fire feeds Earth"), illustrations only |
-| `system-pink`, `system-purple` | `.pink`, `.purple` | Letter avatars, illustrations (Fire) |
-| `system-brown` | `.brown` | Letter avatars, used sparingly (Earth) |
+| `system-yellow` | `.yellow` · `systemYellow` | Rare, illustrations only |
+| `system-pink`, `system-purple` | `.pink`, `.purple` | Letter avatars, illustrations (warm hues) |
+| `system-brown` | `.brown` | Letter avatars, used sparingly |
 | `system-gray` … `system-gray-6` | `.gray` · `systemGray` … `systemGray6` | Offline, borders, group backgrounds |
 
 - AppKit has only `systemGray`; Gray 2–6 are iOS colors. On the Mac, use semantic colors
   (`separatorColor`, `controlBackgroundColor`) where iOS uses Gray 2–6.
-- Not used ("Water overcomes Fire"): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`,
+- Not used (blue belongs to the system): `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`,
   `systemIndigo` — not for the brand, large color areas, status, or avatars. Parts the system draws
   from the user's own choices (accent color, text selection) are left as they are.
 
@@ -79,8 +79,8 @@ HIG source: https://developer.apple.com/design/human-interface-guidelines/color
 - Liquid Glass: tint only the background of one primary action on glass
   (`.buttonStyle(.glassProminent)`, `Glass.tint(_:)`); don't tint text or icons on glass; don't tint
   several controls at once. Status dots on glass are allowed.
-- Intentional deviation: links use `accent` instead of the system's blue `link` color ("Water
-  overcomes Fire"); links always sit in a clear context and never rely on color alone.
+- Intentional deviation: links use `accent` instead of the system's blue `link` color, so
+  HandLive's own color stays green; links always sit in a clear context and never rely on color alone.
 
 ## Status
 
@@ -141,4 +141,4 @@ System colors switch to their high-contrast variants on their own; custom colors
 | Call the semantic color APIs on Apple platforms | Copy the hex `#FF383C` into Swift code |
 | Tint one primary button per screen | Tint every button with `accent-fill` |
 | Use `text-*` for small colored text | Small text in `system-green`, `system-orange` |
-| Keep vermilion in the content layer | Buttons or status in `brand-fire` |
+| Keep flame red in the content layer | Buttons or status in `brand-fire` |

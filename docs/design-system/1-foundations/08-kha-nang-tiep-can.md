@@ -50,7 +50,7 @@ over their background before measuring. Text is measured on 7 backgrounds: `syst
 | `on-call-fill` on `call-accept-fill` | 3.52:1 | 3 (icon) |
 | `label` on `bubble-incoming` | 13.14:1 | 4.5 |
 | `accent` on `accent-tint` | 4.64:1 | 3 (text from 13 pt) |
-| `brand-fire` on `system-background`, `brand-glow` | 4.86, 4.15:1 | 3 (large text) |
+| `brand-fire` on `system-background`, `brand-glow` | 4.16, 3.73:1 | 3 (large text) |
 
 These don't reach 4.5:1 in the Light appearance, so they're never used for text that carries
 information: `tertiary-label` (1.7:1), `system-green` (1.9–2.2:1), `system-orange` (2.0–2.3:1),

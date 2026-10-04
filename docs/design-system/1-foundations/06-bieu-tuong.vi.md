@@ -99,9 +99,9 @@ tảng. Android không dùng `bluetooth` để hai bên giống nhau.
 | Công cụ | Icon Composer, xuất sang Xcode |
 | Cỡ, cấu trúc | 1024×1024 px cho iOS, iPadOS, macOS; một lớp nền và ít nhất một lớp trước; lớp vuông chưa mask, vector SVG hoặc PDF |
 | Appearance | Mặc định, tối, clear sáng, clear tối, tinted sáng, tinted tối; cả sáu giữ cùng đặc điểm nhận dạng |
-| Màu lớp | Nền `brand-ember` (đỏ than, thay cho đen); lớp trước `brand-fire`, `brand-flame` (ngọn lửa hiệu) |
+| Màu lớp | Nền: gradient bình minh #fff6ee → #ffe3cf; lớp trước: ngọn núi tím than `brand-ember`, ngọn lửa (`brand-fire` → `brand-flame` → hổ phách), vòng sóng tín hiệu |
 | Không dùng | SF Symbols hay hình dễ lẫn với symbol, font SF, hình phần cứng Apple, chữ; không tự thêm bóng, vệt sáng, viền nổi, glow vì hệ thống tự thêm |
-| Hiện tại | Chưa có biểu tượng. Preview dùng khối gradient lửa `brand-flame` → `brand-fire` → `brand-ember` (145°) làm chỗ giữ |
+| File | Sinh bằng `tools/brand/build_brand_assets.py`: bộ AppIcon (iOS mặc định, tối, phủ màu; macOS 16–512 pt), biểu tượng thích ứng Android và các lớp cho Icon Composer ở `docs/brand/assets/app-icon/` ([hướng dẫn thương hiệu](../../brand-guidelines.vi.md)) |
 
 Android: adaptive icon dùng cùng lớp nền và lớp trước (lớp 108 dp, vùng an toàn 66 dp), có lớp
 monochrome cho biểu tượng theo chủ đề (Android 13+); hình dạng do Android cắt.

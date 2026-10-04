@@ -42,5 +42,5 @@ without changing the button's size.
 
 - Do put the primary button at the right edge (Mac) or at the bottom within easy reach (iPhone,
   Android).
-- Don't put two prominent buttons side by side; don't use vermilion `brand-fire` for buttons.
+- Don't put two prominent buttons side by side; don't use flame red `brand-fire` for buttons.
 - Don't use "OK", "Yes", or "No" as labels; "Cancel" is only for cancel buttons.

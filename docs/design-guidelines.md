@@ -27,9 +27,9 @@ English | [Tiếng Việt](design-guidelines.vi.md)
   Android rebuilds the same language in Compose (Inter font, Material Symbols Rounded) and keeps the
   parts Android owns as they are (notifications, permission dialogs, Quick Settings tiles, the back
   gesture). Apple's license does not allow SF Pro, SF Symbols or the UI Kit on Android.
-- Brand colors follow feng shui for the Sơn Đầu Hỏa element (fire on the mountaintop): vermilion,
-  ember red and flame orange for identity; green (Wood feeds Fire) is the AccentColor; no black or
-  blue for the brand. Four appearances: Light, Dark and two high-contrast variants; every
+- Brand: a signal fire on a mountaintop, in dawn colors ([brand guidelines](brand-guidelines.md)): flame
+  red and flame orange for identity, plum in place of black, dawn cream for brand backgrounds; green is
+  the AccentColor; no black or blue for the brand. Four appearances: Light, Dark and two high-contrast variants; every
   text–background pair ≥ 4.5:1.
 - Decisions, HIG research and the list of points synced with `docs/detailed-design/` (2026-09-25):
   `plans/20260924-apple-hig-design-system/`. UI wording: `docs/detailed-design/README.md`

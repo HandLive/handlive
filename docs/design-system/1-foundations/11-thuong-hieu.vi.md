@@ -3,34 +3,34 @@
 # Thương hiệu
 
 Thương hiệu HandLive nằm ở lớp nội dung: màn chào, màn ghép nối, trạng thái trống, biểu tượng app và
-chữ HandLive. Control, trạng thái và thanh điều hướng giữ diện mạo của hệ thống. Mục này gồm câu
-chuyện, bảng màu, chữ và các giới hạn.
+logo HandLive. Control, trạng thái và thanh điều hướng giữ diện mạo của hệ thống. Mục này nói thương
+hiệu xuất hiện thế nào trong app: bảng màu, chữ và các giới hạn. Câu chuyện, giọng văn, thông điệp, file
+logo và ảnh quảng bá nằm trong [hướng dẫn thương hiệu](../../brand-guidelines.vi.md).
 
 Nguồn HIG: https://developer.apple.com/design/human-interface-guidelines/branding
 
 ## Câu chuyện
 
-Bảng màu chọn theo phong thủy mệnh Sơn Đầu Hỏa, lửa trên đỉnh núi. Người xưa đốt lửa hiệu trên đỉnh
-núi để truyền tin từ trạm này sang trạm khác; HandLive làm việc tương tự giữa điện thoại và máy
-tính. Tính cách: đáng tin, kín đáo, ấm. Theo HIG, thương hiệu nhường chỗ cho nội dung: không rải
+Điều xảy ra trên điện thoại hiện lên màn hình trước mặt bạn. Logo vẽ điều đó thành ngọn lửa hiệu trên
+đỉnh núi, trong màu bình minh: đỏ lửa, cam và hổ phách trên ngọn núi tím than và bầu trời màu kem. Tính cách: đáng tin, kín đáo, ấm. Theo HIG, thương hiệu nhường chỗ cho nội dung: không rải
 logo, không trang trí thừa.
 
 ## Bảng màu
 
-| Vai trò | Token | Sáng / Tối | Ngũ hành | Dùng cho |
-|---|---|---|---|---|
-| Nhận diện | `brand-fire` (đỏ son) | #d2381f / #ff6b4a | Hỏa, màu bản mệnh | Chữ HandLive, biểu tượng app, màn chào |
-| Mảng sâu | `brand-ember` (đỏ than) | #8a2210 / #b43a20 | Hỏa | Khối lớn ở bìa, lớp nền biểu tượng app, thay cho đen |
-| Điểm sáng | `brand-flame` (cam lửa) | #f07a1a / #ff9a3d | Hỏa | Gradient thương hiệu, minh họa; không làm màu chữ |
-| Nền thương hiệu | `brand-glow` (hồng đào) | #fde9e2 / #3b1a12 | Hỏa | Nền màn chào, màn ghép nối |
-| Thao tác | `accent`, `accent-fill` (xanh lá) | #197934 / #3ddc6c | Mộc sinh Hỏa, tương sinh | AccentColor |
-| Trung tính | Xám hệ thống | Theo hệ thống | Kim; Hỏa khắc Kim, dùng được | Nền, chữ, viền |
-| Nhấn phụ | `system-pink`, `system-purple`; ít dùng `system-yellow`, `system-brown` | Theo hệ thống | Hỏa; Thổ | Ảnh đại diện chữ cái, minh họa |
-| Không dùng | Đen, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Thủy khắc Hỏa | Không cho thương hiệu hay mảng màu lớn |
+| Vai trò | Token | Sáng / Tối | Dùng cho |
+|---|---|---|---|
+| Nhận diện | `brand-fire` (đỏ lửa) | #e63d1a / #ff7448 | Tiêu đề thương hiệu cỡ lớn, biểu tượng app, màn chào |
+| Mảng sâu | `brand-ember` (tím than) | #33232d / #6e5463 | Ngọn núi trong logo, khối lớn ở bìa, thay cho đen |
+| Điểm sáng | `brand-flame` (cam lửa) | #ff861f / #ffa04a | Ngọn lửa và vòng sóng, gradient thương hiệu, minh họa; không làm màu chữ |
+| Nền thương hiệu | `brand-glow` (kem bình minh) | #fff0e3 / #2b1e26 | Nền màn chào, màn ghép nối |
+| Thao tác | `accent`, `accent-fill` (xanh lá) | #197934 / #3ddc6c | AccentColor: đèn xanh của tín hiệu đã nhận |
+| Trung tính | Xám hệ thống | Theo hệ thống | Nền, chữ, viền |
+| Nhấn phụ | `system-pink`, `system-purple`; ít dùng `system-yellow`, `system-brown` | Theo hệ thống | Ảnh đại diện chữ cái, minh họa |
+| Không cho thương hiệu | Đen, `systemBlue`, `systemCyan`, `systemTeal`, `systemMint`, `systemIndigo` | — | Xanh dương là của hệ thống; mảng sâu dùng `brand-ember` thay cho đen |
 
 Nền tối của hệ thống (đen trên iPhone, xám trên Mac) là của Apple; HandLive không thêm mảng đen hay
-xanh dương nào của riêng mình. Mỗi màu thương hiệu có đủ 4 biến thể, kể cả hai bản tương phản cao
-(xem Màu sắc).
+xanh dương nào của riêng mình, nên không bị nhìn như một tiện ích hệ thống. Mỗi màu thương hiệu có đủ 4
+biến thể, kể cả hai bản tương phản cao (xem Màu sắc).
 
 ## Màu thương hiệu ở đâu
 
@@ -43,7 +43,7 @@ xanh dương nào của riêng mình. Mỗi màu thương hiệu có đủ 4 bi�
 
 - HIG: muốn thể hiện thương hiệu bằng màu thì đưa màu vào lớp nội dung, nơi nó cuộn bên dưới control
   kính và được kính "bắt" màu; không tô màu thương hiệu lên control.
-- Đỏ son không dùng cho nút hay trạng thái, để không lẫn với màu hủy, xóa, lỗi (systemRed).
+- Đỏ lửa không dùng cho nút hay trạng thái, để không lẫn với màu hủy, xóa, lỗi (systemRed).
 - Mỗi màn tối đa một khoảnh khắc thương hiệu.
 
 ## Màu nhấn trên control
@@ -67,10 +67,11 @@ Theo HIG, màu nhấn dùng tiết chế trên control:
 
 ## Logo và chữ HandLive
 
-- Chưa có logo. Cho tới khi có, dùng chữ "HandLive" kiểu `wordmark` (Be Vietnam Pro Bold 20/24), màu
-  `brand-fire` hoặc `label`.
-- Wordmark chỉ ở màn chào và cửa sổ Giới thiệu; không rải logo khắp app, không đặt trên thanh điều
-  hướng.
+- Logo là ngọn lửa hiệu trên đỉnh núi; các file (biểu tượng, chữ HandLive, bộ ghép, biểu tượng app)
+  nằm ở `docs/brand/assets/`, quy tắc dùng ở [hướng dẫn thương hiệu](../../brand-guidelines.vi.md).
+- Trong app, logo chỉ có ở màn chào và cửa sổ Giới thiệu: dạng ảnh bộ ghép, hoặc chữ "HandLive" kiểu
+  `wordmark` (Be Vietnam Pro Bold 20/24) màu `brand-fire` hay `label`. Không rải logo khắp app, không
+  đặt trên thanh điều hướng.
 - Không dùng SF Symbols, font San Francisco hay hình dễ lẫn với symbol trong logo và biểu tượng app:
   giấy phép của Apple không cho phép.
 
@@ -99,4 +100,4 @@ Theo HIG, màu nhấn dùng tiết chế trên control:
 | Màu thương hiệu ở màn chào, màn ghép nối | Nút chính màu `brand-fire` |
 | Chữ HandLive bằng `wordmark` | Logo ghép từ SF Symbol |
 | Màn chào trong `Onboarding` | Logo trên launch screen |
-| Đỏ than thay cho đen | Nền đen hay xanh dương tự vẽ |
+| Tím than `brand-ember` thay cho đen | Nền đen hay xanh dương tự vẽ |

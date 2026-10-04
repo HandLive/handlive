@@ -50,7 +50,7 @@ khi đo. Chữ được đo trên 7 nền: `system-background`, `secondary-syste
 | `on-call-fill` trên `call-accept-fill` | 3.52:1 | 3 (biểu tượng) |
 | `label` trên `bubble-incoming` | 13.14:1 | 4.5 |
 | `accent` trên `accent-tint` | 4.64:1 | 3 (chữ từ 13 pt) |
-| `brand-fire` trên `system-background`, `brand-glow` | 4.86, 4.15:1 | 3 (chữ lớn) |
+| `brand-fire` trên `system-background`, `brand-glow` | 4.16, 3.73:1 | 3 (chữ lớn) |
 
 Không đạt 4.5:1 ở giao diện Sáng nên không dùng làm chữ mang thông tin: `tertiary-label` (1.7:1),
 `system-green` (1.9–2.2:1), `system-orange` (2.0–2.3:1), `system-gray` (2.8–3.3:1), `system-red`

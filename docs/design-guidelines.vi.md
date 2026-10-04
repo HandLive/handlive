@@ -15,8 +15,9 @@
 ## Design system giao diện
 
 - Nguồn: artifact "HandLive Design System", https://claude.ai/artifact/2rsmYxBjxXrd12FByTd9vT. Bản sao nằm trong `docs/design-system/`. Token nằm ở `shared/design-tokens/tokens.json`. Theo **Apple Human Interface Guidelines** (bản 24/09/2026, Liquid Glass) cho mọi nền tảng. Mac, iPhone và iPad dùng control, font San Francisco, SF Symbols và vật liệu sẵn trên hệ thống. Android dựng lại cùng ngôn ngữ bằng Compose (font Inter, Material Symbols Rounded). Android giữ nguyên phần hệ thống quản lý: thông báo, hộp thoại quyền, ô Cài đặt nhanh, cử chỉ quay lại. Giấy phép Apple không cho dùng SF Pro, SF Symbols và UI Kit trên Android.
-- Màu thương hiệu theo phong thủy mệnh Sơn Đầu Hỏa: đỏ son, đỏ than, cam lửa cho nhận diện; xanh lá
-  (Mộc sinh Hỏa) là AccentColor; không dùng đen, xanh dương cho thương hiệu. Bốn giao diện Sáng, Tối
+- Thương hiệu: ngọn lửa hiệu trên đỉnh núi, màu bình minh ([hướng dẫn thương hiệu](brand-guidelines.vi.md)):
+  đỏ lửa, cam lửa cho nhận diện, tím than thay cho đen, kem bình minh cho nền thương hiệu; xanh lá là
+  AccentColor; không dùng đen, xanh dương cho thương hiệu. Bốn giao diện Sáng, Tối
   và hai bản tương phản cao; mọi cặp chữ–nền ≥ 4.5:1.
 - Quyết định, nghiên cứu HIG và danh sách điểm đã đồng bộ với `docs/detailed-design/` (25/09/2026):
   `plans/20260924-apple-hig-design-system/`. Câu chữ giao diện: `docs/detailed-design/README.md`

@@ -97,8 +97,9 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 - **Device name:** on iOS 16 and later the phone sees "iPhone" or "iPad" as the device name unless Apple grants
   the user-assigned device name entitlement (`com.apple.developer.device-information.user-assigned-device-name`);
   request it before the release (PAIR-01 field 3).
-- **App icon:** the App Store needs an app icon, and the design system has no logo yet
-  (`docs/design-system/1-foundations/11-thuong-hieu.md`), so a logo and an icon must exist before submission.
+- **App icon:** the AppIcon set (macOS and iOS) and the Android adaptive icon are in the app repositories,
+  generated from `docs/brand-guidelines.md` by `tools/brand/build_brand_assets.py`; store listings use the 1024 px
+  and 512 px files in `docs/brand/assets/app-icon/`.
 
 ## Cloud relay (Rust)
 

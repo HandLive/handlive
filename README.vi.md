@@ -2,7 +2,9 @@
 
 # HandLive
 
-> Continuity kiểu hệ sinh thái cho Android: clipboard, SMS, cuộc gọi và hơn thế nữa, đồng bộ với Mac, iPhone và iPad.
+<img src="docs/brand/assets/promo/readme-hero.vi.png" alt="HandLive. Không bỏ lỡ tín hiệu nào. Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại Android, trên Mac, iPhone và iPad." width="800">
+
+> **Không bỏ lỡ tín hiệu nào.** Bảng nhớ tạm, SMS và cuộc gọi của điện thoại Android, ngay trên Mac, iPhone và iPad.
 >
 > *"WebSocket cho dữ liệu, Bluetooth cho giọng nói."*
 

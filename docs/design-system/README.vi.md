@@ -38,28 +38,29 @@ Theo trang Design principles của HIG, áp vào HandLive:
 
 ## Thương hiệu: lửa hiệu trên đỉnh núi
 
-Bảng màu chọn theo phong thủy mệnh **Sơn Đầu Hỏa** — lửa trên đỉnh núi. Người xưa đốt lửa trên đỉnh
-núi để truyền tin từ trạm này sang trạm khác; HandLive làm việc tương tự giữa điện thoại và máy
-tính.
+Điều xảy ra trên điện thoại hiện lên màn hình trước mặt bạn; logo vẽ điều đó thành ngọn lửa hiệu trên
+đỉnh núi, trong màu bình minh. Câu chuyện, giọng văn, file logo và ảnh quảng bá: [hướng dẫn thương hiệu](../brand-guidelines.vi.md).
 
-| Vai trò | Màu | Ngũ hành |
+| Vai trò | Màu | Vì sao |
 |---------|-----|----------|
-| Nhận diện | Đỏ son `brand-fire`, đỏ than `brand-ember`, cam lửa `brand-flame` | Hỏa — màu bản mệnh |
-| Thao tác (AccentColor) | Xanh lá `accent`, `accent-fill` | Mộc sinh Hỏa — màu tương sinh |
-| Nền thương hiệu | Hồng đào `brand-glow` | Hỏa |
-| Trung tính | Xám hệ thống của Apple | Kim — Hỏa khắc Kim, dùng được |
-| Không dùng | Đen, xanh dương, xanh nước biển: systemBlue, Cyan, Teal, Mint, Indigo | Thủy khắc Hỏa |
+| Nhận diện | Đỏ lửa `brand-fire`, cam lửa `brand-flame` | Ngọn lửa hiệu |
+| Chiều sâu | Tím than `brand-ember` | Ngọn núi; dùng thay cho đen |
+| Thao tác (AccentColor) | Xanh lá `accent`, `accent-fill` | Đèn xanh của tín hiệu đã nhận |
+| Nền thương hiệu | Kem bình minh `brand-glow` | Bầu trời lúc rạng đông |
+| Trung tính | Xám hệ thống của Apple | Nền, chữ, viền |
+| Không cho thương hiệu | Đen, xanh dương, xanh nước biển: systemBlue, Cyan, Teal, Mint, Indigo | Xanh dương là của hệ thống |
 
-- Đỏ son chỉ có ở biểu tượng app, chữ HandLive, màn chào và minh họa; không ở nút hay trạng thái, để
-  không lẫn với màu hủy và xóa của hệ thống.
+- Đỏ lửa chỉ có ở biểu tượng app, logo, màn chào và minh họa; không ở nút hay trạng thái, để không lẫn
+  với màu hủy và xóa của hệ thống.
 - Xanh lá là AccentColor: nút chính, liên kết, dấu chưa đọc, bong bóng tin mình gửi. Theo HIG, tô
   màu control tiết chế — mỗi màn một, tối đa hai nút tô màu.
 - Liên kết và vùng chọn dùng xanh lá thay cho xanh dương mặc định của Apple. Trên Mac, khi người
   dùng chọn màu nhấn khác Multicolor, control theo màu người dùng chọn.
 - Nền tối của hệ thống (đen trên iPhone, xám trên Mac) thuộc về Apple; HandLive không thêm mảng đen
   hay xanh dương nào của riêng mình.
-- Chưa có logo. Cho tới khi có, dùng chữ HandLive kiểu `wordmark`. Không dùng SF Symbol hay font San
-  Francisco trong logo và biểu tượng app — giấy phép của Apple không cho phép.
+- Logo và biểu tượng app nằm ở `docs/brand/assets/`; trong app, chữ HandLive dùng kiểu `wordmark`.
+  Không dùng SF Symbol hay font San Francisco trong logo và biểu tượng app — giấy phép của Apple không
+  cho phép.
 
 ## Tóm tắt nhanh
 
