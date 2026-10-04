@@ -6,6 +6,12 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+### Added
+
+- `release-collect` (workflow của hub): APK, IPA iOS và DMG Mac của một tag phiên bản, kèm SHA-256, được chép từ
+  Release của handlive-android và handlive-apple sang Release của hub sau khi kiểm checksum, để người dùng tải mọi
+  nền tảng ở một trang (`docs/deployment-guide.vi.md`, Bản phát hành). Đã làm cho `v0.1.0-beta.2`.
+
 ### Fixed
 
 - Xóa tất cả trên Mac xóa khóa HandLive ở cả hai keychain (SET-02 API 7 logic 6, en và vi), nên người dùng đã chạy cả

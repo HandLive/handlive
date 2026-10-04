@@ -1,0 +1,121 @@
+# Release: gathers the installable files of a version tag into this repository's Release, so users download every
+# platform from one page. The files are built and signed by release-android (handlive-android) and release-apple
+# (handlive-apple); this workflow copies them from those Releases, checks each SHA-256 and attaches them here (the
+# Release is created when missing, pre-release when the tag has a suffix such as -beta.1).
+# Runs on a pushed tag v*: the hub tag is pushed first, so it waits up to 60 minutes for the platform files. By hand for
+# an existing tag: wait=false collects what is there now; a file already attached is never replaced unless
+# replace=true. Reads the public platform Releases and writes only this repository's Release, with its own token.
+name: release-collect
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag, e.g. v0.1.0-beta.2
+        required: true
+      wait:
+        description: Wait up to 60 minutes for the Android APK, the iOS IPA and the Mac DMG
+        type: boolean
+        default: false
+      replace:
+        description: Replace files already attached to this repository's Release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: collect the platform files
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: write # create this repository's Release and upload its assets
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      WAIT: ${{ github.event_name == 'push' || inputs.wait }}
+      REPLACE: ${{ inputs.replace || false }}
+      OWNER: ${{ github.repository_owner }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Version tag
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Not a version tag: $TAG (expected v1.2.3 or v1.2.3-beta.1)"; exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      # The platform workflows start from their own tags and take a few minutes; the Mac file is the ad-hoc signed DMG
+      # or, with Developer ID, the notarized one.
+      - name: Wait for the platform files
+        if: env.WAIT == 'true'
+        run: |
+          names() { gh release view "$TAG" --repo "$OWNER/$1" --json assets --jq '.assets[].name' 2> /dev/null || true; }
+          for minute in $(seq 1 60); do
+            android="$(names handlive-android)"
+            apple="$(names handlive-apple)"
+            if grep -qx "HandLive-$VERSION-android-foss.apk" <<< "$android" \
+              && grep -qx "HandLive-$VERSION-ios-unsigned.ipa" <<< "$apple" \
+              && grep -qE "^HandLive-$VERSION-macos(-unsigned)?\.dmg$" <<< "$apple"; then
+              echo "All platform files are attached (after $minute min)"; exit 0
+            fi
+            sleep 60
+          done
+          echo "::warning::Not every platform file appeared within 60 minutes: collecting what is there; run this workflow again by hand once the rest is published"
+
+      - name: Download and check the files
+        run: |
+          out="$RUNNER_TEMP/out"
+          mkdir -p "$out"
+          for repo in handlive-android handlive-apple; do
+            if ! gh release download "$TAG" --repo "$OWNER/$repo" --pattern "HandLive-$VERSION-*" --dir "$out" 2> "$RUNNER_TEMP/download.err"; then
+              echo "::warning::$repo: $(cat "$RUNNER_TEMP/download.err")"
+            fi
+          done
+          cd "$out"
+          shopt -s nullglob
+          sums=(*.sha256)
+          if [ "${#sums[@]}" = 0 ]; then
+            echo "::error::No installable file of $TAG in handlive-android or handlive-apple"; exit 1
+          fi
+          for sum in "${sums[@]}"; do
+            [ -e "${sum%.sha256}" ] || { echo "::error::$sum without its file"; exit 1; }
+            sha256sum --check --strict "$sum"
+          done
+          for file in *; do
+            [ -e "$file.sha256" ] || [[ "$file" == *.sha256 ]] || { echo "::error::$file has no SHA-256 file"; exit 1; }
+          done
+          ls -l
+
+      - name: Attach to this repository's Release
+        run: |
+          files=("$RUNNER_TEMP"/out/*)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            attached="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+            new=()
+            for file in "${files[@]}"; do
+              name="$(basename "$file")"
+              if grep -qxF "$name" <<< "$attached" && [ "$REPLACE" != true ]; then
+                echo "::notice::$name is already attached (replace=true to replace it)"
+              else
+                new+=("$file")
+              fi
+            done
+            if [ "${#new[@]}" != 0 ]; then
+              gh release upload "$TAG" "${new[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+            fi
+          else
+            prerelease=()
+            if [[ "$TAG" == *-* ]]; then prerelease=(--prerelease); fi
+            gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "HandLive $TAG" "${prerelease[@]}" \
+              --notes "Installable files of HandLive $TAG for Android, Mac and iPhone/iPad, each with its SHA-256. Changes: CHANGELOG.md, section [${VERSION}]."
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[] | "\(.name) \(.size)"'

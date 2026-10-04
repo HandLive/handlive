@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `release-collect` (hub workflow): the APK, the iOS IPA and the Mac DMG of a version tag, with their SHA-256, are
+  copied from the handlive-android and handlive-apple Releases into the hub's Release after a checksum check, so users
+  download every platform from one page (`docs/deployment-guide.md`, Release builds). Done for `v0.1.0-beta.2`.
+
 ### Fixed
 
 - Delete All on the Mac deletes HandLive's keys in both keychains (SET-02 API 7 logic 6, en and vi), so a user who ran
