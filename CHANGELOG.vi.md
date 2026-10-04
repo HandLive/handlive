@@ -8,6 +8,9 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Added
 
+- `docs/deployment-guide.md` (en, vi): Bản phát hành — `release-android` chạy theo tag (APK `foss` đã ký) và
+  `release-apple` (IPA iOS chưa ký; app Mac ký Developer ID và notarize khi có secret của team trả phí), cách ra một
+  bản phát hành, build lại một tag đã có, và các secret chủ dự án cần tạo.
 - CALL-05 (cuộc gọi từ ứng dụng khác): `AppCallListenerService` (`NotificationListenerService`) đọc thông báo cuộc gọi
   của Telegram và các ứng dụng khác trên Android và gửi tới Mac; người dùng có thể trả lời, từ chối hoặc kết thúc từ
   Mac (âm thanh vẫn ở trên điện thoại ở v1). Cần quyền truy cập thông báo, một quyền đặc biệt mà người dùng bật bằng

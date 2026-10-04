@@ -2,7 +2,8 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 
 # HandLive — Deployment & Distribution
 
-> No build pipeline yet. This is the distribution plan following decisions D5/D7/D8 in the original plan.
+> Distribution plan following decisions D5/D7/D8 in the original plan. Release files come from tag-driven workflows:
+> see Release builds.
 
 ## Android app
 
@@ -124,9 +125,80 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 - TLS: Let's Encrypt + cert pinning on the client side.
 - Estimate: 100 concurrent Opus calls ≈ 12GB/hour; a commodity VPS with 20TB/month is enough for ~1000 users.
 
+## Release builds
+
+A version tag builds the installable files and attaches them, each with a `.sha256`, to that tag's GitHub Release
+(created when missing; a tag with a suffix such as `-beta.1` makes a pre-release). The relay ships from source (D5).
+
+| Repository | Workflow | Files |
+|---|---|---|
+| handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: the `foss` flavor, signed with the release key |
+| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos.zip` (Developer ID, notarized) once the macOS secrets exist |
+
+**Cutting a release:** set the version in every repository (Android `versionName` and a higher `versionCode` in
+`app/build.gradle.kts`; Apple `MARKETING_VERSION`, the version core without the suffix, and `CURRENT_PROJECT_VERSION`
+in `project.yml`), commit, then tag `vX.Y.Z` or `vX.Y.Z-suffix` in each repository and push the hub and handlive-shared
+tags first: the workflows check those two out at the same tag, and one without it falls back to `main` with a warning.
+A workflow stops when the tag does not match its repository's version and warns when the build number (`versionCode`,
+`CURRENT_PROJECT_VERSION`) is not above the previous tag's. To rebuild the files of an existing tag, run the workflow by
+hand: GitHub › Actions › `release-android` or `release-apple` › Run workflow, or
+`gh workflow run release-android.yml --repo HandLive/handlive-android -f tag=v0.1.0-beta.1 -f publish=false`
+(`publish=false` keeps the files as workflow artifacts and leaves the Release alone; a file already attached is
+replaced only with `replace=true`).
+
+**Who holds the keys:** each workflow builds in a job with read-only rights and no secret, then signs and publishes in
+a separate job of the environment `release` that runs only the platform's signing tools and `gh`: third-party build
+code never runs next to a signing key or a token that can write Releases. Keep the signing secrets in that environment
+(Settings › Environments › `release` › Environment secrets), add yourself as a required reviewer and limit it to tags
+`v*`, and protect the tags with a ruleset (Settings › Rules › Rulesets › Tag, `v*`, restrict creation, update and
+deletion).
+
+**Android signing (owner, once):** the APK is signed after the build with `apksigner`; without the secrets the sign job
+stops (the unsigned build stays a workflow artifact) rather than publish an APK nobody can install or update. Create
+the key and keep the keystore and its password in a safe offline place: an installed app accepts updates only from the
+same key.
+
+```sh
+keytool -genkeypair -v -keystore handlive-release.jks -alias handlive -keyalg RSA -keysize 4096 -validity 10000
+base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEY_ALIAS --repo HandLive/handlive-android --body handlive
+```
+
+`gh secret set` without `--body` asks for the value, so the password stays out of the shell history; add
+`--env release` to keep the secrets in the environment. `keytool` writes a PKCS12 keystore, whose key password is the
+store password; `ANDROID_RELEASE_KEY_PASSWORD` is needed only for an older JKS keystore with a separate key password. The repository
+variables `HANDLIVE_RELAY_HOST` and `HANDLIVE_RELAY_EXTRA_PINS` (Settings › Secrets and variables › Variables)
+configure the relay of release builds; without them a release has no relay.
+
+**iOS/iPadOS:** the IPA is a Release build for devices with its Notification Service Extension and is not signed:
+sideloading tools re-sign it with the installer's own Apple ID. TestFlight and the App Store need the paid Apple
+Developer Program team (signing, the App Group and Keychain Sharing identifiers, `aps-environment` = production).
+
+**macOS (needs the paid Apple Developer Program team):** an unsigned or ad-hoc signed Mac app cannot open its
+data-protection Keychain (`errSecMissingEntitlement`, -34018) and stops at key creation, so the workflow publishes the
+Mac app only when all seven secrets exist; with none it only compiles the app, and with some but not all it fails. It signs the universal Release build inside
+out (embedded `SQLCipher.framework`, then the app with `macOS/HandLive.entitlements`, the hardened runtime and a
+secure timestamp), notarizes it with `notarytool`, staples it, checks that it still runs after ten seconds, and zips
+it. Before signing it checks that the profile is a Developer ID profile of `app.handlive.mac` made for the certificate
+and granting the three capabilities. Secrets of handlive-apple:
+
+| Secret | Content |
+|---|---|
+| `APPLE_TEAM_ID` | the team ID (10 characters) |
+| `APPLE_DEVELOPER_ID_P12_BASE64`, `APPLE_DEVELOPER_ID_P12_PASSWORD` | the "Developer ID Application" certificate with its private key, exported from Keychain Access as `.p12`, base64 |
+| `APPLE_MAC_PROFILE_BASE64` | a Developer ID provisioning profile of the App ID `app.handlive.mac` with Keychain Sharing, Communication Notifications and Time Sensitive Notifications, base64 |
+| `APPLE_NOTARY_KEY_P8_BASE64`, `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER_ID` | an App Store Connect API key (Developer role) for notarization: the `.p8` file base64, its key ID and the issuer ID |
+
+When the Mac app gains resources the hardened runtime guards (microphone for call audio, Apple Events for Continue
+Browsing), add their entitlements (`com.apple.security.device.audio-input`,
+`com.apple.security.automation.apple-events`) to `macOS/HandLive.entitlements`; an app extension or system
+extension needs its own signing step, which the workflow asks for when it finds one.
+
 ## CI
 
-One GitHub Actions workflow per repository, in that repository's `.github/workflows/`: `ci-android` (`./gradlew
+One GitHub Actions CI workflow per repository (plus the release workflows of Release builds), in that repository's
+`.github/workflows/`: `ci-android` (`./gradlew
 check`), `ci-apple` (four parallel macOS lanes: core package tests, feature package tests + Mac app build, iOS app build,
 and a tools lane with SwiftLint, a check that package imports stay within declared dependencies, an Intel (x86_64)
 Mac build and the dev tools; each test lane builds its packages once through a shared scheme of

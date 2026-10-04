@@ -2,7 +2,8 @@
 
 # HandLive: Đóng gói và phân phối
 
-> Chưa có pipeline build. Đây là kế hoạch phân phối theo quyết định D5, D7 và D8 trong plan gốc.
+> Kế hoạch phân phối theo quyết định D5, D7 và D8 trong plan gốc. Tệp phát hành do các workflow chạy theo tag tạo ra:
+> xem Bản phát hành.
 
 ## Ứng dụng Android
 
@@ -51,9 +52,77 @@ Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 tr�
 - TLS: Let's Encrypt, kèm cert pinning phía client.
 - Ước tính: 100 cuộc gọi Opus cùng lúc khoảng 12 GB mỗi giờ. VPS thông thường, 20 TB mỗi tháng, đủ cho khoảng 1000 người dùng.
 
+## Bản phát hành
+
+Một tag phiên bản build các tệp cài đặt và gắn chúng, mỗi tệp kèm một `.sha256`, vào GitHub Release của tag đó (tạo
+mới khi chưa có; tag có hậu tố như `-beta.1` thành bản pre-release). Relay phát hành từ mã nguồn (D5).
+
+| Kho | Workflow | Tệp |
+|---|---|---|
+| handlive-android | `release-android` | `HandLive-<version>-android-foss.apk`: flavor `foss`, ký bằng khóa release |
+| handlive-apple | `release-apple` | `HandLive-<version>-ios-unsigned.ipa`; `HandLive-<version>-macos.zip` (Developer ID, đã notarize) khi đã có secret macOS |
+
+**Ra một bản phát hành:** đặt phiên bản ở mọi kho (Android: `versionName` và một `versionCode` lớn hơn trong
+`app/build.gradle.kts`; Apple: `MARKETING_VERSION`, phần số không có hậu tố, và `CURRENT_PROJECT_VERSION` trong
+`project.yml`), commit, rồi tạo tag `vX.Y.Z` hoặc `vX.Y.Z-hậu-tố` ở từng kho và push tag của hub và handlive-shared
+trước: các workflow checkout hai kho này tại cùng tag, kho nào chưa có tag thì dùng `main` kèm cảnh báo. Workflow dừng
+khi tag không khớp phiên bản của kho và cảnh báo khi số build (`versionCode`, `CURRENT_PROJECT_VERSION`) không lớn hơn
+của tag trước. Để build lại tệp của một tag đã có, chạy workflow bằng tay: GitHub › Actions › `release-android` hoặc
+`release-apple` › Run workflow, hoặc
+`gh workflow run release-android.yml --repo HandLive/handlive-android -f tag=v0.1.0-beta.1 -f publish=false`
+(`publish=false` giữ tệp làm artifact của workflow và không đụng tới Release; tệp đã gắn chỉ bị thay khi có
+`replace=true`).
+
+**Ai giữ khóa:** mỗi workflow build trong một job chỉ có quyền đọc và không có secret, rồi ký và phát hành trong một job
+riêng thuộc environment `release`, job này chỉ chạy công cụ ký của nền tảng và `gh`: mã build của bên thứ ba không bao
+giờ chạy cạnh khóa ký hay token ghi được Release. Giữ các secret ký trong environment đó (Settings › Environments ›
+`release` › Environment secrets), thêm chính mình làm người duyệt bắt buộc và giới hạn cho tag `v*`, và bảo vệ tag bằng
+một ruleset (Settings › Rules › Rulesets › Tag, `v*`, hạn chế tạo, sửa và xóa).
+
+**Ký Android (chủ dự án, một lần):** APK được ký sau khi build bằng `apksigner`; thiếu secret thì job ký dừng (bản build
+chưa ký vẫn là artifact của workflow) thay vì phát hành một APK không cài hay cập nhật được. Tạo khóa và cất keystore
+cùng mật khẩu ở nơi an toàn ngoài máy: ứng dụng đã cài chỉ nhận bản cập nhật ký bằng đúng khóa đó.
+
+```sh
+keytool -genkeypair -v -keystore handlive-release.jks -alias handlive -keyalg RSA -keysize 4096 -validity 10000
+base64 -i handlive-release.jks | gh secret set ANDROID_RELEASE_KEYSTORE_BASE64 --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEYSTORE_PASSWORD --repo HandLive/handlive-android
+gh secret set ANDROID_RELEASE_KEY_ALIAS --repo HandLive/handlive-android --body handlive
+```
+
+`gh secret set` không có `--body` sẽ hỏi giá trị, nên mật khẩu không nằm trong lịch sử shell; thêm `--env release` để
+giữ secret trong environment. `keytool` tạo keystore PKCS12, có mật khẩu key trùng mật khẩu keystore;
+`ANDROID_RELEASE_KEY_PASSWORD` chỉ cần cho keystore JKS cũ có mật khẩu key riêng. Biến kho
+`HANDLIVE_RELAY_HOST` và `HANDLIVE_RELAY_EXTRA_PINS` (Settings › Secrets and variables › Variables) cấu hình relay cho
+bản phát hành; không có chúng thì bản phát hành không có relay.
+
+**iOS và iPadOS:** IPA là bản build Release cho thiết bị, kèm Notification Service Extension, và chưa ký: các công cụ
+sideload ký lại bằng Apple ID của người cài. TestFlight và App Store cần team Apple Developer Program trả phí (ký, mã
+định danh App Group và Keychain Sharing, `aps-environment` = production).
+
+**macOS (cần team Apple Developer Program trả phí):** app Mac không ký hoặc ký ad-hoc không mở được data-protection
+Keychain (`errSecMissingEntitlement`, -34018) và dừng ở bước tạo khóa, nên workflow chỉ phát hành app Mac khi có đủ
+bảy secret; không có secret nào thì chỉ biên dịch, có một phần thì báo lỗi. Nó ký bản Release universal từ trong ra ngoài (`SQLCipher.framework` nhúng
+kèm, rồi app với `macOS/HandLive.entitlements`, hardened runtime và dấu thời gian an toàn), notarize bằng
+`notarytool`, staple, kiểm app vẫn chạy sau mười giây rồi nén zip. Trước khi ký, nó kiểm profile là profile Developer ID
+của `app.handlive.mac`, làm cho đúng chứng chỉ đó và cấp đủ ba capability. Secret của handlive-apple:
+
+| Secret | Nội dung |
+|---|---|
+| `APPLE_TEAM_ID` | team ID (10 ký tự) |
+| `APPLE_DEVELOPER_ID_P12_BASE64`, `APPLE_DEVELOPER_ID_P12_PASSWORD` | chứng chỉ "Developer ID Application" kèm khóa riêng, xuất từ Keychain Access thành `.p12`, base64 |
+| `APPLE_MAC_PROFILE_BASE64` | provisioning profile Developer ID của App ID `app.handlive.mac` có Keychain Sharing, Communication Notifications và Time Sensitive Notifications, base64 |
+| `APPLE_NOTARY_KEY_P8_BASE64`, `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER_ID` | một App Store Connect API key (vai trò Developer) để notarize: tệp `.p8` dạng base64, key ID và issuer ID |
+
+Khi app Mac dùng tới tài nguyên mà hardened runtime canh giữ (micro cho âm thanh cuộc gọi, Apple Events cho Xem tiếp
+trang web), thêm entitlement tương ứng (`com.apple.security.device.audio-input`,
+`com.apple.security.automation.apple-events`) vào `macOS/HandLive.entitlements`; một app extension hay system
+extension cần bước ký riêng, và workflow sẽ báo khi gặp.
+
 ## CI
 
-Mỗi kho có một workflow GitHub Actions trong `.github/workflows/` của kho đó.
+Mỗi kho có một workflow CI GitHub Actions trong `.github/workflows/` của kho đó (cộng các workflow phát hành ở mục Bản
+phát hành).
 
 - `ci-android` chạy `./gradlew check`.
 - `ci-apple` chạy bốn lane macOS song song: test các package lõi; test các package tính năng rồi build app Mac; build
