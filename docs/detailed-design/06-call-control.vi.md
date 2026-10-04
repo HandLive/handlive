@@ -1587,10 +1587,12 @@ flowchart TB
      di động thuộc CALL-01…04; ngược lại tên người gọi sẽ vượt qua `READ_CALL_LOG` và lặp sự kiện).
      Rồi chỉ lấy thông báo có `extras` chứa `android.callType` hoặc có `category` là `call` (C22, E6).
      Từ API 31, `android.callType` chỉ được tính khi có template của nền tảng
-     `android.template = android.app.Notification$CallStyle`, thứ Android chỉ chấp nhận kèm một foreground
-     service, một user-initiated job hoặc một full-screen intent: ứng dụng nào cũng tự gắn được extra trần vào
-     một thông báo thường, và khi đó intent trả lời của nó sẽ được gửi bằng quyền miễn trừ mở activity từ nền
-     của HandLive (dưới API 31 không có `CallStyle` của nền tảng để kiểm);
+     `android.template = android.app.Notification$CallStyle`, thứ Android chỉ đăng cho ứng dụng có foreground
+     service hoặc user-initiated job, hoặc có xin full-screen intent (từ API 34, yêu cầu bị từ chối cũng được
+     tính): ứng dụng nào cũng tự gắn được extra trần vào một thông báo thường, và khi đó intent trả lời của nó sẽ
+     được gửi bằng quyền miễn trừ mở activity từ nền của HandLive. Dưới API 31 không có `CallStyle` của nền tảng
+     để kiểm. Phần còn lại: ứng dụng đăng thông báo `CallStyle` thật vẫn được gửi intent trả lời kèm quyền miễn
+     trừ đó khi người dùng trả lời trên Mac, nơi hiện tên ứng dụng;
      trong khoảng ghép (logic 3) lấy thêm thông báo đang diễn ra của cùng gói (không phải gói đang chờ
      — chỉ ứng dụng gọi điện), chỉ đọc `flags` và `actions`. Không đọc gì khác: không tiêu đề, nội
      dung hay extras của bất kỳ thông báo nào khác; chúng không được lưu, không log và không rời khỏi

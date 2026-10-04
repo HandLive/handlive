@@ -57,13 +57,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Security scan of every change since v0.1.0-beta.1 (no critical or high finding):
 
 - Android, calls from other apps: a notification counts as a call only with the platform `CallStyle` template (API
-  31+). Before, any app could fake a call with the bare `android.callType` extra and, when answered from the Mac, have
-  its own activity started from the background with HandLive's exemption. CALL-05 API 3 logic 1 updated.
+  31+), which Android posts only with a foreground service, a user-initiated job or a full-screen intent request.
+  Before, any app could fake a call with the bare `android.callType` extra and, when answered from the Mac, have its
+  own activity started from the background with HandLive's exemption. Still open: below API 31, and for an app that
+  posts a real `CallStyle` notification. CALL-05 API 3 logic 1 updated.
 - Website: nginx denies the WordPress web installer and `setup.sh` starts nginx only after WP-CLI installed WordPress,
   so no one can create the admin during a first setup; the admin's login name no longer shows in the feed or oEmbed;
   Polylang updates itself; `docs/website.md` explains the login limit behind a reverse proxy.
-- Apple release workflow: built code runs only without secrets (the signed app after the signing keychain is removed,
-  the ad-hoc DMG in the read-only build job), and XcodeGen is pinned by checksum. `docs/deployment-guide.md` updated.
+- Apple release workflow: the ad-hoc DMG is signed and launched in the read-only build job; the Developer ID app is
+  launched only after the signing keychain and notary key are removed, without secrets in its environment (the job
+  still holds them in memory: splitting it is planned before those secrets exist); XcodeGen is pinned by checksum.
+  `docs/deployment-guide.md` updated.
 
 ### Compatibility note
 

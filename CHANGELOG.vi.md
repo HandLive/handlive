@@ -61,13 +61,16 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 Quét bảo mật mọi thay đổi từ v0.1.0-beta.1 (không có lỗi nghiêm trọng hay mức cao):
 
 - Android, cuộc gọi từ ứng dụng khác: một thông báo chỉ được tính là cuộc gọi khi có template `CallStyle` của nền
-  tảng (API 31+). Trước đây, ứng dụng bất kỳ có thể giả cuộc gọi bằng extra `android.callType` trần và, khi được trả
-  lời từ Mac, được mở activity của chính nó từ nền bằng quyền miễn trừ của HandLive. Đã cập nhật CALL-05 API 3 logic 1.
+  tảng (API 31+), thứ Android chỉ đăng kèm foreground service, user-initiated job hoặc yêu cầu full-screen intent.
+  Trước đây, ứng dụng bất kỳ có thể giả cuộc gọi bằng extra `android.callType` trần và, khi được trả lời từ Mac, được
+  mở activity của chính nó từ nền bằng quyền miễn trừ của HandLive. Còn mở: dưới API 31, và ứng dụng đăng thông báo
+  `CallStyle` thật. Đã cập nhật CALL-05 API 3 logic 1.
 - Website: nginx chặn trình cài WordPress qua web và `setup.sh` chỉ bật nginx sau khi WP-CLI đã cài WordPress, nên
   không ai tạo được tài khoản admin trong lần cài đầu; tên đăng nhập của admin không còn hiện trong feed hay oEmbed;
   Polylang tự cập nhật; `docs/website.vi.md` giải thích giới hạn đăng nhập khi đứng sau reverse proxy.
-- Workflow phát hành Apple: mã đã build chỉ chạy khi không có secret (bản đã ký chạy sau khi xóa keychain ký, DMG ad
-  hoc trong job build chỉ có quyền đọc), và XcodeGen được ghim bằng checksum. Đã cập nhật
+- Workflow phát hành Apple: DMG ad hoc được ký và chạy thử trong job build chỉ có quyền đọc; bản Developer ID chỉ
+  được chạy thử sau khi xóa keychain ký và khóa notary, môi trường không có secret (job vẫn giữ chúng trong bộ nhớ:
+  sẽ tách job trước khi có các secret đó); XcodeGen được ghim bằng checksum. Đã cập nhật
   `docs/deployment-guide.vi.md`.
 
 ### Ghi chú tương thích

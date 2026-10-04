@@ -151,7 +151,8 @@ replaced only with `replace=true`).
 a separate job of the environment `release` that runs only the platform's signing tools and `gh`: third-party build
 code never runs next to a signing key or a token that can write Releases. The Mac app is signed ad hoc and launched once
 in the build job; a Developer ID build is launched in the release job only after its signing keychain and notary key
-are removed, in a step without secrets. The Apple builds generate the Xcode project with a pinned, checksum-verified
+are removed, in a step without secrets (the job still holds them in memory: split it into sign, launch and publish
+jobs before adding the macOS secrets). The Apple builds generate the Xcode project with a pinned, checksum-verified
 XcodeGen (`apple/Tools/fetch-xcodegen.sh`). Keep the signing secrets in that environment
 (Settings › Environments › `release` › Environment secrets), add yourself as a required reviewer and limit it to tags
 `v*`, and protect the tags with a ruleset (Settings › Rules › Rulesets › Tag, `v*`, restrict creation, update and
