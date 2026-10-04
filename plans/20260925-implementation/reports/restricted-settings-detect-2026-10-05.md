@@ -5,7 +5,7 @@ Follow-up of the S25 image-copy case (CLAUDE.md "In progress" item 8): the Acces
 first attempt. Run by a forum team (lead, Android, QA, two BAs, pentester) while the owner slept; the owner's rule for
 the night: skip the gates that need him, never skip a warning, no push, no merge, do not touch the S25.
 
-Branches (all local, **not pushed, not merged**): hub and android `fix/restricted-settings-detect`. Shared unchanged.
+Shipped: android #6 (merged `715c65b`, CI green); hub `fix/restricted-settings-detect` via its PR. Shared unchanged.
 
 ## Outcome
 
@@ -60,6 +60,32 @@ The android history keeps the 4-value state and its removal (`d05d018`) on purpo
 - Reviews: BA (Thảo), tester (Lan), pentester (Khoa) approved both tasks; remaining lows fixed (`b50c05e`, `b676e20`,
   `cc2a59b`, `bcf7325`).
 
+## S25 replay (06:34–06:39, owner approved; One UI 8, Android 16, locale vi-VN)
+
+The fix APK (`adb install -r`, same debug signer, pairing kept) was installed, the HandLive service turned off and the
+op set to `deny`, then the flow was driven through the UI:
+
+| Step | Seen |
+|------|------|
+| Settings › Tự gửi khi sao chép (on, service off) | "Chưa bật tự gửi"; switch on → field 14 with **Tiếp tục** |
+| Tiếp tục → Hỗ trợ › Ứng dụng đã cài đặt | HandLive greyed out, "Do chế độ Cài đặt hạn chế kiểm soát" |
+| Tap HandLive | dialog "Ứng dụng đã bị từ chối cấp quyền"; op went `deny` → **`ignore`** (AOSP model confirmed on One UI) |
+| Đóng, Back to HandLive | field 14 shown again by itself with **Mở cài đặt** (E8) |
+| Mở cài đặt | App info "Thông tin ứng dụng"; ⋮ lists **"Cho phép cài đặt bị hạn chế"** |
+| Allow (needs the owner's PIN/biometric, so `appops set … allow` stood in), Back | HandLive, nothing opened by itself |
+| Switch off/on → Tiếp tục → HandLive → Tắt → "Cho phép" (full control) → back | card "Đã đồng ý lúc 21:11, 29 Th9, 2026" (on) |
+
+Phone put back: service list identical to before, Chrome in front, still connected to the MacBook Pro. The op is left
+at `allow` (what Allow sets in AOSP) instead of the earlier `default`, so Android does not guard HandLive again.
+
+Findings for G1 / a follow-up (not changed here):
+- One UI Vietnamese names differ from `setup.restricted_settings_help*`: Accessibility is "Hỗ trợ" (string: "Hỗ trợ
+  tiếp cận"), the menu item is "Cho phép cài đặt bị hạn chế" (string: "Cho phép chế độ cài đặt bị hạn chế"), the block
+  shows as "Ứng dụng đã bị từ chối cấp quyền" / "Do chế độ Cài đặt hạn chế kiểm soát" (string quotes "Chế độ cài đặt bị
+  hạn chế"). Pixel/AOSP names still unchecked; the strings may need OEM-neutral wording.
+- In Settings, tapping the Auto-Send row while it reads "Chưa bật tự gửi" turns the switch off (it is a switch); the
+  way back is off → on, or the Permissions card. Worth a look in SET-02.
+
 ## Workspace notes
 
 - Worktrees: hub `.claude/worktrees/restricted-settings-detect`; android and shared under
@@ -69,10 +95,8 @@ The android history keeps the 4-value state and its removal (`d05d018`) on purpo
 
 ## Unresolved questions
 
-- Owner: allow `adb shell appops set app.handlive.android ACCESS_RESTRICTED_SETTINGS deny` on the S25 to replay the
-  real block once, then reset it?
-- Owner: should the foreground-service notification text also say "Auto-send isn't on yet" for users who never open
-  the app? Not done (no new string, YAGNI).
+- Owner decided 06:33: PRs and merge (done), S25 replay (done, above), no reminder in the service notification.
+- Vietnamese restricted-setting strings vs One UI names (above): reword OEM-neutral or per OEM?
 - G1 checklist: One UI Vietnamese names ("Cho phép chế độ cài đặt bị hạn chế", "Thông tin ứng dụng"); TalkBack reads
   the title first when field 14 shows by itself; API 33/34 behaviour (no AVD here).
 - WEB-01 (after G6): logic 6/7 must tell the clipboard service from "HandLive Browser Pages" and honour `feature.web`.
@@ -80,4 +104,4 @@ The android history keeps the 4-value state and its removal (`d05d018`) on purpo
 Status: DONE_WITH_CONCERNS
 Summary: Field 14 now comes back on return and consent is asked once, on hub + android branches, reviewed and green;
 the app-op read is impossible on Android 15, so detection stays the install source.
-Concerns/Blockers: not pushed or merged (owner's rule); S25 replay and the open questions above wait for the owner.
+Concerns/Blockers: One UI Vietnamese setting names differ from the strings (G1 follow-up).

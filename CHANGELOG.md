@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   field 14 again, once per return, with Open Settings for App info; the disclosure is asked only once (SET-02 field 2,
   CLIP-01 A1), and the first Agree is no longer lost when the disclosure closes. HandLive cannot read Android's own
   verdict (the app op needs `GET_APP_OPS_STATS`, Android 15 answers `SecurityException`), so the rule stays the install
-  source. Code: android `fix/restricted-settings-detect`. Report:
+  source. Code: android #6. Report:
   `plans/20260925-implementation/reports/restricted-settings-detect-2026-10-05.md`.
 - Clipboard, CLIP-01 API 2 logic 2 and CLIP-03 API 1 logic 1 (en and vi): an Android item whose URI is an image is the
   copied image even when the source app put the image's URL, its alt text or an empty string beside it; the text rule
