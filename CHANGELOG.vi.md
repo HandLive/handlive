@@ -8,6 +8,11 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Added
 
+- Bảng nhớ tạm HTML (CLIP-01 API 5 `html`, 0.7.2 `text/html` trong `features.clipboard.mimes`, 0.10 `CLIP_MAX_HTML`): clip
+  chữ mang kèm HTML đã lọc của chính nó khi đối phương liệt kê `text/html`, nên bài báo sao chép trong trình duyệt trên điện
+  thoại dán vào Notes, Pages, Word hay Mail có đủ tiêu đề, liên kết và ảnh (ứng dụng dán tự tải từ URL). Hai đầu chạy cùng
+  `HtmlClipSanitizer`, chốt bằng `shared/test-vectors/clipboard-html.json`; định danh, vòng lặp, xung đột và luật nội dung nhạy
+  cảm vẫn chỉ nhìn chữ thuần. Kế hoạch: `plans/20261005-clipboard-html/plan.md`.
 - `release-collect` (workflow của hub): APK, IPA iOS và DMG Mac của một tag phiên bản, kèm SHA-256, được chép từ
   Release của handlive-android và handlive-apple sang Release của hub sau khi kiểm checksum, để người dùng tải mọi
   nền tảng ở một trang (`docs/deployment-guide.vi.md`, Bản phát hành). Đã làm cho `v0.1.0-beta.2`.
