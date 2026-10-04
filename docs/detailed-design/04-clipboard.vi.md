@@ -73,8 +73,9 @@
 > - **QC10 — Vệ sinh HTML.** Khi `html` có mặt trong một push văn bản, bên nhận vệ sinh nó trước
 >   ghi (phòng thủ sâu). Bộ vệ sinh (`HtmlClipSanitizer` trên mọi nền tảng) áp dụng cùng thuật toán,
 >   được chứng minh bằng vector dùng chung `shared/test-vectors/clipboard-html.json` (input → output,
->   cả hai nền tảng phải trùng byte). Xóa bình luận `<!-- … -->`; tên thẻ và thuộc tính không phân
->   biệt chữ hoa/thường, output chữ thường. Thẻ bỏ kèm nội dung (tới thẻ đóng hoặc tới cuối khi không
+>   cả hai nền tảng phải trùng byte). Xóa bình luận `<!-- … -->`, `<!--` không đóng thì tới cuối;
+>   `<!…>` và `<?…>` (doctype, CDATA, chỉ thị xử lý) bỏ tới dấu `>` kế tiếp; tên thẻ và thuộc tính
+>   không phân biệt chữ hoa/thường chỉ trên chữ cái ASCII, output chữ thường. Thẻ bỏ kèm nội dung (tới thẻ đóng hoặc tới cuối khi không
 >   đóng): `script`, `style`, `iframe`, `object`, `embed`, `svg`, `math`, `template`, `noscript`,
 >   `head`, `title`, `textarea`, `select`, `button`, `form`, `input`, `video`, `audio`, `canvas`,
 >   `link`, `meta`, `base`, `applet`, `frame`, `frameset`. Thẻ giữ (chỉ thẻ và thuộc tính cho phép):
@@ -87,7 +88,9 @@
 >   thì bỏ. Khoảng trắng (cắt mép, ngăn thuộc tính) và chữ số chỉ tính ASCII: NBSP và các khoảng
 >   trắng Unicode khác là một phần giá trị, `²` không phải chữ số. Thuộc tính theo thứ tự: `href` | `src alt
 >   width height` | `colspan rowspan`; giá trị `"` thành `&quot;`, `<` `>` thành `&lt;` `&gt;`;
->   thẻ rỗng `br` `hr` `img` phát thành `<br>`, `<hr>`, `<img …>`. Output không chứa `<script`,
+>   thẻ rỗng `br` `hr` `img` phát thành `<br>`, `<hr>`, `<img …>`. Văn bản giữa các thẻ sao chép
+>   nguyên, trừ dấu `<` đứng trước `/` hoặc chữ cái ASCII mà không khép thành thẻ thì phát `&lt;`.
+>   Output không chứa `<script`,
 >   `javascript:`, hoặc thuộc tính `on…=`.
 >
 > Hằng số mới dùng trong nhóm (đề xuất bổ sung vào 0.10): `CLIP_INLINE_MAX` = 180 KiB plaintext,
@@ -441,7 +444,7 @@ override fun onClick() {
   6. `clip_id` đã có kết quả `applied` /`ignored` → `ignored` /`duplicate`, không ghi lại; clip từng
      bị từ chối thì được nhận lại (gửi lại sau `CLIP_CHECKSUM_MISMATCH`).
   7. Kiểm xung đột QC8 → `ignored`/`conflict` (trường hợp (a) gửi thêm API 6).
-  8. Ghi clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `html`: vệ sinh trước ghi (phòng thủ sâu). `sensitive = true`:
+  8. Ghi clipboard (Mac: API 7; Android: CLIP-02 API 3; iOS: CLIP-04 API 1). `html`: vệ sinh trước ghi (phòng thủ sâu); sau vệ sinh vượt `CLIP_MAX_HTML` → chỉ ghi văn bản. `sensitive = true`:
      Android thêm extra `EXTRA_IS_SENSITIVE`, Mac thêm kiểu `org.nspasteboard.ConcealedType` để
      trình quản lý clipboard không lưu. Ghi dấu vết QC4, hẹn CLIP-05, rồi trả `applied`. `clip_id`, SHA-256, và QC3/QC4/QC6/QC8 chỉ xét `text`; `html` là phần đính kèm của clip.
   9. Android nhận từ client: sau logic 8 chuyển tiếp tới các client khác theo QC6 (CLIP-02 API 4); chuyển tiếp giữ `html` cho client liệt kê `text/html`, bỏ cho client khác.
