@@ -72,6 +72,22 @@ của GitHub, hoặc ảnh đại diện của bài viết).
   lưới chấm (`hl-section--grid`) hoặc quầng sáng trôi chậm (`hl-section--glow`).
 - Không gọi tới bên thứ ba: font và ảnh do chính website phục vụ, không có công cụ thống kê.
 
+## Image được ghim và cách cập nhật
+
+Mọi `image:` trong `website/docker-compose.yml` có dạng `tên:tag@sha256:<digest>`: tag cho người đọc biết đó là
+gì, còn digest của manifest list đa kiến trúc (giống nhau trên Apple silicon và x86) làm cho việc pull tái lập
+được, nên một image bị gắn lại tag hoặc bị tráo sẽ không được kéo về âm thầm. Không có gì tự cập nhật: muốn nhận
+bản vá bảo mật thì làm mới digest có chủ đích, khoảng mỗi tháng hoặc khi image gốc báo có bản vá.
+
+```sh
+docker buildx imagetools inspect nginx:alpine | grep '^Digest:'
+```
+
+Chạy lệnh cho từng image, đặt `sha256:…` in ra sau tag trong file compose, rồi chạy
+`docker compose -f website/docker-compose.yml pull` và `bin/setup.sh` trên một bản sao thử để kiểm tra site vẫn
+cài và nạp nội dung được. Digest phải là của index (`MediaType: …image.index…`), không phải manifest của một
+kiến trúc.
+
 ## Đưa lên mạng
 
 Chưa triển khai. Trước khi chạy thật ở `handlive.app`:

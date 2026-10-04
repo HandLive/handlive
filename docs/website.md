@@ -73,6 +73,21 @@ Polylang adds `hreflang` links between translations; the theme adds the descript
   (`hl-section--glow`).
 - No third-party requests: fonts and images are served by the site itself, and there are no analytics.
 
+## Pinned images and how to update them
+
+Every `image:` in `website/docker-compose.yml` is `name:tag@sha256:<digest>`: the tag tells a reader what it is, and
+the digest of the multi-arch manifest list (the same on Apple silicon and x86) makes a pull reproducible, so a
+re-tagged or tampered image is never pulled silently. Nothing updates by itself: to take security fixes, refresh a
+digest on purpose, about monthly or when the base images announce a fix.
+
+```sh
+docker buildx imagetools inspect nginx:alpine | grep '^Digest:'
+```
+
+Run it for each image, put the printed `sha256:…` after the tag in the compose file, then run
+`docker compose -f website/docker-compose.yml pull` and `bin/setup.sh` on a scratch copy to check the site still
+installs and seeds. The digest must be the index (`MediaType: …image.index…`), not one architecture's manifest.
+
 ## Going live
 
 Not deployed yet. Before going live on `handlive.app`:
