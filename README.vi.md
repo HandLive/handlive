@@ -71,6 +71,7 @@ Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md
 | **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |
 | **5** Camera / mic ảo | CMIOExtension + AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
 | **6** Duyệt web tiếp | URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome/Samsung; còn go/no-go trình duyệt |
+| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng: Bluetooth, Wi-Fi Direct (Wi-Fi Mac rảnh), relay; không đổi Wi-Fi | **Đề xuất** (2026-10-01) · bắt đầu sau G4/G5/G6 bằng spike G7 |
 | **G0** Vector mã hóa | | **Xong** |
 | **G1** Ma trận Phase 1 máy thật | | **Mở** (trước 1.0) |
 | **G2** Tờ khai SMS / nhật ký Play Console | | **Mở** (trước 1.0; phương án B: F-Droid/APK) |

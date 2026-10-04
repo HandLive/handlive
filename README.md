@@ -71,6 +71,7 @@ Full narrative: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards
 | **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike on `main`** (`HFPSpike`) · G4 needs BT phone + live call |
 | **5** Virtual camera / mic | CMIOExtension + AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs paid Apple Developer team |
 | **6** Continue Browsing | Foreground URL across devices | **Spike on `main`** · Chrome/Samsung measured; browser go/no-go pending |
+| **7** Connect anywhere | Auto link without a shared network: Bluetooth, Wi-Fi Direct (Mac Wi-Fi idle), relay; no Wi-Fi change | **Proposed** (2026-10-01) · starts after G4/G5/G6 with spike G7 |
 | **G0** Test vectors | | **Done** |
 | **G1** Real-device Phase 1 matrix | | **Open** (before 1.0) |
 | **G2** Play Console SMS / call-log | | **Open** (before 1.0; Plan B: F-Droid/APK) |

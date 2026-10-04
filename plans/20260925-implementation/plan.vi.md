@@ -2,7 +2,7 @@
 
 # Kế hoạch triển khai HandLive — giao cho agent viết mã
 
-**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); Phase 2 đã gộp vào `main` (27/09/2026, chủ dự án cho gộp trước cổng G1, G2 và trước việc kiểm trên máy thật, relay, APNs, FCM, các việc này vẫn còn mở, `reports/phase-02-merge.md`); Phase 3 đã gộp vào `main` (28/09/2026, chủ dự án cho gộp trước việc kiểm trên máy thật, `reports/phase-03-merge.md`); Phase 4 mở trên nhánh `feat/phase-04-call-audio` bằng spike của cổng G4 (`reports/phase-04-spike-d1.md`); Phase 6 (Duyệt web tiếp) được đề xuất ngày 28/09/2026, chờ spike G6; theo quyết định của chủ dự án (28/09/2026), Phase 5 và 6 làm xong trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike phần cứng HFP của cổng G4 · **Nguồn:**
+**Trạng thái:** Phase 0 và Phase 1 đã gộp vào `main` ở mọi kho (26/09/2026, chủ dự án cho gộp Phase 1 trước cổng G1 — việc kiểm G1 trên máy thật vẫn còn mở, `reports/phase-01-merge.md`); Phase 2 đã gộp vào `main` (27/09/2026, chủ dự án cho gộp trước cổng G1, G2 và trước việc kiểm trên máy thật, relay, APNs, FCM, các việc này vẫn còn mở, `reports/phase-02-merge.md`); Phase 3 đã gộp vào `main` (28/09/2026, chủ dự án cho gộp trước việc kiểm trên máy thật, `reports/phase-03-merge.md`); Phase 4 mở trên nhánh `feat/phase-04-call-audio` bằng spike của cổng G4 (`reports/phase-04-spike-d1.md`); Phase 6 (Duyệt web tiếp) được đề xuất ngày 28/09/2026, chờ spike G6; theo quyết định của chủ dự án (28/09/2026), Phase 5 và 6 làm xong trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike phần cứng HFP của cổng G4; Phase 7 (Kết nối mọi nơi) được đề xuất ngày 2026-10-01, lập theo kiểu viết test trước, bắt đầu sau các cổng G4, G5 và G6 (`phase-07-ket-noi-moi-noi.vi.md`, `reports/phase-07-brainstorm.vi.md`) · **Nguồn:**
 `plans/20260924-definitive-architecture/plan.md` (kiến trúc, D1–D12), `docs/detailed-design/` v1.3
 (38 chức năng lá, C1–C21), `docs/design-system/` (Apple HIG, bản 6), `docs/code-standards.md`,
 `docs/project-roadmap.md`.
@@ -19,6 +19,7 @@
 | I6 | Khi mã và tài liệu lệch nhau: sửa tài liệu trước (00-common-specs → chức năng lá), chạy `tools/docs/validate_design_docs.py`, rồi mới sửa mã | Tài liệu là hợp đồng giữa các nền tảng |
 | I7 | **Đa ngôn ngữ, tài liệu song ngữ** (chủ dự án quyết định 25/09/2026, C20): sản phẩm tiếng Anh mặc định, tiếng Việt thứ hai; nền tảng bản địa hóa (catalog chuỗi, bộ sinh tài nguyên, chọn ngôn ngữ) làm ở Phase 1 trước mọi màn hình. Mọi tài liệu có `X.md` (tiếng Anh, bản chuẩn) và `X.vi.md` (tiếng Việt), sửa cùng commit; báo cáo agent chỉ viết tiếng Anh; kế hoạch và báo cáo trước 25/09/2026 giữ tiếng Việt làm lưu trữ; tên file giữ nguyên làm định danh | Mã nguồn mở hướng tới cộng đồng quốc tế; người dùng Việt Nam vẫn có đủ giao diện và tài liệu |
 | I8 | **Chỉ phụ thuộc mã nguồn mở trong app**: không ML Kit hay Play Services (quét QR dùng CameraX + ZXing core); FCM chỉ ở flavor riêng (Phase 2) | Apache-2.0 và đường phân phối F-Droid/APK (Plan B của cổng G2) |
+| I9 | **Hạ tầng stream channel chỉ xây một lần** (2026-10-01): server `/v1/stream/*` trên A-SVC và client trên Mac (`stream_hello`/`stream_welcome`, 0.6.3 bước 7) do phase nào bắt đầu thẻ sản phẩm trước trong Phase 4 (AUDIO-04), Phase 5 (camera) hoặc Phase 7 (A7.3/M7.3) xây; các phase còn lại dùng lại | Ba phase cần cùng một kiểu bắt tay và đóng khung; xây ba lần sẽ lệch nhau |
 
 ## 2. Phase
 
@@ -28,11 +29,13 @@
 | 1 | Bảng nhớ tạm Android ↔ Mac trong LAN (MVP), giao diện tiếng Anh và tiếng Việt | SET-01, SET-02, SET-03, PAIR-01 (LAN), PAIR-02, PAIR-03 (luồng A), CONN-01, CONN-02, CLIP-01, CLIP-02, CLIP-03, CLIP-05 | Android, macOS | 0 | Văn bản < 50 ms LAN; ảnh 5 MB < 2 s; kết nối lại < 3 s | [phase-01-bang-nho-tam-mvp.md](phase-01-bang-nho-tam-mvp.vi.md) |
 | 2 | SMS, app iPhone/iPad, relay, push | SMS-01…05, CONN-03, CONN-04, CLIP-04, PAIR-01 (relay), PAIR-03 (từ xa), SET-02 (phần còn lại) | Cả ba + relay | 1 | Thông báo SMS < 500 ms; trả lời xác nhận < 2 s | [phase-02-sms-ios-relay.md](phase-02-sms-ios-relay.vi.md) |
 | 3 | Thông tin và điều khiển cuộc gọi | CALL-01…04 | Android, macOS, iOS | 2 | Cuộc gọi đến < 200 ms; trả lời < 500 ms đầu-cuối | [phase-03-cuoc-goi.md](phase-03-cuoc-goi.vi.md) |
+| 3+ | Cuộc gọi của app khác trên Mac (CALL-05, đề xuất 2026-10-01) | CALL-05 (mới), SET-01/02 | Android, macOS | 3, spike T3.2; âm thanh trên Mac cần thêm 4 | Panel ≤ 200 ms; từ chối/kết thúc ≤ 500 ms; nghe ≤ 1 s; âm thanh trên Mac ≤ 1,5 s khi HFP cho phép | [phase-03-cuoc-goi-app.md](phase-03-cuoc-goi-app.vi.md) |
 | 4 | Nghe gọi trên Mac | AUDIO-01…04, CALL-03 (giữ máy, DTMF, tắt tiếng qua HFP) | Android, macOS | 3, spike D1 | MOS ≥ 3,5 (HFP), ≥ 3,0 (Opus/WS); ERL > 40 dB | [phase-04-am-thanh-cuoc-goi.md](phase-04-am-thanh-cuoc-goi.vi.md) |
 | 5 | Điện thoại làm webcam và micro | CAM-01…05 | Android, macOS | 1, spike D6 | Trễ < 120 ms Wi-Fi, < 70 ms USB ở 720p30 | [phase-05-camera-micro.md](phase-05-camera-micro.vi.md) |
 | 6 | Duyệt web tiếp (đề xuất) | WEB-01…05, SET-01 phần B và SET-02 trường 34–37 cho `web` | Android, macOS, iOS | 1, spike G6 | Gửi sau 1,5 s ổn định; không trang riêng tư nào bị gửi; không lưu gì | [phase-06-web-handoff.md](phase-06-web-handoff.vi.md) |
+| 7 | Kết nối mọi nơi (đề xuất 2026-10-01; bắt đầu sau G4, G5, G6) | CONN-05, CONN-06 mới; PAIR-01 (rendezvous qua BLE), CLIP-03 (làn bulk), AUDIO (tự ghép đôi), SET-01/02/03 | Android, macOS, relay | 1, 2, 4, spike G7 | Văn bản < 50 ms trên LAN, ≤ 200 ms qua Bluetooth; ảnh 5 MB ≤ 2 s trên LAN, ảnh đầu khi offline ≤ 10 s; không máy nào bị đổi Wi-Fi | [phase-07-ket-noi-moi-noi.md](phase-07-ket-noi-moi-noi.vi.md) |
 
-Ước lượng công (roadmap): P1 3,5 · P2 4 · P3 3 · P4 6 · P5 5,5 · P6 1,5 người-tháng; Phase 0 khoảng 0,5.
+Ước lượng công (roadmap): P1 3,5 · P2 4 · P3 3 · P4 6 · P5 5,5 · P6 1,5 người-tháng; Phase 0 khoảng 0,5; P7 ước lượng sau gate G7.
 
 ## 3. Cách giao việc cho agent
 
@@ -83,6 +86,7 @@ nêu trong báo cáo để agent nền tảng khác chạy lại (CI nền tản
 | G4 (spike D1) | Tuần đầu Phase 4 | `IOBluetoothHandsFreeDevice` nhận được âm thanh SCO ở vai HF trên macOS 13, 14, 15, 26 với Pixel và Samsung | Opus/WS thành đường chính; HFP chỉ giữ điều khiển; cập nhật AUDIO-02, plan D1 |
 | G5 (spike D6) | Tuần đầu Phase 5 | CMIOExtension xuất khung vào Zoom/Meet/FaceTime; AudioServerPlugin loopback nghe được trong ứng dụng họp | Dừng Phase 5, ghi báo cáo |
 | G6 (spike, plan W8) | 3–5 ngày đầu Phase 6 | Android: thanh địa chỉ và nhận biết ẩn danh cho Chrome, Samsung Internet, Firefox, Edge, Brave trên API 29 và 35, đo chi phí pin; Mac: Apple Events cho Safari, Chrome, Arc trên macOS 13 và 26, cửa sổ riêng tư của Safari, TCC với bản Developer ID; kiểm chính sách Hỗ trợ tiếp cận của Play. Đạt/không đạt theo trình duyệt | Trình duyệt bị loại được liệt kê trong `09-web-handoff.md`; không trình duyệt nào đạt → dừng Phase 6, ghi báo cáo |
+| G7 (spike, Phase 7) | Tuần đầu Phase 7, sau G4, G5, G6 | Lớp mang Bluetooth (BLE L2CAP hoặc RFCOMM) đạt 200 ms cho văn bản trên liên kết đã nối sẵn giữa một điện thoại Samsung và một Mac, khi chạy nền và khi đang có cuộc gọi HFP; đã chọn luồng ghép đôi và cách join Wi-Fi Direct; đã đo pin | Dừng Phase 7; LAN + relay vẫn là lời giải; ghi báo cáo |
 
 Điểm phải kiểm trên máy thật (không phải câu hỏi mở, là việc trong phase): tên mục hệ thống bằng tiếng Anh và tiếng Việt ("Privacy & Security" / "Quyền riêng tư & Bảo mật",
 "Focus" / "Tập trung", "Paste from Other Apps" / "Dán từ ứng dụng khác") — A1.4, M1.1; hiệu ứng Magic
