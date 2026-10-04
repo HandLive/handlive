@@ -73,7 +73,10 @@ của GitHub, hoặc ảnh đại diện của bài viết).
 Chưa triển khai. Trước khi chạy thật ở `handlive.app`:
 
 1. Một máy chủ có Docker; đặt `SITE_URL=https://handlive.app` và `WP_ENVIRONMENT_TYPE=production` trong `.env`.
-2. TLS phía trước nginx (một reverse proxy như Caddy, hoặc gắn chứng chỉ vào nginx).
+2. TLS phía trước nginx (một reverse proxy như Caddy, hoặc gắn chứng chỉ vào nginx). Đứng sau proxy, giới hạn
+   đăng nhập (10 lần mỗi phút cho mỗi địa chỉ) chỉ thấy địa chỉ của proxy, nên một người truy cập có thể khóa luôn
+   chủ trang: thêm `set_real_ip_from <địa chỉ của proxy>;` và `real_ip_header X-Forwarded-For;` vào
+   `nginx/default.conf`, chỉ tin đúng địa chỉ đó, và để proxy thay `X-Forwarded-For` chứ không nối thêm vào.
 3. Sao lưu hai volume `db` và `wordpress`.
 4. Chạy `website/bin/setup.sh` một lần, sau đó quản lý nội dung trong trang quản trị; chỉ chạy lại phần nạp
    nội dung khi thật sự muốn.
