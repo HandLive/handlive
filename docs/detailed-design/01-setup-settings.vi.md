@@ -354,8 +354,9 @@ flowchart TB
   5. Người dùng tắt "Tự gửi khi sao chép" (SET-02) → dịch vụ gọi `disableSelf()` để trả lại quyền Hỗ
      trợ tiếp cận.
   6. Lúc quay về: A-UI nhớ trang hệ thống cuối cùng do chính nó mở (Hỗ trợ tiếp cận, Truy cập thông
-     báo hoặc Thông tin ứng dụng), giữ qua thay đổi cấu hình (người dùng hay đổi cỡ chữ trong Hỗ trợ
-     tiếp cận) và mất khi tiến trình kết thúc. Ở `onResume` đầu tiên, A-UI xóa dấu này **trước** khi
+     báo hoặc Thông tin ứng dụng), giữ trong trạng thái đã lưu của màn hình, nên còn sau một thay đổi cấu hình (người dùng hay đổi
+      cỡ chữ trong Hỗ trợ tiếp cận) và sau khi tiến trình khởi động lại rồi khôi phục màn hình; lần mở
+      ứng dụng mới thì không có dấu này. Ở `onResume` đầu tiên, A-UI xóa dấu này **trước** khi
      xử lý, nên mỗi lần quay về chỉ xử lý tối đa một lần (`onResume` lần hai, xoay màn hình hay kéo
      thanh thông báo không chồng thêm màn):
      - "vẫn tắt" nghĩa là dịch vụ của HandLive không có trong
@@ -368,7 +369,7 @@ flowchart TB
        theo logic 2 (`likely` → lại là trường 14 với nút "Tiếp tục");
      - nếu người dùng chưa cho phép, Hỗ trợ tiếp cận vẫn hiện HandLive bị mờ và lần quay về sau lại
        hiện trường 14: vòng này là chủ ý và tự hội tụ (và bao luôn giới hạn đã biết ở logic 2);
-     - tiến trình đã kết thúc giữa chừng → không tự hiện gì; trạng thái thẻ và lần bấm theo logic 2.
+     - ứng dụng được mở mới giữa chừng (tác vụ đã bị đóng) → không tự hiện gì; trạng thái thẻ và lần bấm theo logic 2.
   7. `clip.auto_send = false` (người dùng chọn gửi thủ công hoặc đã tắt): không có trường 14, không
      cảnh báo, bất kể `R`.
 

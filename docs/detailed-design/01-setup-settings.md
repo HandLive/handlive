@@ -365,8 +365,9 @@ flowchart TB
   5. The user turns off "Auto-Send on Copy" (SET-02) → the service calls
      `disableSelf()` to give back the Accessibility permission.
   6. Coming back: A-UI remembers the last system page it opened itself (Accessibility, Notification
-     access or App info), keeps it across configuration changes (the user often changes the font
-     size in Accessibility) and loses it when the process ends. On the first `onResume` it clears
+     access or App info), keeps it in the screen's saved state, so it survives a configuration change (the user often changes
+      the font size in Accessibility) and a process restart that restores the screen; a fresh launch
+      starts without it. On the first `onResume` it clears
      the mark **before** acting, so each return acts at most once (a second `onResume`, a rotation or
      the notification shade does not stack a second screen):
      - "still off" means HandLive's service is not in
@@ -380,7 +381,7 @@ flowchart TB
      - if the user did not allow it, Accessibility still shows HandLive greyed out and the next
        return shows field 14 again: this loop is intended and converges (and covers the known limit
        of logic 2);
-     - the process ended in between → nothing is shown by itself; the card status and a tap follow
+     - a fresh launch in between (the task was closed) → nothing is shown by itself; the card status and a tap follow
        logic 2.
   7. `clip.auto_send = false` (the user chose manual sending or turned it off): no field 14 and no
      warning, whatever `R`.
