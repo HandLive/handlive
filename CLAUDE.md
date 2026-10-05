@@ -53,6 +53,7 @@ project owner in Vietnamese with diacritics.
 | Clipboard HTML (2026-10-05, 04:00) | Owner decision: a text clip keeps its HTML (`html` on `clipboard/push`, capability `text/html`, shared sanitizer vectors `clipboard-html.json`); shared, android, apple and the spec changed in parallel; review found a hole in the reference sanitizer (a failed tag start copied as text) → fixed in contract, reference and both ports; e2e with the final APK 48 PASS / 0 FAIL; owner's Mac and S25 reinstalled 04:51–04:56 without re-pairing (`plans/20261005-clipboard-html/plan.md`, reports under it) | shared PR #4 (merged), android PR #5, apple PR #3, hub `feat/clipboard-html` |
 | Reinstall + quiet-host e2e (2026-10-05, 03:00) | Owner's Mac (Debug, `app.handlive.mac.localtest`) and S25 (debuggable APK) rebuilt from `main` without re-pairing, both connected; `e2e.py all` on API 35: 0 FAIL (setup 27, clipboard 16, sms 36, calls 35 PASS); API 29 exposed two bugs, both fixed: the harness could not see Android 10's battery dialog (shared #2), and PIN pairing hit `OutOfMemoryError` because Argon2id's 64 MiB sits on a 48 MB heap → `android:largeHeap` (android #3, follow-up: off-heap Argon2 in android issue #2); rerun green (`reports/reinstall-devices-and-quiet-host-e2e-2026-10-05.md`) | hub `feat/reinstall-devices-and-quiet-host-e2e` |
 | Clipboard images (2026-10-05) | Owner report "image copy fails" (S25 ↔ Mac): no code deleted; Mac read/write and Android receive verified; phone → Mac image e2e added and green on the API 35 emulator; fix: an image URI wins over the text beside it, a lost URI grant is told on Send Clipboard and logged (`clip_read_failed`, debug); release-apple split into sign/launch/publish; website images pinned to digests. Root cause on the S25 itself still needs the owner's device check (`reports/clipboard-image-sync-debug-2026-10-05.md`) | android `fix/clipboard-image-item-precedence`, shared `feat/e2e-phone-to-mac-image`, apple `ci/release-apple-split-jobs`, hub `feat/check-progress-image-copy-debug-906617` |
+| Team follow-ups (2026-10-05, 15:20–21:00) | Forum team (lead, Android, Apple, tooling, two BA/Tester/Pentester trios), owner rule: push + PR, owner merges. CALL-05: the Mac names the calling app (launcher-intent `<queries>`, not `QUERY_ALL_PACKAGES`); a swiped in-call notification on Android 14+ keeps the call `ongoing` with End hidden until the audio mode leaves communication, then `unknown` (E11; only a later in-call notification of the app re-attaches it and brings End back). Bench: `app_call_*` rows in `call_latency.py` (+ `bench_log.py` used to drop every app-call event). Apple: call controllers time their waits on an injected clock; `ManualClock` tests; the three flaky call tests went from 34 % / 34 % / 48.5 % failing (×200, parallel) to 0/600; CI stays serial because clipboard tests also use real time (`reports/team-followups-2026-10-05.md`) | **PRs open, owner merges:** android #8, hub #15 (spec), shared #6, apple #5, hub docs PR |
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
@@ -83,6 +84,16 @@ project owner in Vietnamese with diacritics.
    `feat/brand-identity` in shared/android/apple, 2026-10-01); still
    open: an Icon Composer `.icon` for Liquid Glass (the mark on the welcome screens landed 2026-10-04).
 7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
+8. **Merge and check the 2026-10-05 team PRs** (android #8 + hub #15 together, shared #6, apple #5, hub docs): on the S25 the Mac
+   must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
+   and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
+9. **Follow-ups from that review** (no gate): Apple clipboard tests on the same virtual clock (`sendPastedWithHtml`
+   fails 200/200 in parallel, `replayWindow`/`ackErrors` 12–18 %), then try `-parallel-testing-enabled YES` again;
+   Android logs a distinct `reason` for an app call resent after a setting change so the bench skips it; bench
+   self-test cases for two Macs and a resent tap-to-answer; whether an app call ended `unknown` should keep
+   `answered_at` (shared schema forbids it today, so a call that was answered shows no duration); `ManualClock.waitForSleepers`
+   hangs instead of failing if a controller stops sleeping (add a cancellation handler + a wide `.timeLimit`), and the
+   test helpers' `clock:`/`timer:` names are swapped against the product's.
 
 ### Archive
 
