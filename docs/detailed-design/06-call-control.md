@@ -1594,7 +1594,7 @@ The `app` object:
 | Field | Type | Value |
 |--------|------|---------|
 | `package` | string(255) | Android package name of the calling app |
-| `label` | string(64) | The app's label from `PackageManager` (display only) |
+| `label` | string(64) | The app's label from `PackageManager` (display only). From API 30 package visibility hides other apps, and a notification listener is not exempt: the manifest's `<queries>` declares the `MAIN`/`LAUNCHER` intent so every app with a launcher activity is visible (never `QUERY_ALL_PACKAGES`); an app still hidden or removed falls back to its package name |
 
 The `controls` object:
 

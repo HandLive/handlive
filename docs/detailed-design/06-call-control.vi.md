@@ -1560,7 +1560,7 @@ flowchart TB
 | Trường | Kiểu | Giá trị |
 |--------|------|---------|
 | `package` | string(255) | Tên gói Android của ứng dụng gọi điện |
-| `label` | string(64) | Nhãn của ứng dụng lấy từ `PackageManager` (chỉ để hiển thị) |
+| `label` | string(64) | Nhãn của ứng dụng lấy từ `PackageManager` (chỉ để hiển thị). Từ API 30, package visibility ẩn các ứng dụng khác, và notification listener không được miễn: `<queries>` trong manifest khai báo intent `MAIN`/`LAUNCHER` để mọi ứng dụng có activity launcher đều thấy được (không bao giờ dùng `QUERY_ALL_PACKAGES`); ứng dụng vẫn bị ẩn hoặc đã gỡ thì dùng tên gói thay thế |
 
 Đối tượng `controls`:
 
