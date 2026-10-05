@@ -8,6 +8,15 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Added
 
+- iPhone và iPad giữ phiên tối đa `IOS_BACKGROUND_GRACE` (25 giây, hoặc thời gian iOS cho trừ 5 giây) sau khi ứng dụng
+  vào nền, thay vì đóng ngay (CONN-02 E3, 00-common-specs): chuyển nhanh sang ứng dụng khác không còn làm mất kết nối.
+  Thao tác từ thông báo dùng chung việc giữ phiên này; clip đến trong lúc giữ chỉ được ghi khi người dùng chưa sao chép
+  gì mới (CLIP-04 E2, `changeCount`); SMS và cuộc gọi trong khoảng đó hiện thông báo cục bộ theo cùng luật nội dung như
+  đường push. Đồng bộ nền lâu hơn thì iOS không cho phép: báo SMS và cuộc gọi khi ở xa cần relay và APNs (gate G2).
+  Mã: apple #4.
+- Android, Tự gửi khi sao chép (SET-02 trường 39, E10): bấm công tắc khi đang báo "Chưa bật tự gửi" sẽ mở bảng tác vụ
+  (Bật, Gửi thủ công, Hủy) thay vì lặng lẽ tắt tự gửi. Chuỗi: handlive-shared#5; mã: android #7.
+
 - Bảng nhớ tạm HTML (CLIP-01 API 5 `html`, 0.7.2 `text/html` trong `features.clipboard.mimes`, 0.10 `CLIP_MAX_HTML`): clip
   chữ mang kèm HTML đã lọc của chính nó khi đối phương liệt kê `text/html`, nên bài báo sao chép trong trình duyệt trên điện
   thoại dán vào Notes, Pages, Word hay Mail có đủ tiêu đề, liên kết và ảnh (ứng dụng dán tự tải từ URL). Hai đầu chạy cùng
