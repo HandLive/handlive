@@ -40,7 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the Mac: only the app's own removal means `ended`; a swiped call stays `ongoing` with End hidden while the phone is in
   communication mode and ends as `unknown` when it leaves it (E11; below API 31, or outside that mode, it ends as
   `unknown` at once); only a later in-call notification of the same app (`CallStyle` or category `call`) re-attaches
-  the call and brings End back, so End never fires another notification's action (an upload's Cancel). Code: android #8; spec: hub #15. Owner check on the S25 pending.
+  the call and brings End back, so End never fires another notification's action (an upload's Cancel). Code:
+  android #8; spec: hub #15. Owner check on the S25 pending.
 - Setup, SET-01 (en and vi): an Android 13+ phone that installed HandLive outside Google Play no longer stays silent
   when Android's restricted setting keeps the Accessibility service (automatic clipboard sending) or Notification
   access (calls from other apps) off. The user who comes back from that system page without turning HandLive on sees
