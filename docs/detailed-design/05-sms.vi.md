@@ -890,7 +890,7 @@ flowchart TB
 | 12 | Người dùng | M-APP / I-APP | Thấy "Đã gửi" hoặc "Đã nhận"; hoặc "Gửi lỗi" kèm lý do và "Thử lại". |  |
 | A1 | Người dùng | M-APP / I-APP | Chạm "Thử lại" trên tin lỗi: xóa dòng `sms_outbox` cũ, tạo `local_id` mới, quay lại bước 3 với cùng nội dung, người nhận, SIM. | Nếu điện thoại đã ghi tin lỗi (`box = failed`), tin đó vẫn hiển thị như trên điện thoại. |
 | B1 | Người dùng | I-APP | iOS: nhập trả lời trong thông báo khi I-APP đang treo nền. |  |
-| B2 | Hệ thống | I-APP | Hệ thống đánh thức I-APP ở nền để xử lý hành động; I-APP xin thời gian chạy nền, ghi `sms_outbox`, kết nối (CONN-01 trong LAN hoặc CONN-03 qua relay) và gửi như bước 5. |  |
+| B2 | Hệ thống | I-APP | Hệ thống đánh thức I-APP ở nền để xử lý hành động; I-APP xin thời gian chạy nền, ghi `sms_outbox`, dùng phiên nếu còn đang được giữ (CONN-02 E3), không thì kết nối (CONN-01 trong LAN hoặc CONN-03 qua relay), rồi gửi như bước 5. |  |
 | B3 | Hệ thống | I-APP | Có `ack` trong khoảng 20 s → kết thúc tác vụ nền (trạng thái tiếp theo cập nhật khi ứng dụng kết nối lại). Không có → giữ `pending`, hiện trường 11, kết thúc tác vụ nền. | E8. |
 
 ### 5.4.5 Đặc tả API/service

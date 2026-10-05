@@ -679,11 +679,11 @@ N/A — trang chỉ nằm trong bộ nhớ A-SVC (QW4); `web.notify` đọc từ
 | Mục | Nội dung |
 |-----|----------|
 | Tên | WEB-05 — Hiện trang của điện thoại trên iPhone/iPad |
-| Mô tả | Khi ứng dụng HandLive đang ở foreground trên iPhone/iPad và có phiên với điện thoại, trang nhận từ điện thoại (WEB-01) hiện thành banner phủ lên đầu tab đang hiển thị, bất kể tab nào: "Duyệt web tiếp: \<tiêu đề hoặc host>", kèm host bên dưới; chạm vào thì mở URL trong Safari (`UIApplication.open`). Người dùng có thể đóng banner; banner ẩn cho tới khi có trang với `page_id` mới.<br>Không push, không Live Activity: ứng dụng ở nền không có phiên và nhận lại trang hiện tại sau khi trở lại foreground và kết nối lại (QW3). |
+| Mô tả | Khi ứng dụng HandLive đang ở foreground trên iPhone/iPad và có phiên với điện thoại, trang nhận từ điện thoại (WEB-01) hiện thành banner phủ lên đầu tab đang hiển thị, bất kể tab nào: "Duyệt web tiếp: \<tiêu đề hoặc host>", kèm host bên dưới; chạm vào thì mở URL trong Safari (`UIApplication.open`). Người dùng có thể đóng banner; banner ẩn cho tới khi có trang với `page_id` mới.<br>Không push, không Live Activity: sau thời gian giữ khi ở nền của CONN-02 E3, ứng dụng không có phiên và nhận lại trang hiện tại sau khi trở lại foreground và kết nối lại (QW3); trong thời gian giữ thì phiên và banner vẫn tiếp tục. |
 | Tác nhân | Chính: Người dùng. Hệ thống: I-APP, A-SVC (bên gửi), OS (`UIApplication`). |
 | Điều kiện trước | 1.<br>Cặp hiệu lực; ứng dụng ở foreground và có phiên tới điện thoại.<br>2.<br>`feature.web = true` trên iPhone/iPad (`features.web.receive = true`) và chiều Android → iPhone/iPad hiệu lực (QW2). |
 | Điều kiện sau | Banner hiện trang mới nhất của điện thoại khi trang còn hợp lệ, trừ khi người dùng đã đóng nó cho `page_id` đó. Không ghi gì xuống đĩa. |
-| Ngoại lệ | E1 — Payload không hợp lệ hoặc chiều này không hiệu lực: bỏ im lặng (QW8).<br>E2 — `web/inactive`, hết `WEB_PAGE_TTL` hoặc phiên kết thúc (kể cả khi ứng dụng xuống nền): gỡ banner.<br>E3 — `UIApplication.open` kết thúc với `false`: không mở gì; banner vẫn giữ. |
+| Ngoại lệ | E1 — Payload không hợp lệ hoặc chiều này không hiệu lực: bỏ im lặng (QW8).<br>E2 — `web/inactive`, hết `WEB_PAGE_TTL` hoặc phiên kết thúc (kể cả khi hết thời gian giữ khi iOS ở nền, CONN-02 E3): gỡ banner; chỉ vào nền thì banner vẫn giữ.<br>E3 — `UIApplication.open` kết thúc với `false`: không mở gì; banner vẫn giữ. |
 | Yêu cầu đặc biệt | **Riêng tư:** QW4.<br>**Bảo mật:** QW7.<br>**Truy cập:** VoiceOver đọc banner là một nút, "Duyệt web tiếp: \<tiêu đề hoặc host>, \<host>"; Dynamic Type tới AX5. |
 
 ### 9.5.2 Màn hình
@@ -732,7 +732,7 @@ flowchart TB
 | 5 | Hệ thống | I-APP | Hiện trường 1 và 2 phủ lên đầu tab đang hiển thị, trừ khi người dùng đã đóng `page_id` này (trường 5). |  |
 | 6 | Người dùng | I-APP | Chạm vào banner (trường 3), hoặc đóng nó (trường 5): banner ẩn cho tới khi có `page_id` mới. |  |
 | 7 | Hệ thống | I-APP, OS | Kiểm lại URL (QW7), gọi `UIApplication.shared.open(url)` (API 1). | E3. |
-| 8 | Hệ thống | I-APP | `web/inactive` với `page_id` đang giữ, hết TTL, ứng dụng xuống nền hoặc phiên kết thúc → gỡ banner và quên trang. | E2. |
+| 8 | Hệ thống | I-APP | `web/inactive` với `page_id` đang giữ, hết TTL hoặc phiên kết thúc (sau thời gian giữ khi ở nền của CONN-02 E3) → gỡ banner và quên trang. | E2. |
 
 ### 9.5.5 Đặc tả API/service
 

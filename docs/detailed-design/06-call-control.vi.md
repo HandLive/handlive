@@ -595,7 +595,7 @@ flowchart TB
 | 9 | Hệ thống | M-APP, A-AUD | "Nghe trên Mac" đi qua bước 4: sau `ack` thành công, M-APP chạy AUDIO-03 để chuyển âm thanh sang Mac (nối HFP theo AUDIO-02 rồi mở SCO, hoặc Opus/WS theo AUDIO-04). | Lỗi → E7. |
 | 10 | Người dùng | M-APP / I-APP | Mac: thấy panel đang gọi (CALL-03) với `audio_on`, hoặc panel đóng sau khi từ chối; tin trả lời nằm trong hội thoại (SMS-04). iOS: banner đóng. |  |
 | B1 | Người dùng | I-APP (thông báo) | iOS: chạm "Từ chối" trên thông báo cuộc gọi đến (CALL-01 API 6); hệ thống yêu cầu mở khóa (`.authenticationRequired`). | Thông báo không có nút → E10. |
-| B2 | Hệ thống | I-APP | Hệ thống đánh thức I-APP ở nền (API 6).<br>I-APP xin thời gian chạy nền, đọc `pair_id`, `call_id` trong `userInfo`, kết nối CONN-01 (LAN) hoặc CONN-03 (relay — điện thoại thường đã mở relay sau push, CALL-01 API 4; chưa online thì gửi wake `call_action` theo CONN-04), rồi làm bước 4 với `reject`. |  |
+| B2 | Hệ thống | I-APP | Hệ thống đánh thức I-APP ở nền (API 6).<br>I-APP xin thời gian chạy nền, đọc `pair_id`, `call_id` trong `userInfo`, dùng phiên nếu còn đang được giữ (CONN-02 E3), không thì kết nối CONN-01 (LAN) hoặc CONN-03 (relay — điện thoại thường đã mở relay sau push, CALL-01 API 4; chưa online thì gửi wake `call_action` theo CONN-04), rồi làm bước 4 với `reject`. |  |
 | B3 | Hệ thống | I-APP | `ack` thành công, `CALL_NOT_FOUND` hoặc `CALL_ACTION_NOT_ALLOWED` (mọi `reason`, kể cả `system`: điện thoại không còn cho từ chối cuộc gọi) → gỡ thông báo, kết thúc tác vụ nền. Lỗi khác (`PERMISSION_MISSING`, `FEATURE_DISABLED`, `INTERNAL`), không kết nối được hoặc quá 15 s → đăng trường 11, kết thúc tác vụ nền. | E8. |
 
 ### 6.2.5 Đặc tả API/service

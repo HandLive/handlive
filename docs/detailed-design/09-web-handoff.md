@@ -685,11 +685,11 @@ N/A — the page lives only in A-SVC memory (QW4); `web.notify` is read from Dat
 | Item | Content |
 |-----|----------|
 | Name | WEB-05 — Show the phone's page on iPhone/iPad |
-| Description | While the HandLive app is in the foreground on iPhone/iPad and has a session with the phone, a page received from the phone (WEB-01) is shown as a banner laid over the top of whichever tab is visible: "Continue browsing: \<title or host>", with the host under it; tapping it opens the URL in Safari (`UIApplication.open`). The user can close the banner; it then stays hidden until a page with a new `page_id` arrives.<br>No push and no Live Activity: an app in the background has no session and receives the current page again after it returns to the foreground and reconnects (QW3). |
+| Description | While the HandLive app is in the foreground on iPhone/iPad and has a session with the phone, a page received from the phone (WEB-01) is shown as a banner laid over the top of whichever tab is visible: "Continue browsing: \<title or host>", with the host under it; tapping it opens the URL in Safari (`UIApplication.open`). The user can close the banner; it then stays hidden until a page with a new `page_id` arrives.<br>No push and no Live Activity: after the background grace of CONN-02 E3 the app has no session and receives the current page again after it returns to the foreground and reconnects (QW3); within the grace the session and the banner go on. |
 | Actors | Primary: User. System: I-APP, A-SVC (sender), OS (`UIApplication`). |
 | Preconditions | 1.<br>A valid pair; the app in the foreground with a session to the phone.<br>2.<br>`feature.web = true` on iPhone/iPad (`features.web.receive = true`) and the Android → iPhone/iPad direction in effect (QW2). |
 | Postconditions | The banner shows the phone's latest page while it is valid, unless the user closed it for that `page_id`. Nothing is written to disk. |
-| Exceptions | E1 — Invalid payload or direction not in effect: dropped silently (QW8).<br>E2 — `web/inactive`, `WEB_PAGE_TTL` or the session ends (including the app going to the background): the banner is removed.<br>E3 — `UIApplication.open` completes with `false`: nothing opens; the banner stays. |
+| Exceptions | E1 — Invalid payload or direction not in effect: dropped silently (QW8).<br>E2 — `web/inactive`, `WEB_PAGE_TTL` or the session ends (including the end of the iOS background grace, CONN-02 E3): the banner is removed; going to the background alone keeps it.<br>E3 — `UIApplication.open` completes with `false`: nothing opens; the banner stays. |
 | Special requirements | **Privacy:** QW4.<br>**Security:** QW7.<br>**Accessibility:** VoiceOver reads the banner as a button, "Continue browsing: \<title or host>, \<host>"; Dynamic Type up to AX5. |
 
 ### 9.5.2 Screens
@@ -738,7 +738,7 @@ flowchart TB
 | 5 | System | I-APP | Shows fields 1 and 2 over the top of the visible tab, unless the user closed this `page_id` (field 5). |  |
 | 6 | User | I-APP | Taps the banner (field 3), or closes it (field 5): it stays hidden until a new `page_id` arrives. |  |
 | 7 | System | I-APP, OS | Checks the URL again (QW7), calls `UIApplication.shared.open(url)` (API 1). | E3. |
-| 8 | System | I-APP | `web/inactive` with the stored `page_id`, TTL, the app moving to the background or the session ending → removes the banner and forgets the page. | E2. |
+| 8 | System | I-APP | `web/inactive` with the stored `page_id`, TTL or the session ending (after the background grace of CONN-02 E3) → removes the banner and forgets the page. | E2. |
 
 ### 9.5.5 API/service specification
 
