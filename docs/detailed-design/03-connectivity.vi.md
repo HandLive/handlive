@@ -13,7 +13,7 @@
 | Mục | Nội dung |
 |-----|----------|
 | Tên | CONN-01 — Tự khám phá và kết nối trong mạng LAN |
-| Mô tả | Client (Mac/iOS) tự tìm điện thoại đã ghép trong LAN, mở kênh `/v1/ctl` qua TLS có ghim chứng chỉ, bắt tay phiên theo 0.6.3, trao đổi capability để xác định tính năng hiệu lực, rồi khởi chạy các đồng bộ phụ thuộc (SMS-01, CALL-04, gửi clipboard mới nhất).<br>Chạy tự động khi ứng dụng khởi động, khi có mạng mới, khi Mac thức dậy, khi iOS quay lại foreground, ngay sau PAIR-01 và mỗi lần CONN-02 thử kết nối lại. |
+| Mô tả | Client (Mac/iOS) tự tìm điện thoại đã ghép trong LAN, mở kênh `/v1/ctl` qua TLS có ghim chứng chỉ, bắt tay phiên theo 0.6.3, trao đổi capability để xác định tính năng hiệu lực, rồi khởi chạy các đồng bộ phụ thuộc (SMS-01, CALL-04, gửi clipboard mới nhất).<br>Chạy tự động khi ứng dụng khởi động, khi có mạng mới, khi Mac thức dậy, khi iOS quay lại foreground mà không còn phiên (phiên được giữ qua thời gian giữ ở nền của CONN-02 E3 thì tiếp tục), ngay sau PAIR-01 và mỗi lần CONN-02 thử kết nối lại. |
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng tác động gián tiếp (mở ứng dụng, bật WiFi, mở nắp máy) hoặc bấm "Kết nối lại ngay". |
 | Điều kiện trước | 1. Có một cặp hiệu lực (PAIR-01).<br>2. A-SVC đang chạy dưới dạng foreground service.<br>3. Hai thiết bị cùng LAN và mạng cho phép multicast mDNS.<br>4. Client đã được cấp quyền mạng cục bộ (iOS 14+, macOS 15+) theo SET-03. |
 | Điều kiện sau | **Thành công:** trạng thái `Connected` (LAN); khóa phiên sẵn sàng; capability của đối phương lưu vào `features_json`; `last_seen_at`, `last_host`, `last_port` cập nhật; tính năng hiệu lực được bật; thông báo foreground service trên Android ghi "Đã kết nối với <tên>".<br>**Thất bại:** chuyển CONN-03 sau `LAN_DISCOVERY_GRACE` (nếu relay bật) hoặc sang `Backoff` (CONN-02). |
@@ -285,7 +285,7 @@ WHERE revoked_at IS NULL;
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng có thể bấm "Kết nối lại ngay". |
 | Điều kiện trước | Đã từng có phiên (`Connected`) hoặc đang ở `Backoff`/`Discovering`. |
 | Điều kiện sau | Phiên được duy trì hoặc thiết lập lại; trạng thái hiển thị đúng thực tế trong ≤ 1 s sau khi phát hiện; `sms_outbox` còn `pending` được gửi lại; SMS-01 và CALL-04 chạy bù. |
-| Ngoại lệ | E1 — Mất mạng hoàn toàn: chuyển `Idle`, chờ `NWPathMonitor`/`NetworkCallback` báo có mạng, không backoff vô ích.<br>E2 — Mac ngủ: gửi `session/bye {reason: shutdown}` nếu còn kịp; khi thức dậy chạy CONN-01 ngay.<br>E3 — iOS vào background: gửi `session/bye {reason: shutdown}`, đóng; khi suspended nhận tin qua push (CONN-04).<br>E4 — Rekey không nhận `ack` trong 10 s → đóng phiên, kết nối lại (bắt tay mới sinh khóa mới).<br>E5 — `DECRYPT_FAILED` → đóng 4400, kết nối lại.<br>E6 — Hệ điều hành dừng A-SVC (OEM tắt nền) → client thấy mất kết nối; A-SVC `START_STICKY` tự khởi động lại; SET-01 đã xin miễn tối ưu pin.<br>E7 — Đóng 4409 (bị thay bởi kết nối mới của chính client; qua relay: `session/bye {reason: replaced}`, API 4) → không kết nối lại từ phiên cũ. |
+| Ngoại lệ | E1 — Mất mạng hoàn toàn: chuyển `Idle`, chờ `NWPathMonitor`/`NetworkCallback` báo có mạng, không backoff vô ích.<br>E2 — Mac ngủ: gửi `session/bye {reason: shutdown}` nếu còn kịp; khi thức dậy chạy CONN-01 ngay.<br>E3 — iOS vào nền (`scenePhase` của ứng dụng thành `.background`; bỏ qua `.inactive`): I-APP giữ phiên thêm một khoảng ngắn thay vì đóng ngay. I-APP bắt đầu một tác vụ nền (`beginBackgroundTask`); iOS từ chối → `session/bye {reason: shutdown}` và đóng ngay. Nếu không, phiên vẫn mở (ping vẫn chạy) tới min(`IOS_BACKGROUND_GRACE`, thời gian nền iOS còn cho − 5 s), rồi `session/bye {reason: shutdown}`, đóng 1000 và kết thúc tác vụ.<br>Thời gian giữ là một bên giữ phiên; một thao tác từ thông báo (SMS-04 bước B2, CALL-02 bước B2) là một bên khác và vẫn dùng tác vụ nền riêng như hiện nay. I-APP chỉ gửi `bye` và đóng khi không còn bên nào giữ và ứng dụng không ở foreground. Khi iOS cho hết hạn tác vụ của thời gian giữ, thời gian giữ nhả phần của nó và kết thúc tác vụ ngay, không chờ; thao tác còn đang chạy vẫn giữ phiên bằng tác vụ của chính nó. Thao tác đến sau khi phiên đã đóng thì kết nối như trước (CONN-01 hoặc CONN-03).<br>Đóng và mở chạy lần lượt trên một hàng đợi (hủy hẹn giờ, hẹn giờ kích hoạt, `bye`, đóng, CONN-01). Quay lại foreground: chưa bắt đầu đóng → hủy hẹn giờ, kết thúc tác vụ, giữ phiên (không `bye`, không chạy lại CONN-01); đã gửi `bye` → chờ đóng xong rồi mới chạy CONN-01, nên client không bao giờ có hai phiên của cùng một cặp (không tự gây 4409).<br>Phiên rớt trong lúc giữ → nhả thời gian giữ ngay: hủy hẹn giờ, kết thúc tác vụ, không `bye`, không nối lại khi đang ở nền.<br>Trong lúc giữ: SMS hoặc cuộc gọi đến hiện thông báo người dùng nhận được qua push (CONN-04), đăng cục bộ, không có chuỗi mới, theo cùng luật nội dung như I-NSE (`sms.preview`, iPhone đang khóa, SMS-02 trường 2); `clipboard/push` chỉ được ghi khi `UIPasteboard.changeCount` vẫn bằng giá trị mốc, lấy lúc ứng dụng vào nền và dời theo mỗi lần HandLive ghi hoặc xóa trong thời gian giữ (CLIP-04 E2, CLIP-05); ghi thành công được nhớ là lần ghi của chính HandLive, ghi thất bại theo đường lỗi sẵn có (`ack` như hiện nay).<br>Sau thời gian giữ, khi bị treo, tin đến qua push (CONN-04).<br>E4 — Rekey không nhận `ack` trong 10 s → đóng phiên, kết nối lại (bắt tay mới sinh khóa mới).<br>E5 — `DECRYPT_FAILED` → đóng 4400, kết nối lại.<br>E6 — Hệ điều hành dừng A-SVC (OEM tắt nền) → client thấy mất kết nối; A-SVC `START_STICKY` tự khởi động lại; SET-01 đã xin miễn tối ưu pin.<br>E7 — Đóng 4409 (bị thay bởi kết nối mới của chính client; qua relay: `session/bye {reason: replaced}`, API 4) → không kết nối lại từ phiên cũ. |
 | Yêu cầu đặc biệt | **Hiệu năng:** kết nối lại < 3 s sau khi mạng trở lại; phát hiện mất kết nối ≤ 25 s (15 s ping + 10 s chờ pong).<br>**Pin:** client chủ động ping, Android chỉ trả pong và đóng kết nối im lặng quá 45 s; Android không giữ relay khi rảnh quá 5 phút.<br>**Backoff:** 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %, về đầu khi một phiên đã giữ kết nối được 30 s (`RECONNECT_BACKOFF`, 0.10). |
 
 ### 3.2.2 Màn hình
@@ -318,7 +318,7 @@ flowchart TB
     S5["(5) Đổi mạng hoặc thức dậy: hủy chờ, chạy CONN-01"]
     S6["(6) Đến ngưỡng: session/rekey và đổi khóa"]
     S7["(7) Đang qua relay mà thấy LAN: mở phiên LAN, Android thay phiên cũ"]
-    S8["(8) Thoát, ngủ, iOS background: session/bye, đóng 1000"]
+    S8["(8) Thoát, ngủ, hết thời gian giữ khi iOS ở nền: session/bye, đóng 1000"]
     S10["(10) Kết nối lại thành công: xả hàng đợi, đồng bộ bù"]
   end
   S1 --> D2
@@ -340,7 +340,7 @@ flowchart TB
 | 5 | Hệ thống | M-APP / I-APP | Hủy chờ, chạy CONN-01 (LAN trước, rồi CONN-03 sau 10 s). |  |
 | 6 | Hệ thống | Bên đạt ngưỡng trước | Gửi `session/rekey`; bên nhận trả `ack` kèm khóa tạm của mình, đổi khóa; bên gửi đổi khóa sau khi nhận `ack`. Giữ khóa cũ 30 s cho envelope đang bay. | Không có `ack` → E4. |
 | 7 | Hệ thống | M-APP / I-APP → A-SVC | Đang dùng relay mà mDNS thấy hint khớp → mở phiên LAN mới theo CONN-01 bước 4–9. A-SVC gửi `session/bye {reason: replaced}` trên phiên relay rồi kết thúc phiên đó (phiên qua relay không có mã đóng, API 4). | E7 với phiên cũ. |
-| 8 | Hệ thống | M-APP / I-APP | Người dùng thoát ứng dụng, Mac sắp ngủ, iOS vào background → gửi `session/bye` và đóng 1000. | E2, E3. |
+| 8 | Hệ thống | M-APP / I-APP | Người dùng thoát ứng dụng, Mac sắp ngủ, hoặc hết thời gian giữ khi iOS ở nền (`IOS_BACKGROUND_GRACE`, E3) → gửi `session/bye` và đóng 1000. iOS quay lại foreground trong lúc giữ → giữ phiên, không `bye`. | E2, E3. |
 | 9 | Người dùng | M-APP / I-APP | Bấm "Kết nối lại ngay". |  |
 | 10 | Hệ thống | M-APP / I-APP, A-SVC | Khi `Connected` trở lại: gửi lại `sms_outbox` còn `pending` theo thứ tự tạo (SMS-04), chạy SMS-01 và CALL-04 với con trỏ đã lưu. |  |
 | 11 | Người dùng | M-APP / I-APP | Thấy trạng thái và số tin chờ gửi cập nhật. |  |
@@ -407,13 +407,13 @@ flowchart TB
 
 #### API 4 — `WS session/bye`
 
-Đặc tả như PAIR-03 API 2. Trong nhóm này `reason` dùng `shutdown` (thoát, ngủ, background),
+Đặc tả như PAIR-03 API 2. Trong nhóm này `reason` dùng `shutdown` (thoát, ngủ, hết thời gian giữ khi iOS ở nền của E3),
 `replaced` (Android thay phiên cũ bằng phiên mới của cùng cặp), `update` (sắp cập nhật ứng dụng).
 
 Phiên đi qua relay không có lệnh đóng WebSocket giữa hai bên: liên kết `/v1/relay` còn mang các phiên
 khác nên vẫn mở, và không mã đóng nào (4409, 4410, 4411, …) đến được đối phương. Vì vậy thiết bị luôn
 gửi `session/bye` trước khi kết thúc một phiên qua relay: `revoked`, `replaced` hoặc `update` như đã
-định nghĩa, `shutdown` cho mọi trường hợp kết thúc khác (thoát, ngủ, background, tắt relay, và các
+định nghĩa, `shutdown` cho mọi trường hợp kết thúc khác (thoát, ngủ, hết thời gian giữ khi iOS ở nền, tắt relay, và các
 trường hợp đóng một phiên LAN đã thiết lập bằng 4400, 4410, 4411 hoặc 4500). Bên nhận kết thúc phiên
 khi nhận `session/bye`: `replaced` tính như 4409 (E7), lý do khác tính như 1000. Ngoại lệ duy nhất:
 khi đối phương mở phiên mới bằng `session/hello` qua relay, thiết bị kết thúc phiên cũ ngay mà không

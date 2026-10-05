@@ -903,7 +903,7 @@ flowchart TB
 | 12 | User | M-APP / I-APP | Sees "Sent" or "Delivered"; or "Not sent" with the reason and "Try Again". |  |
 | A1 | User | M-APP / I-APP | Taps "Try Again" on a failed message: the old `sms_outbox` row is deleted, a new `local_id` is created, back to step 3 with the same text, recipient and SIM. | If the phone has already recorded the failed message (`box = failed`), that message is still shown as it is on the phone. |
 | B1 | User | I-APP | iOS: types a reply in the notification while I-APP is suspended in the background. |  |
-| B2 | System | I-APP | The system wakes I-APP in the background to handle the action; I-APP requests background execution time, writes `sms_outbox`, connects (CONN-01 on the LAN or CONN-03 over the relay) and sends as in step 5. |  |
+| B2 | System | I-APP | The system wakes I-APP in the background to handle the action; I-APP requests background execution time, writes `sms_outbox`, uses the session if one is still held (CONN-02 E3), otherwise connects (CONN-01 on the LAN or CONN-03 over the relay), and sends as in step 5. |  |
 | B3 | System | I-APP | `ack` within about 20 s → end the background task (later status changes are applied when the app reconnects). Otherwise → keep `pending`, show field 11, end the background task. | E8. |
 
 ### 5.4.5 API/service specification

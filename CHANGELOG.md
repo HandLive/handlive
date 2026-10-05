@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- iPhone and iPad keep their session up to `IOS_BACKGROUND_GRACE` (25 s, or what iOS grants minus 5 s) after the app
+  goes to the background, instead of closing at once (CONN-02 E3, 00-common-specs): a quick switch to another app no
+  longer drops the connection. Notification actions share the same hold; a clip that arrives while held is written only
+  if the user copied nothing new (CLIP-04 E2, `changeCount`); SMS and calls in that window raise local notifications
+  under the same content rules as the push path. Longer background sync is not possible on iOS: SMS and call alerts
+  while away need the relay and APNs (gate G2). Code: apple #4.
+- Android, Auto-Send on Copy (SET-02 field 39, E10): tapping the switch while it reads "Auto-send isn't on yet" opens an
+  action sheet (Turn On, Send Manually, Cancel) instead of turning automatic sending off silently. Strings:
+  handlive-shared#5; code: android #7.
+
 - Clipboard HTML (CLIP-01 API 5 `html`, 0.7.2 `text/html` in `features.clipboard.mimes`, 0.10 `CLIP_MAX_HTML`): a text clip
   carries the sanitized HTML of its text when the peer lists `text/html`, so an article copied in a browser on the phone pastes
   in Notes, Pages, Word or Mail with its headings, links and pictures (fetched from their URLs by the pasting app). Both ends run

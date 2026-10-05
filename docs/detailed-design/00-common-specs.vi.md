@@ -958,6 +958,7 @@ SET-02 quản lý các khóa này.
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: ping WS; relay: thêm `ping` E2E mỗi 30 s |
 | `RECONNECT_BACKOFF` | 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Về 0 khi một phiên đã giữ `Connected` được 30 s (phiên rớt sớm hơn giữ nguyên bậc hiện tại, để một thiết bị nhận kết nối rồi rớt ngay không bị thử lại mỗi 0,5 s); thử ngay khi đổi mạng hoặc thức dậy |
 | `LAN_DISCOVERY_GRACE` | 10 s | Không thấy trên LAN sau 10 s → thử relay |
+| `IOS_BACKGROUND_GRACE` | 25 s | iOS giữ phiên chừng này sau khi vào nền, tối đa bằng thời gian nền iOS còn cho − 5 s; iOS từ chối tác vụ nền → đóng ngay (CONN-02 E3) |
 | `REKEY_AFTER` | 24 h hoặc 10 000 envelope/chiều |  |
 | `DEDUP_WINDOW` | Mọi `id` đã nhận trong thế hệ khóa hiện tại, theo từng chiều (≤ 10 000 id; một chiều đạt 20 000 id vì rekey chưa xong thì đóng phiên với 4410) | Xóa khi rekey; id của thế hệ trước được giữ trong lúc khóa của nó còn được nhận; chỉ ghi envelope đã giải mã (0.5.1 quy tắc 2); các `ack` giữ lại để trả lời envelope trùng bị giới hạn 8 MiB mỗi phiên, bỏ cái cũ nhất trước, và envelope trùng mà `ack` của nó đã bị bỏ thì bị bỏ qua, không trả lời |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |

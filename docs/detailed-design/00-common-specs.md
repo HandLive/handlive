@@ -968,6 +968,7 @@ SET-02 function manages these keys.
 | `WS_PING_INTERVAL` / `PONG_TIMEOUT` | 15 s / 10 s | LAN: WS ping; relay: plus an E2E `ping` every 30 s |
 | `RECONNECT_BACKOFF` | 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 % | Back to 0 once a session has stayed `Connected` for 30 s (a session that drops sooner keeps the current step, so a peer that accepts and then drops at once is not retried every 0.5 s); retry immediately on a network change or wake-up |
 | `LAN_DISCOVERY_GRACE` | 10 s | Not seen on the LAN after 10 s → try the relay |
+| `IOS_BACKGROUND_GRACE` | 25 s | iOS keeps the session this long after going to the background, at most the background time iOS still gives − 5 s; iOS refuses the background task → close at once (CONN-02 E3) |
 | `REKEY_AFTER` | 24 h or 10,000 envelopes/direction |  |
 | `DEDUP_WINDOW` | Every `id` accepted in the current key epoch, per direction (≤ 10,000 ids; a direction that reaches 20,000 ids because the rekey has not completed closes the session with 4410) | Emptied at rekey; the previous epoch's ids are kept while its keys are still accepted; only decrypted envelopes are recorded (0.5.1 rule 2); the acks kept to answer duplicates are bounded to 8 MiB per session, oldest dropped first, and a duplicate whose ack was dropped is ignored without an answer |
 | `CLIP_MAX_TEXT` | 1 MiB (UTF-8) |  |
