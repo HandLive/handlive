@@ -34,9 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- Calls from other apps, CALL-05 (en and vi): the Mac panel names the calling app ("Telegram Call") instead of its
-  package name; Android 11+ hid the app from HandLive until the call feature declared a launcher-intent `<queries>`
-  (not `QUERY_ALL_PACKAGES`). On Android 14+, swiping the app's in-call notification away no longer ends the call on
+- Calls from other apps, CALL-05 (en and vi): the call feature declares a launcher-intent `<queries>` (not
+  `QUERY_ALL_PACKAGES`) so the Mac panel names the calling app ("Telegram Call") even where Android hides other apps
+  from HandLive; on an Android 15 emulator the notification listener already sees an app once it posts, so the query
+  is a safeguard for other versions and OEM builds (Android 11–14 not measured). On Android 14+, swiping the app's in-call notification away no longer ends the call on
   the Mac: only the app's own removal means `ended`; a swiped call stays `ongoing` with End hidden while the phone is in
   communication mode and ends as `unknown` when it leaves it (E11; below API 31, or outside that mode, it ends as
   `unknown` at once); only a later in-call notification of the same app (`CallStyle` or category `call`) re-attaches

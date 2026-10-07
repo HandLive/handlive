@@ -33,9 +33,10 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Fixed
 
-- Cuộc gọi từ ứng dụng khác, CALL-05 (en và vi): bảng trên Mac hiện tên ứng dụng gọi ("Telegram Call") thay vì tên
-  gói; Android 11+ giấu ứng dụng đó khỏi HandLive cho tới khi tính năng cuộc gọi khai báo `<queries>` theo intent
-  launcher (không dùng `QUERY_ALL_PACKAGES`). Trên Android 14+, vuốt bỏ thông báo đang gọi của ứng dụng không còn kết
+- Cuộc gọi từ ứng dụng khác, CALL-05 (en và vi): tính năng cuộc gọi khai báo `<queries>` theo intent launcher (không
+  dùng `QUERY_ALL_PACKAGES`) để bảng trên Mac hiện tên ứng dụng gọi ("Telegram Call") cả khi Android giấu ứng dụng
+  khác khỏi HandLive; trên emulator Android 15, trình nghe thông báo đã thấy ứng dụng ngay khi nó đăng thông báo, nên
+  khai báo này là lớp phòng hờ cho phiên bản khác và bản OEM (Android 11–14 chưa đo). Trên Android 14+, vuốt bỏ thông báo đang gọi của ứng dụng không còn kết
   thúc cuộc gọi trên Mac: chỉ khi chính ứng dụng gỡ thông báo mới là `ended`; cuộc gọi bị vuốt giữ `ongoing`, ẩn nút
   Kết thúc trong lúc điện thoại ở chế độ liên lạc và kết thúc `unknown` khi rời chế độ đó (E11; dưới API 31, hoặc ngoài
   chế độ đó, kết thúc `unknown` ngay); chỉ thông báo dạng cuộc gọi sau đó của cùng ứng dụng (`CallStyle` hoặc danh mục
