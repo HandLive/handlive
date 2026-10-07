@@ -10,9 +10,9 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 - iPhone và iPad: biểu tượng ứng dụng là `AppIcon.icon` của Icon Composer với các lớp Liquid Glass (vòng tín hiệu,
   ngọn lửa, ngọn núi; sáng, tối và phủ màu) trên iOS 26+, sinh bằng `tools/brand/build_brand_assets.py --apple-icon`;
-  iOS 16–18 nhận ảnh phẳng 1024 do Xcode dựng từ đó. Mac giữ bộ biểu tượng có biểu tượng rút gọn ở 16 và 32 pt: Xcode
-  27 bỏ qua bộ biểu tượng trong asset catalog khi đã có `.icon`, nên Mac chỉ đổi khi Xcode hỗ trợ hoặc chủ dự án đồng
-  ý bỏ biểu tượng rút gọn (`docs/brand-guidelines.vi.md`). Mã: apple #7; công cụ và hướng dẫn: hub #17.
+  iOS 16–18 nhận ảnh phẳng 1024 do Xcode dựng từ đó. Mac giữ bộ ảnh `AppIcon.appiconset` dùng biểu tượng rút gọn ở 16
+  và 32 pt: Xcode 27 bỏ qua bộ ảnh trong asset catalog khi đã có `.icon`, nên Mac chỉ đổi khi Xcode hỗ trợ hoặc chủ dự
+  án đồng ý bỏ biểu tượng rút gọn (`docs/brand-guidelines.vi.md`). Mã: apple #7; công cụ và hướng dẫn: hub #17.
 - iPhone và iPad giữ phiên tối đa `IOS_BACKGROUND_GRACE` (25 giây, hoặc thời gian iOS cho trừ 5 giây) sau khi ứng dụng
   vào nền, thay vì đóng ngay (CONN-02 E3, 00-common-specs): chuyển nhanh sang ứng dụng khác không còn làm mất kết nối.
   Thao tác từ thông báo dùng chung việc giữ phiên này; clip đến trong lúc giữ chỉ được ghi khi người dùng chưa sao chép

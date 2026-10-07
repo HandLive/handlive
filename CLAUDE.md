@@ -82,13 +82,13 @@ project owner in Vietnamese with diacritics.
 5. **Formal G1 matrix** on ≥2 Android phones + 1 Mac (latency, a11y, setting names).
 6. **G2 + production push:** Play forms; deploy/configure relay; APNs `.p8` + FCM. Logo and app icons exist
    (`docs/brand-guidelines.md`, hub branch `feat/ckm-brand-from-start-008ce2`,
-   `feat/brand-identity` in shared/android/apple, 2026-10-01); still
+   `feat/brand-identity` in shared/android/apple, 2026-10-01);
    the Icon Composer `.icon` for Liquid Glass is on iPhone/iPad (apple #7, hub #17, 2026-10-07); the Mac keeps the
    compact-mark icon set until Xcode honours it next to a `.icon` or the owner drops the compact mark.
 7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
 8. **Merge and check the 2026-10-05 team PRs** (android #8 + hub #15 together, shared #6, apple #5, hub #16). First
-   install a debuggable APK rebuilt from `main` after the merge on the S25 (the APK it runs now still shows the package
-   name, and a release APK logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
+   install a debuggable APK rebuilt from `main` after the merge on the S25 (the APK it runs now predates #8, and a release APK
+   logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
    must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
    and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
 9. **Merge the 2026-10-07 PRs** after item 8: apple #6, apple #7 + hub #17, android #9 after #8, shared #7 after #6,

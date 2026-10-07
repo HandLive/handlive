@@ -14,7 +14,7 @@ HandLive brings ecosystem-native features, such as Apple Handoff, to Android. Th
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
 | 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05); text clips carry their HTML (2026-10-05); restricted-setting guidance shown again on return, consent asked once (2026-10-05, android #6) |
-| 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open; iPhone background grace of 25 s (2026-10-05) |
+| 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open; iPhone background grace of 25 s (2026-10-05); Liquid Glass app icon on iPhone and iPad (2026-10-07, apple #7 + hub #17) |
 | 3 | Done (2026-09-28) | Real-device checks open; app calls show the app's name and outlive a swiped in-call notification (2026-10-05, android #8 + hub #15, awaiting merge); the call bench reads app calls (shared #6); e2e covers app calls with a fake calling app (2026-10-07, android #9 + shared #7) |
 | 4 | Spike on `main` (`HFPSpike`, merged 2026-09-30) | G4: need BT phone + live call |
 | 5 | Spike on `main` (`CameraSpike`, merged 2026-09-30) | G5: need paid Apple Developer team |
