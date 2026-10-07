@@ -8,11 +8,16 @@ icons straight into the app repositories of the workspace:
         [--font BeVietnamPro-Bold.ttf] \
         [--android-res android/app/src/main/res] \
         [--apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset] \
+        [--apple-icon apple/iOS/HandLive/Resources/AppIcon.icon] [--icon-preview] \
         [--android-design-res android/core/design/src/main/res] \
         [--apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets]
 
 The last two write the in-app brand mark (welcome screens): an Android vector drawable with a night
 variant, and an Apple image set with light and dark PDFs.
+
+The hub always gets the Icon Composer document docs/brand/assets/app-icon/icon-composer/AppIcon.icon;
+--apple-icon copies it into the app repository, and --icon-preview renders its Liquid Glass preview sheet
+with Icon Composer's ictool (Xcode 26 or later, the one xcode-select points at, or $ICTOOL).
 
 Needs rsvg-convert and ImageMagick (`brew install librsvg imagemagick`); --font needs fontTools and is only
 required when a text string changed (outlines are cached in tools/brand/text-outlines.json).
@@ -26,10 +31,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import brand_compositions as comp  # noqa: E402
+import icon_composer_writer as icon_doc  # noqa: E402
 import platform_icon_writers as plat  # noqa: E402
 import platform_mark_writers as marks  # noqa: E402
 import text_outlines  # noqa: E402
 
+ICON_DOC = os.path.join("app-icon", "icon-composer", "AppIcon.icon")
 HUB = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(HUB, "docs", "brand", "assets")
 
@@ -93,6 +100,7 @@ def build_hub(t):
     background, foreground = comp.app_icon_layers()
     made += [write("app-icon/icon-composer/background.svg", background),
              write("app-icon/icon-composer/foreground.svg", foreground)]
+    made += [os.path.join(ICON_DOC, rel) for rel in icon_doc.write_icon(os.path.join(OUT, ICON_DOC))]
     render(os.path.join(OUT, "app-icon/handlive-app-icon.svg"),
            os.path.join(OUT, "app-icon/handlive-play-store-512.png"), 512, opaque=True)
     en = COPY["en"]
@@ -123,11 +131,49 @@ def build_apple(iconset):
         fh.write(plat.apple_contents())
 
 
+def ictool_path():
+    """Icon Composer's ictool: $ICTOOL, else the one inside the Xcode that xcode-select points at."""
+    if os.environ.get("ICTOOL"):
+        return os.environ["ICTOOL"]
+    developer = subprocess.run(["xcode-select", "-p"], capture_output=True, text=True).stdout.strip()
+    return os.path.join(os.path.dirname(developer), "Applications", "Icon Composer.app", "Contents", "Executables",
+                        "ictool")
+
+
+def icon_preview():
+    """Preview sheet of the Liquid Glass icon: rows iOS, macOS; columns Default, Dark, Tinted light, Tinted dark."""
+    ictool = ictool_path()
+    if not os.path.exists(ictool):
+        raise SystemExit(f"{ictool} not found: --icon-preview needs Xcode 26 or later (xcode-select -s, or set ICTOOL)")
+    src, sheet = os.path.join(OUT, ICON_DOC), os.path.join(OUT, "app-icon", "icon-composer", "AppIcon-preview.png")
+    rows = []
+    for platform in ("iOS", "macOS"):
+        cells = []
+        for rendition in ("Default", "Dark", "TintedLight", "TintedDark"):
+            cell = f"{sheet[:-4]}-{platform}-{rendition}.png"
+            subprocess.run([ictool, src, "--export-image", "--output-file", cell, "--platform", platform,
+                            "--rendition", rendition, "--width", "256", "--height", "256", "--scale", "1"],
+                           check=True, stdout=subprocess.DEVNULL)
+            cells.append(cell)
+        rows.append(cells)
+    args = []
+    for cells in rows:
+        args += ["("] + cells + ["+append", ")"]
+    subprocess.run(["magick", *args, "-append", "-background", "#8e8e93", "-alpha", "remove", "-bordercolor",
+                    "#8e8e93", "-border", "8", "+repage", "-strip", sheet], check=True)
+    for cells in rows:
+        for cell in cells:
+            os.remove(cell)
+    return os.path.relpath(sheet, OUT)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--font", help="Be Vietnam Pro Bold TTF, to (re)outline text")
     ap.add_argument("--android-res", help="Android res/ directory to receive the adaptive icon")
     ap.add_argument("--apple-iconset", help="AppIcon.appiconset directory to (re)write")
+    ap.add_argument("--apple-icon", help="AppIcon.icon directory to (re)write (Icon Composer, Liquid Glass)")
+    ap.add_argument("--icon-preview", action="store_true", help="render the AppIcon.icon preview sheet (ictool)")
     ap.add_argument("--android-design-res", help="Android res/ directory to receive the in-app brand mark drawable")
     ap.add_argument("--apple-imageset", help="Asset catalog (.xcassets) to receive the brand-mark image set")
     args = ap.parse_args()
@@ -143,6 +189,11 @@ def main():
     if args.apple_iconset:
         build_apple(args.apple_iconset)
         print("apple ", args.apple_iconset)
+    if args.icon_preview:
+        print("hub  ", icon_preview())
+    if args.apple_icon:
+        for rel in icon_doc.write_icon(args.apple_icon):
+            print("apple ", os.path.join(args.apple_icon, rel))
     if args.android_design_res:
         for rel in marks.write_android_mark(args.android_design_res):
             print("android", rel)
