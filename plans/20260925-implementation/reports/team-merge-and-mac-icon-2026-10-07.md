@@ -26,6 +26,8 @@ clean (the merge commits carry the owner's GitHub account), no secret files, ben
   `ci-apple` and the `sign` job of `release-apple` now run on `macos-26` (Xcode 26.6): run 37579854640 green on all
   five jobs. The release `launch` check stays on `macos-15` so the app is still started on a macOS older than 26
   (review finding). Building the Mac app locally needs macOS 26 + Xcode 26 (apple README/CLAUDE, deployment guide).
+- Merged: apple #8 → `main` `ad8e672`, ci-apple green on all five jobs (37581114250); hub #19 → `e4b389c`, ci-docs
+  green (37581121132).
 - hub #19: the brand generator drops the icon-set path and writes the shared `.icon`; Mac previews at 16/32/128/512 pt;
   `brand-guidelines` 1.2 (en, vi) and `deployment-guide` updated.
 
