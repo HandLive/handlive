@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.2`; G1/G2/G4/G5/G6 open
+## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.3`; G1/G2/G4/G5/G6 open
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
-Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`** and **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) on hub/android/apple/shared/relay
+Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) and **`v0.1.0-beta.3`** (2026-10-07) on hub/android/apple/shared/relay
 (not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
 required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
 on a real relay / APNs / FCM, and spike gates **G4** (BT phone + live call), **G5** (paid Apple Developer team),
@@ -47,7 +47,7 @@ project owner in Vietnamese with diacritics.
 | G6 spike (Android) | HOME leave ends page on Android 16 (`inactive reason=left`); probe on `main` | android `tools/web-spike` |
 | Phase 4–6 spikes | Merged onto `main` (2026-09-30): HFPSpike, CameraSpike, WebSpike (Apple), web-spike (Android) | apple `214b4f4` |
 | Hub docs | Live README roadmap + mandatory update rule; bilingual snapshot in `docs/project-roadmap*.md` | hub `650240e` |
-| Beta | Coordinated tags/releases **`v0.1.0-beta.1`** and **`v0.1.0-beta.2`** on all five repos (prerelease, not store); beta.2 has the signed APK, the iOS IPA and the ad-hoc Mac DMG, all gathered on the hub's Release (`release-collect`); the website's Get the Beta opens it | beta.2: hub `9eb0766`, android `45d067b`, apple `c40d918` |
+| Beta | Coordinated tags/releases **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** and **`v0.1.0-beta.3`** on all five repos (prerelease, not store); each since beta.2 has the signed APK, the iOS IPA and the ad-hoc Mac DMG, all gathered on the hub's Release (`release-collect`); the website's Get the Beta opens the latest. beta.3 (2026-10-07): security scan of everything since beta.2 found a quadratic clipboard HTML sanitizer, fixed on all three implementations before the tag; files verified (checksums, APK cert `bddc9efc…a0f9`, versions 0.1.0-beta.3 / build 3, Mac universal ad hoc); `release-apple` `sign` ran on `macos-26`, `launch` on `macos-15`, both green (`reports/release-beta3-2026-10-07.md`) | beta.2: hub `9eb0766`, android `45d067b`, apple `c40d918`; beta.3: hub `8ac6d0e`, shared `dffa1a2`, relay `cda13bf`, android `1a02f42`, apple `e4e05c3` |
 | CI hygiene | shared: sort `settings.check_again`; android: skip `tools/` in `UiTextSourceGuardTest` | shared `b330d4b`; android `4c6db55` |
 | Security | 2026-09-28 scan fixes merged; 2026-10-04 scan of everything since beta.1: PASS, 6 of 8 findings fixed (`reports/security-scan-beta2-2026-10-04.md`) | relay `cda13bf`; beta.2 tips |
 | Clipboard HTML (2026-10-05, 04:00) | Owner decision: a text clip keeps its HTML (`html` on `clipboard/push`, capability `text/html`, shared sanitizer vectors `clipboard-html.json`); shared, android, apple and the spec changed in parallel; review found a hole in the reference sanitizer (a failed tag start copied as text) → fixed in contract, reference and both ports; e2e with the final APK 48 PASS / 0 FAIL; owner's Mac and S25 reinstalled 04:51–04:56 without re-pairing (`plans/20261005-clipboard-html/plan.md`, reports under it) | shared PR #4 (merged), android PR #5, apple PR #3, hub `feat/clipboard-html` |
@@ -58,7 +58,7 @@ project owner in Vietnamese with diacritics.
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
-**Workspace tips to treat as current `main`** (after the 2026-10-07 merges and the Mac icon): android `a93b81b`, shared `1fb2b06`, relay `cda13bf`, apple `ad8e672`, hub `e4b389c` plus the docs PR that records them. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
+**Workspace tips to treat as current `main`** (tag `v0.1.0-beta.3`, 2026-10-07): hub `8ac6d0e`, shared `dffa1a2`, relay `cda13bf`, android `1a02f42`, apple `e4e05c3`, plus later docs PRs on the hub. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
 
 ### In progress / blocked (owner or gate)
 
@@ -92,15 +92,17 @@ project owner in Vietnamese with diacritics.
    logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
    must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
    and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
-9. **Next tag:** `release-apple` now signs on `macos-26` (its launch check stays on `macos-15`); watch both jobs on
-   the first tag after 2026-10-07 (the change could not run without a tag).
+9. **Next release:** follow `docs/deployment-guide.md` (Cutting a release) and the beta.3 report: security scan of
+   everything since the last tag first, then versions, changelogs, website link and badge, tags (hub and shared first).
 10. **Open follow-ups** (no gate): `ManualClock` review debt, apple #5 being merged (`waitForSleepers` ignores
    cancellation; test helpers' `clock:`/`timer:` swapped); keep `-parallel-testing-enabled NO` (parallel saves ~0 s);
    measure the app-call label on Android 11–14 to know whether the launcher query matters there. The e2e `setup` check of
    the foreground-service type asks once right after launch and failed once on API 29 on the slow host (rerun green). Won't do: a separate
    `reason` for app calls resent after a setting change (the bench already times one send per change). Deferred to a
    VPS: the two-instance relay load test. Owner decision, not blocking: whether an app call ended `unknown` keeps
-   `answered_at` (today `null`, like E10).
+   `answered_at` (today `null`, like E10). From the beta.3 scan: android#13 (restrict the URI schemes and providers
+   the clipboard read opens; details kept private until fixed), and a cap on the raw HTML before sanitizing on the
+   local read paths (spec change, CLIP-01).
 
 ### Archive
 
