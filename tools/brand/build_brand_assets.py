@@ -15,8 +15,9 @@ The last two write the in-app brand mark (welcome screens): an Android vector dr
 variant, and an Apple image set with light and dark PDFs.
 
 The hub always gets the Icon Composer document docs/brand/assets/app-icon/icon-composer/AppIcon.icon;
---apple-icon copies it into the app repository (one document for the Mac and iOS apps), and --icon-preview renders its Liquid Glass preview sheet
-with Icon Composer's ictool (Xcode 26 or later, the one xcode-select points at, or $ICTOOL).
+--apple-icon copies it into the app repository (one document for the Mac and iOS apps), and --icon-preview
+renders its Liquid Glass preview sheets with Icon Composer's ictool (Xcode 26 or later, the one xcode-select
+points at, or $ICTOOL).
 
 Needs rsvg-convert and ImageMagick (`brew install librsvg imagemagick`); --font needs fontTools and is only
 required when a text string changed (outlines are cached in tools/brand/text-outlines.json).
@@ -166,8 +167,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--font", help="Be Vietnam Pro Bold TTF, to (re)outline text")
     ap.add_argument("--android-res", help="Android res/ directory to receive the adaptive icon")
-    ap.add_argument("--apple-icon", help="AppIcon.icon directory to (re)write (Icon Composer, Liquid Glass; Mac and iOS app icon)")
-    ap.add_argument("--icon-preview", action="store_true", help="render the AppIcon.icon preview sheet (ictool)")
+    ap.add_argument("--apple-icon",
+                    help="AppIcon.icon directory to (re)write (Icon Composer, Liquid Glass; Mac and iOS app icon)")
+    ap.add_argument("--icon-preview", action="store_true", help="render the AppIcon.icon preview sheets (ictool)")
     ap.add_argument("--android-design-res", help="Android res/ directory to receive the in-app brand mark drawable")
     ap.add_argument("--apple-imageset", help="Asset catalog (.xcassets) to receive the brand-mark image set")
     args = ap.parse_args()
