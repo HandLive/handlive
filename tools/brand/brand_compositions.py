@@ -11,7 +11,7 @@ INK_SOFT = "#6b5562"        # secondary promo text on the dawn background
 GROUND = 1024               # the mountain bleeds off the bottom of the 1024 icon grid
 
 
-def _doc(w, h, defs, body, vb=None):
+def svg_doc(w, h, defs, body, vb=None):
     vb = vb or f"0 0 {fmt(w)} {fmt(h)}"
     return SVG_OPEN.format(vb=vb, w=fmt(w), h=fmt(h)) + f"<defs>{defs}</defs>{body}</svg>\n"
 
@@ -33,12 +33,12 @@ def _mark_group(x, y, height, dark=False, compact=False, uid="m"):
 def mark(dark=False, compact=False):
     x, y, w, h = MARK_BOX
     defs, body = mark_layers(MARK_BASE_Y, MARK_BASE_ROUND, outer_waves=not compact, dark=dark)
-    return _doc(w, h, defs, body, vb=f"{x} {y} {w} {h}")
+    return svg_doc(w, h, defs, body, vb=f"{x} {y} {w} {h}")
 
 
 def mark_mono(color):
     x, y, w, h = MARK_BOX
-    return _doc(w, h, "", mono_layers(MARK_BASE_Y, MARK_BASE_ROUND, color=color), vb=f"{x} {y} {w} {h}")
+    return svg_doc(w, h, "", mono_layers(MARK_BASE_Y, MARK_BASE_ROUND, color=color), vb=f"{x} {y} {w} {h}")
 
 
 def wordmark(word, dark=False, size=200):
@@ -47,7 +47,7 @@ def wordmark(word, dark=False, size=200):
     h = (word["ascender"] - word["descender"]) * size / 1000
     w = word["width"] * size / 1000
     body = _text(word, pad, pad + word["ascender"] * size / 1000, size, color)
-    return _doc(w + 2 * pad, h + 2 * pad, "", body)
+    return svg_doc(w + 2 * pad, h + 2 * pad, "", body)
 
 
 def lockup_horizontal(word, dark=False, size=200):
@@ -61,7 +61,7 @@ def lockup_horizontal(word, dark=False, size=200):
     body = g + _text(word, tx, baseline, size, color)
     w = tx + word["width"] * size / 1000 + pad
     h = max(pad + mark_h, baseline - word["descender"] * size / 1000 * 0.2) + pad
-    return _doc(w, h, defs, body)
+    return svg_doc(w, h, defs, body)
 
 
 def lockup_stacked(word, dark=False, size=200):
@@ -73,19 +73,19 @@ def lockup_stacked(word, dark=False, size=200):
     defs, g, mw = _mark_group((w - text_w * 0.62) / 2, pad, mark_h, dark=dark, uid="ls")
     baseline = pad + mark_h + size * 0.22 + word["cap"] * size / 1000
     h = baseline + size * 0.08 + pad
-    return _doc(w, h, defs, g + _text(word, pad, baseline, size, color))
+    return svg_doc(w, h, defs, g + _text(word, pad, baseline, size, color))
 
 
 def app_icon(appearance="default", ground=GROUND):
     """Full-bleed 1024 square icon (iOS, Android source, store listings). appearance: default|dark|tinted."""
     if appearance == "tinted":
         defs, bg = gradient_bg("bg", "#1c1c1e", "#000000")
-        return _doc(1024, 1024, defs, bg + f'<path d="{mountain(ground)}" fill="#636366"/>' + _tinted_fire())
+        return svg_doc(1024, 1024, defs, bg + f'<path d="{mountain(ground)}" fill="#636366"/>' + _tinted_fire())
     dark = appearance == "dark"
     top, bottom = (DARK["night-top"], DARK["night-bottom"]) if dark else (PALETTE["dawn-top"], PALETTE["dawn-bottom"])
     d1, bg = gradient_bg("bg", top, bottom)
     d2, body = mark_layers(ground, dark=dark, uid="ic")
-    return _doc(1024, 1024, d1 + d2, bg + body)
+    return svg_doc(1024, 1024, d1 + d2, bg + body)
 
 
 def _tinted_fire():
@@ -103,7 +103,7 @@ def app_icon_layers():
     """Icon Composer inputs: square, unmasked background and foreground layers."""
     d1, bg = gradient_bg("bg", PALETTE["dawn-top"], PALETTE["dawn-bottom"])
     d2, body = mark_layers(GROUND, uid="fg")
-    return _doc(1024, 1024, d1, bg), _doc(1024, 1024, d2, body)
+    return svg_doc(1024, 1024, d1, bg), svg_doc(1024, 1024, d2, body)
 
 
 def app_icon_macos(compact=False):
@@ -117,7 +117,7 @@ def app_icon_macos(compact=False):
     tile = (f'<rect x="100" y="100" width="824" height="824" rx="185.4" fill="{PALETTE["dawn-bottom"]}" '
             f'filter="url(#shadow)"/><g clip-path="url(#tile)"><g transform="translate(100 100) scale({s})">'
             f'{bg}{body}</g></g>')
-    return _doc(1024, 1024, defs, tile)
+    return svg_doc(1024, 1024, defs, tile)
 
 
 def promo(w, h, word, title, lines, badge=None):
@@ -147,4 +147,4 @@ def promo(w, h, word, title, lines, badge=None):
     for line in lines:
         body += _text(line, left, y, h * 0.04, INK_SOFT)
         y += h * 0.058
-    return _doc(w, h, d1 + d2 + d3, body)
+    return svg_doc(w, h, d1 + d2 + d3, body)

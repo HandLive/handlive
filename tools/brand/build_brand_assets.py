@@ -17,7 +17,7 @@ variant, and an Apple image set with light and dark PDFs.
 
 The hub always gets the Icon Composer document docs/brand/assets/app-icon/icon-composer/AppIcon.icon;
 --apple-icon copies it into the app repository, and --icon-preview renders its Liquid Glass preview sheet
-with Icon Composer's ictool (needs Xcode 26 or later).
+with Icon Composer's ictool (Xcode 26 or later, the one xcode-select points at, or $ICTOOL).
 
 Needs rsvg-convert and ImageMagick (`brew install librsvg imagemagick`); --font needs fontTools and is only
 required when a text string changed (outlines are cached in tools/brand/text-outlines.json).
@@ -36,7 +36,6 @@ import platform_icon_writers as plat  # noqa: E402
 import platform_mark_writers as marks  # noqa: E402
 import text_outlines  # noqa: E402
 
-ICTOOL = "/Applications/Xcode.app/Contents/Applications/Icon Composer.app/Contents/Executables/ictool"
 ICON_DOC = os.path.join("app-icon", "icon-composer", "AppIcon.icon")
 HUB = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(HUB, "docs", "brand", "assets")
@@ -132,17 +131,27 @@ def build_apple(iconset):
         fh.write(plat.apple_contents())
 
 
+def ictool_path():
+    """Icon Composer's ictool: $ICTOOL, else the one inside the Xcode that xcode-select points at."""
+    if os.environ.get("ICTOOL"):
+        return os.environ["ICTOOL"]
+    developer = subprocess.run(["xcode-select", "-p"], capture_output=True, text=True).stdout.strip()
+    return os.path.join(os.path.dirname(developer), "Applications", "Icon Composer.app", "Contents", "Executables",
+                        "ictool")
+
+
 def icon_preview():
     """Preview sheet of the Liquid Glass icon: rows iOS, macOS; columns Default, Dark, Tinted light, Tinted dark."""
-    if not os.path.exists(ICTOOL):
-        raise SystemExit(f"{ICTOOL} not found: --icon-preview needs Xcode 26 or later")
+    ictool = ictool_path()
+    if not os.path.exists(ictool):
+        raise SystemExit(f"{ictool} not found: --icon-preview needs Xcode 26 or later (xcode-select -s, or set ICTOOL)")
     src, sheet = os.path.join(OUT, ICON_DOC), os.path.join(OUT, "app-icon", "icon-composer", "AppIcon-preview.png")
     rows = []
     for platform in ("iOS", "macOS"):
         cells = []
         for rendition in ("Default", "Dark", "TintedLight", "TintedDark"):
             cell = f"{sheet[:-4]}-{platform}-{rendition}.png"
-            subprocess.run([ICTOOL, src, "--export-image", "--output-file", cell, "--platform", platform,
+            subprocess.run([ictool, src, "--export-image", "--output-file", cell, "--platform", platform,
                             "--rendition", rendition, "--width", "256", "--height", "256", "--scale", "1"],
                            check=True, stdout=subprocess.DEVNULL)
             cells.append(cell)

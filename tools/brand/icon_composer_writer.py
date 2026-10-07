@@ -12,7 +12,7 @@ for its on-dark colors; Tinted and Clear are derived by the system from the same
 import json
 import os
 
-from brand_compositions import GROUND, _doc
+from brand_compositions import GROUND, svg_doc
 from brand_geometry import (DARK, PALETTE, WAVE_RADII, WAVE_STROKE, flame_paths, lit_face, mountain,
                             wave_paths)
 
@@ -25,7 +25,7 @@ def _srgb(hex_rgb):
 def _mountain(ember, lit):
     peak = mountain(GROUND)
     defs = f'<clipPath id="lit"><path d="{peak}"/></clipPath>'
-    return _doc(1024, 1024, defs, f'<path d="{peak}" fill="{ember}"/>'
+    return svg_doc(1024, 1024, defs, f'<path d="{peak}" fill="{ember}"/>'
                 f'<path clip-path="url(#lit)" d="{lit_face(GROUND)}" fill="{lit}"/>')
 
 
@@ -35,7 +35,7 @@ def _flame():
             f'<stop offset="0" stop-color="{PALETTE["brand-fire"]}"/>'
             f'<stop offset=".55" stop-color="{PALETTE["brand-flame"]}"/>'
             f'<stop offset="1" stop-color="{PALETTE["flame-tip"]}"/></linearGradient>')
-    return _doc(1024, 1024, defs, f'<path d="{outer}" fill="url(#flame)"/>'
+    return svg_doc(1024, 1024, defs, f'<path d="{outer}" fill="url(#flame)"/>'
                 f'<path d="{core}" fill="{PALETTE["flame-core"]}"/>')
 
 
@@ -45,7 +45,7 @@ def _rings():
         for d in wave_paths(radius):
             body += (f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{WAVE_STROKE}" '
                      f'stroke-linecap="round"/>')
-    return _doc(1024, 1024, "", body)
+    return svg_doc(1024, 1024, "", body)
 
 
 ASSETS = {
@@ -60,6 +60,7 @@ def icon_json():
     def group(name, layer, glass, shadow, translucency):
         return {"name": name, "layers": [{"name": name.lower(), "glass": glass, **layer}],
                 "shadow": {"kind": shadow, "opacity": 0.5},
+                # translucency 0 turns it off; Icon Composer still saves a value then, and 0.5 is its default.
                 "translucency": {"enabled": translucency > 0, "value": translucency or 0.5}}
 
     doc = {
