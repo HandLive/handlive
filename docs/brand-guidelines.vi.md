@@ -2,7 +2,7 @@
 
 # Hướng dẫn thương hiệu HandLive
 
-Phiên bản 1.1, 2026-10-07. Nguồn chuẩn cho câu chuyện, giọng văn, thông điệp, logo, biểu tượng app, màu
+Phiên bản 1.2, 2026-10-07. Nguồn chuẩn cho câu chuyện, giọng văn, thông điệp, logo, biểu tượng app, màu
 sắc và ảnh quảng bá của HandLive. Thương hiệu xuất hiện thế nào bên trong app (màu thương hiệu được đặt ở
 đâu, màn chào, chữ HandLive trên giao diện) nằm trong design system: [Thương hiệu](design-system/1-foundations/11-thuong-hieu.vi.md).
 
@@ -173,25 +173,22 @@ nét: file không cần font.
 
 | Nền tảng | Phát hành | Ở đâu |
 |---|---|---|
-| iOS, iPadOS | Tài liệu Icon Composer (Liquid Glass): lớp sóng, lửa và núi trên nền bình minh (diện mạo Tối dùng nền đêm và núi trên nền tối); Xcode dựng biểu tượng cho iOS 16–18 từ đó | `apple/iOS/HandLive/Resources/AppIcon.icon` |
-| macOS | Lưới ô của macOS (hình vuông bo góc 824 px trên nền 1024, bóng mềm); 16–512 pt ở 1× và 2×; cỡ 16 và 32 pt dùng biểu tượng rút gọn; chưa có Liquid Glass (xem bên dưới) | `apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset`, các mục `mac` |
+| macOS, iOS, iPadOS | Một tài liệu Icon Composer (Liquid Glass) cho cả hai app: lớp sóng, lửa và núi trên nền bình minh (diện mạo Tối dùng nền đêm và núi trên nền tối); Xcode dựng biểu tượng cho macOS 13–15 và iOS 16–18 từ đó | `apple/macOS/HandLive/Resources/AppIcon.icon` (cả hai target) |
 | Android | Biểu tượng thích ứng: lớp nền bình minh, lớp trước, lớp đơn sắc cho biểu tượng theo chủ đề (Android 13+) | `android/app/src/main/res/` (`mipmap-anydpi`, `drawable`) |
 | App Store, Play Store | 1024 px (App Store, lấy từ biểu tượng iOS), 512 px không alpha (Play) | `docs/brand/assets/app-icon/` |
-| Icon Composer (Liquid Glass) | `AppIcon.icon` (cùng tài liệu với iOS, có cả macOS) và ảnh xem trước; lớp nền và lớp trước hình vuông, chưa cắt khung cho công cụ khác | `docs/brand/assets/app-icon/icon-composer/` |
+| Icon Composer (Liquid Glass) | `AppIcon.icon` (cùng tài liệu với các app) và các ảnh xem trước; lớp nền và lớp trước hình vuông, chưa cắt khung cho công cụ khác | `docs/brand/assets/app-icon/icon-composer/` |
 
 - Không chữ, không SF Symbols, không phần cứng Apple trong biểu tượng; trên iOS không tự thêm vệt sáng
   hay bóng: hệ thống tự thêm.
 - Biểu tượng Tối giữ nguyên ngọn lửa trên nền tím đêm; biểu tượng Phủ màu là ảnh xám để hệ thống phủ màu.
-- Ba ảnh iOS phẳng 1024 (Mặc định, Tối, Phủ màu) vẫn nằm trong `AppIcon.appiconset`, chỉ để dự phòng nếu sau
-  này bỏ `AppIcon.icon` và làm nguồn cho tài liệu quảng bá. Khi target iOS có `AppIcon.icon`, các ảnh này không
-  vào app: biểu tượng trên App Store là bản Xcode dựng từ `.icon`.
-- **Vì sao Mac chưa có Liquid Glass.** Khi có `AppIcon.icon` cạnh `AppIcon.appiconset`, `actool` của Xcode 27 bỏ
-  qua bộ ảnh với mọi phiên bản macOS và tự dựng các cỡ 16–512 pt từ `.icon`, nên mất biểu tượng rút gọn ở 16 và
-  32 pt (kiểm bằng `assetutil --info`: `Assets.car` chứa rendition `AppIcon16x16_…` thay cho `icon-mac-16.png`, và
-  file `.icns` giống từng byte bản chỉ dịch `.icon`; cờ `--enable-icon-stack-fallback-generation disabled` không
-  đổi gì). Vì vậy target Mac giữ bộ ảnh, cho đến khi một bản Xcode sau tôn trọng cờ fallback hoặc chủ dự án chấp
-  nhận bỏ biểu tượng rút gọn. Khi đó chỉ cần thêm `AppIcon.icon` vào target Mac; tệp `AppIcon.icon` đã khai báo
-  sẵn macOS.
+- **Biểu tượng app Mac không còn biểu tượng rút gọn** (quyết định của chủ dự án, 2026-10-07). `actool` của Xcode 27
+  dựng mọi biểu tượng cho hệ điều hành cũ từ `.icon` và không giữ được các cỡ nhỏ vẽ tay bên cạnh, nên macOS 13–15
+  cũng hiện biểu tượng được dựng ở 16 và 32 pt, đủ hai cặp sóng. Biểu tượng rút gọn vẫn dùng ở các chỗ nhỏ khác
+  (favicon của trang web, mọi hình từ 16 đến 32 px): xem Khoảng trống và kích thước tối thiểu.
+- App Mac cũng kèm đủ mọi cỡ trong `AppIcon.icns` (16–512 pt ở 1× và 2×,
+  `ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR: all`); asset catalog chỉ chứa rendition 2×.
+- `handlive-app-icon.png` (cùng bản Tối, Phủ màu, ô macOS) trong `docs/brand/assets/app-icon/` là hình phẳng cho tài
+  liệu và quảng bá; không app nào kèm chúng.
 
 ## 7. Màu sắc
 
@@ -298,8 +295,7 @@ phụ màu tím nhạt hơn (#6b5562); biểu tượng cỡ lớn tràn ra góc 
 ```bash
 python3 tools/brand/build_brand_assets.py \
   --android-res android/app/src/main/res \
-  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset \
-  --apple-icon apple/iOS/HandLive/Resources/AppIcon.icon --icon-preview \
+  --apple-icon apple/macOS/HandLive/Resources/AppIcon.icon --icon-preview \
   --android-design-res android/core/design/src/main/res \
   --apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets
 ```
@@ -314,7 +310,8 @@ python3 tools/brand/build_brand_assets.py \
   `Assets/`. Apple không công bố schema cho `icon.json`; bộ sinh ghi đúng các khóa Icon Composer lưu ra, và
   `actool`, `ictool` của Xcode 27 nhận chúng. Chỉnh kính, bóng, độ trong trong bộ sinh, không chỉnh trong Icon
   Composer, kẻo lần dựng sau ghi đè. `--icon-preview` dựng `icon-composer/AppIcon-preview.png` (hàng iOS, macOS;
-  cột Mặc định, Tối, Phủ màu sáng, Phủ màu tối) bằng `ictool` nằm trong Icon Composer của Xcode, nên cần Xcode 26
+  cột Mặc định, Tối, Phủ màu sáng, Phủ màu tối) và `icon-composer/AppIcon-preview-mac-sizes.png` (biểu tượng Mac ở
+  16, 32, 128 và 512 pt, đúng cỡ thật, mỗi diện mạo một hàng) bằng `ictool` nằm trong Icon Composer của Xcode, nên cần Xcode 26
   trở lên: bản Xcode mà `xcode-select -p` trỏ tới, hoặc đường dẫn trong biến môi trường `ICTOOL`. Chạy lại không
   tạo diff.
 
@@ -322,5 +319,6 @@ python3 tools/brand/build_brand_assets.py \
 
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
+| 1.2 | 2026-10-07 | Biểu tượng app Mac dùng chung `AppIcon.icon` Liquid Glass với iOS; biểu tượng app Mac không còn biểu tượng rút gọn ở 16 và 32 pt (quyết định của chủ dự án); bỏ `AppIcon.appiconset` |
 | 1.1 | 2026-10-07 | Biểu tượng app Liquid Glass cho iOS và iPadOS (`AppIcon.icon` từ bộ sinh); Mac giữ bộ ảnh có biểu tượng rút gọn |
 | 1.0 | 2026-10-01 | Bản hướng dẫn đầu tiên: ngọn lửa hiệu lúc bình minh (logo, biểu tượng app, giọng văn, thông điệp, quảng bá); giá trị bình minh cho các token `brand-*` |
