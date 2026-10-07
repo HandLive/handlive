@@ -11,9 +11,9 @@ branches, the old OS keeps the compact-mark icon, an app call ended `unknown` ke
 | Item | What changed | PR | Review |
 |------|--------------|----|--------|
 | Apple clipboard tests | Test-only. The harness reads the engine's in-flight push (`sending`, via `@testable`) and `pushSettled()` waits until it settles (ack handled, suspended, told, or ended without an ack; 2 s cap). 11 `Task.sleep` removed from `ClipboardIOSTests` and `ClipboardSendTests`. CI stays serial. | apple #6 | BA, Tester, Pentester approve; 2 low fixed (helper name, whole-suite evidence) |
-| App-call e2e | `android/tools/fake-call-app`: a debug-only Gradle project (not in `settings.gradle.kts`, the product APK or CI) that posts a `CallStyle` ringing call, an in-call notification and an upload with Cancel. `shared/tools/e2e` scenario `app_calls` with the fake Mac: label is the launcher label, decline reaches the app, a swiped in-call notification keeps the call `ongoing` with End hidden, the upload never re-attaches the call nor gets its Cancel sent, the app's hang-up ends it `ended`, leaving communication mode ends a detached call `unknown`. Bench self-test: two Macs, a resent tap-to-answer. | android #9 (base #8), shared #7 (base #6) | BA, Tester, Pentester approve; 1 low (stale logcat on API 29) sent back |
+| App-call e2e | `android/tools/fake-call-app`: a debug-only Gradle project (not in `settings.gradle.kts`, the product APK or CI) that posts a `CallStyle` ringing call, an in-call notification and an upload with Cancel. `shared/tools/e2e` scenario `app_calls` with the fake Mac: label is the launcher label, decline reaches the app, a swiped in-call notification keeps the call `ongoing` with End hidden, the upload never re-attaches the call nor gets its Cancel sent, the app's hang-up ends it `ended`, leaving communication mode ends a detached call `unknown`. Bench self-test: two Macs, a resent tap-to-answer. | android #9 (base #8), shared #7 (base #6) | BA, Tester, Pentester approve; 1 low fixed (shared `3d76b3d`: API 29 could not clear logcat and a previous run's `decline_received` could pass the check; reads now start at the device time taken before each action, a failed clear is reported, a self-test plants a stale line) |
 | Liquid Glass icon | `tools/brand/icon_composer_writer.py` writes `AppIcon.icon` (`icon.json` + 4 SVG layers, light/dark/tinted) from the brand geometry; `build_brand_assets.py --apple-icon --icon-preview`. iPhone/iPad use it (iOS 26+; iOS 16–18 get the flat 1024 Xcode derives). The Mac keeps `AppIcon.appiconset` with the compact mark at 16/32 pt. | apple #7, hub #17 | BA, Tester, Pentester approve; 6 low fixed |
-| `<queries>` wording | Spec CALL-05 `app.label`, `PackageAppLabels` KDoc, the manifest comment and the 2026-10-05 changelog/report now say what was measured. | hub #15, android #8, hub #16 | BA checked the wording |
+| `<queries>` wording | Spec CALL-05 `app.label`, `PackageAppLabels` KDoc, the manifest comment and the 2026-10-05 changelog/report now say what was measured. | hub #15 `81a2120`, android #8 `57448f5`, hub #16 | BA checked the wording |
 
 ### Measurements
 
@@ -29,7 +29,8 @@ The three call tests still fail on this branch (34 / 34 / 50) because their fix 
 rerun of the two clipboard suites ×50 in parallel: 1050/1050.
 
 e2e (emulator, Phong's runs, logs in shared #7): API 35 19/19 PASS; API 29 12 PASS + 1 SKIP (swiping an ongoing
-notification exists from API 34).
+notification exists from API 34), twice in a row with the first run's lines still in the buffer. CI green on the new
+heads: android #8 `37575708544`, hub #15 `37575609969`, shared #7 `37576461925`.
 
 ## Findings worth keeping
 
@@ -52,6 +53,8 @@ notification exists from API 34).
   change.
 - Deferred to a VPS: the two-instance relay load test (routing between instances already has a functional test).
 - After apple #5 merges: `ManualClock` review debt (cancellation-aware `waitForSleepers`, helper names).
+- e2e `setup` on API 29 failed once on the foreground-service type check ("type none"): it asks once, right after the
+  app opens, and the slow host had not started the service yet; a rerun passed. Pre-existing, outside this round.
 
 ## Unresolved questions
 

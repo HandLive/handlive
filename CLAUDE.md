@@ -95,7 +95,8 @@ project owner in Vietnamese with diacritics.
    then the hub docs PRs (#16, then the round's). The e2e scenario `app_calls` needs the APK of #8 + #9.
 10. **Open follow-ups** (no gate): `ManualClock` review debt once apple #5 is merged (`waitForSleepers` ignores
    cancellation; test helpers' `clock:`/`timer:` swapped); keep `-parallel-testing-enabled NO` (parallel saves ~0 s);
-   measure the app-call label on Android 11–14 to know whether the launcher query matters there. Won't do: a separate
+   measure the app-call label on Android 11–14 to know whether the launcher query matters there. The e2e `setup` check of
+   the foreground-service type asks once right after launch and failed once on API 29 on the slow host (rerun green). Won't do: a separate
    `reason` for app calls resent after a setting change (the bench already times one send per change). Deferred to a
    VPS: the two-instance relay load test. Owner decisions, not blocking: the Mac on Liquid Glass (drops the compact
    mark at 16/32 pt); whether an app call ended `unknown` keeps `answered_at` (today `null`, like E10).
