@@ -175,7 +175,7 @@ nét: file không cần font.
 |---|---|---|
 | macOS, iOS, iPadOS | Một tài liệu Icon Composer (Liquid Glass) cho cả hai app: lớp sóng, lửa và núi trên nền bình minh (diện mạo Tối dùng nền đêm và núi trên nền tối); Xcode dựng biểu tượng cho macOS 13–15 và iOS 16–18 từ đó | `apple/macOS/HandLive/Resources/AppIcon.icon` (cả hai target) |
 | Android | Biểu tượng thích ứng: lớp nền bình minh, lớp trước, lớp đơn sắc cho biểu tượng theo chủ đề (Android 13+) | `android/app/src/main/res/` (`mipmap-anydpi`, `drawable`) |
-| App Store, Play Store | 1024 px (App Store, lấy từ biểu tượng iOS), 512 px không alpha (Play) | `docs/brand/assets/app-icon/` |
+| App Store, Play Store | App Store: biểu tượng Xcode dựng từ `AppIcon.icon`, không cần tải lên; Play: 512 px, không alpha | `handlive-play-store-512.png` trong `docs/brand/assets/app-icon/` |
 | Icon Composer (Liquid Glass) | `AppIcon.icon` (cùng tài liệu với các app) và các ảnh xem trước; lớp nền và lớp trước hình vuông, chưa cắt khung cho công cụ khác | `docs/brand/assets/app-icon/icon-composer/` |
 
 - Không chữ, không SF Symbols, không phần cứng Apple trong biểu tượng; trên iOS không tự thêm vệt sáng

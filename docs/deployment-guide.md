@@ -98,8 +98,9 @@ English | [Tiếng Việt](deployment-guide.vi.md)
   the user-assigned device name entitlement (`com.apple.developer.device-information.user-assigned-device-name`);
   request it before the release (PAIR-01 field 3).
 - **App icon:** the Liquid Glass `AppIcon.icon` (macOS and iOS) and the Android adaptive icon are in the app
-  repositories, generated from `docs/brand-guidelines.md` by `tools/brand/build_brand_assets.py`; store listings
-  use the 1024 px and 512 px files in `docs/brand/assets/app-icon/`.
+  repositories, generated from `docs/brand-guidelines.md` by `tools/brand/build_brand_assets.py`. The App Store
+  icon is the one Xcode renders from `AppIcon.icon` in the uploaded build; only Google Play takes an uploaded file,
+  `docs/brand/assets/app-icon/handlive-play-store-512.png`.
 
 ## Cloud relay (Rust)
 

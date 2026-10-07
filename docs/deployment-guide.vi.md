@@ -39,7 +39,7 @@ Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 tr�
 - **Khóa APNs.** Tạo một khóa `.p8` trong tài khoản Apple Developer, mục Keys, dịch vụ Apple Push Notifications. Khóa chỉ nằm trên máy chủ relay (`RELAY_APNS_KEY_PATH`, `RELAY_APNS_KEY_ID`, `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`). Bản build phát triển đăng ký token sandbox.
 - **App Review.** Trả lời App Privacy theo `docs/privacy.md`. Ghi chú cho người duyệt rằng app chạy cùng điện thoại Android của chính người dùng có cài HandLive. Kèm video ghép nối và nhận SMS.
 - **Tên thiết bị.** Từ iOS 16, điện thoại chỉ thấy tên "iPhone" hoặc "iPad", trừ khi Apple cấp entitlement tên thiết bị do người dùng đặt (`com.apple.developer.device-information.user-assigned-device-name`). Xin entitlement này trước khi phát hành (PAIR-01 trường 3).
-- **Biểu tượng app.** Tệp Liquid Glass `AppIcon.icon` (macOS và iOS) và biểu tượng thích ứng Android đã có trong kho app, sinh từ `docs/brand-guidelines.md` bằng `tools/brand/build_brand_assets.py`; trang store dùng file 1024 px và 512 px trong `docs/brand/assets/app-icon/`.
+- **Biểu tượng app.** Tệp Liquid Glass `AppIcon.icon` (macOS và iOS) và biểu tượng thích ứng Android đã có trong kho app, sinh từ `docs/brand-guidelines.md` bằng `tools/brand/build_brand_assets.py`. Biểu tượng trên App Store là bản Xcode dựng từ `AppIcon.icon` trong bản build tải lên; chỉ Google Play cần tải lên một file, `docs/brand/assets/app-icon/handlive-play-store-512.png`.
 
 ## Cloud relay (Rust)
 

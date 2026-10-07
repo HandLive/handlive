@@ -176,7 +176,7 @@ outlines: the files don't need the font.
 |---|---|---|
 | macOS, iOS, iPadOS | One Icon Composer document (Liquid Glass) for both apps: rings, fire, and mountain layers over a dawn fill (night fill and on-dark mountain in Dark); Xcode renders the macOS 13–15 and iOS 16–18 icons from it | `apple/macOS/HandLive/Resources/AppIcon.icon` (both targets) |
 | Android | Adaptive icon: dawn background layer, foreground layer, monochrome layer for themed icons (Android 13+) | `android/app/src/main/res/` (`mipmap-anydpi`, `drawable`) |
-| App Store, Play Store | 1024 px (App Store, from the iOS icon), 512 px no alpha (Play) | `docs/brand/assets/app-icon/` |
+| App Store, Play Store | App Store: the icon Xcode renders from `AppIcon.icon`, nothing to upload; Play: 512 px, no alpha | `handlive-play-store-512.png` in `docs/brand/assets/app-icon/` |
 | Icon Composer (Liquid Glass) | `AppIcon.icon` (the same document as the apps) and its preview sheets; square, unmasked background and foreground layers for other tools | `docs/brand/assets/app-icon/icon-composer/` |
 
 - No text, no SF Symbols, no Apple hardware in the icon; don't add highlights or shadows on iOS: the
