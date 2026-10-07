@@ -72,27 +72,30 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 
 - Regular App Store. APNs for push. iOS 16+.
 - **Identifiers:** bundle id `app.handlive.ios`, with a Notification Service Extension target inside the
-  app. The App Group `group.app.handlive` is shared by the app and the extension and is also the Keychain
+  app. The App Group `group.app.hxd.handlive` is shared by the app and the extension and is also the Keychain
   access group of the service `app.handlive.keys` (0.6.1), so the extension can read `PRK` while the device
   is unlocked (C3).
 - **Capabilities of the app (Apple Developer account and `iOS/HandLive.entitlements`):** Push Notifications
   (`aps-environment`, `development` in the file; distribution signing uses production), App Groups
-  (`group.app.handlive`), Keychain Sharing (`$(AppIdentifierPrefix)app.handlive.ios`, `group.app.handlive`),
+  (`group.app.hxd.handlive`; an App Group name is a keychain access group by itself, so it is not listed under
+  Keychain Sharing, where Xcode would match it against the profile's `<team id>.*`), Keychain Sharing
+  (`$(AppIdentifierPrefix)app.handlive.ios`),
   Communication Notifications (`com.apple.developer.usernotifications.communication`) for the communication
   notifications of SMS-02 (`INSendMessageIntent`) and CALL-01 (`INStartCallIntent`), and Time Sensitive
   Notifications (`com.apple.developer.usernotifications.time-sensitive`) for incoming calls. `iOS/Info.plist`
   lists `INSendMessageIntent` and `INStartCallIntent` in `NSUserActivityTypes`. The local network purpose
   string (`NSLocalNetworkUsageDescription`, `NSBonjourServices` = `_handlive._tcp`) comes from the string
   catalog (`infoplist.*` keys, 0.12).
-- **Notification Service Extension (`app.handlive.ios.nse`, `iOS/NotificationService.entitlements`,
-  `iOS/NotificationService-Info.plist`):** App Groups and Keychain Sharing (`group.app.handlive`), the
-  Communication Notifications entitlement, and `IntentsSupported` = `INSendMessageIntent`,
-  `INStartCallIntent` in `NSExtension` › `NSExtensionAttributes` (extension point
-  `com.apple.usernotifications.service`). Phase 3 added the Communication Notifications entitlement and
-  `IntentsSupported` to the extension; the SMS communication notifications need them too, so a Phase 2 build
-  may not have shown SMS as communication notifications on a device. The App IDs `app.handlive.ios` and
-  `app.handlive.ios.nse` both need the Communication Notifications capability; the app also needs Time
-  Sensitive Notifications.
+- **Notification Service Extension (`app.handlive.ios.notifications`, `iOS/NotificationService.entitlements`,
+  `iOS/NotificationService-Info.plist`):** App Groups (`group.app.hxd.handlive`, no Keychain Sharing) and
+  `IntentsSupported` = `INSendMessageIntent`, `INStartCallIntent` in `NSExtension` › `NSExtensionAttributes`
+  (extension point `com.apple.usernotifications.service`). The extension carries no Communication Notifications
+  entitlement: Apple enables that capability on the app target only (the developer portal does not offer it for an
+  extension's App ID, and Xcode refuses to sign an extension that claims it), and the extension's `updating(from:)`
+  works under the app's capability, as in Apple's sample "Handling Communication Notifications and Focus Status
+  Updates". Phase 3 added `IntentsSupported` to the extension; the SMS communication notifications need it too, so
+  a Phase 2 build may not have shown SMS as communication notifications on a device. Only the App ID
+  `app.handlive.ios` needs the Communication Notifications and Time Sensitive Notifications capabilities.
 - **APNs key:** create one `.p8` provider key in the Apple Developer account (Keys, Apple Push Notifications
   service). The key lives only on the relay server (`RELAY_APNS_KEY_PATH`, `RELAY_APNS_KEY_ID`,
   `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`); development builds register sandbox tokens.

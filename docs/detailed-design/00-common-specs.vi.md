@@ -58,8 +58,8 @@ hoặc iPhone/iPad.
 |-----------|---------|
 | Gói Android | `app.handlive.android` |
 | Bundle Mac / Camera Extension | `app.handlive.mac` / `app.handlive.mac.camera` |
-| Bundle iOS / Notification Service Extension | `app.handlive.ios` / `app.handlive.ios.nse` |
-| App Group (iOS, Mac) | `group.app.handlive` |
+| Bundle iOS / Notification Service Extension | `app.handlive.ios` / `app.handlive.ios.notifications` (`app.handlive.ios.nse` đang thuộc Personal Team miễn phí dùng trước 2026-10-07, team trả phí không đăng ký được) |
+| App Group (iOS, Mac) | `group.app.hxd.handlive` (đoạn `hxd` phân biệt group của team chủ dự án với các dev khác trong công ty; App Group ID là duy nhất trên mọi team Apple, và `group.app.handlive` đang thuộc Personal Team miễn phí dùng trước 2026-10-07) |
 | Alias khóa chủ trong Android Keystore | `hl_master` (AES-256-GCM, bọc keyset Tink, `prk_enc`, mật khẩu PKCS#12) |
 | Account Keychain (service `app.handlive.keys`) | `ik_sig`, `ik_dh`, `db_key` (khóa SQLCipher), `<pair_id>` (`PRK` của từng cặp) |
 

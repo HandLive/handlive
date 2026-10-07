@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- iPhone and iPad: the App Group is `group.app.hxd.handlive` (was `group.app.handlive`) and the Notification Service
+  Extension's bundle id is `app.handlive.ios.notifications` (was `app.handlive.ios.nse`): both old identifiers are held
+  by the free Personal Team used before the paid team and cannot be registered to it. The App Group is no longer
+  listed under Keychain Sharing (an App Group name is a keychain access group by itself), and the extension no longer
+  claims the Communication Notifications entitlement (Apple grants that capability to the app target only). A beta install updated to
+  this build loses its settings and keys and must pair again; the Mac app and Android are unchanged.
+
 ## [0.1.0-beta.3] — 2026-10-07
 
 ### Added

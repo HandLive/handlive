@@ -58,8 +58,8 @@ App identifiers and key stores:
 |-----------|---------|
 | Android package | `app.handlive.android` |
 | Mac bundle / Camera Extension | `app.handlive.mac` / `app.handlive.mac.camera` |
-| iOS bundle / Notification Service Extension | `app.handlive.ios` / `app.handlive.ios.nse` |
-| App Group (iOS, Mac) | `group.app.handlive` |
+| iOS bundle / Notification Service Extension | `app.handlive.ios` / `app.handlive.ios.notifications` (`app.handlive.ios.nse` is held by the free Personal Team used before 2026-10-07 and cannot be registered to the paid team) |
+| App Group (iOS, Mac) | `group.app.hxd.handlive` (the `hxd` segment tells the owner's team's group apart from other developers' at the company; App Group IDs are unique across every Apple team, and `group.app.handlive` is held by the free Personal Team used before 2026-10-07) |
 | Master key alias in the Android Keystore | `hl_master` (AES-256-GCM, wraps the Tink keyset, `prk_enc`, the PKCS#12 password) |
 | Keychain accounts (service `app.handlive.keys`) | `ik_sig`, `ik_dh`, `db_key` (SQLCipher key), `<pair_id>` (`PRK` of each pair) |
 

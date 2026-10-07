@@ -6,6 +6,15 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+### Thay đổi
+
+- iPhone và iPad: App Group là `group.app.hxd.handlive` (trước là `group.app.handlive`) và bundle id của Notification
+  Service Extension là `app.handlive.ios.notifications` (trước là `app.handlive.ios.nse`): hai định danh cũ đang thuộc
+  Personal Team miễn phí dùng trước team trả phí nên không đăng ký sang được. App Group không còn liệt kê trong Keychain
+  Sharing (tên App Group tự nó đã là keychain access group), và extension không khai entitlement Communication Notifications
+  nữa (Apple chỉ cấp capability này cho app target). Bản beta đã cài khi cập nhật lên bản này mất cài đặt và
+  khóa, phải ghép đôi lại; app Mac và Android không đổi.
+
 ## [0.1.0-beta.3] — 07/10/2026
 
 ### Added
