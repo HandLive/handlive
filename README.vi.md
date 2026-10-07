@@ -14,7 +14,7 @@ HandLive là mã nguồn mở (Apache-2.0). Kho này là **hub tài liệu**. M�
 
 | | |
 |--|--|
-| **Bản phát hành mới nhất** | [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (04/10/2026): bản đầu tiên có tệp cài đặt, tải tất cả ở cùng trang đó: DMG Mac ký ad-hoc (bấm Open Anyway một lần), IPA iOS (chưa ký, để sideload), APK Android (`foss`, đã ký); mọi thay đổi từ beta.1 đã qua quét bảo mật ([hướng dẫn phân phối](docs/deployment-guide.vi.md)) |
+| **Bản phát hành mới nhất** | [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (07/10/2026): cuộc gọi từ ứng dụng khác giữ tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ, clip chữ giữ HTML, biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac, iPhone giữ phiên 25 giây khi chạy nền; vẫn các tệp như beta.2 ở cùng trang đó: DMG Mac ký ad-hoc (bấm Open Anyway một lần), IPA iOS (chưa ký, để sideload), APK Android (`foss`, đã ký); mọi thay đổi từ beta.2 đã qua quét bảo mật ([hướng dẫn phân phối](docs/deployment-guide.vi.md)) |
 | **Phase trên `main`** | 0–3 mã sản phẩm; spike Phase 4–6 cũng trên `main` (30/09/2026) |
 | **Còn mở trước 1.0** | Cổng **G1** (ma trận máy thật) và **G2** (Play Console); kiểm relay / APNs / FCM thật |
 | **Đang làm** | Quyết định phần cứng/trình duyệt G4/G5/G6; chưa mở thẻ sản phẩm Phase 4–6 |

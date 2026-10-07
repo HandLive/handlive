@@ -6,6 +6,8 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.1.0-beta.3] — 07/10/2026
+
 ### Added
 
 - iPhone, iPad và Mac: biểu tượng ứng dụng là `AppIcon.icon` của Icon Composer với các lớp Liquid Glass (vòng tín

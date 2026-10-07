@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.3] — 2026-10-07
+
 ### Added
 
 - iPhone, iPad and Mac: the app icon is an Icon Composer `AppIcon.icon` with Liquid Glass layers (signal rings, flame,
