@@ -9,7 +9,7 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 ### Added
 
 - iPhone, iPad và Mac: biểu tượng ứng dụng là `AppIcon.icon` của Icon Composer với các lớp Liquid Glass (vòng tín
-  hiệu, ngọn lửa, ngọn núi; sáng, tối và phủ màu) trên iOS 26 và macOS 26+, sinh bằng
+  hiệu, ngọn lửa, ngọn núi; sáng, tối và phủ màu) trên iOS 26+ và macOS 26+, sinh bằng
   `tools/brand/build_brand_assets.py --apple-icon`; hệ điều hành cũ hơn nhận ảnh do Xcode dựng từ đó. Trên Mac, biểu
   tượng rút gọn ở 16 và 32 pt không còn (quyết định của chủ dự án ngày 07/10/2026) và bộ ảnh `AppIcon.appiconset` đã
   bỏ. Dựng app Mac giờ cần macOS 26 và Xcode 26+ (`actool` trên máy macOS 15 bị crash khi dựng `.icon` của Mac): CI và
