@@ -76,6 +76,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Security
 
+- Clipboard HTML: the sanitizer runs in linear time on every platform and in the shared reference (shared #8, apple
+  #10, android #12). Before, a page whose copied HTML held many unclosed tag starts or an unclosed quote took time
+  quadratic in its size, so copying a large page froze the Mac or iPhone app while reading the clipboard; the output is
+  unchanged, pinned by three new shared vectors and a timing test on each port. Found by the security scan before
+  this release (`plans/20260925-implementation/reports/security-scan-beta3-2026-10-07.md`).
 - Calls from other apps (CALL-05 API 1 logic 6): "Answer" from the Mac starts the app from the background only for a
   call Android vouches for (from Android 14: a foreground service, a user-initiated job or a granted full-screen
   intent; Android 12–13: any `CallStyle` notification; Android 10–11: never); any other call is answered through the

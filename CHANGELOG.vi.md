@@ -76,6 +76,11 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Security
 
+- HTML của bảng nhớ tạm: bộ lọc chạy trong thời gian tuyến tính trên mọi nền tảng và ở bản tham chiếu chung (shared
+  #8, apple #10, android #12). Trước đây, một trang có HTML sao chép chứa nhiều thẻ mở không đóng hoặc một dấu nháy không
+  đóng tốn thời gian tăng theo bình phương kích thước, nên sao chép một trang lớn làm ứng dụng Mac hoặc iPhone treo khi
+  đọc bảng nhớ tạm; kết quả lọc không đổi, có ba vector chung mới và một bài kiểm tra thời gian trên mỗi nền tảng. Phát
+  hiện trong lượt quét bảo mật trước bản này (`plans/20260925-implementation/reports/security-scan-beta3-2026-10-07.md`).
 - Cuộc gọi từ ứng dụng khác (CALL-05 API 1 logic 6): "Trả lời" từ Mac chỉ mở ứng dụng từ nền với cuộc gọi mà Android
   bảo đảm (từ Android 14: foreground service, user-initiated job hoặc full-screen intent đã được cấp; Android 12–13:
   mọi thông báo `CallStyle`; Android 10–11: không bao giờ); cuộc gọi khác được trả lời qua thông báo "chạm để nghe"
