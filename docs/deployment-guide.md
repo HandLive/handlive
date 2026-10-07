@@ -40,6 +40,10 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 
 ## macOS app
 
+- **Build host: macOS 26 or later, Xcode 26 or later.** On a macOS 15 host, actool crashes while it renders the Mac
+  icon from `AppIcon.icon` (`IBPlatformToolFailureException`, AssetCatalogAgent), so the Mac app no longer builds
+  there; CI and the release `sign` job run on `macos-26`. The built app still runs on macOS 13 and later, and the
+  release `launch` job starts it on `macos-15` as a smoke test.
 - Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1); Developer ID signing for the
   app, the camera extension and the microphone driver; the app target sets
   `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
@@ -97,9 +101,10 @@ English | [Tiếng Việt](deployment-guide.vi.md)
 - **Device name:** on iOS 16 and later the phone sees "iPhone" or "iPad" as the device name unless Apple grants
   the user-assigned device name entitlement (`com.apple.developer.device-information.user-assigned-device-name`);
   request it before the release (PAIR-01 field 3).
-- **App icon:** the AppIcon set (macOS and iOS) and the Android adaptive icon are in the app repositories,
-  generated from `docs/brand-guidelines.md` by `tools/brand/build_brand_assets.py`; store listings use the 1024 px
-  and 512 px files in `docs/brand/assets/app-icon/`.
+- **App icon:** the Liquid Glass `AppIcon.icon` (macOS and iOS) and the Android adaptive icon are in the app
+  repositories, generated from `docs/brand-guidelines.md` by `tools/brand/build_brand_assets.py`. The App Store
+  icon is the one Xcode renders from `AppIcon.icon` in the uploaded build; only Google Play takes an uploaded file,
+  `docs/brand/assets/app-icon/handlive-play-store-512.png`.
 
 ## Cloud relay (Rust)
 
@@ -159,8 +164,8 @@ the environment `release`. `release-apple` has three jobs:
 
 | Job | Environment, rights | Does |
 |---|---|---|
-| `sign` (iOS and macOS in parallel) | `release`, `contents: read` | Builds with the pinned XcodeGen and `xcodebuild`, packs the IPA, signs the Mac app (ad hoc, or Developer ID and notarization with the secrets), writes each file's SHA-256. The only job that reads the macOS secrets, and each only in the environment of its own step |
-| `launch` | none, `permissions: {}` | Downloads the files and checks them read-only: the IPA is a sound archive with the app inside, the Mac DMG mounts and its app is still running after ten seconds. The only job that runs the built app; it has no secret, no environment and a token without rights |
+| `sign` (iOS and macOS in parallel, `macos-26`) | `release`, `contents: read` | Builds with the pinned XcodeGen and `xcodebuild`, packs the IPA, signs the Mac app (ad hoc, or Developer ID and notarization with the secrets), writes each file's SHA-256. The only job that reads the macOS secrets, and each only in the environment of its own step |
+| `launch` (`macos-15`) | none, `permissions: {}` | Downloads the files and checks them read-only: the IPA is a sound archive with the app inside, the Mac DMG mounts and its app is still running after ten seconds. The only job that runs the built app; it has no secret, no environment and a token without rights |
 | `publish` | `release`, `contents: write` | Needs `sign` and `launch`, checks every file against its SHA-256, keeps them as the workflow artifact `apple-<version>` and attaches them to the Release. Runs no built code and checks out none |
 
 The files pass between the jobs as the workflow artifact `build-<platform>-<version>`. The Apple builds generate the

@@ -21,6 +21,7 @@
 
 ## Ứng dụng macOS
 
+- **Máy dựng: macOS 26 trở lên, Xcode 26 trở lên.** Trên máy macOS 15, actool bị crash khi dựng biểu tượng Mac từ `AppIcon.icon` (`IBPlatformToolFailureException`, AssetCatalogAgent), nên app Mac không dựng được ở đó nữa; CI và job `sign` của bản phát hành chạy trên `macos-26`. App dựng xong vẫn chạy được trên macOS 13 trở lên, và job `launch` của bản phát hành mở thử app trên `macos-15`.
 - Entitlement `keychain-access-groups` (data-protection keychain, 0.6.1). Ký Developer ID cho app, extension camera và driver micro. Target app đặt `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`.
 - **Cuộc gọi (Phase 3).** `macOS/HandLive.entitlements` có thêm capability Communication Notifications (`com.apple.developer.usernotifications.communication`), dùng cho thông báo liên lạc của cuộc gọi và để đọc trạng thái Tập trung bằng `INFocusStatusCenter`. File cũng có entitlement Time Sensitive Notifications (`com.apple.developer.usernotifications.time-sensitive`). Thiếu entitlement này, thông báo cuộc gọi mức time-sensitive đến ở mức active và không vượt qua chế độ Tập trung. `macOS/Info.plist` khai `INSendMessageIntent` và `INStartCallIntent` trong `NSUserActivityTypes`, cùng `NSFocusStatusUsageDescription` lấy chữ từ khóa catalog `infoplist.focus_status_usage` (bên cạnh `NSBonjourServices` = `_handlive._tcp`, `NSLocalNetworkUsageDescription` và `NSMicrophoneUsageDescription`). Bật cả hai capability cho App ID `app.handlive.mac` trước khi ký.
 - **Micro ảo (AudioServerPlugin).** Mac App Store không cài plugin này. Sandbox chặn `/Library/Audio/Plug-Ins/HAL/`. Phân phối theo hai đường:
@@ -39,7 +40,7 @@ Phát hành App Store thông thường. Push đi qua APNs. Yêu cầu iOS 16 tr�
 - **Khóa APNs.** Tạo một khóa `.p8` trong tài khoản Apple Developer, mục Keys, dịch vụ Apple Push Notifications. Khóa chỉ nằm trên máy chủ relay (`RELAY_APNS_KEY_PATH`, `RELAY_APNS_KEY_ID`, `RELAY_APNS_TEAM_ID`, `RELAY_APNS_TOPIC` = `app.handlive.ios`). Bản build phát triển đăng ký token sandbox.
 - **App Review.** Trả lời App Privacy theo `docs/privacy.md`. Ghi chú cho người duyệt rằng app chạy cùng điện thoại Android của chính người dùng có cài HandLive. Kèm video ghép nối và nhận SMS.
 - **Tên thiết bị.** Từ iOS 16, điện thoại chỉ thấy tên "iPhone" hoặc "iPad", trừ khi Apple cấp entitlement tên thiết bị do người dùng đặt (`com.apple.developer.device-information.user-assigned-device-name`). Xin entitlement này trước khi phát hành (PAIR-01 trường 3).
-- **Biểu tượng app.** Bộ AppIcon (macOS và iOS) và biểu tượng thích ứng Android đã có trong kho app, sinh từ `docs/brand-guidelines.md` bằng `tools/brand/build_brand_assets.py`; trang store dùng file 1024 px và 512 px trong `docs/brand/assets/app-icon/`.
+- **Biểu tượng app.** Tệp Liquid Glass `AppIcon.icon` (macOS và iOS) và biểu tượng thích ứng Android đã có trong kho app, sinh từ `docs/brand-guidelines.md` bằng `tools/brand/build_brand_assets.py`. Biểu tượng trên App Store là bản Xcode dựng từ `AppIcon.icon` trong bản build tải lên; chỉ Google Play cần tải lên một file, `docs/brand/assets/app-icon/handlive-play-store-512.png`.
 
 ## Cloud relay (Rust)
 
@@ -85,8 +86,8 @@ build trong một job chỉ có quyền đọc và không có secret, rồi ký 
 
 | Job | Environment, quyền | Việc làm |
 |---|---|---|
-| `sign` (iOS và macOS chạy song song) | `release`, `contents: read` | Build bằng XcodeGen đã ghim phiên bản và `xcodebuild`, đóng gói IPA, ký ứng dụng Mac (ad hoc, hoặc Developer ID và notarization khi có secret), ghi SHA-256 của từng tệp. Là job duy nhất đọc secret macOS, mỗi secret chỉ nằm trong môi trường của bước dùng nó |
-| `launch` | không có, `permissions: {}` | Tải các tệp về và kiểm tra chỉ đọc: IPA là tệp nén hợp lệ có ứng dụng bên trong, DMG của Mac mount được và ứng dụng vẫn chạy sau mười giây. Là job duy nhất chạy ứng dụng đã build; không có secret, không có environment và token không có quyền nào |
+| `sign` (iOS và macOS chạy song song, `macos-26`) | `release`, `contents: read` | Build bằng XcodeGen đã ghim phiên bản và `xcodebuild`, đóng gói IPA, ký ứng dụng Mac (ad hoc, hoặc Developer ID và notarization khi có secret), ghi SHA-256 của từng tệp. Là job duy nhất đọc secret macOS, mỗi secret chỉ nằm trong môi trường của bước dùng nó |
+| `launch` (`macos-15`) | không có, `permissions: {}` | Tải các tệp về và kiểm tra chỉ đọc: IPA là tệp nén hợp lệ có ứng dụng bên trong, DMG của Mac mount được và ứng dụng vẫn chạy sau mười giây. Là job duy nhất chạy ứng dụng đã build; không có secret, không có environment và token không có quyền nào |
 | `publish` | `release`, `contents: write` | Cần `sign` và `launch`, kiểm từng tệp với SHA-256 của nó, giữ chúng làm workflow artifact `apple-<version>` và đính kèm vào Release. Không chạy mã đã build và không checkout mã nào |
 
 Các tệp đi giữa các job dưới dạng workflow artifact `build-<platform>-<version>`. Các bản build Apple tạo project Xcode

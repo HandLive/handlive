@@ -106,10 +106,11 @@ def app_icon_layers():
     return svg_doc(1024, 1024, d1, bg), svg_doc(1024, 1024, d2, body)
 
 
-def app_icon_macos(compact=False):
-    """macOS 11+ grid: an 824 pt rounded square centered on 1024 with a soft drop shadow."""
+def app_icon_macos():
+    """macOS 11+ grid (flat artwork for docs and promo): an 824 pt rounded square centered on 1024 with a soft
+    drop shadow."""
     d1, bg = gradient_bg("bg", PALETTE["dawn-top"], PALETTE["dawn-bottom"])
-    d2, body = mark_layers(GROUND, outer_waves=not compact, uid="mac")
+    d2, body = mark_layers(GROUND, uid="mac")
     s = 824 / 1024
     defs = (d1 + d2 + '<clipPath id="tile"><rect x="100" y="100" width="824" height="824" rx="185.4"/></clipPath>'
             '<filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">'

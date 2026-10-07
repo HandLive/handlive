@@ -2,7 +2,7 @@ English | [Tiếng Việt](brand-guidelines.vi.md)
 
 # HandLive brand guidelines
 
-Version 1.1, 2026-10-07. The source of truth for HandLive's story, voice, messages, logo, app icon,
+Version 1.2, 2026-10-07. The source of truth for HandLive's story, voice, messages, logo, app icon,
 colors, and promo images. How the brand appears inside the apps (where brand color may go, the welcome
 screen, the wordmark in the UI) is in the design system: [Branding](design-system/1-foundations/11-thuong-hieu.md).
 
@@ -174,26 +174,23 @@ outlines: the files don't need the font.
 
 | Platform | What ships | Where |
 |---|---|---|
-| iOS, iPadOS | Icon Composer document (Liquid Glass): rings, fire, and mountain layers over a dawn fill (night fill and on-dark mountain in Dark); Xcode renders the iOS 16–18 icon from it | `apple/iOS/HandLive/Resources/AppIcon.icon` |
-| macOS | The macOS tile grid (824 px rounded square on 1024, soft shadow); 16–512 pt at 1× and 2×; 16 and 32 pt use the compact mark; no Liquid Glass yet (see below) | `apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset`, `mac` entries |
+| macOS, iOS, iPadOS | One Icon Composer document (Liquid Glass) for both apps: rings, fire, and mountain layers over a dawn fill (night fill and on-dark mountain in Dark); Xcode renders the macOS 13–15 and iOS 16–18 icons from it | `apple/macOS/HandLive/Resources/AppIcon.icon` (both targets) |
 | Android | Adaptive icon: dawn background layer, foreground layer, monochrome layer for themed icons (Android 13+) | `android/app/src/main/res/` (`mipmap-anydpi`, `drawable`) |
-| App Store, Play Store | 1024 px (App Store, from the iOS icon), 512 px no alpha (Play) | `docs/brand/assets/app-icon/` |
-| Icon Composer (Liquid Glass) | `AppIcon.icon` (the same document as iOS, macOS included) and its preview sheet; square, unmasked background and foreground layers for other tools | `docs/brand/assets/app-icon/icon-composer/` |
+| App Store, Play Store | App Store: the icon Xcode renders from `AppIcon.icon`, nothing to upload; Play: 512 px, no alpha | `handlive-play-store-512.png` in `docs/brand/assets/app-icon/` |
+| Icon Composer (Liquid Glass) | `AppIcon.icon` (the same document as the apps) and its preview sheets; square, unmasked background and foreground layers for other tools | `docs/brand/assets/app-icon/icon-composer/` |
 
 - No text, no SF Symbols, no Apple hardware in the icon; don't add highlights or shadows on iOS: the
   system adds them.
 - The Dark icon keeps the same flame on a night-plum background; the Tinted icon is grayscale and the
   system tints it.
-- The flat 1024 iOS images (Default, Dark, Tinted) stay in the `AppIcon.appiconset` only as the fallback if
-  `AppIcon.icon` is ever removed, and as a source for marketing material. While the iOS target holds
-  `AppIcon.icon`, they don't go into the app: the App Store icon is the one Xcode renders from the `.icon`.
-- **Why the Mac has no Liquid Glass yet.** With an `AppIcon.icon` next to the `AppIcon.appiconset`, Xcode 27's
-  `actool` ignores the set for every macOS version and renders the 16–512 pt icons from the `.icon`, so the
-  compact mark at 16 and 32 pt is lost (checked with `assetutil --info`: the `Assets.car` holds
-  `AppIcon16x16_…` renditions instead of `icon-mac-16.png`, and the `.icns` is byte-identical to a `.icon`-only
-  compile; `--enable-icon-stack-fallback-generation disabled` changes nothing). The Mac target therefore keeps
-  the set, until a later Xcode honours the fallback flag or the project owner accepts dropping the compact mark.
-  Turning it on then only means adding `AppIcon.icon` to the Mac target; the `.icon` already lists macOS.
+- **No compact mark on the Mac app icon** (project owner's decision, 2026-10-07). Xcode 27's `actool` renders
+  every older-OS icon from the `.icon` and cannot keep hand-drawn small sizes beside it, so macOS 13–15 show the
+  generated icon at 16 and 32 pt too, with both pairs of rings. The compact mark still serves other small places
+  (the website favicon, any artwork from 16 to 32 px): see Clear space and minimum size.
+- The Mac app also ships every size in `AppIcon.icns` (16–512 pt at 1× and 2×,
+  `ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR: all`); the asset catalog holds 2× renditions only.
+- `handlive-app-icon.png` (and Dark, Tinted, the macOS tile) in `docs/brand/assets/app-icon/` are flat artwork for
+  docs and marketing; no app ships them.
 
 ## 7. Color
 
@@ -301,8 +298,7 @@ lines in a softer plum (#6b5562); the mark large, bleeding off the bottom right.
 ```bash
 python3 tools/brand/build_brand_assets.py \
   --android-res android/app/src/main/res \
-  --apple-iconset apple/macOS/HandLive/Resources/Assets.xcassets/AppIcon.appiconset \
-  --apple-icon apple/iOS/HandLive/Resources/AppIcon.icon --icon-preview \
+  --apple-icon apple/macOS/HandLive/Resources/AppIcon.icon --icon-preview \
   --android-design-res android/core/design/src/main/res \
   --apple-imageset apple/Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Images.xcassets
 ```
@@ -317,13 +313,15 @@ python3 tools/brand/build_brand_assets.py \
   `Assets/`. Apple publishes no schema for `icon.json`; the generator writes the keys Icon Composer saves, and
   Xcode 27's `actool` and `ictool` accept them. Tune glass, shadow, and translucency in the generator, not in
   Icon Composer, or the next rebuild undoes it. `--icon-preview` renders
-  `icon-composer/AppIcon-preview.png` (rows iOS, macOS; columns Default, Dark, Tinted light, Tinted dark) with
-  the `ictool` inside Xcode's Icon Composer, so it needs Xcode 26 or later: the Xcode that `xcode-select -p` points
-  at, or the path in the `ICTOOL` environment variable. A rerun leaves no diff.
+  `icon-composer/AppIcon-preview.png` (rows iOS, macOS; columns Default, Dark, Tinted light, Tinted dark) and
+  `icon-composer/AppIcon-preview-mac-sizes.png` (the Mac icon at 16, 32, 128, and 512 pt, actual size, one row per
+  appearance) with the `ictool` inside Xcode's Icon Composer, so it needs Xcode 26 or later: the Xcode that
+  `xcode-select -p` points at, or the path in the `ICTOOL` environment variable. A rerun leaves no diff.
 
 ## Changelog
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.2 | 2026-10-07 | The Mac app icon is the same Liquid Glass `AppIcon.icon` as iOS; no compact mark at 16 and 32 pt on the Mac app icon (project owner's decision); the `AppIcon.appiconset` is gone |
 | 1.1 | 2026-10-07 | Liquid Glass app icon for iOS and iPadOS (`AppIcon.icon` from the generator); the Mac keeps the compact-mark set |
 | 1.0 | 2026-10-01 | First guidelines: the signal fire at dawn (logo, app icon, voice, messages, promo); dawn values for the `brand-*` tokens |

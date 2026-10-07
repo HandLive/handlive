@@ -1,11 +1,10 @@
-"""Platform app icon files: Android adaptive icon vector drawables and the Apple AppIcon.appiconset.
+"""Platform app icon files: Android adaptive icon vector drawables.
 
 Android: background, foreground and monochrome layers on the 108 dp adaptive canvas. The 1024 icon
 grid maps onto the visible 72 dp (offset 18 dp); the mountain bleeds to the canvas edge, and the flame
 and rings stay inside the 66 dp safe zone. The monochrome layer is the standalone mark, glyph-sized.
-Apple: one set for both targets: iOS single-size 1024 (any, dark, tinted) and the macOS sizes.
+The Apple app icon is the Icon Composer document of icon_composer_writer.py.
 """
-import json
 import os
 
 from brand_geometry import (MARK_BASE_ROUND, MARK_BASE_Y, MARK_BOX, PALETTE, WAVE_RADII, WAVE_STROKE,
@@ -103,24 +102,3 @@ def write_android(res_dir):
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(text if text.startswith("<?xml") else '<?xml version="1.0" encoding="utf-8"?>\n' + text)
     return sorted(files)
-
-
-# (point size, scale, use the compact mark) for the macOS entries of the set.
-MAC_SIZES = [(16, 1, True), (16, 2, True), (32, 1, True), (32, 2, False), (128, 1, False), (128, 2, False),
-             (256, 1, False), (256, 2, False), (512, 1, False), (512, 2, False)]
-
-
-def mac_filename(pt, scale):
-    return f"icon-mac-{pt}{'@2x' if scale == 2 else ''}.png"
-
-
-def apple_contents():
-    images = [{"filename": "icon-ios-1024.png", "idiom": "universal", "platform": "ios", "size": "1024x1024"}]
-    for value in ("dark", "tinted"):
-        images.append({"appearances": [{"appearance": "luminosity", "value": value}],
-                       "filename": f"icon-ios-1024-{value}.png", "idiom": "universal", "platform": "ios",
-                       "size": "1024x1024"})
-    for pt, scale, _ in MAC_SIZES:
-        images.append({"filename": mac_filename(pt, scale), "idiom": "mac", "scale": f"{scale}x",
-                       "size": f"{pt}x{pt}"})
-    return json.dumps({"images": images, "info": {"author": "xcode", "version": 1}}, indent=2) + "\n"
