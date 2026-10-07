@@ -15,7 +15,7 @@ HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như
 | 0 | Xong | G0 xong |
 | 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026); clip chữ mang kèm HTML (05/10/2026); hướng dẫn chế độ cài đặt hạn chế hiện lại khi quay về, chỉ hỏi đồng ý một lần (05/10/2026, android #6) |
 | 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở; iPhone giữ phiên 25 giây khi chạy nền (05/10/2026) |
-| 3 | Xong (28/09/2026) | Kiểm máy thật còn mở; cuộc gọi ứng dụng hiện tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ (05/10/2026, android #8 + hub #15, chờ merge); bench cuộc gọi đọc được cuộc gọi ứng dụng (shared #6) |
+| 3 | Xong (28/09/2026) | Kiểm máy thật còn mở; cuộc gọi ứng dụng hiện tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ (05/10/2026, android #8 + hub #15, chờ merge); bench cuộc gọi đọc được cuộc gọi ứng dụng (shared #6); e2e kiểm cuộc gọi ứng dụng bằng một ứng dụng gọi giả (07/10/2026, android #9 + shared #7) |
 | 4 | Spike trên `main` (`HFPSpike`, merge 30/09/2026) | G4: cần ghép BT điện thoại + cuộc gọi thật |
 | 5 | Spike trên `main` (`CameraSpike`, merge 30/09/2026) | G5: cần Apple Developer trả phí |
 | 6 | Probe spike trên `main` (Apple+Android merge 30/09/2026); chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
