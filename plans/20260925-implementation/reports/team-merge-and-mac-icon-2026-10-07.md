@@ -22,14 +22,16 @@ clean (the merge commits carry the owner's GitHub account), no secret files, ben
   (`actool` ignores it once a `.icon` exists); the Mac target asks for every `.icns` size
   (`ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR = all`). The owner accepted losing the compact mark at 16/32 pt.
 - The first CI run failed both Mac app lanes: on `macos-15` (Xcode 26.3) `actool`'s AssetCatalogAgent crashed rendering
-  the Mac `.icon` (missing system framework symbol), while the iOS lane rendered the same file. The macOS jobs of
-  `ci-apple` and `release-apple` now run on `macos-26` (Xcode 26.6): run 37579854640 green on all five jobs.
+  the Mac `.icon` (missing system framework symbol), while the iOS lane rendered the same file. The macOS job of
+  `ci-apple` and the `sign` job of `release-apple` now run on `macos-26` (Xcode 26.6): run 37579854640 green on all
+  five jobs. The release `launch` check stays on `macos-15` so the app is still started on a macOS older than 26
+  (review finding). Building the Mac app locally needs macOS 26 + Xcode 26 (apple README/CLAUDE, deployment guide).
 - hub #19: the brand generator drops the icon-set path and writes the shared `.icon`; Mac previews at 16/32/128/512 pt;
   `brand-guidelines` 1.2 (en, vi) and `deployment-guide` updated.
 
 ## Risks
 
-- `release-apple` runs only on a tag: its `sign` and `launch` jobs on `macos-26` are unproven until the next tag.
+- `release-apple` runs only on a tag: `sign` on `macos-26` and `launch` on `macos-15` are unproven until the next tag.
 
 ## Unresolved questions
 

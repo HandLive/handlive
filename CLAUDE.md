@@ -84,16 +84,16 @@ project owner in Vietnamese with diacritics.
    (`docs/brand-guidelines.md`, hub branch `feat/ckm-brand-from-start-008ce2`,
    `feat/brand-identity` in shared/android/apple, 2026-10-01);
    the Icon Composer `.icon` (Liquid Glass) is the app icon on iPhone, iPad and Mac (apple #7, #8; hub #17, #19,
-   2026-10-07); the Mac dropped the compact mark at 16/32 pt by owner decision; the macOS CI and release jobs run on
-   `macos-26` because `actool` on macOS 15 crashes rendering a Mac `.icon`.
+   2026-10-07); the Mac dropped the compact mark at 16/32 pt by owner decision; building the Mac app needs macOS 26 +
+   Xcode 26 (`actool` on macOS 15 crashes rendering a Mac `.icon`), so CI and release `sign` run on `macos-26`.
 7. **After gates:** Phase 4/5/6 **product** cards (not spikes) on `feat/phase-0N-*` as usual; one repo per commit; `shared/` first when contracts change.
 8. **Check the app-call work on the S25** (every PR of 2026-10-05 and 2026-10-07 is merged). First
    install a debuggable APK rebuilt from `main` after the merge on the S25 (the APK it runs now predates #8, and a release APK
    logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
    must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
    and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
-9. **Next tag:** `release-apple` now signs and launches on `macos-26`; watch those jobs on the first tag after
-   2026-10-07 (the change could not run without a tag).
+9. **Next tag:** `release-apple` now signs on `macos-26` (its launch check stays on `macos-15`); watch both jobs on
+   the first tag after 2026-10-07 (the change could not run without a tag).
 10. **Open follow-ups** (no gate): `ManualClock` review debt, apple #5 being merged (`waitForSleepers` ignores
    cancellation; test helpers' `clock:`/`timer:` swapped); keep `-parallel-testing-enabled NO` (parallel saves ~0 s);
    measure the app-call label on Android 11–14 to know whether the launcher query matters there. The e2e `setup` check of
