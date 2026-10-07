@@ -1560,7 +1560,7 @@ flowchart TB
 | Trường | Kiểu | Giá trị |
 |--------|------|---------|
 | `package` | string(255) | Tên gói Android của ứng dụng gọi điện |
-| `label` | string(64) | Nhãn của ứng dụng lấy từ `PackageManager` (chỉ để hiển thị). Từ API 30, package visibility ẩn các ứng dụng khác, và notification listener không được miễn: `<queries>` trong manifest khai báo intent `MAIN`/`LAUNCHER` để mọi ứng dụng có activity launcher đều thấy được (không bao giờ dùng `QUERY_ALL_PACKAGES`); ứng dụng vẫn bị ẩn hoặc đã gỡ thì dùng tên gói thay thế |
+| `label` | string(64) | Nhãn của ứng dụng lấy từ `PackageManager` (chỉ để hiển thị). Từ API 30, package visibility ẩn các ứng dụng khác. Theo số đo trên emulator API 35, Android cho notification listener thấy một ứng dụng ngay khi ứng dụng đó đăng thông báo; `<queries>` trong manifest vẫn khai báo intent `MAIN`/`LAUNCHER` (không bao giờ dùng `QUERY_ALL_PACKAGES`) để nhãn vẫn đọc được trên bản Android hoặc ROM OEM không làm như vậy (chưa đo trên API 30–34); ứng dụng vẫn bị ẩn hoặc đã gỡ thì dùng tên gói thay thế |
 
 Đối tượng `controls`:
 
