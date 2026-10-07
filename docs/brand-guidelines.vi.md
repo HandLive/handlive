@@ -182,14 +182,16 @@ nét: file không cần font.
 - Không chữ, không SF Symbols, không phần cứng Apple trong biểu tượng; trên iOS không tự thêm vệt sáng
   hay bóng: hệ thống tự thêm.
 - Biểu tượng Tối giữ nguyên ngọn lửa trên nền tím đêm; biểu tượng Phủ màu là ảnh xám để hệ thống phủ màu.
-- Ba ảnh iOS phẳng 1024 (Mặc định, Tối, Phủ màu) vẫn nằm trong `AppIcon.appiconset`: làm ảnh cho store, và làm
-  biểu tượng lại nếu sau này bỏ `AppIcon.icon`. Khi target iOS có `AppIcon.icon`, Xcode dùng file đó thay vào.
+- Ba ảnh iOS phẳng 1024 (Mặc định, Tối, Phủ màu) vẫn nằm trong `AppIcon.appiconset`, chỉ để dự phòng nếu sau
+  này bỏ `AppIcon.icon` và làm nguồn cho tài liệu quảng bá. Khi target iOS có `AppIcon.icon`, các ảnh này không
+  vào app: biểu tượng trên App Store là bản Xcode dựng từ `.icon`.
 - **Vì sao Mac chưa có Liquid Glass.** Khi có `AppIcon.icon` cạnh `AppIcon.appiconset`, `actool` của Xcode 27 bỏ
   qua bộ ảnh với mọi phiên bản macOS và tự dựng các cỡ 16–512 pt từ `.icon`, nên mất biểu tượng rút gọn ở 16 và
   32 pt (kiểm bằng `assetutil --info`: `Assets.car` chứa rendition `AppIcon16x16_…` thay cho `icon-mac-16.png`, và
   file `.icns` giống từng byte bản chỉ dịch `.icon`; cờ `--enable-icon-stack-fallback-generation disabled` không
   đổi gì). Vì vậy target Mac giữ bộ ảnh, cho đến khi một bản Xcode sau tôn trọng cờ fallback hoặc chủ dự án chấp
-  nhận bỏ biểu tượng rút gọn. Khi đó chỉ cần thêm `AppIcon.icon` vào target Mac; tài liệu đã khai báo macOS.
+  nhận bỏ biểu tượng rút gọn. Khi đó chỉ cần thêm `AppIcon.icon` vào target Mac; tệp `AppIcon.icon` đã khai báo
+  sẵn macOS.
 
 ## 7. Màu sắc
 
@@ -313,7 +315,8 @@ python3 tools/brand/build_brand_assets.py \
   `actool`, `ictool` của Xcode 27 nhận chúng. Chỉnh kính, bóng, độ trong trong bộ sinh, không chỉnh trong Icon
   Composer, kẻo lần dựng sau ghi đè. `--icon-preview` dựng `icon-composer/AppIcon-preview.png` (hàng iOS, macOS;
   cột Mặc định, Tối, Phủ màu sáng, Phủ màu tối) bằng `ictool` nằm trong Icon Composer của Xcode, nên cần Xcode 26
-  trở lên. Chạy lại không tạo diff.
+  trở lên: bản Xcode mà `xcode-select -p` trỏ tới, hoặc đường dẫn trong biến môi trường `ICTOOL`. Chạy lại không
+  tạo diff.
 
 ## Lịch sử thay đổi
 

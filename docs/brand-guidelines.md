@@ -184,15 +184,16 @@ outlines: the files don't need the font.
   system adds them.
 - The Dark icon keeps the same flame on a night-plum background; the Tinted icon is grayscale and the
   system tints it.
-- The flat 1024 iOS images (Default, Dark, Tinted) stay in the `AppIcon.appiconset`: the store image, and the
-  icon again if `AppIcon.icon` is ever removed. While the iOS target holds `AppIcon.icon`, Xcode uses it instead.
+- The flat 1024 iOS images (Default, Dark, Tinted) stay in the `AppIcon.appiconset` only as the fallback if
+  `AppIcon.icon` is ever removed, and as a source for marketing material. While the iOS target holds
+  `AppIcon.icon`, they don't go into the app: the App Store icon is the one Xcode renders from the `.icon`.
 - **Why the Mac has no Liquid Glass yet.** With an `AppIcon.icon` next to the `AppIcon.appiconset`, Xcode 27's
   `actool` ignores the set for every macOS version and renders the 16–512 pt icons from the `.icon`, so the
   compact mark at 16 and 32 pt is lost (checked with `assetutil --info`: the `Assets.car` holds
   `AppIcon16x16_…` renditions instead of `icon-mac-16.png`, and the `.icns` is byte-identical to a `.icon`-only
   compile; `--enable-icon-stack-fallback-generation disabled` changes nothing). The Mac target therefore keeps
   the set, until a later Xcode honours the fallback flag or the project owner accepts dropping the compact mark.
-  Turning it on then only means adding `AppIcon.icon` to the Mac target; the document already lists macOS.
+  Turning it on then only means adding `AppIcon.icon` to the Mac target; the `.icon` already lists macOS.
 
 ## 7. Color
 
@@ -317,7 +318,8 @@ python3 tools/brand/build_brand_assets.py \
   Xcode 27's `actool` and `ictool` accept them. Tune glass, shadow, and translucency in the generator, not in
   Icon Composer, or the next rebuild undoes it. `--icon-preview` renders
   `icon-composer/AppIcon-preview.png` (rows iOS, macOS; columns Default, Dark, Tinted light, Tinted dark) with
-  the `ictool` inside Xcode's Icon Composer, so it needs Xcode 26 or later. A rerun leaves no diff.
+  the `ictool` inside Xcode's Icon Composer, so it needs Xcode 26 or later: the Xcode that `xcode-select -p` points
+  at, or the path in the `ICTOOL` environment variable. A rerun leaves no diff.
 
 ## Changelog
 
