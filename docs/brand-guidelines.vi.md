@@ -2,7 +2,7 @@
 
 # Hướng dẫn thương hiệu HandLive
 
-Phiên bản 1.2, 2026-10-07. Nguồn chuẩn cho câu chuyện, giọng văn, thông điệp, logo, biểu tượng app, màu
+Phiên bản 1.3, 2026-10-08. Nguồn chuẩn cho câu chuyện, giọng văn, thông điệp, logo, biểu tượng app, màu
 sắc và ảnh quảng bá của HandLive. Thương hiệu xuất hiện thế nào bên trong app (màu thương hiệu được đặt ở
 đâu, màn chào, chữ HandLive trên giao diện) nằm trong design system: [Thương hiệu](design-system/1-foundations/11-thuong-hieu.vi.md).
 
@@ -96,13 +96,34 @@ Màu sắc là màu bình minh: ấm và điềm tĩnh. HandLive nên giống ng
 | Câu giới thiệu | Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại Android, ngay trên Mac, iPhone và iPad. |
 | Phụ đề App Store (≤ 30) | Your phone's texts and calls | Tin nhắn, gọi từ điện thoại |
 | Mô tả ngắn Play (≤ 80) | Clipboard, SMS, and calls from your phone on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại lên Mac, iPhone và iPad. |
-| Đoạn đầu mô tả trên store | Your Android phone, within reach. HandLive brings clipboard, SMS, and calls to your Mac, iPhone, and iPad — end-to-end encrypted, no account needed, open source. | Điện thoại Android, ngay trong tầm tay. HandLive đưa bảng nhớ tạm, SMS và cuộc gọi lên Mac, iPhone và iPad — mã hóa đầu cuối, không cần tài khoản, mã nguồn mở. |
+| Đoạn đầu mô tả trên store | Your Android phone, without ever having to pick it up. HandLive keeps your phone's clipboard, texts, and calls within reach on your Mac, iPhone, and iPad — copy something on your phone and paste it on your Mac moments later, read and reply to texts without reaching for your pocket, and see who's calling so you can handle it from right where you're sitting. | Điện thoại Android của bạn, mà không cần cầm lên. HandLive giữ bảng nhớ tạm, tin nhắn và cuộc gọi từ điện thoại luôn trong tầm với trên Mac, iPhone và iPad: chép gì đó trên điện thoại, một chút sau dán ngay trên Mac; đọc và trả lời tin nhắn mà không cần với tay lấy điện thoại; và xem ai đang gọi để xử lý ngay tại chỗ bạn đang ngồi. |
 
 ### Giới thiệu trong 30 giây
 
 HandLive đưa điện thoại Android của bạn lên Mac, iPhone và iPad. Chép ở máy này, dán ở máy kia. Đọc và
 trả lời tin nhắn, xem ai đang gọi, nghe hay từ chối ngay tại bàn làm việc. Mọi thứ được mã hóa đầu cuối,
 chạy trong Wi-Fi của chính bạn mà không cần tài khoản, và mã nguồn mở cho mọi người.
+
+### Mô tả đầy đủ
+
+Nội dung store listing cho Google Play và App Store Connect (giọng văn tham khảo theo Lenovo Smart
+Connect và Intel Unison, theo góp ý của chủ dự án, 2026-10-08).
+
+```
+Điện thoại Android của bạn, mà không cần cầm lên. HandLive giữ bảng nhớ tạm, tin nhắn và cuộc gọi từ điện thoại luôn trong tầm với trên Mac, iPhone và iPad: chép gì đó trên điện thoại, một chút sau dán ngay trên Mac; đọc và trả lời tin nhắn mà không cần với tay lấy điện thoại; và xem ai đang gọi để xử lý ngay tại chỗ bạn đang ngồi.
+
+Ghép nối chỉ cần quét một mã QR — không tài khoản, không đăng ký, không gì phải nhớ. Sau đó HandLive lặng lẽ giữ các thiết bị của bạn đồng nhịp:
+
+• Chép ở máy này, dán ở máy kia — nội dung bảng nhớ tạm hiện trên các thiết bị khác trong dưới 50 ms khi cùng mạng Wi-Fi
+• Đọc và trả lời tin nhắn của điện thoại ngay từ Mac, iPhone hoặc iPad
+• Xem ai đang gọi, rồi nghe, từ chối hoặc kết thúc cuộc gọi ngay trên Mac
+
+Mọi thứ di chuyển giữa các thiết bị đều được mã hóa đầu cuối trên đường đi — chỉ thiết bị đã ghép nối của chính bạn giữ khóa giải mã. Khi ở trong mạng Wi-Fi của mình, dữ liệu không cần rời khỏi mạng đó; khi ra ngoài, một máy chủ chuyển tiếp mã nguồn mở sẽ mang các byte đã mã hóa đi giúp bạn, mà không bao giờ đọc được chúng.
+
+HandLive được xây đúng kiểu mỗi nền tảng mong đợi, nên cảm giác như sinh ra tại chỗ trên Mac, iPhone và iPad, không phải lắp ghép thêm vào. Toàn bộ dự án — ứng dụng lẫn máy chủ chuyển tiếp — mã nguồn mở theo giấy phép Apache-2.0: ai cũng đọc được mã nguồn, kiểm chứng được lời mình nói, hoặc cùng xây tiếp.
+
+Không quảng cáo, không theo dõi, không phân tích hành vi. Chỉ là điện thoại của bạn, ngay chỗ bạn đang nhìn.
+```
 
 ### Trụ cột thông điệp
 
@@ -278,6 +299,7 @@ Trạng thái giữ màu hệ thống (`system-red` cho lỗi và thao tác hủ
 | `github-social-preview.png` | 1280 × 640 | Ảnh xem trước khi chia sẻ mọi kho HandLive trên GitHub |
 | `readme-hero.en.png`, `readme-hero.vi.png` | 1600 × 600 | Đầu `README.md` và `README.vi.md` |
 | `release-banner-beta.en.png`, `release-banner-beta.vi.png` | 1280 × 640 | Ghi chú phát hành và bài đăng cho `v0.1.0-beta.1` |
+| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Feature graphic ở đầu trang store listing trên Google Play Console |
 
 Bố cục: bộ ghép logo ở góc trên trái; tiêu đề (tagline) Be Vietnam Pro Bold màu tím than; một hai dòng
 phụ màu tím nhạt hơn (#6b5562); biểu tượng cỡ lớn tràn ra góc dưới phải.
@@ -319,6 +341,7 @@ python3 tools/brand/build_brand_assets.py \
 
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
+| 1.3 | 2026-10-08 | Thêm mô tả đầy đủ cho Play Console / App Store Connect vào §4, giọng văn tham khảo Lenovo Smart Connect và Intel Unison theo góp ý của chủ dự án; cập nhật dòng mở trong bảng Thông điệp cho khớp |
 | 1.2 | 2026-10-07 | Biểu tượng app Mac dùng chung `AppIcon.icon` Liquid Glass với iOS; biểu tượng app Mac không còn biểu tượng rút gọn ở 16 và 32 pt (quyết định của chủ dự án); bỏ `AppIcon.appiconset` |
 | 1.1 | 2026-10-07 | Biểu tượng app Liquid Glass cho iOS và iPadOS (`AppIcon.icon` từ bộ sinh); Mac giữ bộ ảnh có biểu tượng rút gọn |
 | 1.0 | 2026-10-01 | Bản hướng dẫn đầu tiên: ngọn lửa hiệu lúc bình minh (logo, biểu tượng app, giọng văn, thông điệp, quảng bá); giá trị bình minh cho các token `brand-*` |

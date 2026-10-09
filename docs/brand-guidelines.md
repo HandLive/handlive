@@ -2,7 +2,7 @@ English | [Tiếng Việt](brand-guidelines.vi.md)
 
 # HandLive brand guidelines
 
-Version 1.2, 2026-10-07. The source of truth for HandLive's story, voice, messages, logo, app icon,
+Version 1.3, 2026-10-08. The source of truth for HandLive's story, voice, messages, logo, app icon,
 colors, and promo images. How the brand appears inside the apps (where brand color may go, the welcome
 screen, the wordmark in the UI) is in the design system: [Branding](design-system/1-foundations/11-thuong-hieu.md).
 
@@ -96,13 +96,34 @@ The colors are those of dawn: warm and calm. HandLive should feel like a lamp le
 | One-liner | Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại Android, ngay trên Mac, iPhone và iPad. |
 | App Store subtitle (≤ 30) | Your phone's texts and calls | Tin nhắn, gọi từ điện thoại |
 | Play short description (≤ 80) | Clipboard, SMS, and calls from your phone on your Mac, iPhone, and iPad. | Bảng nhớ tạm, SMS và cuộc gọi từ điện thoại lên Mac, iPhone và iPad. |
-| Store description, first paragraph | Your Android phone, within reach. HandLive brings clipboard, SMS, and calls to your Mac, iPhone, and iPad — end-to-end encrypted, no account needed, open source. | Điện thoại Android, ngay trong tầm tay. HandLive đưa bảng nhớ tạm, SMS và cuộc gọi lên Mac, iPhone và iPad — mã hóa đầu cuối, không cần tài khoản, mã nguồn mở. |
+| Store description, first paragraph | Your Android phone, without ever having to pick it up. HandLive keeps your phone's clipboard, texts, and calls within reach on your Mac, iPhone, and iPad — copy something on your phone and paste it on your Mac moments later, read and reply to texts without reaching for your pocket, and see who's calling so you can handle it from right where you're sitting. | Điện thoại Android của bạn, mà không cần cầm lên. HandLive giữ bảng nhớ tạm, tin nhắn và cuộc gọi từ điện thoại luôn trong tầm với trên Mac, iPhone và iPad: chép gì đó trên điện thoại, một chút sau dán ngay trên Mac; đọc và trả lời tin nhắn mà không cần với tay lấy điện thoại; và xem ai đang gọi để xử lý ngay tại chỗ bạn đang ngồi. |
 
 ### Elevator pitch
 
 HandLive brings your Android phone to your Mac, iPhone, and iPad. Copy on one, paste on the other.
 Read and answer texts, see who's calling, and answer or decline from your desk. Everything is
 end-to-end encrypted, works on your own Wi-Fi without an account, and the code is open source.
+
+### Full description
+
+Store listing copy for Google Play and App Store Connect (tone matched to Lenovo Smart Connect and
+Intel Unison per project owner's feedback, 2026-10-08).
+
+```
+Your Android phone, without ever having to pick it up. HandLive keeps your phone's clipboard, texts, and calls within reach on your Mac, iPhone, and iPad — copy something on your phone and paste it on your Mac moments later, read and reply to texts without reaching for your pocket, and see who's calling so you can handle it from right where you're sitting.
+
+Pairing takes one QR code scan — no account, no sign-up, nothing to remember. From there, HandLive quietly keeps your devices in step:
+
+• Copy on one device, paste on another — clipboard content shows up on your other screens in under 50 ms on the same Wi-Fi
+• Read and reply to your phone's texts from your Mac, iPhone, or iPad
+• See who's calling, and answer, decline, or end the call from your Mac
+
+Everything that moves between your devices is end-to-end encrypted along the way — only your own paired devices ever hold the keys. On your own Wi-Fi, your data never has to leave your network; away from it, an open-source relay carries the encrypted bytes for you, without ever being able to read them.
+
+HandLive is built the way each platform expects, so it feels native on Mac, iPhone, and iPad, not bolted on. The whole project — apps and relay — is open source under Apache-2.0: read the code, check our claims, or help build what's next.
+
+No ads, no analytics, no tracking. Just your phone, right where you're already looking.
+```
 
 ### Message pillars
 
@@ -281,6 +302,7 @@ delete or cancel.
 | `github-social-preview.png` | 1280 × 640 | Social preview of every HandLive repository on GitHub |
 | `readme-hero.en.png`, `readme-hero.vi.png` | 1600 × 600 | Top of `README.md` and `README.vi.md` |
 | `release-banner-beta.en.png`, `release-banner-beta.vi.png` | 1280 × 640 | Release notes and posts for `v0.1.0-beta.1` |
+| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Google Play Console store listing feature graphic |
 
 Layout: lockup top left; headline (the tagline) in Be Vietnam Pro Bold, plum; one or two supporting
 lines in a softer plum (#6b5562); the mark large, bleeding off the bottom right.
@@ -322,6 +344,7 @@ python3 tools/brand/build_brand_assets.py \
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.3 | 2026-10-08 | Full description for Play Console / App Store Connect added to §4, tone matched to Lenovo Smart Connect and Intel Unison per owner feedback; the opening line in the Messages table updated to match |
 | 1.2 | 2026-10-07 | The Mac app icon is the same Liquid Glass `AppIcon.icon` as iOS; no compact mark at 16 and 32 pt on the Mac app icon (project owner's decision); the `AppIcon.appiconset` is gone |
 | 1.1 | 2026-10-07 | Liquid Glass app icon for iOS and iPadOS (`AppIcon.icon` from the generator); the Mac keeps the compact-mark set |
 | 1.0 | 2026-10-01 | First guidelines: the signal fire at dawn (logo, app icon, voice, messages, promo); dawn values for the `brand-*` tokens |

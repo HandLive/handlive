@@ -111,6 +111,8 @@ def build_hub(t):
         made.append(write(f"promo/readme-hero.{lang}.svg", comp.promo(1600, 600, word, title, lines[:2]), 1600))
         made.append(write(f"promo/release-banner-beta.{lang}.svg",
                           comp.promo(1280, 640, word, title, lines, badge=t[c["badge"]]), 1280))
+        made.append(write(f"promo/feature-graphic-play.{lang}.svg",
+                          comp.promo(1024, 500, word, title, lines[:2]), 1024))
     return made
 
 
