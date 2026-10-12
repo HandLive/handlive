@@ -1,6 +1,6 @@
 #!/bin/zsh
-# One run from the hub root: confirm the four FCM secrets, merge the Android R8
-# branch, download the signed Play bundle built on CI, then merge the hub branch.
+# One run from the hub root: confirm the four FCM secrets, merge the Android
+# play-bundle branch, download the signed Play bundle built on CI, then merge the hub branch.
 # Status lines and secret names only. Secret values are never printed.
 # Hub has no CI. Do not use `gh pr checks --watch` there: with no checks it exits
 # on "no checks reported" and would block the merge. Wait only when checks exist.
@@ -68,7 +68,7 @@ print -r -- "ok: ${step}"
 step="android branch"
 cd "${android_dir}"
 branch="$(git branch --show-current)"
-if [[ "${branch}" != "chore/release-r8" ]]; then
+if [[ "${branch}" != "chore/play-bundle-ci" ]]; then
   die " branch is ${branch:-detached}"
 fi
 print -r -- "ok: ${step}"
@@ -87,8 +87,24 @@ if [[ "${index_status}" -ne 0 ]]; then
 fi
 print -r -- "ok: ${step}"
 
+step="android commits"
+git fetch origin
+ahead="$(git rev-list --count origin/main..HEAD)"
+if [[ "${ahead}" -eq 0 ]]; then
+  die " no commits beyond origin/main"
+fi
+print -r -- "ok: ${step}"
+
+step="android pull request state"
+pr_state_status=0
+pr_state="$(gh pr view --json state --jq .state 2>/dev/null)" || pr_state_status=$?
+if [[ "${pr_state_status}" -eq 0 && "${pr_state}" == "MERGED" ]]; then
+  die " pull request already merged"
+fi
+print -r -- "ok: ${step}"
+
 step="android push"
-git push -u origin chore/release-r8
+git push -u origin chore/play-bundle-ci
 print -r -- "ok: ${step}"
 
 step="android pull request"
@@ -99,8 +115,8 @@ if [[ "${pr_status}" -eq 0 && -n "${pr_number}" ]]; then
 else
   gh pr create \
     --base main \
-    --title "build(release): enable R8 shrinking and obfuscation" \
-    --body "Enable R8 shrinking and obfuscation for the Android release build and ship mapping.txt with the Play upload."
+    --title "ci(release): sign the release build and build a Play bundle on CI" \
+    --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt."
   print -r -- "ok: ${step} opened"
 fi
 
@@ -126,9 +142,8 @@ print -r -- "ok: ${step}"
 
 step="android merge"
 gh pr merge --squash --delete-branch \
-  --subject "build(release): enable R8 shrinking and obfuscation" \
-  --body "Enable R8 shrinking and obfuscation for the release build and ship mapping.txt with the Play upload.
-Sign the release when upload key settings are present in gradle.properties.
+  --subject "ci(release): sign the release build and build a Play bundle on CI" \
+  --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt.
 
 Signed-off-by: Hồ Xuân Dũng <me@hxd.vn>"
 print -r -- "ok: ${step}"
@@ -136,6 +151,14 @@ print -r -- "ok: ${step}"
 step="android update main"
 git checkout main
 git pull --ff-only
+print -r -- "ok: ${step}"
+
+step="android workflow on main"
+workflow_on_main=0
+gh api "repos/HandLive/handlive-android/contents/.github/workflows/play-bundle.yml?ref=main" >/dev/null || workflow_on_main=$?
+if [[ "${workflow_on_main}" -ne 0 ]]; then
+  die " play-bundle.yml is not on main"
+fi
 print -r -- "ok: ${step}"
 
 # 30s skew so the newest play-bundle run on main is the one this dispatch created.
