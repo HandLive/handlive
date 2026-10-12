@@ -115,7 +115,12 @@ gh pr checks --watch
 print -r -- "ok: ${step}"
 
 step="android merge"
-gh pr merge --squash --delete-branch
+gh pr merge --squash --delete-branch \
+  --subject "build(release): enable R8 shrinking and obfuscation" \
+  --body "Enable R8 shrinking and obfuscation for the release build and ship mapping.txt with the Play upload.
+Sign the release when upload key settings are present in gradle.properties.
+
+Signed-off-by: Hồ Xuân Dũng <me@hxd.vn>"
 print -r -- "ok: ${step}"
 
 step="android update main"
@@ -207,7 +212,12 @@ fi
 print -r -- "ok: ${step}"
 
 step="hub merge"
-gh pr merge --squash --delete-branch
+hub_subject="$(gh pr view --json title -q .title)"
+gh pr merge --squash --delete-branch \
+  --subject "${hub_subject}" \
+  --body "Store screenshots, android #13 docs, Phase 4 stopped, the G5 guide, the Play Console guide, and the release script.
+
+Signed-off-by: Hồ Xuân Dũng <me@hxd.vn>"
 print -r -- "ok: ${step}"
 
 step="print artifacts"
