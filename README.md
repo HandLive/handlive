@@ -15,9 +15,11 @@ HandLive is open source (Apache-2.0). This repository is the **documentation hub
 | | |
 |--|--|
 | **Latest release** | [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07): calls from other apps keep the app's name and survive a swiped in-call notification, text clips keep their HTML, the Liquid Glass app icon on iPhone, iPad and Mac, the iPhone keeps its session 25 s in the background; same files on that one page as beta.2: Mac DMG signed ad hoc (Open Anyway once), iOS IPA (unsigned, for sideloading), Android APK (`foss`, signed); every change since beta.2 passed a security scan ([deployment guide](docs/deployment-guide.md)) |
+| **Store screenshots** | App Store Connect (iOS, native 1320×2868) and Play Console (Android, 1080×1920) screenshots recaptured at the required size (2026-10-12) |
 | **Phases on `main`** | 0–3 product code; Phase 4–6 **spike probes** also on `main` (2026-09-30) |
 | **Still open before 1.0** | Gates **G1** (real-device matrix) and **G2** (Play Console); real relay / APNs / FCM checks |
-| **In progress** | G4/G5/G6 hardware and browser decisions; product cards for Phases 4–6 not started |
+| **In progress** | G5/G6 hardware and browser decisions; product cards for Phases 5–6 not started |
+| **Phase 4 stopped** | Owner decision (2026-10-12): only macOS 27 is available, so calls on the computer stay notification + answer/decline/end only, no audio; gate G4 is closed, not reopened unless the owner decides otherwise |
 | **Languages** | English (default) and Vietnamese; every hub doc has `X.md` + `X.vi.md` |
 | **Website** | WordPress product site and blog in `website/`, English and Vietnamese; runs locally, not deployed yet ([guide](docs/website.md)) |
 
@@ -29,8 +31,8 @@ Beta builds are for early testers. They are not App Store / Play Store releases 
 |---------|:-----:|:------------:|
 | Two-way clipboard (text keeps its HTML, so an article pastes with its pictures; one image at a time) | Yes | Yes |
 | Receive and send SMS | Yes | Yes |
-| Call details and control (answer, decline, end; hold/DTMF over HFP later) | Yes | Details and decline only (no audio) |
-| Call audio on the computer | Planned (Phase 4) | No (Apple has no HF-side HFP API) |
+| Call details and control (answer, decline, end) | Yes | Details and decline only (no audio) |
+| Call audio on the computer | Not planned — Phase 4 stopped (owner decision, 2026-10-12) | No (Apple has no HF-side HFP API) |
 | Virtual camera and microphone | Planned (Phase 5) | No |
 | Continue Browsing (open page follows you) | Planned (Phase 6) | Planned (from the phone only) |
 
@@ -53,7 +55,7 @@ Full set (English and Vietnamese): [`docs/screenshots/README.md`](docs/screensho
 ## How it works
 
 - **WebSocket** moves clipboard, SMS, call details, and notifications. Android runs a Ktor server; peers find each other with mDNS.
-- **Bluetooth HFP SCO** carries **call audio only** (Phase 4). When HFP is busy, the design falls back to Opus over WebSocket (needs Shizuku on some devices).
+- **Bluetooth HFP SCO** would have carried **call audio** (Phase 4, with an Opus-over-WebSocket fallback); the owner stopped Phase 4 (2026-10-12) — calls on the computer keep notification and answer/decline/end control only, no audio, unless this reopens.
 - **E2E crypto:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, **QR pairing**.
 - **Cloud relay** (Rust) forwards encrypted blobs when devices are not on the same LAN. It never reads content.
 
@@ -61,23 +63,23 @@ Details: [`docs/system-architecture.md`](docs/system-architecture.md) · [`plans
 
 ## Roadmap and progress
 
-Phases ship in order, each as a usable slice. Exception (owner, 2026-09-28): Phases 5 and 6 start before Phase 4 finishes, because Phase 4 waits on the G4 HFP hardware spike.
+Phases ship in order, each as a usable slice. Exception (owner, 2026-09-28): Phases 5 and 6 start before Phase 4. Phase 4 itself is stopped (owner decision, 2026-10-12): calls on the computer stay notification + answer/decline/end only, no audio; gate G4 is closed, reopened only if the owner decides to revisit call audio.
 
 Full narrative: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
 
-| Phase / gate | Goal | Status (2026-10-05) |
+| Phase / gate | Goal | Status (2026-10-12) |
 |--------------|------|---------------------|
 | **0** Scaffold, protocol, crypto, CI | Shared vectors, green CI | **Done** |
-| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable; one-sided pair after a key reset fixed (2026-10-04); an image copied with a text beside its URI is sent as the image, a lost URI grant is told on Send Clipboard, e2e covers phone → Mac images (2026-10-05) · a text clip keeps its HTML (`text/html` capability, CLIP-01 API 5 `html`, 2026-10-05) · the Accessibility service blocked by Android's restricted setting is no longer silent: the guidance comes back when the user returns without turning it on, consent is asked once (2026-10-05, android #6, replayed on the S25); the Auto-Send switch asks before turning off a service that never came on (android #7) |
+| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable; one-sided pair after a key reset fixed (2026-10-04); an image copied with a text beside its URI is sent as the image, a lost URI grant is told on Send Clipboard, e2e covers phone → Mac images (2026-10-05) · a text clip keeps its HTML (`text/html` capability, CLIP-01 API 5 `html`, 2026-10-05) · the Accessibility service blocked by Android's restricted setting is no longer silent: the guidance comes back when the user returns without turning it on, consent is asked once (2026-10-05, android #6, replayed on the S25); the Auto-Send switch asks before turning off a service that never came on (android #7) · reading copied images opens only items shared by other apps via a content provider, other URIs rejected (2026-10-12, android #13) |
 | **2** SMS + iOS + relay + push | Conversations, Rust relay, APNs/FCM | **Code done** · G2 and real push still open · the iPhone keeps its session up to 25 s in the background (2026-10-05, apple #4) · the app icon is Liquid Glass on iPhone, iPad and Mac (2026-10-07, apple #7 + #8, hub #17 + #19) |
 | **3** Call info and control | Telecom APIs, Mac panel, iOS metadata | **Code done** · real-device checks open · calls from other apps (CALL-05): the Mac names the app instead of its package, and swiping the in-call notification away on Android 14+ no longer closes the Mac panel (2026-10-05, android #8 + hub #15, merged 2026-10-07; S25 check open); the call bench measures app calls (shared #6); the e2e harness drives a fake calling app on the emulator: label, decline, swipe, upload, hang-up (2026-10-07, android #9 + shared #7) |
-| **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike on `main`** (`HFPSpike`) · G4 needs BT phone + live call |
+| **4** Call audio | HFP/SCO + Opus/WS fallback | **Stopped** (owner decision, 2026-10-12) · G4 closed: only macOS 27 available, calls stay notification + answer/decline/end, no audio · reopens only on a later owner decision |
 | **5** Virtual camera / mic | CMIOExtension + AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs paid Apple Developer team |
 | **6** Continue Browsing | Foreground URL across devices | **Spike on `main`** · Chrome/Samsung measured; browser go/no-go pending |
-| **7** Connect anywhere | Auto link without a shared network: Bluetooth, Wi-Fi Direct (Mac Wi-Fi idle), relay; no Wi-Fi change | **Proposed** (2026-10-01) · starts after G4/G5/G6 with spike G7 |
+| **7** Connect anywhere | Auto link without a shared network: Bluetooth, Wi-Fi Direct (Mac Wi-Fi idle), relay; no Wi-Fi change | **Proposed** (2026-10-01) · starts after G5/G6 (G4 closed 2026-10-12) with spike G7 |
 | **G0** Test vectors | | **Done** |
-| **G1** Real-device Phase 1 matrix | | **Open** (before 1.0) |
-| **G2** Play Console SMS / call-log | | **Open** (before 1.0; Plan B: F-Droid/APK) |
+| **G1** Real-device Phase 1 matrix | | **Open** (before 1.0) · App Store Connect screenshots recaptured at native 1320×2868 (2026-10-12) |
+| **G2** Play Console SMS / call-log | | **Open** (before 1.0; Plan B: F-Droid/APK) · Play Console screenshots recaptured at 1080×1920 (2026-10-12) |
 
 ### Rule: keep this roadmap current
 

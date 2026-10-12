@@ -8,12 +8,22 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ### Thay đổi
 
+- Ảnh gian hàng: chụp lại cả 11 ảnh App Store Connect trên Simulator iPhone 6.9" ở kích thước gốc 1320×2868 (trước bị
+  thu nhỏ còn khung gallery cao 1200px), và 8 ảnh Play Console trên emulator 1080×1920 (trước là 540x1200, vượt tỉ lệ
+  tối đa 2:1 của Play); màn hình thiết bị đã ghép giờ hiện tên thiết bị thật thay vì định danh ghép thử nghiệm
+  (`docs/screenshots/android/`, `docs/screenshots/ios/`).
 - iPhone và iPad: App Group là `group.app.hxd.handlive` (trước là `group.app.handlive`) và bundle id của Notification
   Service Extension là `app.handlive.ios.notifications` (trước là `app.handlive.ios.nse`): hai định danh cũ đang thuộc
   Personal Team miễn phí dùng trước team trả phí nên không đăng ký sang được. App Group không còn liệt kê trong Keychain
   Sharing (tên App Group tự nó đã là keychain access group), và extension không khai entitlement Communication Notifications
   nữa (Apple chỉ cấp capability này cho app target). Bản beta đã cài khi cập nhật lên bản này mất cài đặt và
   khóa, phải ghép đôi lại; app Mac và Android không đổi.
+
+### Security
+
+- Ảnh bảng nhớ tạm trên Android: luồng đọc ảnh chỉ mở nội dung do ứng dụng khác chia sẻ qua content provider; mọi URI
+  khác (file, resource, provider của chính HandLive, hoặc provider không tồn tại) đều bị từ chối và báo "Không đọc được
+  ảnh" (android #13).
 
 ## [0.1.0-beta.3] — 07/10/2026
 

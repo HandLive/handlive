@@ -8,12 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Store screenshots: all 11 iOS App Store Connect screenshots recaptured on the iPhone 6.9" Simulator at the native
+  1320×2868 size (was downscaled to a 1200px-tall gallery crop), and the 8 Android Play Console screenshots recaptured
+  on a 1080×1920 emulator (was 540x1200, over Play's 2:1 max aspect ratio); the paired-device screens now show a real
+  device name instead of the test pairing identity (`docs/screenshots/android/`, `docs/screenshots/ios/`).
 - iPhone and iPad: the App Group is `group.app.hxd.handlive` (was `group.app.handlive`) and the Notification Service
   Extension's bundle id is `app.handlive.ios.notifications` (was `app.handlive.ios.nse`): both old identifiers are held
   by the free Personal Team used before the paid team and cannot be registered to it. The App Group is no longer
   listed under Keychain Sharing (an App Group name is a keychain access group by itself), and the extension no longer
   claims the Communication Notifications entitlement (Apple grants that capability to the app target only). A beta install updated to
   this build loses its settings and keys and must pair again; the Mac app and Android are unchanged.
+
+### Security
+
+- Clipboard images on Android: reading copied images now opens only items shared by other apps via a content provider;
+  any other URI (file, resource, HandLive's own provider, or unresolved provider) is rejected with "Couldn't read the image"
+  (android #13).
 
 ## [0.1.0-beta.3] — 2026-10-07
 

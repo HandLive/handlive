@@ -15,9 +15,11 @@ HandLive là mã nguồn mở (Apache-2.0). Kho này là **hub tài liệu**. M�
 | | |
 |--|--|
 | **Bản phát hành mới nhất** | [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (07/10/2026): cuộc gọi từ ứng dụng khác giữ tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ, clip chữ giữ HTML, biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac, iPhone giữ phiên 25 giây khi chạy nền; vẫn các tệp như beta.2 ở cùng trang đó: DMG Mac ký ad-hoc (bấm Open Anyway một lần), IPA iOS (chưa ký, để sideload), APK Android (`foss`, đã ký); mọi thay đổi từ beta.2 đã qua quét bảo mật ([hướng dẫn phân phối](docs/deployment-guide.vi.md)) |
+| **Ảnh cho gian hàng** | Ảnh App Store Connect (iOS, 1320×2868 gốc) và Play Console (Android, 1080×1920) đã chụp lại đúng kích thước yêu cầu (12/10/2026) |
 | **Phase trên `main`** | 0–3 mã sản phẩm; spike Phase 4–6 cũng trên `main` (30/09/2026) |
 | **Còn mở trước 1.0** | Cổng **G1** (ma trận máy thật) và **G2** (Play Console); kiểm relay / APNs / FCM thật |
-| **Đang làm** | Quyết định phần cứng/trình duyệt G4/G5/G6; chưa mở thẻ sản phẩm Phase 4–6 |
+| **Đang làm** | Quyết định phần cứng/trình duyệt G5/G6; chưa mở thẻ sản phẩm Phase 5–6 |
+| **Phase 4 dừng** | Quyết định của chủ dự án (12/10/2026): chỉ có Mac macOS 27, nên cuộc gọi trên máy tính chỉ còn thông báo và nút nghe/từ chối/kết thúc, không có âm thanh; cổng G4 đóng, chỉ mở lại khi chủ dự án đổi ý |
 | **Ngôn ngữ** | Tiếng Anh (mặc định) và tiếng Việt; mọi tài liệu hub có `X.md` + `X.vi.md` |
 | **Website** | Website sản phẩm và blog WordPress ở `website/`, tiếng Anh và tiếng Việt; chạy trên máy, chưa triển khai ([hướng dẫn](docs/website.vi.md)) |
 
@@ -29,8 +31,8 @@ Bản beta dành cho người thử sớm. Chưa phải bản trên App Store / 
 |-----------|:-----:|:------------:|
 | Clipboard hai chiều (chữ giữ dạng HTML nên bài báo dán ra kèm ảnh; mỗi lần một ảnh) | Có | Có |
 | SMS nhận và gửi | Có | Có |
-| Thông tin và điều khiển cuộc gọi (nghe, từ chối, kết thúc; giữ máy/DTMF qua HFP sau) | Có | Chỉ thông tin và từ chối (không âm thanh) |
-| Âm thanh cuộc gọi trên máy tính | Dự kiến (Phase 4) | Không (Apple không mở API HFP phía tai nghe) |
+| Thông tin và điều khiển cuộc gọi (nghe, từ chối, kết thúc) | Có | Chỉ thông tin và từ chối (không âm thanh) |
+| Âm thanh cuộc gọi trên máy tính | Không còn dự kiến — Phase 4 dừng (quyết định của chủ dự án, 12/10/2026) | Không (Apple không mở API HFP phía tai nghe) |
 | Camera và mic ảo | Dự kiến (Phase 5) | Không |
 | Duyệt web tiếp (trang đang mở theo bạn) | Dự kiến (Phase 6) | Dự kiến (chỉ từ điện thoại) |
 
@@ -53,7 +55,7 @@ Bộ đầy đủ (Anh và Việt): [`docs/screenshots/README.vi.md`](docs/scree
 ## Cách hoạt động
 
 - **WebSocket** chuyển clipboard, SMS, thông tin cuộc gọi và thông báo. Android chạy máy chủ Ktor; các máy tìm nhau bằng mDNS.
-- **Bluetooth HFP SCO** chỉ mang **âm thanh cuộc gọi** (Phase 4). Khi HFP bận, thiết kế chuyển sang Opus qua WebSocket (cần Shizuku trên một số máy).
+- **Bluetooth HFP SCO** lẽ ra mang **âm thanh cuộc gọi** (Phase 4, dự phòng Opus qua WebSocket); chủ dự án đã dừng Phase 4 (12/10/2026) — cuộc gọi trên máy tính chỉ còn thông báo và nút nghe/từ chối/kết thúc, không có âm thanh, trừ khi phase này mở lại.
 - **Mã hóa E2E:** payload XChaCha20-Poly1305, khóa phiên X25519 + HKDF, **ghép cặp QR**.
 - **Cloud relay** (Rust) chuyển khối đã mã hóa khi thiết bị không cùng LAN. Relay không đọc nội dung.
 
@@ -61,23 +63,23 @@ Chi tiết: [`docs/system-architecture.vi.md`](docs/system-architecture.vi.md) �
 
 ## Lộ trình và tiến độ
 
-HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike HFP của cổng G4.
+HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước Phase 4. Phase 4 đã dừng (quyết định của chủ dự án, 12/10/2026): cuộc gọi trên máy tính chỉ còn thông báo và nút nghe/từ chối/kết thúc, không có âm thanh; cổng G4 đóng, chỉ mở lại khi chủ dự án quyết định xem lại âm thanh cuộc gọi.
 
 Mô tả đầy đủ: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md). Thẻ việc: [`plans/20260925-implementation/plan.vi.md`](plans/20260925-implementation/plan.vi.md).
 
-| Phase / cổng | Mục tiêu | Trạng thái (05/10/2026) |
+| Phase / cổng | Mục tiêu | Trạng thái (12/10/2026) |
 |--------------|----------|-------------------------|
 | **0** Khung, giao thức, mã hóa, CI | Vector dùng chung, CI xanh | **Xong** |
-| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); ảnh sao chép kèm chữ bên cạnh URI được gửi như ảnh, mất quyền URI được báo khi bấm Gửi bảng nhớ tạm, e2e kiểm ảnh điện thoại → Mac (05/10/2026) · clip chữ giữ dạng HTML (capability `text/html`, CLIP-01 API 5 `html`, 05/10/2026) · dịch vụ Hỗ trợ tiếp cận bị Android chặn bởi chế độ cài đặt hạn chế không còn im lặng: hướng dẫn hiện lại khi người dùng quay về mà chưa bật, chỉ hỏi đồng ý một lần (05/10/2026, android #6, đã chạy lại trên S25); công tắc Tự gửi hỏi trước khi tắt một dịch vụ chưa từng bật được (android #7) |
+| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WS LAN, QR | **Mã xong** · G1 còn mở · ghép S25↔Mac ổn định; đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); ảnh sao chép kèm chữ bên cạnh URI được gửi như ảnh, mất quyền URI được báo khi bấm Gửi bảng nhớ tạm, e2e kiểm ảnh điện thoại → Mac (05/10/2026) · clip chữ giữ dạng HTML (capability `text/html`, CLIP-01 API 5 `html`, 05/10/2026) · dịch vụ Hỗ trợ tiếp cận bị Android chặn bởi chế độ cài đặt hạn chế không còn im lặng: hướng dẫn hiện lại khi người dùng quay về mà chưa bật, chỉ hỏi đồng ý một lần (05/10/2026, android #6, đã chạy lại trên S25); công tắc Tự gửi hỏi trước khi tắt một dịch vụ chưa từng bật được (android #7) · khi đọc ảnh, Android chỉ mở ảnh do app khác chia sẻ qua content provider, mọi URI khác bị từ chối (12/10/2026, android #13) |
 | **2** SMS + iOS + relay + push | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · G2 và push thật còn mở · iPhone giữ phiên tối đa 25 giây khi chạy nền (05/10/2026, apple #4) · biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac (07/10/2026, apple #7 + #8, hub #17 + #19) |
 | **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, metadata iOS | **Mã xong** · kiểm máy thật còn mở · cuộc gọi từ ứng dụng khác (CALL-05): Mac hiện tên ứng dụng thay vì tên gói, vuốt bỏ thông báo đang gọi trên Android 14+ không còn đóng bảng trên Mac (05/10/2026, android #8 + hub #15, đã merge 07/10/2026; còn kiểm trên S25); bench cuộc gọi đo được cuộc gọi ứng dụng (shared #6); e2e điều khiển một ứng dụng gọi giả trên emulator: tên ứng dụng, từ chối, vuốt bỏ, tải lên, gác máy (07/10/2026, android #9 + shared #7) |
-| **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Spike trên `main`** (`HFPSpike`) · G4 cần BT điện thoại + cuộc gọi thật |
+| **4** Âm thanh cuộc gọi | HFP/SCO + Opus/WS dự phòng | **Đã dừng** (quyết định của chủ dự án, 12/10/2026) · G4 đóng: chỉ có Mac macOS 27, cuộc gọi chỉ còn thông báo và nút nghe/từ chối/kết thúc, không âm thanh · chỉ mở lại khi chủ dự án quyết định sau |
 | **5** Camera / mic ảo | CMIOExtension + AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
 | **6** Duyệt web tiếp | URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome/Samsung; còn go/no-go trình duyệt |
-| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng: Bluetooth, Wi-Fi Direct (Wi-Fi Mac rảnh), relay; không đổi Wi-Fi | **Đề xuất** (2026-10-01) · bắt đầu sau G4/G5/G6 bằng spike G7 |
+| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng: Bluetooth, Wi-Fi Direct (Wi-Fi Mac rảnh), relay; không đổi Wi-Fi | **Đề xuất** (2026-10-01) · bắt đầu sau G5/G6 (G4 đã đóng 12/10/2026) bằng spike G7 |
 | **G0** Vector mã hóa | | **Xong** |
-| **G1** Ma trận Phase 1 máy thật | | **Mở** (trước 1.0) |
-| **G2** Tờ khai SMS / nhật ký Play Console | | **Mở** (trước 1.0; phương án B: F-Droid/APK) |
+| **G1** Ma trận Phase 1 máy thật | | **Mở** (trước 1.0) · ảnh App Store Connect đã chụp lại ở kích thước gốc 1320×2868 (12/10/2026) |
+| **G2** Tờ khai SMS / nhật ký Play Console | | **Mở** (trước 1.0; phương án B: F-Droid/APK) · ảnh Play Console đã chụp lại ở 1080×1920 (12/10/2026) |
 
 ### Quy định: luôn cập nhật lộ trình trên README
 
