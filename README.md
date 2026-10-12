@@ -10,29 +10,29 @@ English | [Tiếng Việt](README.vi.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v0.1.0--beta.3-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3)
 
-HandLive connects Android phones with macOS, iOS, and iPadOS devices. It syncs your clipboard, bridges SMS conversations, and shows call notifications with action controls with zero cloud lock-in. End-to-end encryption stays on by default, and the entire project is open source under Apache-2.0.
+HandLive connects Android devices with macOS, iOS, and iPadOS. It syncs your clipboard, bridges SMS conversations, and delivers call notifications with action controls—without cloud lock-in. End-to-end encryption is always on, and the entire project is open source under Apache-2.0.
 
 ## Get the beta
 
 Download the latest pre-release [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07):
-- **macOS:** Ad-hoc signed DMG (open via *Open Anyway* on first run).
+- **macOS:** Ad-hoc signed DMG (choose *Open Anyway* on first run).
 - **Android:** Signed `foss` APK.
 - **iOS / iPadOS:** Unsigned IPA for sideloading.
 
-Beta builds are for early testers and not yet on the App Store or Google Play. See the [Deployment Guide](docs/deployment-guide.md) for installation and packaging details.
+Beta builds are intended for early testers and are not yet on the App Store or Google Play. See the [Deployment Guide](docs/deployment-guide.md) for installation and packaging details.
 
 ## Features
 
 | Feature | macOS | iOS / iPadOS |
 |---------|:-----:|:------------:|
 | Two-way clipboard (HTML formatted text and images) | Yes | Yes |
-| Receive and send SMS | Yes | Yes |
+| Send and receive SMS | Yes | Yes |
 | Call details and actions (answer, decline, end) | Yes | Details and decline only |
 | Call audio on the computer | Not planned (Phase 4 stopped, 2026-10-12) | No (Apple has no HF-side HFP API) |
 | Virtual camera and mic | Planned (Phase 5) | No |
 | Continue Browsing (open page follows you) | Planned (Phase 6) | Planned (from the phone only) |
 
-End-to-end encryption stays on. Users cannot turn it off.
+End-to-end encryption is always on and cannot be disabled.
 
 ## Screenshots
 
@@ -41,15 +41,15 @@ End-to-end encryption stays on. Users cannot turn it off.
 | <img src="docs/screenshots/android/04-devices-connected.en.png" alt="Android: paired Mac over Wi-Fi" width="220"> | <img src="docs/screenshots/ios/04-sms-conversation.en.png" alt="iPhone: SMS from the phone" width="220"> | <img src="docs/screenshots/macos/04-incoming-call-panel.en.png" alt="Mac: incoming-call panel" width="320"> |
 | Android: paired Mac over Wi-Fi | iPhone: SMS from the phone | Mac: incoming-call panel |
 
-Full gallery (English and Vietnamese): [`docs/screenshots/README.md`](docs/screenshots/README.md).
+Full screenshot gallery (English and Vietnamese): [`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 ## How it works
 
-- **Local WebSocket & mDNS:** Fast peer-to-peer data transport over Wi-Fi; Android runs an embedded Ktor server.
-- **E2E crypto:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, and QR pairing.
-- **Zero-knowledge relay:** Stateless Rust relay forwards encrypted blobs across different networks without reading content.
+- **Local WebSocket & mDNS:** Fast peer-to-peer transport over Wi-Fi, powered by an embedded Ktor server on Android.
+- **End-to-end encryption:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, and QR pairing.
+- **Zero-knowledge relay:** A stateless Rust relay forwards encrypted envelopes across networks without inspecting content.
 
-Full technical details: [`docs/system-architecture.md`](docs/system-architecture.md).
+For full technical details, see [`docs/system-architecture.md`](docs/system-architecture.md).
 
 ## Status
 
@@ -71,7 +71,7 @@ Full roadmap and history: [`docs/project-roadmap.md`](docs/project-roadmap.md).
 
 ### Rule: keep this roadmap current
 
-Whenever a concrete task completes (phase card merged, gate closed, spike resolved, real-device fix on `main`), the same change set must update this table, the snapshot in [`docs/project-roadmap.md`](docs/project-roadmap.md), and hub [`CHANGELOG.md`](CHANGELOG.md) for user-visible changes.
+Whenever a concrete task completes (phase card merged, gate closed, spike resolved, or real-device fix on `main`), the same change set must update this table, the snapshot in [`docs/project-roadmap.md`](docs/project-roadmap.md), and hub [`CHANGELOG.md`](CHANGELOG.md) for user-visible changes.
 
 ## Repositories
 
@@ -79,7 +79,7 @@ Whenever a concrete task completes (phase card merged, gate closed, spike resolv
 |------------|-------------|
 | [handlive](https://github.com/HandLive/handlive) | Documentation hub, plans, and workspace tools |
 | [handlive-android](https://github.com/HandLive/handlive-android) | Android service and client application (Kotlin) |
-| [handlive-apple](https://github.com/HandLive/handlive-apple) | macOS menu bar app, iOS, and iPadOS application (Swift) |
+| [handlive-apple](https://github.com/HandLive/handlive-apple) | macOS menu bar app, iOS, and iPadOS apps (Swift) |
 | [handlive-relay](https://github.com/HandLive/handlive-relay) | Zero-knowledge encrypted relay server (Rust) |
 | [handlive-shared](https://github.com/HandLive/handlive-shared) | Shared protocol schemas, crypto test vectors, and UI strings |
 
