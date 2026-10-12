@@ -118,7 +118,7 @@ chạy trong Wi-Fi của chính bạn mà không cần tài khoản, và mã ngu
 |---|---|
 | Người dùng Mac có điện thoại Android | "Tin nhắn và cuộc gọi, ngay trên Mac của bạn." |
 | Người coi trọng quyền riêng tư | "Mã hóa đầu cuối. Không tài khoản. Mã nguồn mở." |
-| Lập trình viên, người đóng góp | "Mã nguồn mở, WebSocket cho dữ liệu và Bluetooth cho giọng nói; cùng xây với chúng tôi." |
+| Lập trình viên, người đóng góp | "Mã nguồn mở, mã hóa đầu cuối qua WebSocket; cùng xây với chúng tôi." |
 
 ### Đoạn giới thiệu chuẩn
 

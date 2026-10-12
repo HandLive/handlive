@@ -118,7 +118,7 @@ end-to-end encrypted, works on your own Wi-Fi without an account, and the code i
 |---|---|
 | Mac people with an Android phone | "Your texts and calls, right on your Mac." |
 | Privacy-minded people | "End-to-end encrypted. No account. Open source." |
-| Developers, contributors | "Open source, WebSocket for data and Bluetooth for voice; come build it with us." |
+| Developers, contributors | "Open source, end-to-end encrypted over WebSocket; come build it with us." |
 
 ### Boilerplate
 
