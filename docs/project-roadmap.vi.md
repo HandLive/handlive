@@ -2,23 +2,27 @@
 
 # HandLive: Lộ trình
 
-> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
+> Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.vi.md`](../README.vi.md#trạng-thái) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
 
 HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm trước khi Phase 4 hoàn tất, vì Phase 4 chờ spike Bluetooth rảnh tay của cổng G4 trên phần cứng thật.
 
 ## Tiến độ tóm tắt (05/10/2026)
 
-**Tag mới nhất:** [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (beta thứ hai, bản đầu tiên có tệp cài đặt). Bảng sống: [`README.vi.md`](../README.vi.md#lộ-trình-và-tiến-độ).
+**Bản phát hành mới nhất:** [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (07/10/2026): cuộc gọi từ ứng dụng khác giữ tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ, clip chữ giữ HTML, biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac, iPhone giữ phiên 25 giây khi chạy nền; vẫn các tệp như beta.2 ở cùng trang đó: DMG Mac ký ad-hoc (bấm Open Anyway một lần), IPA iOS (chưa ký, để sideload), APK Android (`foss`, đã ký); mọi thay đổi từ beta.2 đã qua quét bảo mật ([hướng dẫn phân phối](deployment-guide.vi.md)). Bảng sống: [`README.vi.md`](../README.vi.md#trạng-thái).
 
 | Phase | Mã trên `main` | Cổng / điểm nghẽn |
 |-------|----------------|-------------------|
 | 0 | Xong | G0 xong |
-| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026); clip chữ mang kèm HTML (05/10/2026); hướng dẫn chế độ cài đặt hạn chế hiện lại khi quay về, chỉ hỏi đồng ý một lần (05/10/2026, android #6) |
+| 1 | Xong (26/09/2026) | G1 mở; ghép S25↔Mac ổn định (30/09/2026); đã sửa ghép đôi một phía sau khi đặt lại khóa (04/10/2026); item ảnh kèm chữ bên cạnh URI, báo mất quyền URI và e2e ảnh điện thoại → Mac (05/10/2026); clip chữ mang kèm HTML (capability `text/html`, CLIP-01 API 5 `html`, 05/10/2026); hướng dẫn chế độ cài đặt hạn chế hiện lại khi quay về, chỉ hỏi đồng ý một lần (05/10/2026, android #6, đã chạy lại trên S25); công tắc Tự gửi hỏi trước khi tắt một dịch vụ chưa từng bật được (android #7); giới hạn an toàn URI cho clipboard (12/10/2026, android #13) |
 | 2 | Xong (27/09/2026) | G2 mở; kiểm relay / APNs / FCM thật còn mở; iPhone giữ phiên 25 giây khi chạy nền (05/10/2026); biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac (07/10/2026, apple #7 + #8, hub #17 + #19) |
 | 3 | Xong (28/09/2026) | Kiểm máy thật còn mở; cuộc gọi ứng dụng hiện tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ (05/10/2026, android #8 + hub #15, đã merge 07/10/2026); bench cuộc gọi đọc được cuộc gọi ứng dụng (shared #6); e2e kiểm cuộc gọi ứng dụng bằng một ứng dụng gọi giả (07/10/2026, android #9 + shared #7) |
-| 4 | Spike trên `main` (`HFPSpike`, merge 30/09/2026) | G4: cần ghép BT điện thoại + cuộc gọi thật |
+| 4 | Dừng (quyết định chủ dự án 12/10/2026) | Cổng G4 đóng; bỏ âm thanh cuộc gọi, chỉ giữ thông tin và điều khiển |
 | 5 | Spike trên `main` (`CameraSpike`, merge 30/09/2026) | G5: cần Apple Developer trả phí |
 | 6 | Probe spike trên `main` (Apple+Android merge 30/09/2026); chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
+| 7 | Đề xuất (01/10/2026) | Bắt đầu sau G4/G5/G6 bằng spike G7 |
+| G0 | Xong | Vector kiểm thử |
+| G1 | Mở (trước 1.0) | Ma trận Phase 1 máy thật |
+| G2 | Mở (trước 1.0) | Tờ khai SMS / nhật ký Play Console (phương án B: F-Droid/APK) |
 
 ## Phase 1. Đồng bộ clipboard (MVP)
 
