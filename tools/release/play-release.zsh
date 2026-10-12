@@ -65,6 +65,8 @@ if (( ${#missing_secrets} )); then
 fi
 print -r -- "ok: ${step}"
 
+git -C android fetch origin
+
 step="android branch"
 cd "${android_dir}"
 branch="$(git branch --show-current)"
@@ -87,79 +89,90 @@ if [[ "${index_status}" -ne 0 ]]; then
 fi
 print -r -- "ok: ${step}"
 
-step="android commits"
-git fetch origin
-ahead="$(git rev-list --count origin/main..HEAD)"
-if [[ "${ahead}" -eq 0 ]]; then
-  die " no commits beyond origin/main"
-fi
-print -r -- "ok: ${step}"
-
 step="android pull request state"
 pr_state_status=0
 pr_state="$(gh pr view --json state --jq .state 2>/dev/null)" || pr_state_status=$?
 if [[ "${pr_state_status}" -eq 0 && "${pr_state}" == "MERGED" ]]; then
-  die " pull request already merged"
-fi
-print -r -- "ok: ${step}"
+  step="android workflow on main"
+  workflow_on_main=0
+  gh api "repos/HandLive/handlive-android/contents/.github/workflows/play-bundle.yml?ref=main" >/dev/null || workflow_on_main=$?
+  if [[ "${workflow_on_main}" -ne 0 ]]; then
+    die " play-bundle.yml is not on main"
+  fi
+  print -r -- "ok: android already merged"
 
-step="android push"
-git push -u origin chore/play-bundle-ci
-print -r -- "ok: ${step}"
-
-step="android pull request"
-pr_status=0
-pr_number="$(gh pr view --json number --jq .number 2>/dev/null)" || pr_status=$?
-if [[ "${pr_status}" -eq 0 && -n "${pr_number}" ]]; then
-  print -r -- "ok: ${step} already open"
+  step="android update main"
+  git checkout main
+  git pull --ff-only
+  print -r -- "ok: ${step}"
 else
-  gh pr create \
-    --base main \
-    --title "ci(release): sign the release build and build a Play bundle on CI" \
-    --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt."
-  print -r -- "ok: ${step} opened"
-fi
+  print -r -- "ok: ${step}"
 
-step="android checks"
-attempt=0
-while true; do
-  checks_status=0
-  checks_out="$(gh pr checks 2>&1)" || checks_status=$?
-  case "${checks_out}" in
-    *"no checks reported"*)
-      attempt=$((attempt + 1))
-      if [[ "${attempt}" -ge 12 ]]; then
-        die " no checks reported"
-      fi
-      sleep 5
-      continue
-      ;;
-  esac
-  break
-done
-gh pr checks --watch
-print -r -- "ok: ${step}"
+  step="android commits"
+  ahead="$(git rev-list --count origin/main..HEAD)"
+  if [[ "${ahead}" -eq 0 ]]; then
+    die " no commits beyond origin/main"
+  fi
+  print -r -- "ok: ${step}"
 
-step="android merge"
-gh pr merge --squash --delete-branch \
-  --subject "ci(release): sign the release build and build a Play bundle on CI" \
-  --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt.
+  step="android push"
+  git push -u origin chore/play-bundle-ci
+  print -r -- "ok: ${step}"
+
+  step="android pull request"
+  pr_status=0
+  pr_number="$(gh pr view --json number --jq .number 2>/dev/null)" || pr_status=$?
+  if [[ "${pr_status}" -eq 0 && -n "${pr_number}" ]]; then
+    print -r -- "ok: ${step} already open"
+  else
+    gh pr create \
+      --base main \
+      --title "ci(release): sign the release build and build a Play bundle on CI" \
+      --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt."
+    print -r -- "ok: ${step} opened"
+  fi
+
+  step="android checks"
+  attempt=0
+  while true; do
+    checks_status=0
+    checks_out="$(gh pr checks 2>&1)" || checks_status=$?
+    case "${checks_out}" in
+      *"no checks reported"*)
+        attempt=$((attempt + 1))
+        if [[ "${attempt}" -ge 12 ]]; then
+          die " no checks reported"
+        fi
+        sleep 5
+        continue
+        ;;
+    esac
+    break
+  done
+  gh pr checks --watch
+  print -r -- "ok: ${step}"
+
+  step="android merge"
+  gh pr merge --squash --delete-branch \
+    --subject "ci(release): sign the release build and build a Play bundle on CI" \
+    --body "Sign the release on CI with the release keystore in the release environment. The play-bundle workflow uploads the AAB and mapping.txt.
 
 Signed-off-by: Hồ Xuân Dũng <me@hxd.vn>"
-print -r -- "ok: ${step}"
+  print -r -- "ok: ${step}"
 
-step="android update main"
-git checkout main
-git pull --ff-only
-print -r -- "ok: ${step}"
+  step="android update main"
+  git checkout main
+  git pull --ff-only
+  print -r -- "ok: ${step}"
 
-step="android workflow on main"
-workflow_on_main=0
-gh api "repos/HandLive/handlive-android/contents/.github/workflows/play-bundle.yml?ref=main" >/dev/null || workflow_on_main=$?
-if [[ "${workflow_on_main}" -ne 0 ]]; then
-  die " play-bundle.yml is not on main"
+  step="android workflow on main"
+  workflow_on_main=0
+  gh api "repos/HandLive/handlive-android/contents/.github/workflows/play-bundle.yml?ref=main" >/dev/null || workflow_on_main=$?
+  if [[ "${workflow_on_main}" -ne 0 ]]; then
+    die " play-bundle.yml is not on main"
+  fi
+  print -r -- "ok: ${step}"
 fi
-print -r -- "ok: ${step}"
 
 # 30s skew so the newest play-bundle run on main is the one this dispatch created.
 step="android workflow"
