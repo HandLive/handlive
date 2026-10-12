@@ -296,6 +296,14 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
      checks the same condition as for reading, since Android 10). A-UI registers it in `onResume` and
      removes it in `onPause`; when called, it reads directly as in logic 2, without opening the
      transparent activity.
+  7. A clip item URI is opened only when its scheme is `content` and
+     `PackageManager.resolveContentProvider(authority, 0)` returns a provider whose package is not
+     HandLive's. Any other scheme, an authority that does not resolve, or HandLive's own provider is
+     not opened: `getType`, `openInputStream`, `coerceToText` and `coerceToHtmlText` are not called on
+     it. An image item then fails as unreadable (manual path: "Couldn't read the image", same wording
+     as CLIP-03 E10). A debug build logs `clip_read_failed` with `why=uri_not_allowed` and, for a
+     `content` URI, the authority only, never the path. Text already carried on the item is still
+     sent. An item with no `text` whose URI fails this check is not read.
 
 #### API 3 — Quick Settings tile and "Send Clipboard" button on the notification
 
@@ -824,7 +832,7 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # step 10: schedu
 | Actors | Primary: User. System: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (receives the forwarded copy). |
 | Preconditions | 1.<br>Clipboard is active and images are allowed per QC1 (`clip.send_images = true` on the sender, the receiver's `mimes` include the image MIME type).<br>2.<br>Android: the image is read through the automatic or manual path of CLIP-01 (the Share target accepts only text).<br>Mac: CLIP-02 polling is running and reading is allowed (C10).<br>3.<br>The receiver has room for the temporary file. |
 | Postconditions | **Success:** the receiver's clipboard holds the image (Android: a HandLive `content://` URI pointing to a file in `cache/clip/`; Mac: PNG or JPEG data); the receiver has recorded the QC4 trace and scheduled CLIP-05; the transfer's temporary file has been deleted (Android keeps the file of the clip currently on the clipboard); Android forwards the clip to the other clients (QC6).<br>**Failure or cancellation:** no side changes its clipboard; the temporary files are deleted. |
-| Exceptions | E1 — Images not allowed (`clip.send_images = false` on the sender, or the receiver's `mimes` lacks this MIME type): skipped, no notification.<br>E2 — Image (source or after normalization) > 10 MiB: `CLIP_TOO_LARGE`, reported in place "Image is too large (up to 10 MB)" (toast on Android, status line in the menu bar menu on the Mac).<br>E3 — The image cannot be decoded or converted: `CLIP_UNSUPPORTED_MIME`, logged only (the manual path shows "Couldn't read the image").<br>E4 — SHA-256 mismatch: the receiver returns `CLIP_CHECKSUM_MISMATCH`; the sender resends once with a new `transfer_id`; wrong again → "Couldn't send the image" in place (a status line in the menu on the Mac, a toast on Android; no system notification, C19).<br>E5 — A newer clip appears during the transfer: the sender sends `clipboard/cancel` `superseded`.<br>E6 — The user chooses "Cancel" on the progress (sender or receiver side): `clipboard/cancel` `user`.<br>E7 — The receiver gets no chunk within `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): it sends `clipboard/cancel` `timeout` and deletes the temporary file.<br>E8 — Connection lost midway: both sides delete their temporary files, no resume; when a new session starts, the whole image is replayed if still within 120 s (QC7).<br>E9 — Not enough space for the temporary file: `ack` `INTERNAL`, the receiver shows "Not enough storage to receive the image".<br>E10 — Android: the URI cannot be read (the permission was lost because the clip changed, or the clipboard never granted it): skipped on the automatic path; the manual path shows "Couldn't read the image". Debug builds log `clip_read_failed` with the reason and the URI's authority. |
+| Exceptions | E1 — Images not allowed (`clip.send_images = false` on the sender, or the receiver's `mimes` lacks this MIME type): skipped, no notification.<br>E2 — Image (source or after normalization) > 10 MiB: `CLIP_TOO_LARGE`, reported in place "Image is too large (up to 10 MB)" (toast on Android, status line in the menu bar menu on the Mac).<br>E3 — The image cannot be decoded or converted: `CLIP_UNSUPPORTED_MIME`, logged only (the manual path shows "Couldn't read the image").<br>E4 — SHA-256 mismatch: the receiver returns `CLIP_CHECKSUM_MISMATCH`; the sender resends once with a new `transfer_id`; wrong again → "Couldn't send the image" in place (a status line in the menu on the Mac, a toast on Android; no system notification, C19).<br>E5 — A newer clip appears during the transfer: the sender sends `clipboard/cancel` `superseded`.<br>E6 — The user chooses "Cancel" on the progress (sender or receiver side): `clipboard/cancel` `user`.<br>E7 — The receiver gets no chunk within `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): it sends `clipboard/cancel` `timeout` and deletes the temporary file.<br>E8 — Connection lost midway: both sides delete their temporary files, no resume; when a new session starts, the whole image is replayed if still within 120 s (QC7).<br>E9 — Not enough space for the temporary file: `ack` `INTERNAL`, the receiver shows "Not enough storage to receive the image".<br>E10 — Android: the URI cannot be read (the permission was lost because the clip changed, the clipboard never granted it, or the URI fails CLIP-01 API 2 logic 7): skipped on the automatic path; the manual path shows "Couldn't read the image". Debug builds log `clip_read_failed` with the reason and, for a `content` URI, the authority. A logic 7 refusal also logs `why=uri_not_allowed` and never the path. |
 | Special requirements | **Performance:** a 5 MB image < 2 s on the LAN (80 chunks); through the relay the limit is 2 MiB/s per pair, so a 10 MiB image takes ≥ 5 s.<br>Progress is shown for images > 1 MiB.<br>**Resources:** the receiver writes chunks straight to the file and hashes SHA-256 incrementally, never holding the whole image in memory; at most one incoming transfer from each peer; at most 4 chunks waiting in the WebSocket send buffer so that other envelopes (calls, SMS) can get ahead.<br>**Security:** every chunk is an encrypted envelope; the relay sees only `type = clipboard` and the size; temporary files live in the app's private storage; `FileProvider` exposes only the `cache/clip/` directory, and the pasting app gets a temporary read permission from the system. |
 
 ### 4.3.2 Screens
@@ -928,6 +936,7 @@ flowchart TB
 ```kotlin
 // [Design] In ClipboardReadActivity, on the IO thread, before finish()
 val uri = clip.getItemAt(0).uri ?: return
+// Open only after CLIP-01 API 2 logic 7: scheme content, provider in another package.
 val srcMime = contentResolver.getType(uri) ?: clip.description.getMimeType(0)
 val src = File(cacheDir, "clip/$transferId.src")
 contentResolver.openInputStream(uri)?.use { copyLimited(it, src, limit = CLIP_MAX_IMAGE + 1L) }   // over the limit → E2
@@ -946,6 +955,8 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
   4. The source and converted files live in `cache/clip/`; they are kept until `CLIP_STALE_AFTER` has
      passed, for replay (QC7), then deleted.
   5. For images, QC3 looks only at the `IS_SENSITIVE` extra (no Luhn check).
+  6. `getType` and `openInputStream` run only after CLIP-01 API 2 logic 7. A refused URI is not
+     opened; the read fails as E10.
 
 #### API 2 — Mac reads the image from `NSPasteboard`
 

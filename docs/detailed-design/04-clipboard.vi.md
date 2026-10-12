@@ -308,6 +308,14 @@ override fun onWindowFocusChanged(hasFocus: Boolean) {
   6. `OnPrimaryClipChangedListener` chỉ được hệ thống gọi khi HandLive có focus (mã nguồn AOSP kiểm
      cùng điều kiện với việc đọc, từ Android 10). A-UI đăng ký ở `onResume`, gỡ ở `onPause`; khi
      được gọi thì đọc trực tiếp như logic 2, không mở activity trong suốt.
+  7. URI của item chỉ được mở khi scheme là `content` và
+     `PackageManager.resolveContentProvider(authority, 0)` trả về provider có package khác package
+     của HandLive. Scheme khác, authority không resolve được, hoặc provider của chính HandLive thì
+     không mở: không gọi `getType`, `openInputStream`, `coerceToText` hay `coerceToHtmlText` trên URI
+     đó. Item ảnh thì coi là không đọc được (đường thủ công: "Không đọc được ảnh", cùng câu với
+     CLIP-03 E10). Bản debug ghi `clip_read_failed` với `why=uri_not_allowed` và, với URI `content`,
+     chỉ authority, không ghi đường dẫn. `text` đã có sẵn trên item vẫn được gửi. Item không có
+     `text` mà URI không qua kiểm tra này thì không đọc.
 
 #### API 3 — Ô Cài đặt nhanh và nút "Gửi bảng nhớ tạm" trên thông báo
 
@@ -825,7 +833,7 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # bước 10: h�
 | Tác nhân | Chính: Người dùng. Hệ thống: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1.<br>Clipboard hiệu lực và ảnh được phép theo QC1 (`clip.send_images = true` ở bên gửi, `mimes` của bên nhận có MIME ảnh).<br>2.<br>Android: ảnh được đọc qua đường tự động hoặc thủ công của CLIP-01 (đích Chia sẻ chỉ nhận văn bản).<br>Mac: hỏi vòng CLIP-02 đang chạy và được phép đọc (C10).<br>3.<br>Bên nhận còn chỗ cho tệp tạm. |
 | Điều kiện sau | **Thành công:** clipboard bên nhận chứa ảnh (Android: URI `content://` của HandLive trỏ tới tệp trong `cache/clip/`; Mac: dữ liệu PNG hoặc JPEG); bên nhận đã ghi dấu vết QC4, hẹn CLIP-05; tệp tạm của lần truyền đã xóa (Android giữ tệp của clip đang nằm trên clipboard); Android chuyển tiếp tới client khác (QC6).<br>**Thất bại hoặc hủy:** không bên nào đổi clipboard; tệp tạm bị xóa. |
-| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: không đọc được URI (quyền mất vì clip đã đổi, hoặc clipboard chưa từng cấp quyền): bỏ qua ở đường tự động; đường thủ công báo "Không đọc được ảnh". Bản debug ghi `clip_read_failed` kèm lý do và authority của URI. |
+| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: không đọc được URI (quyền mất vì clip đã đổi, clipboard chưa từng cấp quyền, hoặc URI không qua CLIP-01 API 2 logic 7): bỏ qua ở đường tự động; đường thủ công báo "Không đọc được ảnh". Bản debug ghi `clip_read_failed` kèm lý do và, với URI `content`, authority. Lần từ chối theo logic 7 còn ghi `why=uri_not_allowed` và không ghi đường dẫn. |
 | Yêu cầu đặc biệt | **Hiệu năng:** ảnh 5 MB < 2 s trong LAN (80 khối); qua relay giới hạn 2 MiB/s mỗi cặp nên ảnh 10 MiB mất ≥ 5 s.<br>Hiện tiến trình khi ảnh > 1 MiB.<br>**Tài nguyên:** bên nhận ghi khối thẳng vào tệp và băm SHA-256 dần, không giữ cả ảnh trong bộ nhớ; tối đa một lần truyền đến từ mỗi đối phương; tối đa 4 khối chờ trong bộ đệm gửi của WebSocket để envelope khác (cuộc gọi, SMS) được chen trước.<br>**Bảo mật:** mỗi khối là một envelope mã hóa; relay chỉ thấy `type = clipboard` và kích thước; tệp tạm nằm trong vùng riêng của ứng dụng; `FileProvider` chỉ lộ thư mục `cache/clip/`, ứng dụng dán được hệ thống cấp quyền đọc tạm thời. |
 
 ### 4.3.2 Màn hình
@@ -929,6 +937,7 @@ flowchart TB
 ```kotlin
 // [Thiết kế] Trong ClipboardReadActivity, trên luồng IO, trước khi finish()
 val uri = clip.getItemAt(0).uri ?: return
+// Chỉ mở sau CLIP-01 API 2 logic 7: scheme content, provider thuộc package khác.
 val srcMime = contentResolver.getType(uri) ?: clip.description.getMimeType(0)
 val src = File(cacheDir, "clip/$transferId.src")
 contentResolver.openInputStream(uri)?.use { copyLimited(it, src, limit = CLIP_MAX_IMAGE + 1L) }   // quá → E2
@@ -945,6 +954,8 @@ val out = if (srcMime == "image/png" || srcMime == "image/jpeg") src
   4. Tệp nguồn và tệp chuyển đổi nằm trong `cache/clip/`; giữ tới khi quá `CLIP_STALE_AFTER` để phát
      lại (QC7), sau đó xóa.
   5. QC3 với ảnh chỉ xét extra `IS_SENSITIVE` (không kiểm Luhn).
+  6. `getType` và `openInputStream` chỉ chạy sau CLIP-01 API 2 logic 7. URI bị từ chối thì không
+     mở; lần đọc thất bại theo E10.
 
 #### API 2 — Mac đọc ảnh từ `NSPasteboard`
 
