@@ -1,7 +1,7 @@
 #!/bin/zsh
-# One run from the hub root: check local Gradle keys, merge the Android R8 branch,
-# build a signed gmsRelease AAB, then merge the hub branch.
-# Status lines and missing key names only. Property values are never printed.
+# One run from the hub root: confirm the four FCM secrets, merge the Android R8
+# branch, download the signed Play bundle built on CI, then merge the hub branch.
+# Status lines and secret names only. Secret values are never printed.
 # Hub has no CI. Do not use `gh pr checks --watch` there: with no checks it exits
 # on "no checks reported" and would block the merge. Wait only when checks exist.
 set -euo pipefail
@@ -25,59 +25,69 @@ hub_root="${0:A:h:h:h}"
 cd "${hub_root}"
 android_dir="${hub_root}/android"
 
-required_keys=(
-  handlive.relayHost
-  handlive.relayExtraPins
-  handlive.fcm.applicationId
-  handlive.fcm.apiKey
-  handlive.fcm.projectId
-  handlive.fcm.senderId
-  handlive.upload.storeFile
-  handlive.upload.storePassword
-  handlive.upload.keyAlias
-  handlive.upload.keyPassword
+fcm_secrets=(
+  HANDLIVE_FCM_PROJECT_ID
+  HANDLIVE_FCM_SENDER_ID
+  HANDLIVE_FCM_APPLICATION_ID
+  HANDLIVE_FCM_API_KEY
 )
-props_file="${HOME}/.gradle/gradle.properties"
 
-step="check gradle properties"
-missing_keys=()
-if [[ ! -f "${props_file}" ]]; then
-  missing_keys=("${required_keys[@]}")
-else
-  for key in "${required_keys[@]}"; do
-    found="$(
-      awk -v key="${key}" '
-        /^[[:space:]]*#/ { next }
-        {
-          eq = index($0, "=")
-          if (eq == 0) next
-          k = substr($0, 1, eq - 1)
-          gsub(/^[[:space:]]+|[[:space:]]+$/, "", k)
-          if (k != key) next
-          v = substr($0, eq + 1)
-          gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
-          if (length(v) > 0) { print "yes"; exit }
-        }
-      ' "${props_file}" || true
-    )"
-    if [[ "${found}" != "yes" ]]; then
-      missing_keys+=("${key}")
-    fi
-  done
+step="check fcm secrets"
+secret_status=0
+secret_list="$(gh secret list --env release --repo HandLive/handlive-android)" || secret_status=$?
+if [[ "${secret_status}" -ne 0 ]]; then
+  die " could not list release secrets"
 fi
-if (( ${#missing_keys} )); then
+missing_secrets=()
+for name in "${fcm_secrets[@]}"; do
+  present=0
+  while IFS= read -r line; do
+    [[ -z "${line}" ]] && continue
+    field="${line%%[[:space:]]*}"
+    if [[ "${field}" == "${name}" ]]; then
+      present=1
+      break
+    fi
+  done <<< "${secret_list}"
+  if [[ "${present}" -eq 0 ]]; then
+    missing_secrets+=("${name}")
+  fi
+done
+if (( ${#missing_secrets} )); then
   trap - ERR
   print -r -- "FAIL: ${step}" >&2
-  print -r -- "missing keys:" >&2
-  for key in "${missing_keys[@]}"; do
-    print -r -- "${key}" >&2
+  print -r -- "missing secrets:" >&2
+  for name in "${missing_secrets[@]}"; do
+    print -r -- "${name}" >&2
   done
+  print -r -- "run tools/release/setup-fcm.zsh" >&2
   exit 1
 fi
 print -r -- "ok: ${step}"
 
-step="android push"
+step="android branch"
 cd "${android_dir}"
+branch="$(git branch --show-current)"
+if [[ "${branch}" != "chore/release-r8" ]]; then
+  die " branch is ${branch:-detached}"
+fi
+print -r -- "ok: ${step}"
+
+step="android index"
+index_status=0
+git diff --cached --quiet || index_status=$?
+if [[ "${index_status}" -eq 1 ]]; then
+  trap - ERR
+  print -r -- "FAIL: ${step} staged changes remain" >&2
+  git diff --cached --name-only >&2 || true
+  exit 1
+fi
+if [[ "${index_status}" -ne 0 ]]; then
+  die " git diff --cached failed"
+fi
+print -r -- "ok: ${step}"
+
+step="android push"
 git push -u origin chore/release-r8
 print -r -- "ok: ${step}"
 
@@ -128,30 +138,52 @@ git checkout main
 git pull --ff-only
 print -r -- "ok: ${step}"
 
-step="android bundle gmsRelease"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
-export PATH="${JAVA_HOME}/bin:${PATH}"
-./gradlew :app:bundleGmsRelease
+# 30s skew so the newest play-bundle run on main is the one this dispatch created.
+step="android workflow"
+dispatched_after="$(date -u -v-30S +%Y-%m-%dT%H:%M:%SZ)"
+gh workflow run play-bundle.yml --ref main --repo HandLive/handlive-android
 print -r -- "ok: ${step}"
 
-aab_path="${android_dir}/app/build/outputs/bundle/gmsRelease/app-gms-release.aab"
-mapping_path="${android_dir}/app/build/outputs/mapping/gmsRelease/mapping.txt"
+step="android workflow run"
+run_id=""
+attempt=0
+while [[ -z "${run_id}" ]]; do
+  run_id="$(
+    gh run list \
+      --workflow play-bundle.yml \
+      --branch main \
+      --repo HandLive/handlive-android \
+      --limit 5 \
+      --json databaseId,createdAt \
+      --jq "[.[] | select(.createdAt >= \"${dispatched_after}\")] | .[0].databaseId // empty"
+  )"
+  if [[ -n "${run_id}" ]]; then
+    break
+  fi
+  attempt=$((attempt + 1))
+  if [[ "${attempt}" -ge 30 ]]; then
+    die " workflow run did not appear"
+  fi
+  sleep 5
+done
+print -r -- "ok: ${step} ${run_id}"
 
-step="android verify signature"
-if [[ ! -f "${aab_path}" ]]; then
-  die ""
-fi
-verify_status=0
-verify_out="$(jarsigner -verify "${aab_path}" 2>&1)" || verify_status=$?
-if [[ "${verify_status}" -ne 0 ]]; then
-  die ""
-fi
-case "${verify_out}" in
-  *unsigned*)
-    die ""
-    ;;
-esac
+step="android workflow watch"
+gh run watch "${run_id}" --exit-status --repo HandLive/handlive-android
 print -r -- "ok: ${step}"
+
+step="android workflow download"
+cd "${hub_root}"
+mkdir -p android/app/build/outputs/play
+gh run download "${run_id}" -n play-bundle -D android/app/build/outputs/play/ --repo HandLive/handlive-android
+aab_path="${hub_root}/android/app/build/outputs/play/app-gms-release.aab"
+mapping_path="${hub_root}/android/app/build/outputs/play/mapping.txt"
+if [[ ! -f "${aab_path}" || ! -f "${mapping_path}" ]]; then
+  die ""
+fi
+print -r -- "ok: ${step}"
+print -r -- "aab: ${aab_path}"
+print -r -- "mapping: ${mapping_path}"
 
 cd "${hub_root}"
 
