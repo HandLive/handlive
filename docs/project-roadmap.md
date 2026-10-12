@@ -2,23 +2,27 @@ English | [Tiếng Việt](project-roadmap.vi.md)
 
 # HandLive: Roadmap
 
-> Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`. **Live progress table:** hub [`README.md`](../README.md#roadmap-and-progress) (must be updated whenever a concrete task finishes).
+> Source: `plans/20260924-definitive-architecture/plan.md`, sections 8 and 11. Task cards, Phase 0, gates and the device matrix are in `plans/20260925-implementation/plan.md`. **Live progress table:** hub [`README.md`](../README.md#status) (must be updated whenever a concrete task finishes).
 
 HandLive brings ecosystem-native features, such as Apple Handoff, to Android. The roadmap below is built **in order**. Each phase is a usable piece. Each later phase stands on the infrastructure of the phase before it. The WebSocket, pairing and encryption from Phase 1 are reused by every later phase. One exception to the order (project owner's decision, 2026-09-28): Phases 5 and 6 are done before Phase 4. Phase 4 itself is stopped (project owner's decision, 2026-10-12): only macOS 27 is available, so calls on the computer stay notification + answer/decline/end only, no audio; gate G4 is closed, reopened only on a later owner decision.
 
 ## Progress snapshot (2026-10-12)
 
-**Latest tag:** [`v0.1.0-beta.2`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.2) (second beta, the first with installable files). Live table: hub [`README.md`](../README.md#roadmap-and-progress).
+**Latest release:** [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07): calls from other apps keep the app's name and survive a swiped in-call notification, text clips keep their HTML, the Liquid Glass app icon on iPhone, iPad and Mac, the iPhone keeps its session 25 s in the background; same files on that one page as beta.2: Mac DMG signed ad hoc (Open Anyway once), iOS IPA (unsigned, for sideloading), Android APK (`foss`, signed); every change since beta.2 passed a security scan ([deployment guide](deployment-guide.md)). Live table: hub [`README.md`](../README.md#status).
 
 | Phase | Code on `main` | Gate / blocker |
 |-------|----------------|----------------|
 | 0 | Done | G0 done |
-| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05); text clips carry their HTML (2026-10-05); restricted-setting guidance shown again on return, consent asked once (2026-10-05, android #6); App Store Connect store screenshots recaptured at native 1320×2868 (2026-10-12); reading copied images opens only items shared by other apps via a content provider, other URIs rejected (2026-10-12, android #13) |
+| 1 | Done (2026-09-26) | G1 open; S25↔Mac pairing stable (2026-09-30); one-sided pair after a key reset fixed (2026-10-04); image items with a text beside the URI, lost-grant message and phone → Mac image e2e (2026-10-05); text clips carry their HTML (`text/html` capability, CLIP-01 API 5 `html`, 2026-10-05); restricted-setting guidance shown again on return, consent asked once (2026-10-05, android #6, replayed on the S25); the Auto-Send switch asks before turning off a service that never came on (android #7); App Store Connect store screenshots recaptured at native 1320×2868 (2026-10-12); reading copied images opens only items shared by other apps via a content provider, other URIs rejected (2026-10-12, android #13) |
 | 2 | Done (2026-09-27) | G2 open; real relay / APNs / FCM checks open; iPhone background grace of 25 s (2026-10-05); Liquid Glass app icon on iPhone, iPad and Mac (2026-10-07, apple #7 + #8, hub #17 + #19); Play Console store screenshots recaptured at 1080×1920 (2026-10-12) |
 | 3 | Done (2026-09-28) | Real-device checks open; app calls show the app's name and outlive a swiped in-call notification (2026-10-05, android #8 + hub #15, merged 2026-10-07); the call bench reads app calls (shared #6); e2e covers app calls with a fake calling app (2026-10-07, android #9 + shared #7) |
 | 4 | Stopped (owner decision, 2026-10-12) | G4 closed: only macOS 27 available, calls stay notification + answer/decline/end, no audio |
 | 5 | Spike on `main` (`CameraSpike`, merged 2026-09-30) | G5: need paid Apple Developer team |
 | 6 | Spike probes on `main` (Apple+Android merged 2026-09-30); product cards not started | G6: owner browser decisions; Firefox/Edge/Brave rows |
+| 7 | Proposed (2026-10-01) | Starts after G4/G5/G6 with spike G7 |
+| G0 | Done | Test vectors |
+| G1 | Open (before 1.0) | Real-device Phase 1 matrix |
+| G2 | Open (before 1.0) | Play Console SMS / call-log (Plan B: F-Droid/APK) |
 
 ## Phase 1. Clipboard sync (MVP)
 
