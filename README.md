@@ -4,34 +4,32 @@ English | [Tiếng Việt](README.vi.md)
 
 <img src="docs/brand/assets/promo/readme-hero.en.png" alt="HandLive. Never miss a signal. Clipboard, SMS and calls from your Android phone, on your Mac, iPhone and iPad." width="800">
 
-> **Never miss a signal.** Your Android phone's clipboard, SMS, and calls, on your Mac, iPhone, and iPad.
->
-> *"WebSocket for data, Bluetooth for voice."*
+> **Never miss a signal.** Your Android phone's clipboard, SMS, and call notifications, on your Mac, iPhone, and iPad.
 
-HandLive is open source (Apache-2.0). This repository is the **documentation hub**. App source lives in four sibling repositories (see [Layout](#layout-five-repositories-one-workspace)).
+[![ci-docs](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/badge/release-v0.1.0--beta.3-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3)
 
-## Status
+HandLive connects Android phones with macOS, iOS, and iPadOS devices. It syncs your clipboard, bridges SMS conversations, and shows call notifications with action controls with zero cloud lock-in. End-to-end encryption stays on by default, and the entire project is open source under Apache-2.0.
 
-| | |
-|--|--|
-| **Latest release** | [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07): calls from other apps keep the app's name and survive a swiped in-call notification, text clips keep their HTML, the Liquid Glass app icon on iPhone, iPad and Mac, the iPhone keeps its session 25 s in the background; same files on that one page as beta.2: Mac DMG signed ad hoc (Open Anyway once), iOS IPA (unsigned, for sideloading), Android APK (`foss`, signed); every change since beta.2 passed a security scan ([deployment guide](docs/deployment-guide.md)) |
-| **Phases on `main`** | 0–3 product code; Phase 4–6 **spike probes** also on `main` (2026-09-30) |
-| **Still open before 1.0** | Gates **G1** (real-device matrix) and **G2** (Play Console); real relay / APNs / FCM checks |
-| **In progress** | G4/G5/G6 hardware and browser decisions; product cards for Phases 4–6 not started |
-| **Languages** | English (default) and Vietnamese; every hub doc has `X.md` + `X.vi.md` |
-| **Website** | WordPress product site and blog in `website/`, English and Vietnamese; runs locally, not deployed yet ([guide](docs/website.md)) |
+## Get the beta
 
-Beta builds are for early testers. They are not App Store / Play Store releases yet.
+Download the latest pre-release [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07):
+- **macOS:** Ad-hoc signed DMG (open via *Open Anyway* on first run).
+- **Android:** Signed `foss` APK.
+- **iOS / iPadOS:** Unsigned IPA for sideloading.
 
-## What you get
+Beta builds are for early testers and not yet on the App Store or Google Play. See the [Deployment Guide](docs/deployment-guide.md) for installation and packaging details.
+
+## Features
 
 | Feature | macOS | iOS / iPadOS |
 |---------|:-----:|:------------:|
-| Two-way clipboard (text keeps its HTML, so an article pastes with its pictures; one image at a time) | Yes | Yes |
+| Two-way clipboard (HTML formatted text and images) | Yes | Yes |
 | Receive and send SMS | Yes | Yes |
-| Call details and control (answer, decline, end; hold/DTMF over HFP later) | Yes | Details and decline only (no audio) |
-| Call audio on the computer | Planned (Phase 4) | No (Apple has no HF-side HFP API) |
-| Virtual camera and microphone | Planned (Phase 5) | No |
+| Call details and actions (answer, decline, end) | Yes | Details and decline only |
+| Call audio on the computer | Not planned (Phase 4 stopped, 2026-10-12) | No (Apple has no HF-side HFP API) |
+| Virtual camera and mic | Planned (Phase 5) | No |
 | Continue Browsing (open page follows you) | Planned (Phase 6) | Planned (from the phone only) |
 
 End-to-end encryption stays on. Users cannot turn it off.
@@ -40,59 +38,50 @@ End-to-end encryption stays on. Users cannot turn it off.
 
 | | | |
 |---|---|---|
-| <img src="docs/screenshots/android/04-devices-connected.en.png" alt="Android: the paired Mac, connected over Wi-Fi" width="220"> | <img src="docs/screenshots/ios/04-sms-conversation.en.png" alt="iPhone: read and reply to the phone's SMS" width="220"> | <img src="docs/screenshots/ios/05-calls.en.png" alt="iPhone: the phone's call log" width="220"> |
-| Android: paired Mac over Wi-Fi | iPhone: SMS from the phone | iPhone: call log |
+| <img src="docs/screenshots/android/04-devices-connected.en.png" alt="Android: paired Mac over Wi-Fi" width="220"> | <img src="docs/screenshots/ios/04-sms-conversation.en.png" alt="iPhone: SMS from the phone" width="220"> | <img src="docs/screenshots/macos/04-incoming-call-panel.en.png" alt="Mac: incoming-call panel" width="320"> |
+| Android: paired Mac over Wi-Fi | iPhone: SMS from the phone | Mac: incoming-call panel |
 
-| | |
-|---|---|
-| <img src="docs/screenshots/macos/03-messages-window.en.png" alt="Mac: SMS and the call log in one window" width="420"> | <img src="docs/screenshots/macos/04-incoming-call-panel.en.png" alt="Mac: floating panel for an incoming call" width="420"> |
-| Mac: SMS and call log | Mac: incoming-call panel |
-
-Full set (English and Vietnamese): [`docs/screenshots/README.md`](docs/screenshots/README.md).
+Full gallery (English and Vietnamese): [`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 ## How it works
 
-- **WebSocket** moves clipboard, SMS, call details, and notifications. Android runs a Ktor server; peers find each other with mDNS.
-- **Bluetooth HFP SCO** carries **call audio only** (Phase 4). When HFP is busy, the design falls back to Opus over WebSocket (needs Shizuku on some devices).
-- **E2E crypto:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, **QR pairing**.
-- **Cloud relay** (Rust) forwards encrypted blobs when devices are not on the same LAN. It never reads content.
+- **Local WebSocket & mDNS:** Fast peer-to-peer data transport over Wi-Fi; Android runs an embedded Ktor server.
+- **E2E crypto:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, and QR pairing.
+- **Zero-knowledge relay:** Stateless Rust relay forwards encrypted blobs across different networks without reading content.
 
-Details: [`docs/system-architecture.md`](docs/system-architecture.md) · [`plans/20260924-definitive-architecture/plan.md`](plans/20260924-definitive-architecture/plan.md).
+Full technical details: [`docs/system-architecture.md`](docs/system-architecture.md).
 
-## Roadmap and progress
+## Status
 
-Phases ship in order, each as a usable slice. Exception (owner, 2026-09-28): Phases 5 and 6 start before Phase 4 finishes, because Phase 4 waits on the G4 HFP hardware spike.
+| Phase / gate | Goal | Status |
+|--------------|------|--------|
+| **0** Foundation | Protocol, shared test vectors, green CI | **Done** |
+| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WebSocket, QR pairing | **Code done** (android #13) · Gate G1 open |
+| **2** SMS bridge & iOS | Conversations, Rust relay, APNs/FCM | **Code done** · Gate G2 open |
+| **3** Call info and control | Telecom APIs, Mac panel, call history | **Code done** · Real-device checks open |
+| **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision 2026-10-12) · G4 closed |
+| **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · Gate G5 pending |
+| **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Browser decisions pending |
+| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Proposed** (2026-10-01) · Spike G7 pending |
+| **G0** Vectors | Shared cross-platform crypto test vectors | **Done** |
+| **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) |
+| **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) |
 
-Full narrative: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
-
-| Phase / gate | Goal | Status (2026-10-05) |
-|--------------|------|---------------------|
-| **0** Scaffold, protocol, crypto, CI | Shared vectors, green CI | **Done** |
-| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WS, QR | **Code done** · G1 still open · S25↔Mac pairing stable; one-sided pair after a key reset fixed (2026-10-04); an image copied with a text beside its URI is sent as the image, a lost URI grant is told on Send Clipboard, e2e covers phone → Mac images (2026-10-05) · a text clip keeps its HTML (`text/html` capability, CLIP-01 API 5 `html`, 2026-10-05) · the Accessibility service blocked by Android's restricted setting is no longer silent: the guidance comes back when the user returns without turning it on, consent is asked once (2026-10-05, android #6, replayed on the S25); the Auto-Send switch asks before turning off a service that never came on (android #7) |
-| **2** SMS + iOS + relay + push | Conversations, Rust relay, APNs/FCM | **Code done** · G2 and real push still open · the iPhone keeps its session up to 25 s in the background (2026-10-05, apple #4) · the app icon is Liquid Glass on iPhone, iPad and Mac (2026-10-07, apple #7 + #8, hub #17 + #19) |
-| **3** Call info and control | Telecom APIs, Mac panel, iOS metadata | **Code done** · real-device checks open · calls from other apps (CALL-05): the Mac names the app instead of its package, and swiping the in-call notification away on Android 14+ no longer closes the Mac panel (2026-10-05, android #8 + hub #15, merged 2026-10-07; S25 check open); the call bench measures app calls (shared #6); the e2e harness drives a fake calling app on the emulator: label, decline, swipe, upload, hang-up (2026-10-07, android #9 + shared #7) |
-| **4** Call audio | HFP/SCO + Opus/WS fallback | **Spike on `main`** (`HFPSpike`) · G4 needs BT phone + live call |
-| **5** Virtual camera / mic | CMIOExtension + AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs paid Apple Developer team |
-| **6** Continue Browsing | Foreground URL across devices | **Spike on `main`** · Chrome/Samsung measured; browser go/no-go pending |
-| **7** Connect anywhere | Auto link without a shared network: Bluetooth, Wi-Fi Direct (Mac Wi-Fi idle), relay; no Wi-Fi change | **Proposed** (2026-10-01) · starts after G4/G5/G6 with spike G7 |
-| **G0** Test vectors | | **Done** |
-| **G1** Real-device Phase 1 matrix | | **Open** (before 1.0) |
-| **G2** Play Console SMS / call-log | | **Open** (before 1.0; Plan B: F-Droid/APK) |
+Full roadmap and history: [`docs/project-roadmap.md`](docs/project-roadmap.md).
 
 ### Rule: keep this roadmap current
 
-Whenever a concrete task finishes (phase card merged, gate closed, spike go/no-go, real-device fix on `main`), the **same change set** must update:
+Whenever a concrete task completes (phase card merged, gate closed, spike resolved, real-device fix on `main`), the same change set must update this table, the snapshot in [`docs/project-roadmap.md`](docs/project-roadmap.md), and hub [`CHANGELOG.md`](CHANGELOG.md) for user-visible changes.
 
-1. This progress table and the Status section in `README.md` + `README.vi.md`
-2. The snapshot in `docs/project-roadmap.md` + `.vi.md`
-3. Hub `CHANGELOG.md` + `.vi.md` when the change is user- or release-visible
-4. `CLAUDE.md` Next steps when the agent handoff changes
+## Repositories
 
-Progress that lives only in a plan report or a chat does not count. A finished task without a README update is incomplete.
-
-## Layout: five repositories, one workspace
-
-This hub holds docs, plans, and doc tools only. Clone the code repos **inside** this folder (git-ignored here). Builds and tests expect `../shared`; Apple tests also read `../docs`.
+| Repository | Description |
+|------------|-------------|
+| [handlive](https://github.com/HandLive/handlive) | Documentation hub, plans, and workspace tools |
+| [handlive-android](https://github.com/HandLive/handlive-android) | Android service and client application (Kotlin) |
+| [handlive-apple](https://github.com/HandLive/handlive-apple) | macOS menu bar app, iOS, and iPadOS application (Swift) |
+| [handlive-relay](https://github.com/HandLive/handlive-relay) | Zero-knowledge encrypted relay server (Rust) |
+| [handlive-shared](https://github.com/HandLive/handlive-shared) | Shared protocol schemas, crypto test vectors, and UI strings |
 
 ```
 HandLive/                 # hub: handlive
@@ -104,29 +93,27 @@ HandLive/                 # hub: handlive
 └── .github-org/          # HandLive/.github (CONTRIBUTING, SECURITY, …)
 ```
 
-```sh
-git clone git@github.com:HandLive/handlive.git HandLive && cd HandLive
-tools/workspace.sh clone git@github.com:HandLive
-tools/workspace.sh status
-```
-
 ## Documentation
 
-| Doc | About |
-|-----|--------|
-| [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) | Goals, scope, constraints |
-| [`docs/system-architecture.md`](docs/system-architecture.md) | Transports, protocol, security |
-| [`docs/project-roadmap.md`](docs/project-roadmap.md) | Phases and effort |
-| [`docs/screenshots/README.md`](docs/screenshots/README.md) | App screenshots |
-| [`docs/design-guidelines.md`](docs/design-guidelines.md) | UX and security principles |
-| [`docs/code-standards.md`](docs/code-standards.md) | Per-platform conventions |
-| [`docs/deployment-guide.md`](docs/deployment-guide.md) | Packaging and distribution |
-| [`docs/privacy.md`](docs/privacy.md) | Privacy: devices, relay, deletion |
-| [`docs/codebase-summary.md`](docs/codebase-summary.md) | Code map |
-| [`docs/detailed-design/README.md`](docs/detailed-design/README.md) | Spec: functions, protocol, errors |
+- [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) — Goals, scope, and product constraints
+- [`docs/system-architecture.md`](docs/system-architecture.md) — Transports, protocol, and security model
+- [`docs/project-roadmap.md`](docs/project-roadmap.md) — Phases, progress snapshot, and effort
+- [`docs/deployment-guide.md`](docs/deployment-guide.md) — Packaging, signing, and distribution
+- [`docs/design-guidelines.md`](docs/design-guidelines.md) — UX, ergonomics, and security principles
+- [`docs/code-standards.md`](docs/code-standards.md) — Cross-platform conventions and standards
+- [`docs/privacy.md`](docs/privacy.md) — Privacy principles, data storage, and relay retention
+- [`docs/codebase-summary.md`](docs/codebase-summary.md) — Code map and architecture overview
+- [`docs/detailed-design/README.md`](docs/detailed-design/README.md) — Specifications, protocols, and error codes
+- [`docs/screenshots/README.md`](docs/screenshots/README.md) — App screenshots and galleries
+
+## Contributing and community
+
+- [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) — Developer Certificate of Origin (`git commit -s`), PR workflow, and standards
+- [CODE_OF_CONDUCT](https://github.com/HandLive/.github/blob/main/CODE_OF_CONDUCT.md) — Community standards and expectations
+- [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md) — Vulnerability reporting and disclosure policy
 
 ## License
 
 Apache License 2.0 — [LICENSE](LICENSE). Applies to all repositories under [HandLive](https://github.com/HandLive).
 
-Contribute: [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) (real name, `git commit -s` DCO). Security: [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md).
+Website and blog content in `website/` are licensed under GPL-2.0-or-later.
