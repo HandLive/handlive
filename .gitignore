@@ -15,6 +15,9 @@
 # Secrets / config
 .env
 .env.*
+# Bí mật Firebase cục bộ: không commit (tools/release/setup-fcm.zsh)
+google-services.json
+*-firebase-adminsdk-*.json
 
 # Xuất tài liệu (tools/docs/build_design_html.py)
 /build/
