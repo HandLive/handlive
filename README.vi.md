@@ -21,14 +21,16 @@ Tải bản phát hành thử nghiệm mới nhất [`v0.1.0-beta.3`](https://gi
 
 Bản beta dành cho người thử nghiệm sớm và chưa có trên App Store hay Google Play. Xem [Hướng dẫn phân phối](docs/deployment-guide.vi.md) để biết chi tiết cài đặt và đóng gói.
 
+Tài liệu hub có cả tiếng Anh và tiếng Việt. Website và blog WordPress trong `website/` chạy trên máy, chưa triển khai ([hướng dẫn](docs/website.vi.md)).
+
 ## Tính năng
 
 | Tính năng | macOS | iOS / iPadOS |
 |-----------|:-----:|:------------:|
-| Bảng nhớ tạm hai chiều (văn bản giữ định dạng HTML và ảnh) | Có | Có |
+| Bảng nhớ tạm hai chiều (chữ giữ dạng HTML, mỗi lần một ảnh) | Có | Có |
 | Gửi và nhận SMS | Có | Có |
-| Thông tin và thao tác cuộc gọi (nghe, từ chối, kết thúc) | Có | Chỉ thông tin và từ chối |
-| Âm thanh cuộc gọi trên máy tính | Không làm (Phase 4 dừng, 12/10/2026) | Không (Apple không mở API HFP phía tai nghe) |
+| Thông tin và thao tác cuộc gọi (nghe, từ chối, kết thúc) | Có | Chỉ thông tin và từ chối (không âm thanh) |
+| Âm thanh cuộc gọi trên máy tính | Không làm (Phase 4 dừng, quyết định của chủ dự án 12/10/2026) | Không (Apple không mở API HFP phía tai nghe) |
 | Camera và mic ảo | Dự kiến (Phase 5) | Không |
 | Duyệt web tiếp (trang đang mở theo bạn) | Dự kiến (Phase 6) | Dự kiến (chỉ từ điện thoại) |
 
@@ -45,7 +47,8 @@ Toàn bộ ảnh chụp màn hình (tiếng Anh và tiếng Việt): [`docs/scre
 
 ## Cách hoạt động
 
-- **WebSocket nội bộ & mDNS:** Kênh truyền ngang hàng tốc độ cao qua Wi-Fi, vận hành bởi máy chủ Ktor nhúng trên Android.
+- **WebSocket nội bộ và mDNS:** Bảng nhớ tạm, SMS, thông tin cuộc gọi và thông báo đi qua Wi-Fi. Android chạy máy chủ Ktor nhúng; các máy tìm nhau bằng mDNS.
+- **Âm thanh cuộc gọi:** Bluetooth HFP lẽ ra mang âm thanh cuộc gọi, dự phòng bằng Opus qua WebSocket. Chủ dự án đã dừng Phase 4 (12/10/2026), nên cuộc gọi trên máy tính chỉ còn thông báo và nút nghe, từ chối hoặc kết thúc.
 - **Mã hóa đầu cuối:** Payload XChaCha20-Poly1305, khóa phiên X25519 + HKDF và ghép cặp qua mã QR.
 - **Relay zero-knowledge:** Máy chủ trung chuyển Rust chuyển tiếp dữ liệu mã hóa giữa các mạng mà không thể đọc nội dung.
 
@@ -53,21 +56,23 @@ Xem chi tiết kiến trúc kỹ thuật tại [`docs/system-architecture.vi.md`
 
 ## Trạng thái
 
+HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoại lệ (chủ dự án, 28/09/2026): Phase 5 và 6 làm trước Phase 4. Phase 4 đã dừng (quyết định của chủ dự án, 12/10/2026): cổng G4 đóng, chỉ mở lại khi chủ dự án quyết định xem lại âm thanh cuộc gọi.
+
 | Phase / cổng | Mục tiêu | Trạng thái |
 |--------------|----------|------------|
 | **0** Nền tảng | Giao thức, vector kiểm thử dùng chung, CI xanh | **Xong** |
-| **1** Đồng bộ clipboard (MVP) | Android ↔ Mac, WebSocket LAN, ghép cặp QR | **Mã xong** (android #13) · Cổng G1 còn mở |
-| **2** Cầu nối SMS & iOS | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · Cổng G2 còn mở |
-| **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, nhật ký cuộc gọi | **Mã xong** · Kiểm máy thật còn mở |
-| **4** Âm thanh cuộc gọi | Bluetooth HFP/SCO và dự phòng Opus | **Dừng** (quyết định chủ dự án 12/10/2026) · Cổng G4 đóng |
-| **5** Camera / mic ảo | CMIOExtension và AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · Cổng G5 chờ kiểm |
-| **6** Duyệt web tiếp | Chuyển tiếp URL đang mở giữa các thiết bị | **Spike trên `main`** · Chờ quyết định trình duyệt |
-| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đề xuất** (01/10/2026) · Chờ spike G7 |
+| **1** Đồng bộ bảng nhớ tạm (MVP) | Android ↔ Mac, WebSocket LAN, ghép cặp QR | **Mã xong** · Cổng G1 còn mở · clip chữ giữ HTML (`text/html`); khi đọc ảnh chỉ mở mục app khác chia sẻ qua content provider, URI khác bị từ chối (12/10/2026, android #13) |
+| **2** Cầu nối SMS và iOS | Hội thoại, relay Rust, APNs/FCM | **Mã xong** · Cổng G2 còn mở · iPhone giữ phiên tối đa 25 giây khi chạy nền · biểu tượng ứng dụng Liquid Glass trên iPhone, iPad và Mac |
+| **3** Thông tin và điều khiển cuộc gọi | API Telecom, bảng Mac, nhật ký cuộc gọi | **Mã xong** · Kiểm máy thật còn mở · cuộc gọi từ ứng dụng khác giữ tên ứng dụng và không kết thúc khi thông báo đang gọi bị vuốt bỏ |
+| **4** Âm thanh cuộc gọi | Bluetooth HFP/SCO và dự phòng Opus | **Dừng** (quyết định của chủ dự án, 12/10/2026) · G4 đóng: chỉ có macOS 27, cuộc gọi chỉ còn thông báo và nút nghe/từ chối/kết thúc, không âm thanh |
+| **5** Camera / mic ảo | CMIOExtension và AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
+| **6** Duyệt web tiếp | Chuyển tiếp URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome và Samsung Internet; còn go/no-go trình duyệt |
+| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đề xuất** (01/10/2026) · bắt đầu sau G5 và G6 (G4 đã đóng 12/10/2026) bằng spike G7 |
 | **G0** Vector mã hóa | Vector kiểm thử mã hóa dùng chung giữa các nền tảng | **Xong** |
-| **G1** Máy thật | Kiểm thực tế ma trận máy thật Phase 1 | **Mở** (trước 1.0) |
-| **G2** Play Console | Tờ khai quyền SMS và nhật ký cuộc gọi | **Mở** (trước 1.0; phương án B: F-Droid/APK) |
+| **G1** Máy thật | Kiểm thực tế ma trận máy thật Phase 1 | **Mở** (trước 1.0) · ảnh App Store Connect đã chụp lại ở kích thước gốc 1320×2868 (12/10/2026) |
+| **G2** Play Console | Tờ khai quyền SMS và nhật ký cuộc gọi | **Mở** (trước 1.0; phương án B: F-Droid/APK) · ảnh Play Console đã chụp lại ở 1080×1920 (12/10/2026) |
 
-Xem lộ trình và lịch sử chi tiết: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md).
+Xem lộ trình và lịch sử chi tiết: [`docs/project-roadmap.vi.md`](docs/project-roadmap.vi.md). Thẻ việc: [`plans/20260925-implementation/plan.vi.md`](plans/20260925-implementation/plan.vi.md).
 
 ### Quy định: luôn cập nhật lộ trình
 

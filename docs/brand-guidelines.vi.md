@@ -299,7 +299,8 @@ Trạng thái giữ màu hệ thống (`system-red` cho lỗi và thao tác hủ
 | `github-social-preview.png` | 1280 × 640 | Ảnh xem trước khi chia sẻ mọi kho HandLive trên GitHub |
 | `readme-hero.en.png`, `readme-hero.vi.png` | 1600 × 600 | Đầu `README.md` và `README.vi.md` |
 | `release-banner-beta.en.png`, `release-banner-beta.vi.png` | 1280 × 640 | Ghi chú phát hành và bài đăng cho `v0.1.0-beta.1` |
-| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Feature graphic ở đầu trang store listing trên Google Play Console |
+| `play-feature-graphic.en.png`, `play-feature-graphic.vi.png` | 1024 × 500 | Ảnh đầu trang Google Play dùng để tải lên (PNG không kênh alpha, không chữ beta) |
+| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Ảnh đầu trang Play bản trước, từ lần cập nhật brand 08/10/2026 |
 
 Bố cục: bộ ghép logo ở góc trên trái; tiêu đề (tagline) Be Vietnam Pro Bold màu tím than; một hai dòng
 phụ màu tím nhạt hơn (#6b5562); biểu tượng cỡ lớn tràn ra góc dưới phải.
@@ -341,6 +342,7 @@ python3 tools/brand/build_brand_assets.py \
 
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
+| 1.4 | 2026-10-12 | Ảnh đầu trang Google Play 1024 × 500, không kênh alpha, không chữ beta (`play-feature-graphic.en.png`, `play-feature-graphic.vi.png`) |
 | 1.3 | 2026-10-08 | Thêm mô tả đầy đủ cho Play Console / App Store Connect vào §4, giọng văn tham khảo Lenovo Smart Connect và Intel Unison theo góp ý của chủ dự án; cập nhật dòng mở trong bảng Thông điệp cho khớp |
 | 1.2 | 2026-10-07 | Biểu tượng app Mac dùng chung `AppIcon.icon` Liquid Glass với iOS; biểu tượng app Mac không còn biểu tượng rút gọn ở 16 và 32 pt (quyết định của chủ dự án); bỏ `AppIcon.appiconset` |
 | 1.1 | 2026-10-07 | Biểu tượng app Liquid Glass cho iOS và iPadOS (`AppIcon.icon` từ bộ sinh); Mac giữ bộ ảnh có biểu tượng rút gọn |

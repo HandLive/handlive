@@ -302,7 +302,8 @@ delete or cancel.
 | `github-social-preview.png` | 1280 × 640 | Social preview of every HandLive repository on GitHub |
 | `readme-hero.en.png`, `readme-hero.vi.png` | 1600 × 600 | Top of `README.md` and `README.vi.md` |
 | `release-banner-beta.en.png`, `release-banner-beta.vi.png` | 1280 × 640 | Release notes and posts for `v0.1.0-beta.1` |
-| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Google Play Console store listing feature graphic |
+| `play-feature-graphic.en.png`, `play-feature-graphic.vi.png` | 1024 × 500 | Google Play feature graphic to upload (PNG, no alpha channel, no beta label) |
+| `feature-graphic-play.en.png`, `feature-graphic-play.vi.png` | 1024 × 500 | Earlier Play feature graphic from the 2026-10-08 brand update |
 
 Layout: lockup top left; headline (the tagline) in Be Vietnam Pro Bold, plum; one or two supporting
 lines in a softer plum (#6b5562); the mark large, bleeding off the bottom right.
@@ -344,6 +345,7 @@ python3 tools/brand/build_brand_assets.py \
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.4 | 2026-10-12 | Google Play feature graphic at 1024 × 500, no alpha channel, no beta label (`play-feature-graphic.en.png`, `play-feature-graphic.vi.png`) |
 | 1.3 | 2026-10-08 | Full description for Play Console / App Store Connect added to §4, tone matched to Lenovo Smart Connect and Intel Unison per owner feedback; the opening line in the Messages table updated to match |
 | 1.2 | 2026-10-07 | The Mac app icon is the same Liquid Glass `AppIcon.icon` as iOS; no compact mark at 16 and 32 pt on the Mac app icon (project owner's decision); the `AppIcon.appiconset` is gone |
 | 1.1 | 2026-10-07 | Liquid Glass app icon for iOS and iPadOS (`AppIcon.icon` from the generator); the Mac keeps the compact-mark set |

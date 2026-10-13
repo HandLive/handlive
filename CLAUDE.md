@@ -3,16 +3,18 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 4–6 spikes on `main`; beta `v0.1.0-beta.3`; G1/G2/G4/G5/G6 open
+## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; beta `v0.1.0-beta.3`; G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
 Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) and **`v0.1.0-beta.3`** (2026-10-07) on hub/android/apple/shared/relay
 (not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
 required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
-on a real relay / APNs / FCM, and spike gates **G4** (BT phone + live call), **G5** (paid Apple Developer team),
-**G6** (browser go/no-go). Owner decision 2026-09-28: Phases 5 and 6 proceed before Phase 4 finishes. Security
-scan fixes of 2026-09-28 are merged. Reports: `plans/20260925-implementation/reports/`.
+on a real relay / APNs / FCM, and spike gates **G5** (paid Apple Developer team), **G6** (browser go/no-go). Owner
+decision 2026-09-28: Phases 5 and 6 proceed before Phase 4. Owner decision 2026-10-12 stops Phase 4 itself and
+closes gate **G4**: only macOS 27 is available, so calls on the computer keep notification + answer/decline/end
+control only, no audio; reopens only on a later owner decision. Security scan fixes of 2026-09-28 are merged.
+Reports: `plans/20260925-implementation/reports/`.
 
 This repository is the **hub** of a five-repository workspace: it holds only the
 architecture/research documents under `plans/`, project docs under `docs/`, the implementation-level
@@ -62,7 +64,7 @@ project owner in Vietnamese with diacritics.
 
 ### In progress / blocked (owner or gate)
 
-1. **Gate G4 (call audio spike):** run `apple/Tools/HFPSpike` with S25 paired over Bluetooth + a live cellular call; fill `reports/phase-04-spike-d1.md`; decide HFP vs Opus/WS primary (AUDIO-02 / plan D1). No other Phase 4 product card until G4.
+1. **Gate G4 (call audio) — closed, owner decision 2026-10-12:** only macOS 27 is available and the owner wants calls to stay notification + answer/decline/end only, no audio on the computer. Phase 4 (HFP/SCO + Opus/WS) is stopped; the hardware session (`plans/20261012-hardware-session-g4-g5/plan.md`) skips its G4 part. Reopens only on a later owner decision; result logged in `reports/phase-04-spike-d1.md`.
 2. **Gate G5 (camera/mic spike):** needs a **paid Apple Developer Program team** (System Extension). Runbook: `apple/Tools/CameraSpike/README.md`. No other Phase 5 card until G5.
 3. **Gate G6 (Continue Browsing spike):** Chrome + Samsung measured on S25; HOME fix verified. Pending owner decisions: Safari Accessibility, Samsung origin-only; matrix rows Firefox/Edge/Brave; then product cards WEB-01…05.
 4. **Gate G1 (formal):** device matrix in `shared/tools/bench/README.md`, TalkBack/VoiceOver, system setting names. Pairing on this machine is informally green only.
@@ -75,7 +77,7 @@ project owner in Vietnamese with diacritics.
 ### Plan next (priority order)
 
 0. **Keep the README roadmap current** after every concrete finish (same change set as code/docs). Rule in hub README → Roadmap and progress.
-1. **Owner hardware day for G4:** BT pair S25 ↔ Mac, grant Bluetooth permission, one real call through `HFPSpike`; write `phase-04-spike-d1.md`.
+1. ~~Owner hardware day for G4~~ **not needed:** Phase 4 is stopped by owner decision (2026-10-12); see In progress / blocked, gate G4.
 2. **Owner inputs for G5:** paid Apple Developer team; run CameraSpike; write/update `phase-05-spike-d6.md`.
 3. **Owner decisions for G6:** Safari / Samsung Internet; install Firefox/Edge/Brave for matrix; then open WEB-01…05 only after go/no-go.
 4. ~~Quiet-host e2e~~ **done 2026-10-05** on API 35 (`all`: 0 FAIL) and API 29 (`reports/reinstall-devices-and-quiet-host-e2e-2026-10-05.md`); rerun after Phase 1–3 code changes.
@@ -100,9 +102,9 @@ project owner in Vietnamese with diacritics.
    the foreground-service type asks once right after launch and failed once on API 29 on the slow host (rerun green). Won't do: a separate
    `reason` for app calls resent after a setting change (the bench already times one send per change). Deferred to a
    VPS: the two-instance relay load test. Owner decision, not blocking: whether an app call ended `unknown` keeps
-   `answered_at` (today `null`, like E10). From the beta.3 scan: android#13 (restrict the URI schemes and providers
-   the clipboard read opens; details kept private until fixed), and a cap on the raw HTML before sanitizing on the
-   local read paths (spec change, CLIP-01).
+   `answered_at` (today `null`, like E10). From the beta.3 scan: android #13 done (2026-10-12, commit `ef618b4`:
+   clipboard read opens images only from other apps' content providers, other URIs rejected), and a cap on the raw
+   HTML before sanitizing on the local read paths (spec change, CLIP-01).
 
 ### Archive
 
@@ -197,15 +199,19 @@ Design tagline: **"WebSocket for data, Bluetooth for voice."**
 | iOS/iPadOS app | Swift 6, SwiftUI, iOS 16+; WebSocket + APNs alert + Notification Service Extension (metadata only; no PushKit/CallKit — detailed design C7); clipboard + SMS |
 | Cloud relay | Rust, Actix-web + actix-ws; zero-knowledge (relays encrypted blobs only, never decrypts/logs payloads); self-hosted single VPS initially |
 
-## Development phases (build in order; exception: Phases 5 and 6 before Phase 4 finishes)
+## Development phases (build in order; exception: Phases 5 and 6 before Phase 4)
+
+Phase 4 is stopped (owner decision, 2026-10-12): only macOS 27 is available, so calls on the computer keep
+notification + answer/decline/end control only, no audio. The design below is kept as reference and reopens only
+on a later owner decision.
 
 1. **Clipboard sync** (MVP): Android FG service + Ktor WS server + mDNS + QR pairing + XChaCha20 E2E
    ↔ macOS menu-bar app. Target: text <50ms, 5MB image <2s.
 2. **SMS bridge** + iOS app + Rust cloud relay + push.
 3. **Call metadata + control** (public Telecom APIs + floating `NSPanel`: answer/reject/end;
    hold/DTMF/mute via HFP AT commands once Phase 4 lands).
-4. **Call audio relay** (HFP/SCO + Opus/WS fallback + AEC). Starts with a 1-week HFP spike; legal
-   disclosure UI required before enabling.
+4. **Call audio relay** (HFP/SCO + Opus/WS fallback + AEC) — **stopped, see above**. Design: starts with a 1-week
+   HFP spike; legal disclosure UI required before enabling.
 5. **Camera/mic virtual devices** (CMIOExtension + AudioServerPlugin). Starts with a 1-week
    CMIOExtension spike.
 6. **Web Handoff ("Continue Browsing")**: the page open in the foreground browser appears on the other device

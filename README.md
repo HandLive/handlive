@@ -21,14 +21,16 @@ Download the latest pre-release [`v0.1.0-beta.3`](https://github.com/HandLive/ha
 
 Beta builds are intended for early testers and are not yet on the App Store or Google Play. See the [Deployment Guide](docs/deployment-guide.md) for installation and packaging details.
 
+Hub docs are bilingual, English and Vietnamese. The WordPress site and blog in `website/` run locally and are not deployed yet ([guide](docs/website.md)).
+
 ## Features
 
 | Feature | macOS | iOS / iPadOS |
 |---------|:-----:|:------------:|
-| Two-way clipboard (HTML formatted text and images) | Yes | Yes |
+| Two-way clipboard (text keeps its HTML, one image at a time) | Yes | Yes |
 | Send and receive SMS | Yes | Yes |
-| Call details and actions (answer, decline, end) | Yes | Details and decline only |
-| Call audio on the computer | Not planned (Phase 4 stopped, 2026-10-12) | No (Apple has no HF-side HFP API) |
+| Call details and actions (answer, decline, end) | Yes | Details and decline only (no audio) |
+| Call audio on the computer | Not planned (Phase 4 stopped, owner decision 2026-10-12) | No (Apple has no HF-side HFP API) |
 | Virtual camera and mic | Planned (Phase 5) | No |
 | Continue Browsing (open page follows you) | Planned (Phase 6) | Planned (from the phone only) |
 
@@ -45,7 +47,8 @@ Full screenshot gallery (English and Vietnamese): [`docs/screenshots/README.md`]
 
 ## How it works
 
-- **Local WebSocket & mDNS:** Fast peer-to-peer transport over Wi-Fi, powered by an embedded Ktor server on Android.
+- **Local WebSocket and mDNS:** Clipboard, SMS, call details, and notifications move over Wi-Fi. Android runs an embedded Ktor server; peers find each other with mDNS.
+- **Call audio:** Bluetooth HFP would have carried call audio, with Opus over WebSocket as the fallback. The owner stopped Phase 4 (2026-10-12), so calls on the computer stay notification and answer, decline, or end only.
 - **End-to-end encryption:** XChaCha20-Poly1305 payloads, X25519 + HKDF session keys, and QR pairing.
 - **Zero-knowledge relay:** A stateless Rust relay forwards encrypted envelopes across networks without inspecting content.
 
@@ -53,21 +56,23 @@ For full technical details, see [`docs/system-architecture.md`](docs/system-arch
 
 ## Status
 
+Phases ship in order, each as a usable slice. One exception (owner, 2026-09-28): Phases 5 and 6 start before Phase 4. Phase 4 is stopped (owner decision, 2026-10-12): gate G4 is closed unless the owner decides to revisit call audio.
+
 | Phase / gate | Goal | Status |
 |--------------|------|--------|
 | **0** Foundation | Protocol, shared test vectors, green CI | **Done** |
-| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WebSocket, QR pairing | **Code done** (android #13) · Gate G1 open |
-| **2** SMS bridge & iOS | Conversations, Rust relay, APNs/FCM | **Code done** · Gate G2 open |
-| **3** Call info and control | Telecom APIs, Mac panel, call history | **Code done** · Real-device checks open |
-| **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision 2026-10-12) · G4 closed |
-| **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · Gate G5 pending |
-| **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Browser decisions pending |
-| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Proposed** (2026-10-01) · Spike G7 pending |
+| **1** Clipboard sync (MVP) | Android ↔ Mac, LAN WebSocket, QR pairing | **Code done** · Gate G1 open · text clips keep their HTML (`text/html`); copied images open only from other apps' content providers, other URIs rejected (2026-10-12, android #13) |
+| **2** SMS bridge and iOS | Conversations, Rust relay, APNs/FCM | **Code done** · Gate G2 open · the iPhone keeps its session up to 25 s in the background · Liquid Glass app icon on iPhone, iPad and Mac |
+| **3** Call info and control | Telecom APIs, Mac panel, call history | **Code done** · Real-device checks open · calls from other apps keep the app's name and survive a swiped in-call notification |
+| **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision, 2026-10-12) · G4 closed: only macOS 27 is available, so calls stay notification + answer/decline/end, no audio |
+| **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs a paid Apple Developer team |
+| **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Chrome and Samsung Internet measured; browser go/no-go pending |
+| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Proposed** (2026-10-01) · starts after G5 and G6 (G4 closed 2026-10-12) with spike G7 |
 | **G0** Vectors | Shared cross-platform crypto test vectors | **Done** |
-| **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) |
-| **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) |
+| **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) · App Store Connect screenshots recaptured at native 1320×2868 (2026-10-12) |
+| **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) · Play Console screenshots recaptured at 1080×1920 (2026-10-12) |
 
-Full roadmap and history: [`docs/project-roadmap.md`](docs/project-roadmap.md).
+Full roadmap and history: [`docs/project-roadmap.md`](docs/project-roadmap.md). Task cards: [`plans/20260925-implementation/plan.md`](plans/20260925-implementation/plan.md).
 
 ### Rule: keep this roadmap current
 
