@@ -26,11 +26,12 @@ app mới) — keystore của owner chỉ là **upload key**.
   calls to your Mac, iPhone, and iPad — end-to-end encrypted, no account needed, open source."
   (ghép thêm elevator pitch + 3 message pillars trong brand-guidelines.md §4 nếu cần dài hơn)
 - Icon: `docs/brand/assets/app-icon/handlive-play-store-512.png`
-- Screenshots: `docs/screenshots/android/*.en.png` — **540×1200px, tỉ lệ 2.22:1, vượt giới hạn Play
-  (tối đa 2:1)**. Không chặn Internal testing. Trước Production: chụp lại ở tỉ lệ ≤2:1 (khuyến nghị
-  1080×1920) hoặc crop/pad ảnh hiện có.
-- Privacy policy URL: `https://github.com/HandLive/handlive/blob/main/docs/privacy.md` (repo public,
-  GitHub tự render — dùng tạm cho đến khi `handlive.app` lên).
+- Feature graphic: `docs/brand/assets/promo/feature-graphic-play.en.png` (+ `.vi.png`), 1024×500 — đã có.
+- Screenshots: `docs/screenshots/android/*.en.png` (+ `.vi.png`) — đã chụp lại đúng 1080×1920, 8 màn × 2
+  ngôn ngữ, merged.
+- Privacy policy URL: **`https://handlive.hxd.app/privacy/`** (`https://handlive.hxd.app/vi/quyen-rieng-tu/`
+  cho bản VI) — site đã live, verify trực tiếp 2026-10-09, nội dung khớp `docs/privacy.md`/`.vi.md` mới
+  nhất. Không cần dùng link GitHub tạm nữa.
 
 ## 3. Data safety form (map từ `docs/privacy.md`)
 
@@ -96,4 +97,5 @@ app mới) — keystore của owner chỉ là **upload key**.
 
 - `targetSdk` 36 build + bundle OK (xem `plan.md`).
 - Store copy (tên, short/long description) đã có sẵn trong `docs/brand-guidelines.md`.
-- Data an toàn/privacy policy content đã có sẵn trong `docs/privacy.md`, chỉ thiếu URL public.
+- Data an toàn/privacy policy content đã có sẵn trong `docs/privacy.md`; URL public đã live
+  (`https://handlive.hxd.app/privacy/`), không còn thiếu gì ở mục này.

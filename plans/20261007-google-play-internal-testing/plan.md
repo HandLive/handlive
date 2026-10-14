@@ -12,11 +12,10 @@ testing** trước (owner chọn), Production để sau.
    trong source). Đã cập nhật 4 chỗ hardcode package trong `shared/tools/e2e/` (`adb_device.py`,
    `scenario_app_calls.py`, `scenario_clipboard.py`, `self_test.py`) — chỉ phần package trước `/`,
    phần class name sau `/` vẫn `app.handlive.android.*` vì dùng namespace.
-2. **Privacy policy URL:** dùng GitHub. `docs/website.md` ghi rõ site handlive.app WordPress
-   **chưa deploy**. Thay vì dựng GitHub Pages (tốn thêm bước đổi Settings repo), dùng ngay URL đang
-   sống sẵn vì repo `HandLive/handlive` là **public**: `https://github.com/HandLive/handlive/blob/main/docs/privacy.md`
-   (và `.../docs/privacy.vi.md`) — GitHub tự render Markdown đẹp, không cần setup gì, dùng được
-   ngay cho Internal testing. Đổi sang `handlive.app/privacy` khi site WordPress lên sau.
+2. **Privacy policy URL — đã giải quyết (2026-10-09):** site WordPress đã deploy ở staging
+   `handlive.hxd.app`, verify trực tiếp còn sống: `https://handlive.hxd.app/privacy/` và
+   `https://handlive.hxd.app/vi/quyen-rieng-tu/`, nội dung khớp `docs/privacy.md`/`.vi.md` mới nhất.
+   Dùng 2 URL này cho Play Console/App Store Connect, không cần link GitHub blob tạm nữa.
 3. **Commit targetSdk + applicationId:** đã tạo nhánh `fix/google-play-submission-readiness` ở cả
    `android/` và `shared/`, commit xong (chi tiết dưới). **Chưa push, chưa tạo PR** — chờ owner
    duyệt trước khi push (xem "Việc tiếp theo").
@@ -71,8 +70,9 @@ testing** trước (owner chọn), Production để sau.
 3. Nộp song song (không chặn Internal testing nhưng chặn Production/Closed/Open mở rộng sau):
    Data safety form, Permissions Declaration Form (use case "Cross-device synchronization or
    transfer of SMS or calls"), Accessibility API declaration form, Content rating questionnaire —
-   nội dung draft ở `play-console-checklist.md`. Privacy policy URL dùng GitHub blob ở trên.
-4. Trước khi lên Production: chụp lại screenshots đúng tỉ lệ ≤2:1 (khuyến nghị 1080×1920).
+   nội dung draft ở `play-console-checklist.md`. Privacy policy URL dùng `handlive.hxd.app` ở trên.
+4. ~~Chụp lại screenshots đúng tỉ lệ ≤2:1~~ — **xong** (1080×1920, 8 màn × 2 ngôn ngữ, merged
+   2026-10-09, PR hub #23).
 
 Chi tiết nộp form, script video demo, data-safety mapping: [play-console-checklist.md](play-console-checklist.md).
 
