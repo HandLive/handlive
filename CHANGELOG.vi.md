@@ -6,6 +6,21 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.1.1] — 22/10/2026
+
+### Thêm mới
+
+- Phát hành `v0.1.1`, thẻ đầu tiên không có hậu tố tiền phát hành, trên cả 5 kho: Release của hub giữ APK `foss` đã
+  ký, IPA iOS chưa ký và DMG Mac ký ad hoc kèm SHA-256 (`release-collect`); README (en, vi), ảnh chụp lộ trình, link
+  Tải bản beta và huy hiệu trang chủ của website trỏ tới đó. Android dùng mã ứng dụng mới `com.handlive.android` nên
+  bản beta đã cài không được cập nhật: gỡ bản cũ trước, rồi ghép đôi lại (changelog handlive-android). Rà soát bảo mật
+  mọi thay đổi từ beta.3: 0 nghiêm trọng, 0 cao, 0 trung bình, 1 thấp hoãn lại
+  (`plans/20260925-implementation/reports/security-scan-0.1.1-2026-10-22.md`).
+- Chuẩn bị Google Play: nội dung gian hàng (en, vi) và ảnh đầu trang 1024×500 (`docs/brand/`,
+  `tools/brand/build_play_feature_graphic.py`), hướng dẫn Play Console, `tools/release/play-release.zsh` (gộp PR
+  Android và chạy `play-bundle`) và `tools/release/setup-fcm.zsh` (lưu giá trị FCM thành secret môi trường;
+  `google-services.json` nằm trong .gitignore).
+
 ### Thay đổi
 
 - Ảnh gian hàng: chụp lại cả 11 ảnh App Store Connect trên Simulator iPhone 6.9" ở kích thước gốc 1320×2868 (trước bị

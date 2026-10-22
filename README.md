@@ -8,16 +8,16 @@ English | [Tiếng Việt](README.vi.md)
 
 [![ci-docs](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.0--beta.3-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3)
+[![Release](https://img.shields.io/badge/release-v0.1.1-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.1)
 
 HandLive connects Android devices with macOS, iOS, and iPadOS. It syncs your clipboard, bridges SMS conversations, and delivers call notifications with action controls—without cloud lock-in. End-to-end encryption is always on, and the entire project is open source under Apache-2.0.
 
 ## Get the beta
 
-Download the latest pre-release [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (2026-10-07):
+Download the latest release [`v0.1.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.1) (2026-10-22):
 - **macOS:** Ad-hoc signed DMG (choose *Open Anyway* on first run).
-- **Android:** Signed `foss` APK.
-- **iOS / iPadOS:** Unsigned IPA for sideloading.
+- **Android:** Signed `foss` APK. Its application id is new (`com.handlive.android`): remove a beta install first, then pair again.
+- **iOS / iPadOS:** Unsigned IPA for sideloading. A beta install updated to this build must pair again (new App Group).
 
 Beta builds are intended for early testers and are not yet on the App Store or Google Play. See the [Deployment Guide](docs/deployment-guide.md) for installation and packaging details.
 

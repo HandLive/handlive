@@ -8,16 +8,16 @@
 
 [![ci-docs](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.0--beta.3-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3)
+[![Release](https://img.shields.io/badge/release-v0.1.1-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.1)
 
 HandLive kết nối điện thoại Android với các thiết bị macOS, iOS và iPadOS. Ứng dụng đồng bộ bảng nhớ tạm, chuyển tiếp tin nhắn SMS và hiển thị thông báo cuộc gọi kèm nút thao tác—hoàn toàn không phụ thuộc vào đám mây. Mã hóa đầu cuối luôn bật, và toàn bộ dự án là mã nguồn mở theo giấy phép Apache-2.0.
 
 ## Tải bản beta
 
-Tải bản phát hành thử nghiệm mới nhất [`v0.1.0-beta.3`](https://github.com/HandLive/handlive/releases/tag/v0.1.0-beta.3) (07/10/2026):
+Tải bản phát hành mới nhất [`v0.1.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.1) (22/10/2026):
 - **macOS:** Tệp DMG ký ad-hoc (chọn *Open Anyway* trong lần mở đầu tiên).
-- **Android:** Tệp APK `foss` đã ký.
-- **iOS / iPadOS:** Tệp IPA chưa ký để sideload.
+- **Android:** Tệp APK `foss` đã ký. Mã ứng dụng đã đổi (`com.handlive.android`): gỡ bản beta cũ trước, rồi ghép đôi lại.
+- **iOS / iPadOS:** Tệp IPA chưa ký để sideload. Bản beta cập nhật lên bản này phải ghép đôi lại (App Group mới).
 
 Bản beta dành cho người thử nghiệm sớm và chưa có trên App Store hay Google Play. Xem [Hướng dẫn phân phối](docs/deployment-guide.vi.md) để biết chi tiết cài đặt và đóng gói.
 

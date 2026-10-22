@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-10-22
+
+### Added
+
+- Release `v0.1.1`, the first tag without a pre-release suffix, on all five repositories: the hub's Release holds the
+  signed `foss` APK, the unsigned iOS IPA and the ad-hoc Mac DMG with their SHA-256 (`release-collect`); README (en,
+  vi), roadmap snapshot and the website's Get the Beta link and home page badge point at it. Android ships with its
+  new application id `com.handlive.android`, so a beta install is not updated: remove it first, then pair again
+  (handlive-android changelog). Security scan of everything since beta.3: 0 critical, 0 high, 0 medium, 1 low deferred
+  (`plans/20260925-implementation/reports/security-scan-0.1.1-2026-10-22.md`).
+- Google Play preparation: store listing text (en, vi) and the 1024×500 feature graphic (`docs/brand/`,
+  `tools/brand/build_play_feature_graphic.py`), the Play Console guide, `tools/release/play-release.zsh` (merges the
+  Android PR and dispatches `play-bundle`) and `tools/release/setup-fcm.zsh` (stores the FCM values as environment
+  secrets; `google-services.json` is git-ignored).
+
 ### Changed
 
 - Store screenshots: all 11 iOS App Store Connect screenshots recaptured on the iPhone 6.9" Simulator at the native

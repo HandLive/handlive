@@ -3,12 +3,12 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; beta `v0.1.0-beta.3`; G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
+## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; latest release `v0.1.1` (2026-10-22); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
 Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) and **`v0.1.0-beta.3`** (2026-10-07) on hub/android/apple/shared/relay
-(not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
+(not a store release), then **`v0.1.1`** (2026-10-22), the first tag without a pre-release suffix (still not a store release; Google Play readiness on Android, paid-team identifiers on iOS). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
 required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
 on a real relay / APNs / FCM, and spike gates **G5** (paid Apple Developer team), **G6** (browser go/no-go). Owner
 decision 2026-09-28: Phases 5 and 6 proceed before Phase 4. Owner decision 2026-10-12 stops Phase 4 itself and
@@ -50,6 +50,7 @@ project owner in Vietnamese with diacritics.
 | Phase 4–6 spikes | Merged onto `main` (2026-09-30): HFPSpike, CameraSpike, WebSpike (Apple), web-spike (Android) | apple `214b4f4` |
 | Hub docs | Live README roadmap + mandatory update rule; bilingual snapshot in `docs/project-roadmap*.md` | hub `650240e` |
 | Beta | Coordinated tags/releases **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** and **`v0.1.0-beta.3`** on all five repos (prerelease, not store); each since beta.2 has the signed APK, the iOS IPA and the ad-hoc Mac DMG, all gathered on the hub's Release (`release-collect`); the website's Get the Beta opens the latest. beta.3 (2026-10-07): security scan of everything since beta.2 found a quadratic clipboard HTML sanitizer, fixed on all three implementations before the tag; files verified (checksums, APK cert `bddc9efc…a0f9`, versions 0.1.0-beta.3 / build 3, Mac universal ad hoc); `release-apple` `sign` ran on `macos-26`, `launch` on `macos-15`, both green (`reports/release-beta3-2026-10-07.md`) | beta.2: hub `9eb0766`, android `45d067b`, apple `c40d918`; beta.3: hub `8ac6d0e`, shared `dffa1a2`, relay `cda13bf`, android `1a02f42`, apple `e4e05c3` |
+| Release 0.1.1 (2026-10-22) | Owner: pull the latest code, build the release and publish it on GitHub and the website; owner chose `v0.1.1` over `v1.0.1` (no `v1.0.0` yet, gates G1/G2 open) and asked for the security scan first. Scan of everything since beta.3 (`reports/security-scan-0.1.1-2026-10-22.md`): 0 critical, 0 high, 0 medium, 1 low deferred (iOS UI-test seams ship in Release, gated on launch arguments; wrap in `#if DEBUG` next round); release notes: Android application id is `com.handlive.android` (beta installs are not updated: remove, reinstall, pair again), first R8 `foss` APK (owner to launch it on the S25). Versions: android `versionCode 6` / `0.1.1`, apple `0.1.1` build 4; changelogs on shared, android, apple and the hub (en, vi); README, roadmap and website link/badge point at `v0.1.1`. Tags pushed from the owner's Mac (this session's shell had no GitHub credential); `release-android`, `release-apple`, `release-collect` run on the tags | shared `56b4c93`, android `8e4022a`, apple `098996c`, relay `17f367b` (no code change since beta.3), hub: the `v0.1.1` commit |
 | CI hygiene | shared: sort `settings.check_again`; android: skip `tools/` in `UiTextSourceGuardTest` | shared `b330d4b`; android `4c6db55` |
 | Security | 2026-09-28 scan fixes merged; 2026-10-04 scan of everything since beta.1: PASS, 6 of 8 findings fixed (`reports/security-scan-beta2-2026-10-04.md`) | relay `cda13bf`; beta.2 tips |
 | Clipboard HTML (2026-10-05, 04:00) | Owner decision: a text clip keeps its HTML (`html` on `clipboard/push`, capability `text/html`, shared sanitizer vectors `clipboard-html.json`); shared, android, apple and the spec changed in parallel; review found a hole in the reference sanitizer (a failed tag start copied as text) → fixed in contract, reference and both ports; e2e with the final APK 48 PASS / 0 FAIL; owner's Mac and S25 reinstalled 04:51–04:56 without re-pairing (`plans/20261005-clipboard-html/plan.md`, reports under it) | shared PR #4 (merged), android PR #5, apple PR #3, hub `feat/clipboard-html` |
@@ -60,7 +61,7 @@ project owner in Vietnamese with diacritics.
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
-**Workspace tips to treat as current `main`** (tag `v0.1.0-beta.3`, 2026-10-07): hub `8ac6d0e`, shared `dffa1a2`, relay `cda13bf`, android `1a02f42`, apple `e4e05c3`, plus later docs PRs on the hub. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
+**Workspace tips to treat as current `main`** (tag `v0.1.1`, 2026-10-22): shared `56b4c93`, relay `17f367b`, android `8e4022a`, apple `098996c`, hub at the `v0.1.1` tag. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
 
 ### In progress / blocked (owner or gate)
 
@@ -94,8 +95,10 @@ project owner in Vietnamese with diacritics.
    logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
    must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
    and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
-9. **Next release:** follow `docs/deployment-guide.md` (Cutting a release) and the beta.3 report: security scan of
+9. **Next release:** follow `docs/deployment-guide.md` (Cutting a release) and the 0.1.1 scan report: security scan of
    everything since the last tag first, then versions, changelogs, website link and badge, tags (hub and shared first).
+   Open from the 0.1.1 scan: wrap the iOS UI-test seams (`-HLUITest*` launch arguments) and their `/tmp` debug writes
+   in `#if DEBUG`, fix the `project.yml` comment that calls `HandLiveiOSUITests` uncommitted.
 10. **Open follow-ups** (no gate): `ManualClock` review debt, apple #5 being merged (`waitForSleepers` ignores
    cancellation; test helpers' `clock:`/`timer:` swapped); keep `-parallel-testing-enabled NO` (parallel saves ~0 s);
    measure the app-call label on Android 11–14 to know whether the launcher query matters there. The e2e `setup` check of
