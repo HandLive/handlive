@@ -4,7 +4,7 @@
 
 > Nguồn: `plans/20260924-definitive-architecture/plan.md`, mục 8 và 11. Thẻ việc, Phase 0, cổng kiểm và ma trận máy nằm ở `plans/20260925-implementation/plan.md`. **Bảng tiến độ sống:** [`README.vi.md`](../README.vi.md#trạng-thái) của hub (phải cập nhật mỗi khi hoàn thành một công việc cụ thể).
 
-HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm trước Phase 4. Phase 4 đã dừng (quyết định của chủ dự án, 12/10/2026): chỉ có Mac macOS 27, nên cuộc gọi trên máy tính chỉ còn thông báo và nút nghe/từ chối/kết thúc, không có âm thanh; cổng G4 đóng, chỉ mở lại khi chủ dự án quyết định sau.
+HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như Handoff trên Apple, lên Android. Lộ trình dưới đây xây **theo thứ tự**. Mỗi phase là một phần dùng được. Phase sau đứng trên hạ tầng phase trước. WebSocket, ghép cặp và mã hóa từ Phase 1 dùng lại cho mọi phase sau. Một ngoại lệ về thứ tự (quyết định của chủ dự án, 28/09/2026): Phase 5 và 6 làm trước Phase 4. Phase 4 đã dừng (quyết định của chủ dự án, 12/10/2026): chỉ có Mac macOS 27, nên cuộc gọi trên máy tính chỉ còn thông báo và nút nghe/từ chối/kết thúc, không có âm thanh; cổng G4 đóng, chỉ mở lại khi chủ dự án quyết định sau. Phase 7 bắt đầu ngày 28/10/2026 (quyết định của chủ dự án) mà không chờ Phase 4–6 hay các cổng của chúng.
 
 ## Tiến độ tóm tắt (12/10/2026)
 
@@ -21,7 +21,7 @@ HandLive đưa các tính năng native riêng trong từng hệ sinh thái, như
 | 4 | Đã dừng (quyết định của chủ dự án, 12/10/2026) | G4 đóng: chỉ có macOS 27, cuộc gọi chỉ còn thông báo và nút nghe/từ chối/kết thúc, không âm thanh |
 | 5 | Spike trên `main` (`CameraSpike`, merge 30/09/2026) | G5: cần Apple Developer trả phí |
 | 6 | Probe spike trên `main` (Apple+Android merge 30/09/2026); chưa mở thẻ sản phẩm | G6: quyết định trình duyệt; hàng Firefox/Edge/Brave |
-| 7 | Đề xuất (01/10/2026) | Bắt đầu sau G4/G5/G6 bằng spike G7 |
+| 7 | Đã bắt đầu (quyết định của chủ dự án, 28/10/2026) | Spike G7 trước, không chờ G4/G5/G6; trường hợp cả hai offline, không relay, không tự ghép đôi HFP |
 | G0 | Xong | Vector kiểm thử |
 | G1 | Mở (trước 1.0) | Ma trận Phase 1 máy thật |
 | G2 | Mở (trước 1.0) | Tờ khai SMS / nhật ký Play Console (phương án B: F-Droid/APK) |
@@ -60,9 +60,9 @@ dự án quyết định sau.
 **Bắt đầu bằng spike G6 (3–5 ngày).** Trang web đang mở trên một thiết bị được xem tiếp trên thiết bị khác: Android sang Mac, Android sang iPhone và iPad (khi ứng dụng đang mở), Mac sang Android. Android đọc thanh địa chỉ của trình duyệt ở foreground qua một dịch vụ Hỗ trợ tiếp cận riêng, giới hạn ở các trình duyệt được hỗ trợ, sau màn hình công bố, mặc định tắt. Mac đọc tab trước nhất qua Apple Events, với quyền Tự động hóa cho từng trình duyệt. Mac hiện trang trong menu, Android hiện thông báo im lặng, iPhone và iPad hiện banner; người dùng mở bằng một lần bấm hoặc chạm. Tab riêng tư không bao giờ được gửi và trang không bao giờ được lưu. Chỉ dựa trên hạ tầng Phase 1 (phiên, mã hóa, capability), nên không phụ thuộc Phase 4 và 5; theo quyết định của chủ dự án ngày 28/09/2026, phase này làm xong trước khi Phase 4 hoàn tất. Thiết kế chi tiết: nhóm 9, WEB-01 tới WEB-05, quyết định C21.
 **Cổng G6:** thanh địa chỉ và nhận biết ẩn danh trên Android cho Chrome, Samsung Internet, Firefox, Edge và Brave trên Android 10 và 15, kèm chi phí pin của dịch vụ; Apple Events cho Safari, Chrome và Arc trên macOS 13 và 26, cửa sổ riêng tư của Safari, TCC với bản Developer ID; chính sách Hỗ trợ tiếp cận hiện hành của Play. Đạt hoặc không đạt theo từng trình duyệt. **Công:** khoảng 1.5 person-month (Android 3 tuần, macOS 2 tuần, iOS nửa tuần, test 1 tuần, spike 1 tuần).
 
-## Phase 7. Kết nối mọi nơi (đề xuất)
+## Phase 7. Kết nối mọi nơi (đã bắt đầu)
 
-**Bắt đầu sau các cổng G4, G5 và G6, bằng spike G7 (khoảng một tuần).** Sau lần ghép đôi QR đầu tiên, điện thoại và Mac tự kết nối khi không chung mạng — cả hai offline, hoặc điện thoại dùng dữ liệu di động còn Mac dùng Wi-Fi công cộng — và không máy nào phải rời hay đổi Wi-Fi hiện tại. Một liên kết Bluetooth (BLE hoặc cổ điển, chọn theo G7) chở kênh điều khiển; một làn dữ liệu lớn mới chở ảnh qua LAN, Wi-Fi Direct (chỉ khi Wi-Fi của Mac đang rảnh), relay hoặc Bluetooth; ghép đôi lần đầu cũng chạy được khi offline qua BLE; HandLive tự khởi động ghép đôi Bluetooth cổ điển cho HFP và Mac chỉ tự xác nhận khi mã đã được kiểm đầu-cuối. Mọi đường Bluetooth đều có bảo mật ngoài bắt tay phiên (lớp bảo mật link, chính sách admission). Plan: `plans/20260925-implementation/phase-07-ket-noi-moi-noi.vi.md`.
+**Bắt đầu 28/10/2026, spike G7 (khoảng một tuần), không chờ G4, G5, G6.** Sau ghép đôi QR, điện thoại và Mac ở gần tự kết nối khi cả hai offline (trường hợp chủ dự án), không rời hay đổi Wi-Fi; cùng đường Bluetooth phủ trường hợp điện thoại dùng 4G và Mac ở Wi-Fi khác khi gần nhau. Liên kết Bluetooth (BLE hoặc cổ điển, G7 chọn) chở kênh điều khiển; làn dữ liệu lớn mới chở ảnh qua LAN, Wi-Fi Direct (nhu cầu, Wi-Fi Mac rảnh), Bluetooth; ghép đôi đầu offline qua BLE. Bỏ: bulk relay (không deploy), ghép đôi HFP (P4 dừng). Nếu G7 hỏng thì không relay dự phòng, chỉ còn LAN. Bluetooth được bảo mật ngoài bắt tay phiên (lớp bảo mật link, chính sách admission). Plan: `plans/20260925-implementation/phase-07-ket-noi-moi-noi.vi.md`.
 **Đo:** văn bản dưới 50 ms trên LAN và trong 200 ms qua Bluetooth; ảnh 5 MB trong 2 s trên LAN, ảnh đầu khi offline trong 10 s; không máy nào bị đổi Wi-Fi. **Công:** ước lượng sau G7.
 
 ## Công tổng
