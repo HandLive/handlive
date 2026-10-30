@@ -19,6 +19,25 @@ RELEASE_BRANCH="feat/docs-v0-2-0"
 PR_TITLE="docs: v0.2.0 release links and status"
 PR_BODY="Website (#265) và tài liệu (README, CLAUDE.md, roadmap, profile tổ chức) trỏ tới v0.2.0 đã phát hành. Không đổi mã nguồn app, không ảnh hưởng release đã tag."
 
+# Cập nhật mô tả PR nếu đã mở (dùng bản có dấu từ Bao commit c6ff51c)
+update_pr_body() {
+  local repo_path="$1"
+  local existing_pr_url="$2"
+
+  if [ -z "$existing_pr_url" ]; then
+    return 0
+  fi
+
+  echo "+ gh pr edit $existing_pr_url --title ... --body ..."
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "$name: (dry-run) không cập nhật PR"
+    return 0
+  fi
+
+  (cd "$repo_path" && gh pr edit "$existing_pr_url" --title "$PR_TITLE" --body "$PR_BODY") \
+    || fail "$name: gh pr edit thất bại"
+}
+
 typeset -a REPO_NAMES
 typeset -a REPO_PATHS
 REPO_NAMES=(hub github-org)
@@ -73,11 +92,21 @@ while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
   remote_branch_sha="$(cd "$repo_path" && git ls-remote origin "refs/heads/$RELEASE_BRANCH" | awk '{print $1}')"
 
   echo "+ git ls-remote origin refs/heads/$RELEASE_BRANCH"
+  should_push=1
   if [ -n "$remote_branch_sha" ] && [ "$remote_branch_sha" = "$local_sha" ]; then
     echo "$name: origin/$RELEASE_BRANCH đã đúng SHA ($local_sha), bỏ qua push"
+    should_push=0
   elif [ -n "$remote_branch_sha" ]; then
-    fail "$name: origin/$RELEASE_BRANCH đã tồn tại với SHA khác ($remote_branch_sha != $local_sha), không tự --force"
-  else
+    echo "+ git fetch origin $RELEASE_BRANCH"
+    (cd "$repo_path" && git fetch origin "$RELEASE_BRANCH") \
+      || fail "$name: git fetch $RELEASE_BRANCH thất bại"
+
+    (cd "$repo_path" && git merge-base --is-ancestor "$remote_branch_sha" "$local_sha") \
+      || fail "$name: origin/$RELEASE_BRANCH ($remote_branch_sha) không phải tổ tiên của main ($local_sha), không tự --force"
+    echo "$name: origin/$RELEASE_BRANCH ($remote_branch_sha) là tổ tiên của main, đẩy fast-forward"
+  fi
+
+  if [ "$should_push" -eq 1 ]; then
     echo "+ git push origin main:$RELEASE_BRANCH"
     if [ "$DRY_RUN" -eq 1 ]; then
       echo "$name: (dry-run) không push"
@@ -97,6 +126,7 @@ while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
   existing_pr_url="$(cd "$repo_path" && gh pr list --head "$RELEASE_BRANCH" --state open --json url --jq '.[0].url' 2>/dev/null)"
   if [ -n "$existing_pr_url" ]; then
     echo "$name: PR đã có -> $existing_pr_url"
+    update_pr_body "$repo_path" "$existing_pr_url"
     continue
   fi
 
