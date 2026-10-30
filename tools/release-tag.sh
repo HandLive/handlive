@@ -11,9 +11,10 @@
 #        - main local la ancestor (merge commit): git merge --ff-only origin/main
 #        - lich su bi viet lai (rebase/squash, SHA moi): git reset --soft origin/main
 #          (cay giong het nen index va working tree khong doi; commit cu van con trong reflog)
-#   3. kiem tra phan loi cua tag khop versionName (Android) va MARKETING_VERSION (Apple, ca 3 target)
-#   4. git tag <tag> roi git push origin <tag>, theo thu tu hub -> shared -> android -> apple
-# Dung ngay khi mot buoc loi (khong tiep tuc repo sau, khong tag nhung repo con lai).
+#   3. kiem tag chua ton tai o local va tren origin (git ls-remote)
+#   Buoc 1-3 (Pha 1) chay du 4 repo truoc; repo nao loi thi dung, KHONG repo nao duoc gan tag.
+#   4. (Pha 2) chi khi ca 4 repo qua Pha 1: git tag <tag> roi git push, thu tu hub -> shared -> android -> apple
+# Truoc Pha 1: phan loi cua tag phai khop versionName (Android) va MARKETING_VERSION (Apple, ca 3 target).
 #
 # Merge PR tren GitHub nen dung "Create a merge commit" (giu nguyen SHA cua commit da kiem).
 # "Rebase and merge" va "Squash and merge" deu tao SHA moi; script van chay duoc nho buoc so
@@ -87,11 +88,15 @@ REPO_PATHS=(
   "$APPLE_DIR"
 )
 
+typeset -a TAG_SHAS
+
+# Pha 1: kiem du 4 repo, chua gan tag nao. Repo nao loi thi dung, khong repo nao co tag.
+echo
+echo "==== Pha 1: kiem 4 repo ===="
 i=1
 while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
   name="${REPO_NAMES[$i]}"
   repo_path="${REPO_PATHS[$i]}"
-  i=$((i + 1))
 
   echo
   echo "== $name ($repo_path) =="
@@ -125,15 +130,40 @@ while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
     || fail "$name: main local ($local_sha) khac origin/main ($remote_sha) sau khi dong bo"
   echo "$name: main khop origin/main ($local_sha)"
 
-  if (cd "$repo_path" && git rev-parse "$TAG" >/dev/null 2>&1); then
-    fail "$name: tag '$TAG' da ton tai, khong tag lai"
+  if (cd "$repo_path" && git rev-parse -q --verify "refs/tags/$TAG" >/dev/null); then
+    fail "$name: tag '$TAG' da ton tai o local"
   fi
+  (cd "$repo_path" && git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null)
+  ls_code=$?
+  case "$ls_code" in
+    2) ;;
+    0) fail "$name: tag '$TAG' da ton tai tren origin" ;;
+    *) fail "$name: git ls-remote that bai (ma $ls_code)" ;;
+  esac
+  echo "$name: tag '$TAG' chua co o local va origin"
 
-  echo "+ git tag $TAG"
-  (cd "$repo_path" && git tag "$TAG") || fail "$name: git tag that bai"
+  TAG_SHAS[$i]="$local_sha"
+  i=$((i + 1))
+done
 
-  echo "+ git push origin $TAG"
-  (cd "$repo_path" && git push origin "$TAG") || fail "$name: git push tag that bai"
+# Pha 2: ca 4 repo da qua Pha 1, moi gan tag va day.
+echo
+echo "==== Pha 2: tag va day ===="
+i=1
+while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
+  name="${REPO_NAMES[$i]}"
+  repo_path="${REPO_PATHS[$i]}"
+  sha="${TAG_SHAS[$i]}"
+  i=$((i + 1))
+
+  echo
+  echo "== $name =="
+  echo "+ git tag $TAG $sha"
+  (cd "$repo_path" && git tag "$TAG" "$sha") || fail "$name: git tag that bai"
+
+  echo "+ git push origin refs/tags/$TAG"
+  (cd "$repo_path" && git push origin "refs/tags/$TAG") \
+    || fail "$name: git push tag that bai — cac repo truoc da co tag tren origin; sua loi roi day tay: git -C $repo_path push origin refs/tags/$TAG"
 
   echo "$name: da tag va day $TAG"
 done
