@@ -20,6 +20,7 @@ mkdir -p "$LOG_DIR"
 GRADLE_LOG="$LOG_DIR/gradle-android-ui.log"
 
 overall_ok=1
+TEST_SUMMARY=""
 
 echo "== Android: gradlew check cho core:design, core:strings, feature:pairing va app:testFossDebugUnitTest =="
 : "${JAVA_HOME:=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}"
