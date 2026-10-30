@@ -829,12 +829,12 @@ prefs[intPreferencesKey("clip.auto_clear_s")] ?: 60            # bước 10: h�
 | Mục | Nội dung |
 |-----|----------|
 | Tên | CLIP-03 — Đồng bộ ảnh clipboard giữa Android và Mac |
-| Mô tả | Đồng bộ ảnh đã sao chép theo hai chiều.<br>Nguồn: Android — item của `ClipData` là URI có MIME `image/*`, mở bằng `ContentResolver` ngay trong `ClipboardReadActivity` (đường tự động hoặc thủ công của CLIP-01); Mac — mục clipboard có `public.png`, `public.jpeg` hoặc `public.tiff`, hoặc tệp ảnh sao chép trong Finder (đọc từ tệp; phát hiện như CLIP-02).<br>PNG, JPEG giữ nguyên; định dạng khác (TIFF, HEIC, WebP, GIF…) chuyển sang PNG; ảnh sau chuẩn hóa > `CLIP_MAX_IMAGE` (10 MiB) bị chặn.<br>Truyền: `clipboard/push` kèm `transfer`, rồi các `clipboard/chunk` 64 KiB theo thứ tự (plaintext nhị phân, 0.5.1); bên nhận ghi tệp tạm, kiểm SHA-256, rồi ghi clipboard — Android bằng URI của `FileProvider` (`ClipData.newUri`), Mac bằng `setData`.<br>Cơ chế chunk dùng chung cho văn bản lớn hơn `CLIP_INLINE_MAX` (QC5) và ảnh của iPhone/iPad (CLIP-04). |
+| Mô tả | Đồng bộ ảnh đã sao chép theo hai chiều.<br>Nguồn: Android — item của `ClipData` là URI có MIME `image/*`, mở bằng `ContentResolver` ngay trong `ClipboardReadActivity` (đường tự động hoặc thủ công của CLIP-01); Mac — mục clipboard có `public.png`, `public.jpeg` hoặc `public.tiff`, hoặc tệp ảnh sao chép trong Finder (đọc từ tệp; phát hiện như CLIP-02).<br>PNG, JPEG giữ nguyên; định dạng khác (TIFF, HEIC, WebP, GIF…) chuyển sang PNG; ảnh sau chuẩn hóa > `CLIP_MAX_IMAGE` (10 MiB) bị chặn.<br>Truyền: `clipboard/push` kèm `transfer`, rồi các `clipboard/chunk` 64 KiB theo thứ tự (plaintext nhị phân, 0.5.1); bên nhận ghi tệp tạm, kiểm SHA-256, rồi ghi clipboard — Android bằng URI của `FileProvider` (`ClipData.newUri`), Mac bằng `setData`.<br>Cơ chế chunk dùng chung cho văn bản lớn hơn `CLIP_INLINE_MAX` (QC5) và ảnh của iPhone/iPad (CLIP-04).<br>Từ P7, khi hai máy không chung LAN, cùng các message đó đi trên làn bulk của 0.4.7: qua Wi-Fi Direct (`/v1/stream/bulk`, CONN-06) với ảnh từ `BULK_DIRECT_MIN` trở lên khi Mac vào được group, ngược lại qua link Bluetooth (kênh `0x02`) ở nền. |
 | Tác nhân | Chính: Người dùng. Hệ thống: A-CLIP (`ClipboardReadActivity`, `ClipboardModule`), A-SVC, A-UI, M-APP, OS (`ClipboardManager`, `ContentResolver`, `FileProvider`, `ImageDecoder`, `NSPasteboard`, ImageIO), I-APP (nhận bản chuyển tiếp). |
 | Điều kiện trước | 1.<br>Clipboard hiệu lực và ảnh được phép theo QC1 (`clip.send_images = true` ở bên gửi, `mimes` của bên nhận có MIME ảnh).<br>2.<br>Android: ảnh được đọc qua đường tự động hoặc thủ công của CLIP-01 (đích Chia sẻ chỉ nhận văn bản).<br>Mac: hỏi vòng CLIP-02 đang chạy và được phép đọc (C10).<br>3.<br>Bên nhận còn chỗ cho tệp tạm. |
 | Điều kiện sau | **Thành công:** clipboard bên nhận chứa ảnh (Android: URI `content://` của HandLive trỏ tới tệp trong `cache/clip/`; Mac: dữ liệu PNG hoặc JPEG); bên nhận đã ghi dấu vết QC4, hẹn CLIP-05; tệp tạm của lần truyền đã xóa (Android giữ tệp của clip đang nằm trên clipboard); Android chuyển tiếp tới client khác (QC6).<br>**Thất bại hoặc hủy:** không bên nào đổi clipboard; tệp tạm bị xóa. |
-| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: không đọc được URI (quyền mất vì clip đã đổi, clipboard chưa từng cấp quyền, hoặc URI không qua CLIP-01 API 2 logic 7): bỏ qua ở đường tự động; đường thủ công báo "Không đọc được ảnh". Bản debug ghi `clip_read_failed` kèm lý do và, với URI `content`, authority. Lần từ chối theo logic 7 còn ghi `why=uri_not_allowed` và không ghi đường dẫn. |
-| Yêu cầu đặc biệt | **Hiệu năng:** ảnh 5 MB < 2 s trong LAN (80 khối); qua relay giới hạn 2 MiB/s mỗi cặp nên ảnh 10 MiB mất ≥ 5 s.<br>Hiện tiến trình khi ảnh > 1 MiB.<br>**Tài nguyên:** bên nhận ghi khối thẳng vào tệp và băm SHA-256 dần, không giữ cả ảnh trong bộ nhớ; tối đa một lần truyền đến từ mỗi đối phương; tối đa 4 khối chờ trong bộ đệm gửi của WebSocket để envelope khác (cuộc gọi, SMS) được chen trước.<br>**Bảo mật:** mỗi khối là một envelope mã hóa; relay chỉ thấy `type = clipboard` và kích thước; tệp tạm nằm trong vùng riêng của ứng dụng; `FileProvider` chỉ lộ thư mục `cache/clip/`, ứng dụng dán được hệ thống cấp quyền đọc tạm thời. |
+| Ngoại lệ | E1 — Ảnh không được phép (`clip.send_images = false` ở bên gửi, hoặc `mimes` của bên nhận không có MIME này): bỏ qua, không thông báo.<br>E2 — Ảnh (nguồn hoặc sau chuẩn hóa) > 10 MiB: `CLIP_TOO_LARGE`, báo tại chỗ "Ảnh quá lớn (tối đa 10 MB)" (toast trên Android, dòng trạng thái trong menu thanh menu trên Mac).<br>E3 — Không giải mã hoặc chuyển đổi được ảnh: `CLIP_UNSUPPORTED_MIME`, chỉ log (đường thủ công báo "Không đọc được ảnh").<br>E4 — SHA-256 không khớp: bên nhận trả `CLIP_CHECKSUM_MISMATCH`; bên gửi gửi lại một lần với `transfer_id` mới; sai lần nữa → báo tại chỗ "Không gửi được ảnh" (dòng trạng thái trong menu trên Mac, toast trên Android; không đẩy thông báo hệ thống, C19).<br>E5 — Có clip mới hơn khi đang truyền: bên gửi gửi `clipboard/cancel` `superseded`.<br>E6 — Người dùng bấm "Hủy" trên tiến trình (bên gửi hoặc bên nhận): `clipboard/cancel` `user`.<br>E7 — Bên nhận không nhận được khối nào trong `CLIP_TRANSFER_IDLE_TIMEOUT` (30 s): gửi `clipboard/cancel` `timeout`, xóa tệp tạm.<br>E8 — Mất kết nối giữa chừng: hai bên xóa tệp tạm, không nối tiếp; khi có phiên mới, phát lại cả ảnh nếu còn trong 120 s (QC7).<br>E9 — Không đủ chỗ ghi tệp tạm: `ack` `INTERNAL`, bên nhận báo "Không đủ bộ nhớ để nhận ảnh".<br>E10 — Android: không đọc được URI (quyền mất vì clip đã đổi, clipboard chưa từng cấp quyền, hoặc URI không qua CLIP-01 API 2 logic 7): bỏ qua ở đường tự động; đường thủ công báo "Không đọc được ảnh". Bản debug ghi `clip_read_failed` kèm lý do và, với URI `content`, authority. Lần từ chối theo logic 7 còn ghi `why=uri_not_allowed` và không ghi đường dẫn.<br>E11 — Không có LAN, làn của một lần truyền đang chạy thay đổi (Wi-Fi Direct lên khi đang chạy qua Bluetooth mà còn hơn một nửa, mất group, phiên LAN thay phiên Bluetooth): bên gửi gửi `clipboard/cancel` `rerouted` và truyền lại toàn bộ ảnh trên làn mới với `transfer_id` mới (0.4.7), tối đa `BULK_MAX_RESTARTS` lần cho mỗi clip, sau đó E8.<br>E12 — Không có LAN và không có Wi-Fi Direct (Mac đang nối mạng khác, thiếu quyền, `DIRECT_WIFI_UNAVAILABLE`, hoặc ảnh nhỏ hơn `BULK_DIRECT_MIN`): ảnh đi qua Bluetooth ở nền; trường 10 hiện cùng tiến trình; người dùng hủy được (E6). |
+| Yêu cầu đặc biệt | **Hiệu năng:** ảnh 5 MB < 2 s trong LAN (80 khối); qua relay giới hạn 2 MiB/s mỗi cặp nên ảnh 10 MiB mất ≥ 5 s. Khi không có LAN (0.4.7): qua Wi-Fi Direct ảnh 5 MB đầu tiên ≤ 10 s tính cả thời gian vào group và các ảnh sau ≤ 2 s khi group còn mở (AC3; chưa đo, A7.4/M7.5 đo trước); qua Bluetooth chạy ở nền với khoảng 12.9 KB/s (G7 Lần 2), nên 5 MB mất khoảng 6,5 phút và 10 MiB khoảng 13,5 phút, trong khi envelope điều khiển vẫn ≤ 200 ms (AC1; A7.4 đo).<br>Hiện tiến trình khi ảnh > 1 MiB, và qua Bluetooth với lần truyền từ `BULK_DIRECT_MIN` trở lên.<br>**Tài nguyên:** bên nhận ghi khối thẳng vào tệp và băm SHA-256 dần, không giữ cả ảnh trong bộ nhớ; tối đa một lần truyền đến từ mỗi đối phương; tối đa 4 khối chờ trong bộ đệm gửi của WebSocket để envelope khác (cuộc gọi, SMS) được chen trước.<br>**Bảo mật:** mỗi khối là một envelope mã hóa; relay chỉ thấy `type = clipboard` và kích thước; tệp tạm nằm trong vùng riêng của ứng dụng; `FileProvider` chỉ lộ thư mục `cache/clip/`, ứng dụng dán được hệ thống cấp quyền đọc tạm thời. |
 
 ### 4.3.2 Màn hình
 
@@ -845,7 +845,7 @@ N/A — chưa có wireframe được duyệt.
 | # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
 |---|--------|--------------|--------------|------------------|-------|
 | 1 | Ảnh được sao chép | image (PNG, JPEG, TIFF, HEIC…) | Input | — | Người dùng sao chép ảnh trên Android hoặc Mac |
-| 2 | Tiến trình gửi/nhận | int32 (%) | Output | 0 | Chỉ khi ảnh > 1 MiB. Android: thông báo có thanh tiến trình; Mac: trong menu bar. Ví dụ "Đang gửi ảnh tới Pixel của Lan — 45 %"; bên nhận: "Đang nhận ảnh từ MacBook của Lan — 45 %" |
+| 2 | Tiến trình gửi/nhận | int32 (%) | Output | 0 | Chỉ khi ảnh > 1 MiB (qua Bluetooth: ≥ `BULK_DIRECT_MIN`, kèm trường 10). Android: thông báo có thanh tiến trình; Mac: trong menu bar. Ví dụ "Đang gửi ảnh tới Pixel của Lan — 45 %"; bên nhận: "Đang nhận ảnh từ MacBook của Lan — 45 %" |
 | 3 | Kích thước ảnh | int64 (byte) | Output | `transfer.size` | Hiển thị dạng MB cạnh tiến trình |
 | 4 | Nút "Hủy" | action | Input | — | Trên tiến trình ở cả hai bên → `clipboard/cancel` `user` |
 | 5 | Thông báo ảnh quá lớn | string | Output | — | "Ảnh quá lớn (tối đa 10 MB)" |
@@ -853,6 +853,7 @@ N/A — chưa có wireframe được duyệt.
 | 7 | Thông báo thiếu bộ nhớ | string | Output | — | "Không đủ bộ nhớ để nhận ảnh" (E9) |
 | 8 | Ảnh trên clipboard bên nhận | image | Output | Ảnh vừa nhận | Dán được ngay trong ứng dụng nhận ảnh; tự xóa theo CLIP-05 |
 | 9 | Tùy chọn "Đồng bộ ảnh" | bool | Input/Output | `clip.send_images` = `true` | Cài đặt → Bảng nhớ tạm (SET-02) trên mỗi thiết bị |
+| 10 | Ghi chú truyền qua Bluetooth | string | Output | Ẩn | Dưới tiến trình (trường 2) khi lần truyền chạy qua Bluetooth: "Đang gửi qua Bluetooth. Có thể mất vài phút." (khóa `clipboard.bulk_bluetooth_sending`); bên nhận: "Đang nhận qua Bluetooth. Có thể mất vài phút." (khóa `clipboard.bulk_bluetooth_receiving`) |
 
 ### 4.3.4 Luồng nghiệp vụ
 
@@ -887,6 +888,7 @@ flowchart TB
   S8 -.-> U9
   U9 -- "Hủy (E6)" --> X2
   S8 -- "Clip mới hơn (E5), 30 s không có khối (E7), mất kết nối (E8)" --> X2
+  S8 -- "Đổi làn (E11)" --> S6
   D10 -- "Có" --> S11 --> U13
   D10 -- "SHA-256 sai (E4)" --> S12
   S12 -- "Gửi lại lần đầu" --> S6
@@ -916,9 +918,9 @@ flowchart TB
 |---|-------------|------|-------|-------------|
 | 1 | Android đọc ảnh: `ClipData.Item.getUri`, `ContentResolver.getType` / `openInputStream`, `ImageDecoder` | Cục bộ Android | A-CLIP ↔ OS | 2, 4 |
 | 2 | Mac đọc ảnh: `NSPasteboardItem.data(forType:)`, ImageIO (`CGImageSource`, `CGImageDestination`) | Cục bộ Mac | M-APP ↔ OS | 2, 4 |
-| 3 | `WS clipboard/push` kèm `transfer` | `/v1/ctl` (LAN hoặc relay) | Hai chiều | 6, 8, 10, 11, 12 |
-| 4 | `WS clipboard/chunk` | `/v1/ctl` (LAN hoặc relay) | Hai chiều | 7, 8 |
-| 5 | `WS clipboard/cancel` | `/v1/ctl` (LAN hoặc relay) | Hai chiều | 6, 8, 9 |
+| 3 | `WS clipboard/push` kèm `transfer` | Làn bulk (0.4.7): `/v1/ctl` (LAN hoặc relay), `/v1/stream/bulk` (Wi-Fi Direct) hoặc kênh `0x02` của link (Bluetooth) | Hai chiều | 6, 8, 10, 11, 12 |
+| 4 | `WS clipboard/chunk` | Làn bulk (0.4.7) | Hai chiều | 7, 8 |
+| 5 | `WS clipboard/cancel` | Làn bulk (0.4.7) | Hai chiều | 6, 8, 9 |
 | 6 | Android ghi ảnh: `FileProvider.getUriForFile`, `ClipData.newUri`, `ClipboardManager.setPrimaryClip` | Cục bộ Android | A-CLIP → OS | 11 |
 | 7 | Mac ghi ảnh: `NSPasteboard.setData(_:forType:)`, `NSPasteboardItemDataProvider` | Cục bộ Mac | M-APP → OS | 11 |
 
@@ -1072,7 +1074,7 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |--------|------|----------|-------|
 | `transfer_id` | uuid | Có | Lần truyền bị hủy |
-| `reason` | enum{superseded\| user\| timeout} | Có | `superseded`: bên gửi có clip mới hơn; `user`: người dùng bấm "Hủy" ở một trong hai bên; `timeout`: bên nhận 30 s không nhận được khối |
+| `reason` | enum{superseded\| user\| timeout\| rerouted} | Có | `superseded`: bên gửi có clip mới hơn; `user`: người dùng bấm "Hủy" ở một trong hai bên; `timeout`: bên nhận 30 s không nhận được khối; `rerouted`: bên gửi truyền lại trên làn khác (0.4.7, E11) |
 
 - **Response:** N/A.
 - **Ví dụ:**
@@ -1084,6 +1086,8 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
      bên gửi dừng gửi khối. `user` → không phát lại clip đó; `timeout` → coi như đối phương chưa
      nhận (QC7).
   3. `cancel` cho `transfer_id` không tồn tại → bỏ qua.
+  4. `rerouted`: bên nhận xóa tệp tạm và chờ một `push` mới cùng `clip_id`, `transfer_id` mới trên làn mới; clip đó vẫn
+     được gửi lại (QC7). Bên nhận không biết `rerouted` xử lý như `superseded` (0.5.1 luật 6), cùng kết quả.
 
 #### API 6 — Android ghi ảnh vào clipboard
 

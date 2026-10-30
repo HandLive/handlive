@@ -17,7 +17,7 @@
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng tác động gián tiếp (mở ứng dụng, bật WiFi, mở nắp máy) hoặc bấm "Kết nối lại ngay". |
 | Điều kiện trước | 1. Có một cặp hiệu lực (PAIR-01).<br>2. A-SVC đang chạy dưới dạng foreground service.<br>3. Hai thiết bị cùng LAN và mạng cho phép multicast mDNS.<br>4. Client đã được cấp quyền mạng cục bộ (iOS 14+, macOS 15+) theo SET-03. |
 | Điều kiện sau | **Thành công:** trạng thái `Connected` (LAN); khóa phiên sẵn sàng; capability của đối phương lưu vào `features_json`; `last_seen_at`, `last_host`, `last_port` cập nhật; tính năng hiệu lực được bật; thông báo foreground service trên Android ghi "Đã kết nối với <tên>".<br>**Thất bại:** chuyển CONN-03 sau `LAN_DISCOVERY_GRACE` (nếu relay bật) hoặc sang `Backoff` (CONN-02). |
-| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt.<br>E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp; mọi instance của cặp đều lệch ghim (điện thoại đã sinh lại khóa TLS, 0.6.1) → dừng thử, hiển thị "Cần ghép nối lại" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục.<br>E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) trong LAN (TLS ghim tới điện thoại) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại. Qua relay, cùng các mã này chỉ dẫn đến `Backoff` (CONN-03 E9).<br>E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn.<br>E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff.<br>E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1.<br>E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
+| Ngoại lệ | E1 — Không thấy instance có hint khớp trong 10 s → CONN-03 (relay bật) hoặc tiếp tục duyệt.<br>E2 — `TLS_PIN_MISMATCH`: bỏ instance này (có thể là thiết bị khác hoặc giả mạo), thử instance kế tiếp; mọi instance của cặp đều lệch ghim (điện thoại đã sinh lại khóa TLS, 0.6.1) → dừng thử, hiển thị "Cần ghép nối lại" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → báo "Không xác thực được điện thoại", backoff dài 5 phút, không thử liên tục.<br>E4 — `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` (4403) trước khi điện thoại được xác thực: trên route có `phoneAuthenticatedByTLS` đúng (LAN, USB: TLS ghim tới điện thoại) → dọn cặp theo PAIR-03 luồng B, yêu cầu ghép nối lại. Trên route có thuộc tính sai (relay, Bluetooth), cùng các mã này chỉ dẫn đến `Backoff` (0.11, CONN-03 E9, CONN-05 E5).<br>E5 — 4426 `UNSUPPORTED_VERSION` → nhắc cập nhật ứng dụng ở thiết bị cũ hơn.<br>E6 — Bắt tay quá 5 s (4408) → CONN-02 backoff.<br>E7 — Mạng cách ly client (Wi-Fi khách, mDNS bị chặn) → như E1.<br>E8 — Quyền mạng cục bộ bị từ chối → báo và mở hướng dẫn SET-03. |
 | Yêu cầu đặc biệt | **Hiệu năng:** kết nối lại < 3 s khi đã biết `last_host` (chỉ số thành công của dự án); bắt tay ≤ 300 ms trong LAN.<br>**Bảo mật:** chỉ TLS 1.3; ghim SHA-256 chứng chỉ, không kiểm hostname; TXT mDNS không chứa định danh tĩnh (0.4.1).<br>**Nền tảng:** iOS/macOS khai báo `NSLocalNetworkUsageDescription` và `NSBonjourServices = ["_handlive._tcp"]`; Android chạy A-SVC type `connectedDevice` (quyền `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) với thông báo thường trực.<br>**Độc lập tính năng:** capability quyết định từng tính năng; một tính năng thiếu quyền không chặn các tính năng khác. |
 
 ### 3.1.2 Màn hình
@@ -285,7 +285,7 @@ WHERE revoked_at IS NULL;
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC). Người dùng có thể bấm "Kết nối lại ngay". |
 | Điều kiện trước | Đã từng có phiên (`Connected`) hoặc đang ở `Backoff`/`Discovering`. |
 | Điều kiện sau | Phiên được duy trì hoặc thiết lập lại; trạng thái hiển thị đúng thực tế trong ≤ 1 s sau khi phát hiện; `sms_outbox` còn `pending` được gửi lại; SMS-01 và CALL-04 chạy bù. |
-| Ngoại lệ | E1 — Mất mạng hoàn toàn: chuyển `Idle`, chờ `NWPathMonitor`/`NetworkCallback` báo có mạng, không backoff vô ích.<br>E2 — Mac ngủ: gửi `session/bye {reason: shutdown}` nếu còn kịp; khi thức dậy chạy CONN-01 ngay.<br>E3 — iOS vào nền (`scenePhase` của ứng dụng thành `.background`; bỏ qua `.inactive`): I-APP giữ phiên thêm một khoảng ngắn thay vì đóng ngay. I-APP bắt đầu một tác vụ nền (`beginBackgroundTask`); iOS từ chối → `session/bye {reason: shutdown}` và đóng ngay. Nếu không, phiên vẫn mở (ping vẫn chạy) tới min(`IOS_BACKGROUND_GRACE`, thời gian nền iOS còn cho − 5 s), rồi `session/bye {reason: shutdown}`, đóng 1000 và kết thúc tác vụ.<br>Thời gian giữ là một bên giữ phiên; một thao tác từ thông báo (SMS-04 bước B2, CALL-02 bước B2) là một bên khác và vẫn dùng tác vụ nền riêng như hiện nay. I-APP chỉ gửi `bye` và đóng khi không còn bên nào giữ và ứng dụng không ở foreground. Khi iOS cho hết hạn tác vụ của thời gian giữ, thời gian giữ nhả phần của nó và kết thúc tác vụ ngay, không chờ; thao tác còn đang chạy vẫn giữ phiên bằng tác vụ của chính nó. Thao tác đến sau khi phiên đã đóng thì kết nối như trước (CONN-01 hoặc CONN-03).<br>Đóng và mở chạy lần lượt trên một hàng đợi (hủy hẹn giờ, hẹn giờ kích hoạt, `bye`, đóng, CONN-01). Quay lại foreground: chưa bắt đầu đóng → hủy hẹn giờ, kết thúc tác vụ, giữ phiên (không `bye`, không chạy lại CONN-01); đã gửi `bye` → chờ đóng xong rồi mới chạy CONN-01, nên client không bao giờ có hai phiên của cùng một cặp (không tự gây 4409).<br>Phiên rớt trong lúc giữ → nhả thời gian giữ ngay: hủy hẹn giờ, kết thúc tác vụ, không `bye`, không nối lại khi đang ở nền.<br>Trong lúc giữ: SMS hoặc cuộc gọi đến hiện thông báo người dùng nhận được qua push (CONN-04), đăng cục bộ, không có chuỗi mới, theo cùng luật nội dung như I-NSE (`sms.preview`, iPhone đang khóa, SMS-02 trường 2); `clipboard/push` chỉ được ghi khi `UIPasteboard.changeCount` vẫn bằng giá trị mốc, lấy lúc ứng dụng vào nền và dời theo mỗi lần HandLive ghi hoặc xóa trong thời gian giữ (CLIP-04 E2, CLIP-05); ghi thành công được nhớ là lần ghi của chính HandLive, ghi thất bại theo đường lỗi sẵn có (`ack` như hiện nay).<br>Sau thời gian giữ, khi bị treo, tin đến qua push (CONN-04).<br>E4 — Rekey không nhận `ack` trong 10 s → đóng phiên, kết nối lại (bắt tay mới sinh khóa mới).<br>E5 — `DECRYPT_FAILED` → đóng 4400, kết nối lại.<br>E6 — Hệ điều hành dừng A-SVC (OEM tắt nền) → client thấy mất kết nối; A-SVC `START_STICKY` tự khởi động lại; SET-01 đã xin miễn tối ưu pin.<br>E7 — Đóng 4409 (bị thay bởi kết nối mới của chính client; qua relay: `session/bye {reason: replaced}`, API 4) → không kết nối lại từ phiên cũ. |
+| Ngoại lệ | E1 — Mất mạng hoàn toàn: phiên LAN và relay kết thúc; chuyển `Idle`, chờ `NWPathMonitor`/`NetworkCallback` báo có mạng, không backoff vô ích. Trên Mac khi còn dùng được Bluetooth, phiên Bluetooth vẫn giữ và client tiếp tục tìm qua Bluetooth thay vì về `Idle` (0.11, CONN-05).<br>E2 — Mac ngủ: gửi `session/bye {reason: shutdown}` nếu còn kịp; khi thức dậy chạy CONN-01 ngay.<br>E3 — iOS vào nền (`scenePhase` của ứng dụng thành `.background`; bỏ qua `.inactive`): I-APP giữ phiên thêm một khoảng ngắn thay vì đóng ngay. I-APP bắt đầu một tác vụ nền (`beginBackgroundTask`); iOS từ chối → `session/bye {reason: shutdown}` và đóng ngay. Nếu không, phiên vẫn mở (ping vẫn chạy) tới min(`IOS_BACKGROUND_GRACE`, thời gian nền iOS còn cho − 5 s), rồi `session/bye {reason: shutdown}`, đóng 1000 và kết thúc tác vụ.<br>Thời gian giữ là một bên giữ phiên; một thao tác từ thông báo (SMS-04 bước B2, CALL-02 bước B2) là một bên khác và vẫn dùng tác vụ nền riêng như hiện nay. I-APP chỉ gửi `bye` và đóng khi không còn bên nào giữ và ứng dụng không ở foreground. Khi iOS cho hết hạn tác vụ của thời gian giữ, thời gian giữ nhả phần của nó và kết thúc tác vụ ngay, không chờ; thao tác còn đang chạy vẫn giữ phiên bằng tác vụ của chính nó. Thao tác đến sau khi phiên đã đóng thì kết nối như trước (CONN-01 hoặc CONN-03).<br>Đóng và mở chạy lần lượt trên một hàng đợi (hủy hẹn giờ, hẹn giờ kích hoạt, `bye`, đóng, CONN-01). Quay lại foreground: chưa bắt đầu đóng → hủy hẹn giờ, kết thúc tác vụ, giữ phiên (không `bye`, không chạy lại CONN-01); đã gửi `bye` → chờ đóng xong rồi mới chạy CONN-01, nên client không bao giờ có hai phiên của cùng một cặp (không tự gây 4409).<br>Phiên rớt trong lúc giữ → nhả thời gian giữ ngay: hủy hẹn giờ, kết thúc tác vụ, không `bye`, không nối lại khi đang ở nền.<br>Trong lúc giữ: SMS hoặc cuộc gọi đến hiện thông báo người dùng nhận được qua push (CONN-04), đăng cục bộ, không có chuỗi mới, theo cùng luật nội dung như I-NSE (`sms.preview`, iPhone đang khóa, SMS-02 trường 2); `clipboard/push` chỉ được ghi khi `UIPasteboard.changeCount` vẫn bằng giá trị mốc, lấy lúc ứng dụng vào nền và dời theo mỗi lần HandLive ghi hoặc xóa trong thời gian giữ (CLIP-04 E2, CLIP-05); ghi thành công được nhớ là lần ghi của chính HandLive, ghi thất bại theo đường lỗi sẵn có (`ack` như hiện nay).<br>Sau thời gian giữ, khi bị treo, tin đến qua push (CONN-04).<br>E4 — Rekey không nhận `ack` trong 10 s → đóng phiên, kết nối lại (bắt tay mới sinh khóa mới).<br>E5 — `DECRYPT_FAILED` → đóng 4400, kết nối lại.<br>E6 — Hệ điều hành dừng A-SVC (OEM tắt nền) → client thấy mất kết nối; A-SVC `START_STICKY` tự khởi động lại; SET-01 đã xin miễn tối ưu pin.<br>E7 — Đóng 4409 (bị thay bởi kết nối mới của chính client; qua relay: `session/bye {reason: replaced}`, API 4) → không kết nối lại từ phiên cũ. |
 | Yêu cầu đặc biệt | **Hiệu năng:** kết nối lại < 3 s sau khi mạng trở lại; phát hiện mất kết nối ≤ 25 s (15 s ping + 10 s chờ pong).<br>**Pin:** client chủ động ping, Android chỉ trả pong và đóng kết nối im lặng quá 45 s; Android không giữ relay khi rảnh quá 5 phút.<br>**Backoff:** 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %, về đầu khi một phiên đã giữ kết nối được 30 s (`RECONNECT_BACKOFF`, 0.10). |
 
 ### 3.2.2 Màn hình
@@ -448,7 +448,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Tác nhân | Chính: Hệ thống (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Điều kiện trước | 1. Có cặp hiệu lực, đã đăng ký relay hoặc đăng ký được ngay (PAIR-01 API 8). 2. `relay.enabled = true` ở cả hai thiết bị. 3. Có Internet. |
 | Điều kiện sau | **Thành công:** phiên E2E qua relay, trạng thái "Đã kết nối qua Internet"; các tính năng dữ liệu hoạt động như LAN (trừ camera và âm thanh cuộc gọi — cần ở gần).<br>**Điện thoại offline:** trạng thái `WaitingPeer` ("Điện thoại ngoại tuyến"), đã gửi push đánh thức. |
-| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim, trên mọi thiết bị (kể cả Android) → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` qua relay, trước khi bước bắt tay xác thực được điện thoại → `Backoff`, không bao giờ hủy cặp: bất kỳ ai trên đường relay cũng có thể giả mạo nó. Việc thu hồi chỉ được xử lý qua `pair_revoked` có chữ ký (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) hoặc qua LAN (CONN-01 E4). `UNSUPPORTED_VERSION` hoặc `AUTH_FAILED` trước xác thực qua relay vẫn hiện thông báo của nó (CONN-01 E3, E5) nhưng giữ lịch backoff bình thường thay vì dừng hoặc chờ 5 phút, để lỗi giả mạo không làm client đứng yên. |
+| Ngoại lệ | E1 — Relay không phản hồi hoặc 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` hoặc 404 `DEVICE_NOT_FOUND` → đăng ký lại thiết bị rồi thử lại một lần.<br>E3 — 410 `DEVICE_REVOKED` → báo "Thiết bị đã bị xóa khỏi dịch vụ Internet", tắt relay cho tới khi người dùng bật lại (đăng ký mới).<br>E4 — `relay.error NOT_PAIRED` khi gửi → gọi `GET /v1/pairs`: đã thu hồi → PAIR-03 luồng B; chưa đăng ký → `POST /v1/pairs` rồi thử lại.<br>E5 — Điện thoại không online trong 60 s sau push → giữ `WaitingPeer`; không push lại quá 1 lần/5 phút.<br>E6 — 429 `RATE_LIMITED` → chờ `Retry-After`; trường 4: "Quá nhiều yêu cầu. Thử lại sau {duration}." (`{duration}` là thời gian chờ `Retry-After` còn lại, định dạng bằng formatter của hệ thống).<br>E7 — Chứng chỉ relay không khớp ghim, trên mọi thiết bị (kể cả Android) → không kết nối; trường 4: "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."<br>E8 — `relay.error NOT_CONNECTED` (đối phương vừa rời) → quay về `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` qua relay, trước khi bước bắt tay xác thực được điện thoại → `Backoff`, không bao giờ hủy cặp: route relay có `phoneAuthenticatedByTLS` sai (0.11), vì bất kỳ ai trên đường relay cũng có thể giả mạo nó. Việc thu hồi chỉ được xử lý qua `pair_revoked` có chữ ký (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) hoặc qua route có `phoneAuthenticatedByTLS` đúng (CONN-01 E4). `UNSUPPORTED_VERSION` hoặc `AUTH_FAILED` trước xác thực qua relay vẫn hiện thông báo của nó (CONN-01 E3, E5) nhưng giữ lịch backoff bình thường thay vì dừng hoặc chờ 5 phút, để lỗi giả mạo không làm client đứng yên. Cùng quy tắc route này áp dụng cho Bluetooth (CONN-05 E5). |
 | Yêu cầu đặc biệt | **Bảo mật:** relay chỉ thấy lớp bọc (`to`/`from`, `type`, kích thước, thời điểm); không có khóa E2E; JWT 15 phút; ghim SPKI ISRG Root X1/X2 + khóa dự phòng.<br>**Tài nguyên:** tối đa 2 MiB/s mỗi cặp mỗi chiều; envelope ≤ 256 KiB.<br>**Hiệu năng tham khảo:** SMS, thông báo cuộc gọi qua relay ≤ 1 s khi hai bên đã online.<br>**Vận hành:** relay stateless; presence và định tuyến giữa instance qua Redis; thống kê chỉ theo `device_hash`. |
 
 ### 3.3.2 Màn hình
@@ -966,4 +966,472 @@ LIMIT 20;
 
 -- [Thiết kế] Android: dọn push đã gửi hoặc hết hạn
 DELETE FROM push_outbox WHERE id = :id OR expires_at <= :now;
+```
+
+---
+
+## 3.5 CONN-05 — Kết nối qua Bluetooth khi không chung LAN
+
+### 3.5.1 Thông tin chung
+
+| Mục | Nội dung |
+|-----|----------|
+| Tên | CONN-05 — Kết nối qua Bluetooth khi không chung LAN |
+| Mô tả | Khi Mac và điện thoại đã ghép ở gần nhưng không chung LAN (không có mạng hoặc hai mạng khác), M-APP tìm gói quảng bá BLE, mở kênh L2CAP, chạy bắt tay bảo mật link (0.4.5), rồi bắt tay phiên (0.6.3) và trao đổi capability. Làn điều khiển (clipboard, SMS, thông tin gọi, `ping`) chạy như LAN; phiên nâng cấp lên LAN khi thấy (0.11).<br>Chạy mỗi khi ở `Discovering` còn dùng được Bluetooth (0.11): mở app, thức dậy, mất mạng, toggle Bluetooth, mỗi lần CONN-02 thử. Chỉ Mac; iOS không đổi. Ghép đôi lần đầu khi không có mạng: luồng B của PAIR-01. Ảnh (làn bulk): 0.4.7. Ảnh qua Wi-Fi Direct: CONN-06. Hỏi quyền và Bluetooth tắt: SET-01, SET-03. |
+| Tác nhân | Chính: Hệ thống (M-APP, A-SVC). Người dùng tác động gián tiếp (bật Bluetooth, mở nắp máy, mang điện thoại lại gần). |
+| Điều kiện trước | 1. Có cặp hợp lệ (PAIR-01).<br>2. A-SVC chạy dạng foreground service loại `connectedDevice`.<br>3. Bluetooth bật ở cả hai máy; Android 12+ đã cấp Nearby devices; Mac đã cấp quyền Bluetooth.<br>4. `link.bluetooth` bật ở cả hai máy. |
+| Điều kiện sau | **Thành công:** trạng thái `Connected` trên route `bluetooth`; dòng trạng thái "Đã kết nối qua Bluetooth với <tên>"; capability của bên kia được lưu và các tính năng hiệu lực được bật; cập nhật `last_seen_at` (không đụng `last_host`, `last_port`); A-SVC thôi quảng bá hint của cặp này khi phiên còn sống.<br>**Thất bại:** `Backoff` (CONN-02), vẫn tiếp tục quét. |
+| Ngoại lệ | E1 — Trên Mac, Bluetooth tắt, thiếu quyền Bluetooth hoặc `link.bluetooth` tắt → không quét; không có mạng thì client ở `Idle` và dòng trạng thái báo Bluetooth đang tắt (câu chữ: SET-03 trường 18; yêu cầu bật Bluetooth trên Android: SET-01 API 10).<br>E2 — Không thấy điện thoại (ngoài tầm, điện thoại tắt Bluetooth, A-SVC dừng) → tiếp tục quét ở `Discovering`; không có hạn giờ riêng.<br>E3 — `noise2` sai tag (thiết bị chép gói quảng bá nhưng không có `PRK`) → đóng kênh, `Backoff`; khi nhiều máy quảng bá cùng hint, lần thử sau chọn máy khác.<br>E4 — `reject` (`LINK_REJECTED`), hoặc kênh bị đóng giữa bắt tay bảo mật link → `Backoff` theo lịch thường, không bao giờ hủy cặp (0.11).<br>E5 — `session/error` `PAIR_UNKNOWN`, `PAIR_REVOKED`, `UNSUPPORTED_VERSION` hoặc `AUTH_FAILED` trước khi điện thoại được xác thực → quy tắc route của 0.11 (`phoneAuthenticatedByTLS` = sai): `Backoff`, không bao giờ hủy cặp, không bao giờ ngừng kết nối lại; thông báo về phiên bản và về xác minh vẫn hiện (CONN-01 E3, E5).<br>E6 — Điện thoại tắt Bluetooth hoặc ra ngoài tầm khi đang có phiên → Mac thấy mất kết nối (`didDisconnectPeripheral`) → `Backoff`, rồi `Discovering` khi thấy lại gói quảng bá (AC2).<br>E7 — Điện thoại bật lại Bluetooth → A-SVC dựng lại L2CAP server và advertiser khi nhận `STATE_ON` (API 6); không làm vậy thì điện thoại vô hình tới khi app khởi động lại.<br>E8 — Bản ghi sai dạng, `rlen` ngoài giới hạn, `chan` lạ, message vượt `BT_MESSAGE_MAX` hoặc bản ghi không giải mã được → đóng link, không trả lời; client tính là mất kết nối (`Backoff`).<br>E9 — Không nhận bản ghi nào trong `BT_IDLE_TIMEOUT` → đóng link, kết nối lại.<br>E10 — Thấy LAN khi đang có phiên Bluetooth → nâng cấp theo 0.11; phiên Bluetooth nhận `session/bye {reason: replaced}` khi phiên LAN đã xác nhận khóa.<br>E11 — Mất mạng khi đang có phiên Bluetooth → phiên không bị ảnh hưởng (0.11). |
+| Yêu cầu đặc biệt | **Hiệu năng** (mục tiêu có số đo của cổng G7, `plans/20260925-implementation/reports/phase-07-spike-g7.md`; độ trễ một chiều ước bằng RTT/2, theo cách đo của G7):<br>1. Envelope văn bản một chiều, p95 ≤ 200 ms trên link đã lập đang rảnh (AC1). G7 Lần 2: p50/p95 91.72/133.97 ms.<br>2. Vẫn ≤ 200 ms khi đang truyền bulk trên link (AC1). G7 trượt với một luồng FIFO (p95 4 769.3 ms ở Lần 2, 7 768.4 ms ở Lần 1), nên bộ lập lịch điều khiển-trước-bulk của 0.4.5 là bắt buộc; đo ở A7.4.<br>3. Điện thoại ở Doze, tắt màn hình: link vẫn giữ và độ trễ chấp nhận là RTT `ping` p95 ≤ 3 s (một chiều ≤ 1,5 s; sếp chốt ngày 2026-10-28). G7 Lần 5b: 29/29 ping, 0 `bt_lost` trong 15 phút Doze ép, RTT p50/p95 232.4/1 328.7 ms. Không tinh chỉnh connection priority: L2CAP CoC không có GATT thì không có API công khai cho việc này (G7 mục "Yêu cầu phát hiện cho sản phẩm", ý 4); chỉ dựng GATT server tối giản để xin priority nếu T7.1 trượt mục tiêu này.<br>4. Nối lại ≤ 3 s tính từ lúc điện thoại bật lại Bluetooth, hoặc lại thấy điện thoại, tới `Connected` (AC2). G7 Lần 4 (bật Bluetooth → mở kênh L2CAP, chưa gồm hai bước bắt tay): p50 2 793 ms, max 10 583 ms, n = 3, nên biên rất mỏng và T7.1 đo lại với nhiều vòng hơn.<br>5. Phát hiện mất kết nối: Mac báo `bt_lost` khoảng 0,7 s sau khi điện thoại tắt Bluetooth (G7 Lần 3; 67 và 42 ms ở vòng 1 và 2 của Lần 4).<br>6. Thông lượng, để tham khảo: 12.9 KB/s (G7 Lần 2): chỉ đủ cho làn điều khiển; ảnh đi làn bulk (0.4.7).<br>**Bảo mật:** AC8 — không message trước xác thực nào qua Bluetooth được đổi trạng thái cặp, xóa cặp hay dừng kết nối lại (0.11, E4, E5). AC9 — không có gì cố định trên sóng: gói quảng bá không có tên, `pair_id`, `device_id`, khóa hay `pr`; hint xoay mỗi `BT_HINT_PERIOD` cùng PSM và advertising set; lớp bảo mật link giấu mọi trường của envelope và phần đệm giấu `type` (0.4.5). Mọi độ dài được kiểm trước khi cấp phát (0.4.5). Tiếp nhận theo 0.4.5.<br>**Nền tảng:** Android: API 29+ (L2CAP CoC), `BLUETOOTH_ADVERTISE` và `BLUETOOTH_CONNECT` (Android 12+), A-SVC đăng ký `BluetoothAdapter.ACTION_STATE_CHANGED`. Mac: CoreBluetooth, `NSBluetoothAlwaysUsageDescription`; không bao giờ khởi động ghép đôi của hệ điều hành. |
+
+### 3.5.2 Màn hình
+
+N/A — chưa có wireframe được duyệt.
+
+### 3.5.3 Mô tả chi tiết các thành phần
+
+| # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Biểu tượng trạng thái (thanh menu Mac) | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | Theo 0.11; phiên Bluetooth hiện `connected` |
+| 2 | Dòng trạng thái | string | Output | "Đang kết nối…" | "Đã kết nối qua Bluetooth với <tên điện thoại>" (khóa catalog thêm ở S7.1) |
+| 3 | Route của phiên | enum{lan\| relay\| bluetooth\| usb} | Output | Rỗng | Nội bộ; quyết định câu trạng thái và quy tắc trước xác thực (`phoneAuthenticatedByTLS`, 0.11) |
+| 4 | Thông báo không dùng được Bluetooth | string | Output | Rỗng | Theo E1; câu chữ và nút: SET-03 trường 18 |
+| 5 | Thông báo foreground service (Android) | string | Output | "Đang chờ kết nối" | Không đổi: "Đã kết nối với <tên client>" dù route nào |
+
+### 3.5.4 Luồng nghiệp vụ
+
+```mermaid
+flowchart TB
+  subgraph ND["Người dùng"]
+    U1["(1) Hai máy ở gần, Bluetooth bật, mở nắp máy"]
+    U10["(10) Thấy Đã kết nối qua Bluetooth"]
+  end
+  subgraph HT["Hệ thống"]
+    S2["(2) A-SVC quảng bá hint xoay vòng và PSM"]
+    S3["(3) M-APP quét BT_SERVICE_UUID và khớp hint"]
+    D4{"(4) Có ứng viên LAN?"}
+    S5["(5) Mở kênh L2CAP tới PSM"]
+    S6["(6) challenge, noise1, noise2"]
+    D7{"(7) Bắt tay bảo mật link OK?"}
+    S8["(8) session/hello và session/welcome trong link"]
+    S9["(9) capability/hello, lưu trạng thái, chạy đồng bộ"]
+    X1(["Backoff (CONN-02), vẫn quét"])
+    X2(["CONN-01 trong LAN"])
+  end
+  U1 --> S2 --> S3 --> D4
+  D4 -- "Có" --> X2
+  D4 -- "Không" --> S5 --> S6 --> D7
+  D7 -- "Có" --> S8 --> S9 --> U10
+  D7 -- "Không (E3, E4)" --> X1
+  S8 -- "session/error (E5)" --> X1
+```
+
+| Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
+|------|----------|-----------|-------|--------------------|
+| 1 | Người dùng | — | Mang hai máy lại gần, bật Bluetooth, mở nắp Mac. | Luồng cũng tự chạy từ 0.11 và CONN-02. |
+| 2 | Hệ thống | A-SVC | Quảng bá theo 0.4.5: hint của các cặp chưa có phiên sống, PSM hiện tại; hint, PSM và advertising set xoay mỗi `BT_HINT_PERIOD`. | E7. |
+| 3 | Hệ thống | M-APP | Quét với bộ lọc `BT_SERVICE_UUID`, đọc service data, tính hint của các epoch từ e − 4 tới e + 4 bằng `K_bt_disc`; gói quảng bá có `ver` = `0x01` và hint khớp là ứng viên. | E1, E2. |
+| 4 | Hệ thống | M-APP | Ưu tiên LAN > Bluetooth: ứng viên LAN (CONN-01 bước 3) được thử trước; không có thì nối ngay ứng viên Bluetooth. |  |
+| 5 | Hệ thống | M-APP → A-SVC | Kết nối tới peripheral và mở kênh L2CAP tới PSM đã quảng bá; A-SVC áp quy tắc tiếp nhận (0.4.5). | Vượt giới hạn → `reject` (E4). |
+| 6 | Hệ thống | Hai bên | Bắt tay bảo mật link, 0.4.5 bước 1–5. | E3, E4. |
+| 7 | Hệ thống | Hai bên | Kết quả bắt tay: M-APP đã kiểm `noise2`, A-SVC đã giải mã được bản ghi transport đầu tiên. | E3, E4. |
+| 8 | Hệ thống | Hai bên | Bắt tay phiên (0.6.3) trên kênh điều khiển `0x01`, đúng như CONN-01 bước 6–8; A-SVC kiểm thêm `pair_id` là cặp đã gắn với link. | E5. |
+| 9 | Hệ thống | Hai bên | `capability/hello`, tính năng hiệu lực, `last_seen_at`; trạng thái `Connected` trên route `bluetooth`; các đồng bộ bắt đầu như CONN-01 bước 10. A-SVC bỏ hint của cặp này khỏi gói quảng bá (dừng quảng bá khi không còn cặp nào). | E6, E8–E11. |
+| 10 | Người dùng | M-APP | Thấy "Đã kết nối qua Bluetooth" trên Mac và thông báo quen thuộc trên Android. |  |
+
+### 3.5.5 Đặc tả API/service
+
+**Danh sách lời gọi**
+
+| # | API/service | Kênh | Chiều | Dùng ở bước |
+|---|-------------|------|-------|-------------|
+| 1 | Quảng bá BLE `BluetoothLeAdvertiser.startAdvertisingSet` | Quảng bá BLE | Android | 2 |
+| 2 | L2CAP server `BluetoothAdapter.listenUsingInsecureL2capChannel` | L2CAP | Android | 2, 5 |
+| 3 | Quét BLE `CBCentralManager.scanForPeripherals` | Quảng bá BLE | Mac | 3 |
+| 4 | Mở kênh `CBPeripheral.openL2CAPChannel` | L2CAP | C→S | 5 |
+| 5 | Bắt tay bảo mật link (bản ghi `challenge`, `noise1`, `noise2`, `reject`) | L2CAP | Hai chiều | 6, 7 |
+| 6 | Trạng thái Bluetooth `ACTION_STATE_CHANGED` / `centralManagerDidUpdateState` | Hệ thống | Hai bên | E1, E6, E7 |
+| 7 | Envelope điều khiển qua link | Kênh `0x01` của link | Hai chiều | 8, 9 |
+
+#### API 1 — Quảng bá BLE (Android)
+
+- **URL:** N/A (kênh quảng bá BLE)
+- **Method:** `BluetoothLeAdvertiser.startAdvertisingSet(parameters, advertiseData, null, null, null, callback)`
+- **Request:**
+
+| Thuộc tính | Giá trị | Mô tả |
+|-----------|---------|-------|
+| `setLegacyMode` | `true` | Quảng bá legacy 31 byte, central nào cũng thấy |
+| `setConnectable` | `true` |  |
+| `setScannable` | `true` | Scan response mang service data |
+| `setInterval` | `INTERVAL_LOW` | Cấu hình probe G7 đã cho số đo AC2 |
+| `setTxPowerLevel` | `TX_POWER_HIGH` | Như probe G7 |
+| UUID dịch vụ | `BT_SERVICE_UUID` | 128-bit, trong gói quảng bá; service data nằm trong scan response |
+| Service data | `ver` ‖ `psm` ‖ `hints` | 0.4.5 |
+| `setIncludeDeviceName`, `setIncludeTxPowerLevel` | `false` | Không tên, không trường TX power |
+
+- **Response:** `AdvertisingSetCallback.onAdvertisingSetStarted(set, txPower, status)`; `status` ≠
+  `ADVERTISE_SUCCESS` → logic 3.
+- **Example** (hai cặp, PSM `0x0085`, `U×16` = `BT_SERVICE_UUID` little-endian): gói quảng bá `02 01 06` ·
+  `11 07 U×16` (21 byte); scan response `1c 21 U×16 01 85 00 1a 2b 3c 4d 77 e0 aa 19` (29 byte).
+- **Business logic:**
+  1. Khởi động lại set khi tập cặp, một phiên sống, epoch `BT_HINT_PERIOD` hoặc cửa sổ ghép đôi QR (mở hay đóng,
+     PAIR-01 B1) thay đổi, tối đa một lần mỗi giây
+     (gom thay đổi).
+  2. Mỗi lần khởi động lại: dừng set, đóng server socket (link đã nhận vẫn giữ), mở server socket mới (API 2), chạy
+     set mới với PSM của nó.
+  3. Khởi động lỗi → thử lại sau 5 s, 30 s, rồi mỗi 5 phút, như mDNS (CONN-01 API 1).
+     `ADVERTISE_FAILED_DATA_TOO_LARGE` là lỗi lập trình: vector S7.1 có gói quảng bá lớn nhất.
+  4. Không cặp nào cần Bluetooth và không có cửa sổ ghép đôi QR đang mở, `link.bluetooth` tắt hoặc Bluetooth tắt →
+     dừng set.
+
+#### API 2 — L2CAP server (Android)
+
+- **URL:** N/A (PSM LE động)
+- **Method:** `BluetoothAdapter.listenUsingInsecureL2capChannel()` → `BluetoothServerSocket`; `getPsm()` cho PSM
+  quảng bá ở API 1; `accept()` trên luồng riêng của A-SVC.
+- **Request:** không có.
+- **Response:** mỗi kênh được nhận là một `BluetoothSocket`.
+- **Example:** PSM `0x0085` (133), trong gói quảng bá là `85 00`.
+- **Business logic:**
+  1. Mỗi socket được nhận qua bước tiếp nhận của 0.4.5 trước, rồi bắt tay bảo mật link (API 5); link đã xác nhận
+     thành một `BluetoothPeerSocket`, được phục vụ bằng cùng logic phiên `/v1/ctl` như peer LAN và relay.
+  2. Đóng server socket khi xoay vòng không bao giờ đóng các socket đã nhận.
+  3. `accept()` lỗi vì Bluetooth tắt thì kết thúc vòng lặp; API 6 khởi động lại.
+
+#### API 3 — Quét BLE (Mac)
+
+- **URL:** N/A (kênh quảng bá BLE)
+- **Method:** `CBCentralManager.scanForPeripherals(withServices: [CBUUID(BT_SERVICE_UUID)], options: nil)`, như probe
+  G7.
+- **Request:** chỉ có bộ lọc dịch vụ.
+- **Response:** `centralManager(_:didDiscover:advertisementData:rssi:)`; service data là
+  `advertisementData[CBAdvertisementDataServiceDataKey][CBUUID(BT_SERVICE_UUID)]`.
+- **Example:** service data `01 85 00 1a 2b 3c 4d 77 e0 aa 19` → `ver` 1, PSM 133, hai hint.
+- **Business logic:**
+  1. Service data đến từ scan response, CoreBluetooth gộp nó vào `advertisementData`; G7 không dùng scan response
+     nên M7.1 kiểm điều này trước tiên trên S25 + Mac. Bỏ qua service data ngắn hơn 3 byte, có `ver` ≠ `0x01`, hoặc độ dài trừ 3 không chia hết cho 4.
+  2. Quét khi client ở `Discovering` hoặc `Backoff` và còn dùng được Bluetooth; dừng khi `Connected` trên bất kỳ
+     route nào (nâng cấp lên LAN đến từ mDNS).
+  3. Nhiều máy quảng bá cùng hint khớp (gói quảng bá bị chép) → thử lần lượt; chỉ điện thoại thật qua được
+     `noise2` (E3).
+
+#### API 4 — Mở kênh L2CAP (Mac)
+
+- **URL:** N/A
+- **Method:** `CBCentralManager.connect(peripheral, options: nil)`, rồi
+  `CBPeripheral.openL2CAPChannel(psm)` → `peripheral(_:didOpen:error:)` với một `CBL2CAPChannel`.
+- **Request:** PSM đọc ở API 3.
+- **Response:** `CBL2CAPChannel.inputStream` / `outputStream`, đọc và ghi theo bản ghi link (0.4.5).
+- **Example:** `openL2CAPChannel(0x0085)`.
+- **Business logic:**
+  1. Kết nối và mở kênh phải xong trong `BT_PREAUTH_TIMEOUT`; không thì `cancelPeripheralConnection` và
+     `Backoff`.
+  2. Kênh không bao giờ khởi động ghép đôi của hệ điều hành: không đọc characteristic GATT mã hóa nào.
+  3. `didDisconnectPeripheral` khi đang có phiên → E6.
+
+#### API 5 — Bắt tay bảo mật link
+
+- **URL:** N/A (bản ghi trên kênh L2CAP)
+- **Method:** các bản ghi `challenge` (S→C), `noise1` (C→S), `noise2` (S→C), `reject` (S→C), rồi bản ghi transport
+  đầu tiên của C (0.4.5).
+- **Request (`noise1`):** `rlen` = `0x0031` ‖ `0x02` ‖ `e` (32) ‖ tag (16).
+- **Response:** `noise2` (`rlen` = `0x0031` ‖ `0x03` ‖ `e` ‖ tag) hoặc `reject` (`rlen` = `0x0001` ‖ `0x7F`).
+- **Example:** `00 21 01` ‖ 32 byte ngẫu nhiên (`challenge`); vector S7.1 có bản ghi đầy đủ.
+- **Business logic:**
+  1. Các bước 1–6 của bắt tay bảo mật link ở 0.4.5; A-SVC thử psk của mọi cặp chưa thu hồi (Query).
+  2. Lỗi được đếm vào `BT_AUTH_FAIL_BLOCK` như định nghĩa ở 0.4.5.
+  3. Với client, `reject` và kênh bị đóng là như nhau: E4.
+
+#### API 6 — Trạng thái Bluetooth
+
+- **URL:** N/A
+- **Method:** Android: receiver cho `BluetoothAdapter.ACTION_STATE_CHANGED`, A-SVC đăng ký suốt vòng đời của nó;
+  Mac: `centralManagerDidUpdateState(_:)`.
+- **Request:** `EXTRA_STATE` (Android); `CBManager.state` (Mac).
+- **Response:** N/A.
+- **Example:** `STATE_TURNING_OFF` → `STATE_OFF` → `STATE_ON`.
+- **Business logic:**
+  1. Android `STATE_TURNING_OFF` hoặc `STATE_OFF`: đóng mọi link (bên kia thấy mất kết nối), dừng advertising set.
+  2. Android `STATE_ON`: mở server socket mới (PSM mới) và chạy advertising set mới, đúng như lúc A-SVC khởi động.
+     G7 thấy probe im lặng sau một chu kỳ tắt/bật thật cho tới khi làm việc này (Lần 3).
+  3. Mac `.poweredOn`: quét theo API 3 khi client ở `Discovering` hoặc `Backoff`. `.poweredOff`,
+     `.unauthorized`: kết thúc phiên Bluetooth và lượt quét, rồi theo 0.11.
+
+#### API 7 — Envelope điều khiển qua link
+
+- **URL:** N/A (kênh điều khiển `0x01` của link)
+- **Method:** JSON envelope của 0.5.1, mỗi message một envelope, chia mảnh theo 0.4.5.
+- **Request:** như trên `/v1/ctl`: `session/hello` (CONN-01 API 4), rồi mọi envelope của 0.7.1 dùng `/v1/ctl`.
+- **Response:** như trên `/v1/ctl`: `session/welcome` hoặc `session/error` (CONN-01 API 5, 6), `ack`.
+- **Example:** xem CONN-01 API 4.
+- **Business logic:**
+  1. Link không có WebSocket ping: client gửi `ping/ping` mỗi `BT_PING_INTERVAL` khi không có lưu lượng khác
+     (CONN-02 API 2).
+  2. Phiên kết thúc bằng `session/bye` theo quy tắc của phiên qua relay (CONN-02 API 4), rồi đóng kênh.
+  3. `camera/start` qua Bluetooth nhận `CAM_TRANSPORT_UNSUPPORTED`, như qua relay.
+  4. Nội dung bulk và kênh `0x02`: 0.4.7 (message của CLIP-03, mảnh tối đa `BT_BULK_FRAGMENT_MAX`).
+
+#### Query
+
+```sql
+-- [Thiết kế] Android, API 1: các cặp có thể quảng bá hint Bluetooth (phiên sống được lọc trong bộ nhớ)
+SELECT pair_id, prk_enc, last_seen_at
+FROM paired_device
+WHERE revoked_at IS NULL
+ORDER BY last_seen_at DESC;
+
+-- [Thiết kế] Android, API 5: psk ứng viên cho noise1
+SELECT pair_id, prk_enc
+FROM paired_device
+WHERE revoked_at IS NULL;
+
+-- [Thiết kế] Mac, API 3: các cặp cần khớp hint
+SELECT pair_id, peer_device_id, peer_name
+FROM paired_device
+WHERE revoked_at IS NULL;
+
+-- [Thiết kế] Hai bên, bước 9
+UPDATE paired_device
+SET last_seen_at = :now, features_json = :features_json
+WHERE pair_id = :pair_id;
+```
+
+---
+
+## 3.6 CONN-06 — Mở kênh Wi-Fi Direct cho ảnh khi không chung LAN
+
+### 3.6.1 Thông tin chung
+
+| Mục | Nội dung |
+|-----|----------|
+| Tên | CONN-06 — Mở kênh Wi-Fi Direct cho ảnh khi không chung LAN |
+| Mô tả | Khi phiên đang chạy qua Bluetooth (CONN-05) và có một ảnh hay lần truyền bulk khác đang chờ, Mac nhờ điện thoại qua làn điều khiển đã mã hóa tạo một group Wi-Fi Direct, vào group như một client Wi-Fi thường, kết nối bằng TLS đã ghim như trong LAN, và rời ngay khi truyền xong (0.4.6). Làn điều khiển vẫn ở Bluetooth. Chỉ Mac; iOS không đổi. Làn bulk, khóa theo kết nối và việc làm lại: 0.4.7. |
+| Tác nhân | Chính: Hệ thống (M-APP, A-SVC). Người dùng tác động gián tiếp (sao chép một ảnh trên một thiết bị). |
+| Điều kiện trước | 1. `Connected` trên route `bluetooth` (CONN-05); không có phiên LAN.<br>2. Có một lần truyền bulk đang chờ (0.4.7) theo chiều nào cũng được.<br>3. Cả hai thiết bị đều bật `link.direct_wifi`.<br>4. Android: Wi-Fi bật, đã cấp Nearby devices (Android 13+) hoặc đã cấp Vị trí và bật dịch vụ vị trí (Android 10–12) (SET-01).<br>5. Mac: đã cấp quyền Vị trí (SET-03); Wi-Fi bật và không nối mạng nào trong ≥ `DIRECT_WIFI_IDLE_MIN`; lần quét gần nhất không thấy mạng đã biết nào. |
+| Điều kiện sau | **Thành công:** Mac ở trong group với một kết nối TLS đã ghim tới A-SVC; các stream bulk của 0.4.7 chạy trên đó; sau `DIRECT_WIFI_LINGER` không có dữ liệu bulk, hoặc tới `DIRECT_WIFI_MAX`, Mac rời group, điện thoại xóa group và cả hai xóa thông tin vào mạng; Wi-Fi của Mac trở lại trạng thái không nối mạng.<br>**Thất bại:** không còn group nào; việc truyền đi qua Bluetooth ở nền; không thử lại trước `DIRECT_WIFI_RETRY_AFTER`. Trong mọi trường hợp không thiết bị nào rời hay đổi mạng đang nối (AC4). |
+| Ngoại lệ | E1 — Một điều kiện vào không đạt (Mac đang nối mạng, thấy mạng đã biết, Wi-Fi tắt, thiếu quyền Vị trí, `link.direct_wifi` tắt) → không gửi `direct/start`; đi Bluetooth ở nền.<br>E2 — `ack` mang `PERMISSION_MISSING` (điện thoại thiếu Nearby devices hoặc Vị trí) → đi Bluetooth ở nền; A-SVC đăng thông báo gợi ý cấp quyền (SET-01 trường 17, E14); thử lại sau `DIRECT_WIFI_RETRY_AFTER`.<br>E3 — `ack` mang `DIRECT_WIFI_UNAVAILABLE` (`wifi_off`, `location_off`, `p2p_unsupported`, `busy`, `error`) → đi Bluetooth ở nền, thử lại sau `DIRECT_WIFI_RETRY_AFTER`; HandLive không bao giờ tự bật Wi-Fi hay dịch vụ vị trí.<br>E4 — `ack` mang `FEATURE_DISABLED` (`link.direct_wifi` tắt trên điện thoại) hoặc `UNSUPPORTED_TYPE` (điện thoại bản cũ) → không gửi `direct/start` nữa trong phiên này.<br>E5 — Không thấy SSID, `associate` lỗi hoặc chưa có kết nối TLS đã ghim trong `DIRECT_WIFI_JOIN_TIMEOUT` → `direct/stop {reason: join_failed}`, ngắt khỏi mạng, đi Bluetooth ở nền, thử lại sau `DIRECT_WIFI_RETRY_AFTER`.<br>E6 — Chứng chỉ trên group không khớp `peer_tls_sha256` (`TLS_PIN_MISMATCH`: một thiết bị khác trả lời ở địa chỉ đó) → đóng, rời group, `direct/stop {reason: join_failed}`; không đụng tới cặp (AC8).<br>E7 — macOS tự chuyển sang mạng khác, hoặc lần quét định kỳ thấy mạng đã biết → rời ngay (AC4), `direct/stop {reason: known_network}`; phần truyền chưa xong tiếp tục qua Bluetooth (0.4.7).<br>E8 — Group của điện thoại mất (điện thoại tắt Wi-Fi, hệ điều hành xóa group) → A-SVC gửi `direct/stop {reason: group_lost}`; Mac thấy mất kết nối mạng và quay về Bluetooth.<br>E9 — Xuất hiện phiên LAN → rời group, `direct/stop {reason: lan}`; bulk chuyển sang LAN.<br>E10 — Phiên Bluetooth kết thúc → cả hai bên kết thúc group (khóa stream thuộc phiên đó).<br>E11 — Thiết bị không có khóa phiên vào group và kết nối tới A-SVC → `/v1/ctl`, `/v1/pair` và đường lạ bị đóng 4400, bắt tay stream thất bại bị đóng 4401 (0.4.6). |
+| Yêu cầu đặc biệt | **Hiệu năng:** AC3 — ảnh 5 MB ở X: ảnh đầu ≤ 10 s, tính cả thời gian vào group (`DIRECT_WIFI_JOIN_TIMEOUT` 8 s chừa khoảng 2 s để truyền); các ảnh sau ≤ 2 s khi group còn mở (`DIRECT_WIFI_LINGER`).<br>**Pin:** group chỉ tồn tại khi có truyền đang chờ hoặc đang chạy, tối đa `DIRECT_WIFI_MAX`; không giữ group khi không có lý do (AC4).<br>**Bảo mật:** thông tin vào mạng mới cho mỗi group, passphrase 144 bit, chỉ gửi bên trong làn điều khiển E2E, không bao giờ quảng bá hay ghi log; TLS đã ghim và bắt tay stream khóa bằng phiên trên group; group không bao giờ thành route của phiên (AC8, 0.4.6).<br>**Bất biến mạng (AC4):** Mac chỉ vào group khi không nối mạng nào và không thấy mạng đã biết, nên không bao giờ mất mạng khác; điện thoại giữ Wi-Fi riêng của nó (STA + P2P).<br>**Chưa đo (A7.5/M7.5 kiểm đầu tiên trên S25 + Mac; G7 không thử Wi-Fi Direct, báo cáo spike mục "Brief items", ý 7):** Mac vào group của S25 từ app đã notarize khi đã cấp Vị trí; thời gian vào mạng so với `DIRECT_WIFI_JOIN_TIMEOUT` và AC3; đọc "đang nối hay rảnh" và SSID trên macOS 27 và macOS 13 hoặc 14; macOS có giữ SSID vừa vào trong danh sách mạng ưu tiên không và app có xóa được mà không hỏi quyền quản trị không; S25 chạy đồng thời STA + P2P khi đang nối Wi-Fi riêng; địa chỉ group owner mà S25 cấp (không phải lúc nào cũng là `192.168.49.1`, nghiên cứu mục 2). |
+
+### 3.6.2 Màn hình
+
+N/A — chưa có wireframe được duyệt.
+
+### 3.6.3 Mô tả chi tiết các thành phần
+
+| # | Trường | Kiểu dữ liệu | Input/Output | Giá trị khởi tạo | Mô tả |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Đường bulk | enum{lan\| direct_wifi\| bluetooth} | Output | Rỗng | Nội bộ; chọn theo bảng route của plan (LAN > Wi-Fi Direct > Bluetooth); không có câu chữ riêng |
+| 2 | Trạng thái truyền (Mac) | string | Output | Rỗng | Giữ nguyên câu chữ của CLIP-03; không có câu riêng cho Wi-Fi Direct, người dùng không cần biết đường đi |
+| 3 | Thông tin vào mạng Wi-Fi Direct | object{ssid, passphrase, host, port} | Input (Mac), Output (Android) | Rỗng | Chỉ trong bộ nhớ, xóa khi group kết thúc; không ghi log |
+| 4 | Dòng trạng thái (Mac) | string | Output | "Đã kết nối qua Bluetooth với \<tên điện thoại>" | Không đổi khi đang ở group: route của phiên vẫn là `bluetooth` (0.4.6) |
+
+### 3.6.4 Luồng nghiệp vụ
+
+```mermaid
+flowchart TB
+  subgraph ND["Người dùng"]
+    U1["(1) Sao chép một ảnh trên một thiết bị"]
+    U11["(11) Ảnh tới thiết bị kia"]
+  end
+  subgraph HT["Hệ thống"]
+    S2["(2) Có bulk đang chờ trên phiên Bluetooth, điện thoại gửi direct/want cho phần của nó"]
+    D3{"(3) Mac đủ điều kiện vào?"}
+    S4["(4) Mac gửi direct/start qua làn điều khiển"]
+    D5{"(5) Điện thoại tạo được group?"}
+    S6["(6) Điện thoại tạo group với thông tin mới, ack kèm ssid, passphrase, host, port"]
+    S7["(7) Mac quét tìm SSID và vào mạng"]
+    D8{"(8) Có TLS đã ghim trong DIRECT_WIFI_JOIN_TIMEOUT?"}
+    S9["(9) Stream bulk trên group (0.4.7)"]
+    S10["(10) Gặp điều kiện rời: rời mạng, direct/stop, xóa group, xóa thông tin vào mạng"]
+    X1(["Bluetooth ở nền"])
+  end
+  U1 --> S2 --> D3
+  D3 -- "Không (E1)" --> X1
+  D3 -- "Có" --> S4 --> D5
+  D5 -- "Không (E2, E3, E4)" --> X1
+  D5 -- "Có" --> S6 --> S7 --> D8
+  D8 -- "Không (E5, E6)" --> X1
+  D8 -- "Có" --> S9 --> U11
+  S9 --> S10
+  S10 -- "Còn phần truyền (E7 tới E10)" --> X1
+```
+
+| Bước | Tác nhân | Thành phần | Mô tả | Ngoại lệ / Ghi chú |
+|------|----------|-----------|-------|--------------------|
+| 1 | Người dùng | — | Sao chép một ảnh (CLIP-03) trên điện thoại hoặc trên Mac khi hai máy không chung LAN. | Lần truyền bulk khác của 0.4.7 bắt đầu cùng cách. |
+| 2 | Hệ thống | M-APP, A-SVC | Lần truyền vào hàng đợi của làn bulk (0.4.7). Có lần truyền chờ trên điện thoại → A-SVC gửi `direct/want {bytes}` (API 3), tối đa một lần cho mỗi lần truyền đang chờ. | Khi chưa có đường nhanh hơn, lần truyền có thể bắt đầu qua Bluetooth ở nền (0.4.7). |
+| 3 | Hệ thống | M-APP | Kiểm điều kiện vào của 0.4.6 bằng API 7: phiên Bluetooth, không có phiên LAN, `link.direct_wifi`, đã cấp Vị trí, Wi-Fi bật và không nối mạng nào trong ≥ `DIRECT_WIFI_IDLE_MIN`, lần quét gần nhất không có mạng đã biết, không có lần thất bại nào trong `DIRECT_WIFI_RETRY_AFTER`. | Một điều kiện không đạt → E1. |
+| 4 | Hệ thống | M-APP → A-SVC | Gửi `direct/start` (API 1) và bắt đầu đếm `DIRECT_WIFI_JOIN_TIMEOUT`. |  |
+| 5 | Hệ thống | A-SVC | Kiểm `link.direct_wifi`, các quyền của SET-01 (bảng API 2), Wi-Fi bật, dịch vụ vị trí bật (Android 10–12). | E2, E3, E4. |
+| 6 | Hệ thống | A-SVC | Sinh `ssid` và `passphrase` (0.4.6), gọi `createGroup` (API 4), đọc địa chỉ group owner từ `WifiP2pInfo.groupOwnerAddress` và trả `ack` với `{ssid, passphrase, host, port}`. Bắt đầu đếm `DIRECT_WIFI_JOIN_TIMEOUT`, `DIRECT_WIFI_LINGER` và `DIRECT_WIFI_MAX` phía nó. | `createGroup` lỗi → `DIRECT_WIFI_UNAVAILABLE` (E3). |
+| 7 | Hệ thống | M-APP | Quét tìm SSID vừa nhận và vào mạng bằng passphrase (API 5). | E5. |
+| 8 | Hệ thống | M-APP → A-SVC | Mở TLS tới `host`:`port` trên giao diện Wi-Fi và kiểm ghim (API 6); thành công trong `DIRECT_WIFI_JOIN_TIMEOUT` nghĩa là đã vào được. | E5, E6. |
+| 9 | Hệ thống | Hai bên | Các stream bulk của 0.4.7 chạy qua group; các ảnh sau dùng lại group khi nó còn mở. Trên địa chỉ group owner, A-SVC chỉ nhận đường stream bulk. | E11. |
+| 10 | Hệ thống | Hai bên | Gặp một điều kiện rời của 0.4.6 (linger, tối đa, mạng đã biết, LAN, mất Bluetooth): Mac ngắt khỏi mạng và xóa mạng đã lưu khi được (API 5), gửi `direct/stop` (API 2); A-SVC gọi `removeGroup`; cả hai xóa thông tin vào mạng. | E7–E10. |
+| 11 | Người dùng | M-APP / A-UI | Ảnh có trên thiết bị kia (CLIP-03). |  |
+
+### 3.6.5 Đặc tả API/service
+
+**Danh sách lời gọi**
+
+| # | API/service | Kênh | Chiều | Dùng ở bước |
+|---|-------------|------|-------|-------------|
+| 1 | `WS direct/start` | Kênh `0x01` của link (Bluetooth) | C→S | 4, 5, 6 |
+| 2 | `WS direct/stop` | Kênh `0x01` của link (Bluetooth) | Hai chiều | 10, E5–E10 |
+| 3 | `WS direct/want` | Kênh `0x01` của link (Bluetooth) | S→C | 2 |
+| 4 | Group Wi-Fi Direct `WifiP2pManager.createGroup` / `removeGroup` | Cục bộ (Android) | — | 6, 10 |
+| 5 | Vào và rời mạng bằng CoreWLAN `CWInterface.scanForNetworks` / `associate` / `disassociate` | Wi-Fi (Mac) | — | 7, 10 |
+| 6 | Kết nối TLS đã ghim trên group | TCP/TLS trên group | C→S | 8, 9 |
+| 7 | Trạng thái Wi-Fi của Mac: sự kiện `CWWiFiClient`, `NWPathMonitor(requiredInterfaceType: .wifi)` | Cục bộ (Mac) | — | 3, 9, E7 |
+
+#### API 1 — `WS direct/start`
+
+- **URL:** N/A (kênh điều khiển `0x01` của link Bluetooth, 0.4.5)
+- **Method:** `WS direct/start` (C→S), envelope đã mã hóa (0.5.1); phản hồi là `ack` kèm dữ liệu.
+- **Request (`data`):**
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `reason` | enum{bulk} | Có | Lý do cần group; bản này chỉ có `bulk` |
+
+- **Response (`ack.data`):**
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `ssid` | string(32) | Có | `"DIRECT-"` ‖ 10 ký tự ngẫu nhiên trong `[A-Za-z0-9]` (0.4.6) |
+| `passphrase` | string(24) | Có | base64url không đệm của 18 byte ngẫu nhiên |
+| `host` | string | Có | Địa chỉ IPv4 của group owner (`WifiP2pInfo.groupOwnerAddress`), dạng chấm thập phân |
+| `port` | int32 | Có | Cổng A-SVC đang lắng nghe (`CTL_PORT` hoặc cổng dự phòng đang dùng) |
+
+  Lỗi: `PERMISSION_MISSING` (`details.permission`), `DIRECT_WIFI_UNAVAILABLE` (`details.reason`), `FEATURE_DISABLED`,
+  `RATE_LIMITED` (đang có group cho một cặp khác).
+- **Example:**
+
+```json
+{"op":"start","data":{"reason":"bulk"}}
+{"re":"0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10","ok":true,"data":{"ssid":"DIRECT-q7Lm2Xc9Ta","passphrase":"3vQ8kN0pR2sT4uW6xY8zA1bC","host":"192.168.49.1","port":47800}}
+```
+
+- **Logic nghiệp vụ:**
+  1. Chỉ nhận trên phiên Bluetooth; trên phiên LAN → `BAD_REQUEST` (bulk dùng LAN).
+  2. Điện thoại mỗi lúc chỉ có một group: `direct/start` khi group của cặp này đang tồn tại thì trả lại cùng thông tin vào
+     mạng; cho một cặp khác → `RATE_LIMITED` với `details.retry_after_ms` = thời gian còn lại của group đó.
+  3. `ack` chỉ được gửi sau khi `onGroupInfoAvailable` báo group có đúng SSID đã yêu cầu, nên Mac không bao giờ quét
+     trước khi group tồn tại.
+  4. Nội dung `ack` là dữ liệu cá nhân theo nghĩa 0.5.1 luật 5: không bao giờ ghi log, kể cả kích thước.
+
+#### API 2 — `WS direct/stop`
+
+- **URL:** N/A (kênh điều khiển `0x01` của link Bluetooth)
+- **Method:** `WS direct/stop` (hai chiều), envelope đã mã hóa; trả lời bằng `ack` không có dữ liệu.
+- **Request (`data`):**
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `reason` | enum{idle\| max\| known_network\| lan\| join_failed\| group_lost} | Có | `idle` sau `DIRECT_WIFI_LINGER`, `max` khi tới `DIRECT_WIFI_MAX`, các giá trị khác theo E5–E9 |
+
+- **Response:** `ack` (`ok: true`).
+- **Example:** `{"op":"stop","data":{"reason":"idle"}}`
+- **Logic nghiệp vụ:**
+  1. Idempotent: `stop` cho group không còn tồn tại vẫn được trả `ok: true`.
+  2. Bên gửi đã rời mạng (Mac) hoặc đã xóa group (điện thoại) trước khi gửi; bên nhận làm tương tự mà không chờ gì
+     thêm.
+  3. `join_failed` bắt đầu đếm `DIRECT_WIFI_RETRY_AFTER` trên Mac; các lý do khác thì không.
+
+#### API 3 — `WS direct/want`
+
+- **URL:** N/A (kênh điều khiển `0x01` của link Bluetooth)
+- **Method:** `WS direct/want` (S→C), sự kiện đã mã hóa, không có `ack`.
+- **Request (`data`):**
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|--------|------|----------|-------|
+| `bytes` | int64 | Có | Tổng kích thước bulk đang chờ trên điện thoại, chỉ để Mac quyết định |
+
+- **Response:** N/A; khi đủ điều kiện vào, Mac đáp bằng `direct/start` (API 1).
+- **Example:** `{"op":"want","data":{"bytes":5242880}}`
+- **Logic nghiệp vụ:**
+  1. Gửi một lần cho mỗi lần truyền đang chờ, và không gửi khi group của cặp này đang tồn tại.
+  2. Mac tự quyết (AC4 phụ thuộc trạng thái Wi-Fi của Mac); điện thoại không bao giờ tạo group khi chưa có
+     `direct/start`.
+
+#### API 4 — Group Wi-Fi Direct (Android)
+
+- **URL:** N/A
+- **Method:** `WifiP2pManager.initialize(context, looper, listener)` → `Channel`;
+  `createGroup(channel, config, actionListener)`; `requestGroupInfo(channel, listener)` và
+  `requestConnectionInfo(channel, listener)`; `removeGroup(channel, actionListener)`; broadcast
+  `WIFI_P2P_CONNECTION_CHANGED_ACTION`.
+- **Request:** `WifiP2pConfig.Builder().setNetworkName(ssid).setPassphrase(passphrase)
+  .setGroupOperatingBand(GROUP_OWNER_BAND_AUTO)`, thêm `setPccModeConnectionType(PCC_MODE_CONNECTION_TYPE_LEGACY_OR_R2)`
+  từ API 36.
+- **Response:** `ActionListener.onSuccess()` hoặc `onFailure(reason)` với `P2P_UNSUPPORTED`, `BUSY` hoặc `ERROR`;
+  `WifiP2pGroup.getNetworkName()`, `WifiP2pInfo.groupOwnerAddress`; danh sách client trong `WifiP2pGroup.getClientList()`.
+- **Example:** `onFailure(BUSY)` → `ack` `DIRECT_WIFI_UNAVAILABLE` `{reason: "busy"}`.
+- **Logic nghiệp vụ:**
+  1. `P2P_UNSUPPORTED` → `p2p_unsupported`; `BUSY` → `busy`; `ERROR` → `error`; Wi-Fi tắt
+     (`WifiManager.isWifiEnabled() = false`) → `wifi_off` mà không gọi `createGroup`; Android 10–12 tắt dịch vụ vị trí
+     → `location_off`.
+  2. Group còn sót từ một lần crash trước (`requestGroupInfo` trả về một group) được xóa trước khi tạo group mới.
+  3. Không có client nào trong `getClientList()` trong `DIRECT_WIFI_JOIN_TIMEOUT` sau `ack` → `removeGroup`,
+     `direct/stop {reason: join_failed}`.
+  4. Group biến mất khi còn cần (broadcast đổi kết nối) → `direct/stop {reason: group_lost}` (E8).
+  5. A-SVC vẫn lắng nghe trên mọi giao diện (0.4.1); trên kết nối có địa chỉ cục bộ là địa chỉ group owner, nó chỉ
+     phục vụ đường stream bulk `/v1/stream/bulk` (0.4.6, 0.4.7).
+
+#### API 5 — Vào và rời group (Mac)
+
+- **URL:** N/A
+- **Method:** `CWWiFiClient.shared().interface()`; `scanForNetworks(withSSID: Data(ssid.utf8))`;
+  `associate(to: network, password: passphrase)`; `disassociate()`; xóa mạng đã lưu qua `CWMutableConfiguration`
+  (`networkProfiles`) và `commitConfiguration(_:authorization:)` chỉ khi không cần hỏi quyền quản trị.
+- **Request:** `ssid` và `passphrase` của API 1.
+- **Response:** một tập `CWNetwork`; `associate` ném `CWErr` khi lỗi.
+- **Example:** quét thấy một mạng `DIRECT-q7Lm2Xc9Ta` → `associate` thành công → `interface.ssid()` =
+  `"DIRECT-q7Lm2Xc9Ta"`.
+- **Logic nghiệp vụ:**
+  1. Cần quyền Vị trí: không có quyền thì CoreWLAN trả các mạng không có SSID (nghiên cứu mục 2), nên điều kiện vào
+     đã đòi quyền này.
+  2. Không bao giờ dùng `networksetup` với passphrase trên dòng lệnh (tiêu chí đạt của G7 trong plan).
+  3. Quét tối đa hai lần trong `DIRECT_WIFI_JOIN_TIMEOUT`; nhiều mạng cùng SSID → thử mạng mạnh nhất trước; TLS đã ghim
+     ở API 6 phân biệt được điện thoại thật.
+  4. Rời mạng: `disassociate()`; sau đó macOS tự vào một mạng đã biết nếu có trong tầm.
+
+#### API 6 — Kết nối TLS đã ghim trên group
+
+- **URL:** `wss://{host}:{port}/v1/stream/bulk`
+- **Method:** TLS 1.3 với chứng chỉ ghim theo `peer_tls_sha256` và không kiểm tên máy, như trong LAN (0.4.1);
+  `NWParameters.requiredInterface` = giao diện Wi-Fi đã vào group.
+- **Request:** `bulk/stream_hello` (0.6.3 bước 7, kênh `bulk`), khóa bằng phiên điều khiển Bluetooth đang sống; sau đó là khóa theo kết nối `K_bulk` (0.4.7).
+- **Response:** `bulk/stream_welcome`; lệch ghim → `TLS_PIN_MISMATCH` trước khi gửi bất kỳ byte nào.
+- **Example:** `wss://192.168.49.1:47800/…` với SHA-256 chứng chỉ đã ghim ở PAIR-01.
+- **Logic nghiệp vụ:**
+  1. Bắt tay TLS thành công đầu tiên trên group kết thúc `DIRECT_WIFI_JOIN_TIMEOUT` (bước 8).
+  2. Lệch ghim → E6; Mac không bao giờ gửi dữ liệu tới một điểm cuối chưa ghim.
+  3. Kết nối không bao giờ dùng cho `/v1/ctl`: phiên vẫn ở Bluetooth (0.4.6 "Không phải LAN").
+
+#### API 7 — Trạng thái Wi-Fi của Mac
+
+- **URL:** N/A
+- **Method:** `CWWiFiClient.shared().delegate` với `startMonitoringEvent(with: .ssidDidChange)` và `.linkDidChange`;
+  `CWInterface.powerOn()`, `ssid()`; `CWConfiguration.networkProfiles` cho các mạng đã biết; `NWPathMonitor` trên giao
+  diện Wi-Fi.
+- **Request:** không có.
+- **Response:** các sự kiện và giá trị hiện tại.
+- **Example:** `ssid()` nil và không có đường Wi-Fi nào thỏa trong 30 s → đã không nối mạng đủ `DIRECT_WIFI_IDLE_MIN`.
+- **Logic nghiệp vụ:**
+  1. Mốc "không nối mạng từ lúc" đặt lại mỗi lần nối mạng; lần quét có bất kỳ SSID nào trong `networkProfiles` nghĩa
+     là "thấy một mạng đã biết".
+  2. Khi đang ở group: quét mỗi `DIRECT_WIFI_SCAN_INTERVAL`; thấy mạng đã biết → E7.
+  3. `ssidDidChange` sang SSID khác SSID của group khi đang ở group → E7.
+
+#### Query
+
+Không truy cập cơ sở dữ liệu. Đọc cài đặt: `link.direct_wifi` (0.9.5) ở cả hai bên.
+
+```text
+# [Thiết kế] UserDefaults trên Mac và DataStore trên Android
+defaults.bool(forKey: "link.direct_wifi")                                 # M-APP, bước 3
+prefs[booleanPreferencesKey("link.direct_wifi")] ?: true                  # A-SVC, bước 5
 ```

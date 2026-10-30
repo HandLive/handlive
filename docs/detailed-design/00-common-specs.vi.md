@@ -119,6 +119,7 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
 | `/v1/ctl` | Kênh điều khiển: mọi envelope ứng dụng | Bắt tay phiên (0.6.3) | P1 |
 | `/v1/stream/call-audio` | Âm thanh cuộc gọi Opus/WS — đường dự phòng (AUDIO-04) | Khóa dẫn xuất từ phiên ctl | P4 |
 | `/v1/stream/camera` | Luồng camera/micro (kênh riêng) | Khóa dẫn xuất từ phiên ctl | P5 |
+| `/v1/stream/bulk` | Truyền bulk, chỉ trên group Wi-Fi Direct (0.4.7) | Khóa theo kết nối dẫn xuất từ phiên ctl | P7 |
 
 - Mỗi cặp chỉ có **một** kết nối `/v1/ctl` tại một thời điểm. Kết nối mới xác thực thành công thay
   thế kết nối cũ (đóng mã 4409).
@@ -164,7 +165,7 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
     `device_id` nguồn và chuyển khung HL đi nguyên vẹn.
   - Ngoại lệ duy nhất là điểm hẹn ghép nối (`rv_msg`, PAIR-01 API 7). Ở đó relay đọc `env.type` và
     đọc payload `pair` chưa mã hóa (giải b64) để chặn `pair/hello` có `mode = "pin"`, vì ghép bằng
-    PIN chỉ dùng trong LAN.
+    PIN không bao giờ đi qua relay (LAN, hoặc Bluetooth có CPace).
 
 ### 0.4.4 Push (P2)
 
@@ -173,6 +174,304 @@ nên người lạ trong LAN không theo dõi được thiết bị qua TXT.
   `{"t":"wake","p":"<pair_id>","r":"<lý do>"}`.
 - **iOS (APNs):** push `alert`, `mutable-content: 1`, `apns-priority: 10`. Nội dung hiển thị mặc định chung chung, gửi bằng `loc-key` (khóa catalog nhóm `push`, 0.12.4) để iPhone tự dịch; trường `hl` chứa envelope đã mã hóa bằng `K_push` để I-NSE giải mã và thay nội dung. `hl` là base64 chuẩn có padding của JSON envelope dạng UTF-8, cùng chuỗi với `env_b64` của `POST /v1/push` (CONN-04 API 2), dài ≤ 3 000 ký tự base64. Tổng payload ≤ 4 KB.
 - Mac không đăng ký push; khi thức dậy, M-APP kết nối lại và đồng bộ theo con trỏ.
+
+### 0.4.5 Kênh Bluetooth: BLE L2CAP CoC (P7)
+
+Kênh điều khiển khi điện thoại và Mac không chung LAN (Phase 7, hai máy ở gần nhau). Lớp
+mang do cổng G7 chọn ([báo cáo spike](../../plans/20260925-implementation/reports/phase-07-spike-g7.md), mục
+"Kết luận bearer"). Chỉ Mac; iOS không đổi. Luồng và ngoại lệ: CONN-05. Ghép đôi lần đầu qua BLE: mục "Chế độ ghép đôi" bên dưới và luồng B (QR), luồng C (PIN) của PAIR-01. Làn bulk (ảnh): 0.4.7. Wi-Fi Direct: 0.4.6.
+
+- **Vai trò.** A-SVC là peripheral: phát quảng bá (dưới đây) và lắng nghe bằng
+  `BluetoothAdapter.listenUsingInsecureL2capChannel()` (PSM LE động, không bond, không GATT server). M-APP là
+  central: `CBCentralManager` quét, `CBPeripheral.openL2CAPChannel(_:)` mở kênh; không bên nào khởi động ghép đôi
+  của hệ điều hành. L2CAP CoC không bond thì không có mã hóa tầng liên kết (G7, mục "Brief items", ý 5), nên lớp bảo
+  mật link dưới đây là bắt buộc: không có gì khác đi qua sóng trước khi lớp này xong.
+- **Khóa** (theo cặp, tính khi cần, lưu như `K_push`):
+  `K_bt_disc` = HKDF(`PRK`, info = `"handlive/v1/bt-discovery"`); `K_bt_link` = HKDF(`PRK`, info =
+  `"handlive/v1/bt-link"`). Không dùng lại `K_disc` hay `K_auth`.
+- **Khóa ghép đôi** (theo từng QR, chỉ nằm trong bộ nhớ trong suốt thời gian sống của QR, `PAIRING_WINDOW`):
+  `K_bt_pdisc` = HKDF-SHA256(ikm = `pairing_secret`, salt = rỗng, info = `"handlive/v1/bt-pair-disc"`, L = 32);
+  `K_bt_plink` = HKDF-SHA256(ikm = `pairing_secret`, salt = rỗng, info = `"handlive/v1/bt-pair-link"`, L = 32). PIN
+  có khóa Bluetooth riêng, sinh từ một lần trao đổi CPace ("Chế độ ghép đôi", PIN).
+
+#### Quảng bá
+
+Quảng bá legacy, kết nối được (`BluetoothLeAdvertiser.startAdvertisingSet`, chế độ legacy, khoảng
+`INTERVAL_LOW`, công suất `TX_POWER_HIGH` — cấu hình probe G7), có scan response, không tên thiết bị, không trường
+TX power. `BT_SERVICE_UUID` là UUID 128-bit tự sinh. Vì UUID 128-bit và service data không vừa 31 byte (G7 gặp
+`ADVERTISE_FAILED_DATA_TOO_LARGE`, mục "Yêu cầu phát hiện cho sản phẩm", ý 2), gói quảng bá mang UUID còn scan
+response mang service data, mỗi gói ≤ 31 byte.
+
+| Cấu trúc AD | Byte | Nội dung |
+|---|---|---|
+| Flags (gói quảng bá) | 3 | Stack tự thêm cho advertising set kết nối được |
+| Danh sách đầy đủ UUID dịch vụ 128-bit (gói quảng bá) | 18 | `BT_SERVICE_UUID` (Mac quét với bộ lọc này); gói quảng bá tổng 21 |
+| Service data, UUID 128-bit (scan response) | 18 + 3 + 4 × n | `BT_SERVICE_UUID` ‖ service data bên dưới |
+| **Tổng scan response** | ≤ 29 | n ≤ 2 (`BT_ADV_MAX_HINTS`) |
+
+Service data (sau UUID):
+
+| Offset | Độ dài | Trường | Mô tả |
+|---|---|---|---|
+| 0 | 1 | `ver` | `0x01` |
+| 1 | 2 | `psm` | PSM L2CAP hiện tại, uint16 little-endian |
+| 3 | 4 × n | `hints` | Mỗi cặp một hint, n = 0…`BT_ADV_MAX_HINTS`; hint = 4 byte đầu của HMAC-SHA256(`K_bt_disc`, `"HLBTDISC1"` ‖ int64 BE `floor(now_ms / BT_HINT_PERIOD)`) |
+
+- A-SVC phát quảng bá khi `link.bluetooth` bật, Bluetooth bật, đã cấp Nearby devices (Android 12+) và có ít nhất
+  một cặp chưa thu hồi đang không có phiên sống trên route nào; hint là của các cặp đó, `last_seen_at` gần nhất
+  trước, tối đa `BT_ADV_MAX_HINTS`. Không có cặp như vậy và không có cửa sổ ghép đôi QR đang mở → không phát ("Chế độ ghép đôi").
+- **Xoay vòng:** ở mỗi mốc `BT_HINT_PERIOD`, A-SVC dừng advertising set, đóng server socket (link hiện tại vẫn mở),
+  mở socket mới (PSM mới) và chạy advertising set mới. Hint, PSM và advertising set đổi cùng lúc; khởi động lại set là
+  đòn bẩy duy nhất app có lên địa chỉ vô tuyến (T7.1 bắt gói BLE kiểm địa chỉ có đổi, AC9).
+- Client so hint của các epoch từ `e − 4` tới `e + 4` (e = epoch hiện tại: chịu lệch đồng hồ tới một giờ, như
+  trong LAN). Quảng bá có `ver` ≠ `0x01` hoặc không có hint khớp → bỏ qua.
+
+#### Bản ghi link
+
+Mọi byte trên kênh L2CAP thuộc một bản ghi: `rlen` (uint16 BE) ‖ `rlen` byte. Bên đọc kiểm `rlen` **trước khi cấp
+phát**: bản ghi pre-auth vượt `BT_PREAUTH_RECORD_MAX`, bản ghi transport có `rlen` khác 272, 1 040 và
+4 112 (`BT_RECORD_MAX`), hoặc loại bản ghi không đúng lúc → đóng kênh ngay, không trả lời (probe G7 đọc độ dài 4 byte không có cận trên,
+finding của pentester ở review #165, mục "Yêu cầu phát hiện cho sản phẩm", ý 3).
+
+Bản ghi pre-auth, không mã hóa, byte đầu = loại:
+
+| Loại | Tên | Chiều | Nội dung | Kích thước |
+|---|---|---|---|---|
+| `0x01` | `challenge` | S→C | `n_s`: 32 byte ngẫu nhiên, mới cho mỗi kênh | 33 |
+| `0x02` | `noise1` | C→S | Noise message 1: `e` (32) ‖ payload rỗng đã mã hóa (16) | 49 |
+| `0x03` | `noise2` | S→C | Noise message 2: `e` (32) ‖ payload rỗng đã mã hóa (16) | 49 |
+| `0x04` | `cpace1` | C→S | `Ya` (32), chỉ cho ghép bằng PIN ("Chế độ ghép đôi") | 33 |
+| `0x05` | `cpace2` | S→C | `Yb` (32), chỉ cho ghép bằng PIN | 33 |
+| `0x7F` | `reject` | S→C | Rỗng; nghĩa là `LINK_REJECTED` (0.8.4) | 1 |
+
+#### Bắt tay bảo mật link
+
+Mẫu `Noise_NNpsk0_25519_ChaChaPoly_SHA256` (Noise rev. 34), psk = `K_bt_link` của cặp, prologue =
+`"HLBT1"` ‖ `n_s`. C = M-APP (bên khởi tạo), S = A-SVC (bên đáp).
+
+1. Kênh mở; S gửi `challenge` ngay và bắt đầu đếm `BT_PREAUTH_TIMEOUT`.
+2. C gửi `noise1` với psk của cặp có hint vừa khớp.
+3. S lần lượt thử psk của từng cặp chưa thu hồi (quảng bá không mang `pair_id`) tới khi tag payload của message 1
+   hợp lệ. Prologue gắn `n_s`, nên một `noise1` bị ghi lại không bao giờ hợp lệ trên kênh mới. Không cặp nào hợp
+   lệ → xác nhận khóa thất bại.
+4. S gửi `noise2`; C kiểm tag payload (sai → C đóng kênh, CONN-05 E3). Hai bên `Split()` ra một CipherState cho
+   mỗi chiều; từ đây link gắn với cặp đó.
+5. S chỉ coi link đã xác nhận khi bản ghi transport đầu tiên của C giải mã được; lỗi ở đây cũng là xác nhận khóa
+   thất bại.
+6. Sau đó bắt tay phiên E2E (0.6.3) chạy bên trong link trên kênh điều khiển, không đổi gì. `session/hello` phải
+   ghi đúng `pair_id` của psk đã hợp lệ; nếu không, S trả `AUTH_FAILED` (`session/error`) rồi đóng link.
+
+Mọi lỗi trước khi xong bước 5 → S gửi `reject` khi gửi được rồi đóng kênh. `reject` là lỗi pre-auth duy nhất trên
+sóng: nó không cho biết nguyên nhân là vượt giới hạn tiếp nhận, hết giờ, đang bị chặn hay xác nhận khóa thất bại.
+
+#### Bản ghi transport và kênh con
+
+Sau bước 4, mọi bản ghi là một Noise transport message: ciphertext của plaintext đã đệm + tag 16 byte, nonce = bộ
+đếm 64-bit của chiều đó, associated data rỗng. Mỗi bên gọi Noise `Rekey()` trên CipherState gửi sau mỗi
+`BT_LINK_REKEY_RECORDS` bản ghi, bên nhận làm theo ở cùng số đếm (không có message). Plaintext:
+
+| Offset | Độ dài | Trường | Mô tả |
+|---|---|---|---|
+| 0 | 1 | `chan` | `0x01` điều khiển, `0x02` bulk (nội dung: 0.4.7); giá trị khác → đóng link |
+| 1 | 1 | `flags` | bit0 `more`: còn mảnh tiếp theo của cùng message; bit1 `long`: mảnh thuộc làn dài của kênh điều khiển (chỉ kênh `0x01`, xem dưới); các bit khác bằng 0 |
+| 2 | 2 | `dlen` | uint16 BE, độ dài `data`, ≤ `BT_FRAGMENT_MAX` |
+| 4 | `dlen` | `data` | Một mảnh của một message |
+| 4 + `dlen` | phần còn lại | đệm | Byte 0, đệm tới cỡ nhỏ nhất trong 256, 1 024 hoặc 4 096 byte đủ chứa frame |
+
+- **Kênh điều khiển** (`0x01`): một message = một JSON envelope (0.5.1) dạng UTF-8, đúng thứ một WS text frame
+  mang trên `/v1/ctl`. Luật envelope (0.5.1) giữ nguyên. Một envelope có thể tới 256 KiB (0.5.1 luật 4), tức khoảng
+  20 s chiếm sóng ở 12.9 KB/s, nên kênh có hai làn, phân biệt bằng `long`:
+  - *Làn ngắn* (`long` = 0): envelope tối đa `BT_FRAGMENT_MAX` byte, luôn đúng một mảnh. `more` = 1 mà `long` = 0
+    → đóng link.
+  - *Làn dài* (`long` = 1): mọi envelope tới `BT_MESSAGE_MAX`, chia mảnh tối đa `BT_BULK_FRAGMENT_MAX` byte, mỗi
+    chiều chỉ một message tại một thời điểm. Bên gửi đưa vào làn này mọi envelope dài hơn `BT_FRAGMENT_MAX`, mọi envelope `session`
+    (`rekey`, `bye`…), và envelope ngắn cùng `type` với một message dài còn trong hàng đợi hoặc đang gửi. Bên nhận
+    chỉ ráp lại làn này và đóng link khi một mảnh của làn dài có `dlen` vượt `BT_BULK_FRAGMENT_MAX` hoặc một message vượt
+    `BT_MESSAGE_MAX` trước mảnh cuối.
+  - *Thứ tự.* Mỗi làn giữ đúng thứ tự bên gửi, và bên nhận xử lý envelope ngay khi nó đủ mảnh. Vì vậy envelope ngắn
+    có thể vượt một envelope dài khác `type` (văn bản clipboard không bao giờ chờ 20 s sau một lô SMS); các envelope
+    cùng `type` và mọi envelope `session` giữ đúng thứ tự đã gửi.
+- **Ưu tiên:** bên gửi giữ ba hàng đợi và ở mỗi ranh giới mảnh gửi từ hàng đầu tiên còn dữ liệu: điều khiển ngắn,
+  rồi điều khiển dài, rồi bulk. Tổng số bản ghi điều khiển dài và bulk đã ghi vào stream L2CAP mà chưa đi hết không
+  vượt quá `BT_BULK_INFLIGHT`, nên envelope ngắn chờ nhiều nhất sau chừng đó bản ghi 1 040 byte (khoảng 160 ms) và
+  bản ghi đang phát. Điều khiển dài đi trước bulk, không chia đều: envelope dài hiếm khi đi qua Bluetooth vì ảnh đi
+  làn bulk (0.4.7). Probe G7 dùng một luồng FIFO duy nhất và không đạt AC1 khi đang truyền bulk (p95 một chiều
+  4 769–7 768 ms, mục "Lần 1" và "Lần 2" của báo cáo spike), vì vậy mới có luật này.
+- **Đệm** giấu `type` của envelope sau ba cỡ (AC9); `id` và `ts` chỉ đi bên trong ciphertext. Envelope dài, giống
+  bulk, hiện ra thành một chuỗi bản ghi 1 040 byte: lộ kích thước với sai số khoảng 1 KiB, không lộ `type`.
+- **Giữ kết nối:** cứ `BT_PING_INTERVAL` không có lưu lượng khác, client gửi `ping/ping` (CONN-02 API 2); bên nào
+  không nhận bản ghi nào trong `BT_IDLE_TIMEOUT` thì đóng link.
+- **Không có close code:** link không có thứ tương đương close code WS (0.8.3). Một bên kết thúc phiên đã lập bằng
+  `session/bye` đã mã hóa, như phiên qua relay (CONN-02 API 4), rồi đóng kênh; trước khi bắt tay phiên thành công
+  thì dùng `session/error` (CONN-01 API 6) rồi đóng. Kênh đóng mà không có `session/bye` được tính là mất kết nối.
+
+#### Tiếp nhận (A-SVC)
+
+- Tối đa `BT_LINK_LIMIT` link L2CAP cùng lúc, trong đó tối đa `BT_PREAUTH_LIMIT` link chưa xong bước 5. Kênh vượt
+  một trong hai giới hạn nhận `reject` rồi bị đóng.
+- Link chưa xong bước 5 trong `BT_PREAUTH_TIMEOUT` nhận `reject`; link đã xác nhận mà không có `session/hello` hợp
+  lệ (trên link ghép đôi: `pair/hello`, "Chế độ ghép đôi") trong `HANDSHAKE_TIMEOUT` thì bị đóng.
+- BLE không cho địa chỉ client để đếm theo, nên lỗi được đếm cho cả bộ lắng nghe Bluetooth: mỗi lần xác nhận khóa
+  thất bại (bước 3 và 5) và mỗi `session/hello` bị từ chối với `AUTH_FAILED` tính là một `AUTH_FAILED`; đủ
+  `BT_AUTH_FAIL_BLOCK` lần trong một phút → bộ lắng nghe trả `reject` cho mọi kênh mới trong một phút. Bộ đếm của
+  LAN (`CTL_PREAUTH_LIMIT`, `CTL_IP_BLOCK`) không thấy link Bluetooth.
+- Mỗi cặp một phiên trên mọi route (0.4.1): phiên mới xác nhận được khóa thì thay phiên cũ, bất kể route; qua
+  Bluetooth bên bị thay nhận `session/bye {reason: replaced}`.
+
+#### Chế độ ghép đôi (luồng B và C của PAIR-01)
+
+Ghép đôi lần đầu khi điện thoại và Mac không chung LAN: QR (luồng B; định dạng QR không đổi) hoặc PIN (luồng C,
+CPace, ý cuối).
+
+- **Quảng bá.** Khi A-SVC đang giữ một cửa sổ ghép đôi QR (PAIR-01 bước 6) và dùng được Bluetooth (đang bật, đã cấp
+  Nearby devices trên Android 12+, `link.bluetooth` bật), nó khởi động lại advertising set (server socket mới, PSM
+  mới) với `pr_bt` là hint đầu tiên, sau đó tối đa `BT_ADV_MAX_HINTS` − 1 hint của cặp theo luật ở trên. `pr_bt` =
+  4 byte đầu của HMAC-SHA256(`K_bt_pdisc`, `"HLBTPAIR1"`). Định dạng không đổi, nên người quan sát không phân biệt
+  được chế độ ghép đôi với quảng bá thường; `pr_bt` đổi theo từng QR và không bao giờ tính từ `pk`, nên không nối
+  được hai lần ghép đôi với nhau (AC9). Khi cửa sổ đóng, A-SVC khởi động lại set không có `pr_bt`.
+- **Client.** Ở PAIR-01 bước 7, M-APP quét thêm với bộ lọc `BT_SERVICE_UUID` và coi gói quảng bá nào có `pr_bt` của
+  chính nó trong danh sách hint là một ứng viên. Ứng viên LAN được ưu tiên; ứng viên Bluetooth được nối ngay khi
+  không có ứng viên LAN. Nhiều máy phát cùng `pr_bt` (gói quảng bá bị chép lại) được thử lần lượt cho tới khi hết
+  20 s của PAIR-01 bước 7.
+- **Bắt tay bảo mật link.** Bước 1–5 ở trên, không đổi, với psk = `K_bt_plink`. Khi cửa sổ đang mở, S thử
+  `K_bt_plink` trước, rồi tới psk của từng cặp chưa thu hồi. Link có `noise1` hợp lệ với `K_bt_plink` là **link ghép
+  đôi**: như vậy frame đầu tiên của một lần ghép đôi đã được xác thực bằng khóa sinh từ `pairing_secret` trước khi
+  suất pre-auth trở thành link đã xác nhận.
+- **Link ghép đôi.** Trong `HANDSHAKE_TIMEOUT` sau bước 5, C gửi `pair/hello` với `mode = "qr"` trên kênh điều khiển
+  `0x01`; sau đó PAIR-01 API 2–6 chạy dưới dạng envelope trên kênh đó (payload không mã hóa như trên `/v1/pair`, nằm
+  bên trong lớp mã hóa link). Envelope có `type` khác trên link ghép đôi, hoặc envelope `pair` trên link của một cặp
+  → đóng link, không trả lời. Link ghép đôi đã gửi `pair/hello` hợp lệ thì giữ cửa sổ: S thôi thử `K_bt_plink`, nên
+  máy thứ hai muốn giành cửa sổ sẽ xác nhận khóa thất bại và nhận `reject` (mỗi cửa sổ một client, PAIR-01 API 2 logic 4).
+- **Sau `pair/done`.** Link được giữ lại và trở thành link điều khiển của cặp mới: envelope tiếp theo từ C phải là
+  `session/hello` mang `pair_id` vừa tạo trên link này (bước 6 ở trên), trong `HANDSHAKE_TIMEOUT`; nếu không,
+  `session/error` `AUTH_FAILED` rồi đóng. `pair/error`, hoặc link bị đóng trước `pair/done`, kết thúc lần ghép đôi:
+  không lưu gì (điều kiện sau của PAIR-01).
+- **PIN (luồng C của PAIR-01, sếp quyết định ngày 2026-10-28).** PIN 6 số ghép qua Bluetooth bằng CPace, nên PIN
+  không bao giờ đi qua sóng dưới bất kỳ dạng nào và một lần trao đổi bị ghi lại không kiểm được ngoại tuyến:
+  - *Quảng bá.* Khi A-SVC đang giữ cửa sổ PIN (PAIR-01 A4) và dùng được Bluetooth, nó khởi động lại advertising set với
+    `BT_PIN_HINT` là hint đầu tiên (sau đó tối đa `BT_ADV_MAX_HINTS` − 1 hint của cặp). Dấu hiệu này giống nhau cho mọi
+    điện thoại ở chế độ PIN và chỉ cho biết "đang có một điện thoại ở chế độ ghép bằng PIN", như TXT `pm = 1` trong
+    LAN; nó không mang gì về thiết bị, PIN hay cặp (AC9). Khi cửa sổ đóng, set khởi động lại không có nó. Ở bước A2,
+    M-APP coi mọi gói quảng bá mang `BT_PIN_HINT` là ứng viên.
+  - *CPace.* Sau `challenge`, C gửi `cpace1` thay cho `noise1`; S chỉ nhận khi đang mở cửa sổ PIN (nếu không thì đóng
+    kênh, không trả lời). Bộ `CPACE-X25519-SHA512` của draft-irtf-cfrg-cpace (initiator-responder), bản draft cố định
+    theo vector S7.1 (`shared/test-vectors/cpace.json`, trường `draft`): PRS = byte UTF-8 của sáu chữ số; CI =
+    `"HLBTPIN1"`; sid = `n_s` (32 byte, mới cho mỗi kênh); ADa = ADb = rỗng. C: generator `g` =
+    `calculate_generator(SHA-512, PRS, CI, sid)` (ánh xạ Elligator2 của RFC 9380), scalar ngẫu nhiên `ya`, `Ya` =
+    X25519(`ya`, `g`) → `cpace1`. S: cùng `g`, `yb`, `Yb` → `cpace2`; `K` = X25519(`yb`, `Ya`). C: `K` =
+    X25519(`ya`, `Yb`). `K` toàn số 0 → đóng, không trả lời. `ISK` (64 byte) tính theo draft từ `sid`, `K`, `Ya`, `Yb`.
+  - *Khóa từ ISK* (chỉ trong bộ nhớ, xóa cùng PIN): `K_bt_pinlink` = HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info =
+    `"handlive/v1/bt-pin-link"`, L = 32), là psk Noise của bước 2–5 ở trên (cùng prologue); `K_bt_pin` =
+    HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-pair"`, L = 32), thay cho `K_pin` ở PAIR-01
+    bước 9–11 (0.6.2). Link qua được `noise1` với `K_bt_pinlink` là **link ghép đôi PIN**: áp dụng các luật "Link ghép
+    đôi" và "Sau `pair/done`" ở trên, với `pair/hello` `mode = "pin"`. `mode = "qr"` trên link ghép đôi PIN, hoặc
+    `mode = "pin"` trên link ghép đôi QR → `pair/error` `AUTH_FAILED` rồi đóng.
+  - *Chỉ dò được trực tuyến.* PIN sai ở bất kỳ bên nào làm tag `noise1` sai ở S (hoặc `noise2` ở C): một lần thử. Kẻ
+    đứng giữa chỉ được đúng một lần đoán PIN cho mỗi kênh, kẻ nghe lén thụ động thì không được lần nào. Điện thoại
+    giữ **một bộ đếm cho mỗi cửa sổ PIN, dùng chung cho cả hai đường truyền**: mỗi `pair/offer` trong LAN kết thúc mà
+    không có `pair/done` và mỗi kênh Bluetooth thất bại sau `cpace1` đều cộng một; tổng tới `PIN_MAX_ATTEMPTS` thì
+    đóng cửa sổ như "PIN hết hạn" (PAIR-01 E2) và từ chối mở mọi cửa sổ PIN mới, trong LAN hay qua Bluetooth, trong
+    `BT_PIN_LOCKOUT` (PAIR-01 E10). Mac giữ cùng một bộ đếm duy nhất cho mỗi PIN (`PIN_INVALID` trong LAN cộng các
+    kênh Bluetooth thất bại) và sinh PIN mới khi tới `PIN_MAX_ATTEMPTS` (E7). Với 10^6 PIN và 3 lần thử mỗi PIN, xác
+    suất đoán trúng trong một cửa sổ PIN là 3 × 10^-6.
+  - *Thời gian.* Thêm một lượt đi về so với link QR (`cpace1`/`cpace2`); điện thoại đang ở trong tay người dùng khi
+    nhập PIN nên không có Doze, `BT_PREAUTH_TIMEOUT` giữ nguyên.
+- **Tiếp nhận.** Link ghép đôi dùng chung `BT_LINK_LIMIT`, `BT_PREAUTH_LIMIT`, `BT_PREAUTH_TIMEOUT` và
+  `BT_AUTH_FAIL_BLOCK` với link của cặp. Thiết bị không có `pairing_secret` (luồng B) hoặc không biết PIN (luồng C)
+  chỉ giữ được suất pre-auth duy nhất tối đa `BT_PREAUTH_TIMEOUT` cho mỗi kênh và không bao giờ giành được cửa sổ;
+  lỗi của nó được tính vào `BT_AUTH_FAIL_BLOCK`, có thể chặn một lần ghép đôi thật trong một phút (rủi ro đã chấp
+  nhận, rủi ro 12 của plan: người dùng thử lại hoặc ghép qua LAN).
+- **AC8.** Link ghép đôi không bao giờ đụng tới cặp đã có: kho cặp chỉ đổi ở PAIR-01 bước 11, sau các bước kiểm `mac`
+  khóa bằng `pairing_secret`; `reject` và kênh bị đóng chỉ làm hỏng lần thử này.
+
+### 0.4.6 Kênh Wi-Fi Direct cho bulk (P7)
+
+Đường nhanh cho ảnh khi điện thoại và Mac không chung LAN (kịch bản X), chỉ mở khi cần và đóng ngay khi không còn cần.
+Kênh chỉ mang kết nối stream bulk; kênh điều khiển vẫn ở link Bluetooth (0.4.5). Chỉ Mac; iOS/iPadOS không có route
+Bluetooth và không có Wi-Fi Direct. Luồng và ngoại lệ: CONN-06. Nội dung bulk, khóa theo kết nối và lập lịch:
+0.4.7.
+
+- **Cấu trúc (quyết định).** A-SVC tạo một group Wi-Fi Direct tự chủ (`WifiP2pManager.createGroup` với một
+  `WifiP2pConfig`, API 29+) và làm group owner; M-APP vào group như một client WPA2 thường bằng CoreWLAN. Lý do
+  ([nghiên cứu 2026-10-01](../../plans/20260925-implementation/reports/research-direct-wifi-link-2026-10-01.vi.md), mục 3
+  và 5): macOS không có API Wi-Fi Direct hay Wi-Fi Aware (F2), nên Mac chỉ có thể vào một mạng; app bên thứ ba không
+  bật được hotspot của điện thoại; `LocalOnlyHotspot` buộc SSID và passphrase ngẫu nhiên và lỗi trên một số bản ROM của
+  hãng; group Wi-Fi Direct cho app tự đặt SSID và passphrase (API 29+) và giữ nguyên mạng Wi-Fi riêng của điện thoại
+  (STA + P2P).
+- **Thông tin vào mạng.** A-SVC sinh mới cho mỗi group và không bao giờ dùng lại: `ssid` = `"DIRECT-"` ‖ 10 ký tự ngẫu
+  nhiên trong `[A-Za-z0-9]` (17 byte; Android bắt buộc tiền tố `DIRECT-xy`, ở đây cả `xy` cũng ngẫu nhiên, nên tên
+  không nói gì về HandLive hay cặp); `passphrase` = base64url không đệm của 18 byte ngẫu nhiên (24 ký tự, 144 bit; WPA2
+  cần 8–63). Chúng chỉ đi trong `ack` của `direct/start`, một envelope E2E bên trong link Bluetooth: không bao giờ được
+  quảng bá, không ghi log, chỉ nằm trong bộ nhớ và bị xóa khi group dừng. Group mới thì thông tin mới, nên không cần lịch
+  xoay vòng: một group sống tối đa `DIRECT_WIFI_MAX`.
+- **Cấu hình group.** `WifiP2pConfig.Builder().setNetworkName(ssid).setPassphrase(passphrase)
+  .setGroupOperatingBand(WifiP2pConfig.GROUP_OWNER_BAND_AUTO)`; từ API 36 thêm
+  `setPccModeConnectionType(WifiP2pConfig.PCC_MODE_CONNECTION_TYPE_LEGACY_OR_R2)` (Mac là client legacy, F4). A-SVC
+  không bao giờ bật/tắt Wi-Fi và không bao giờ rời mạng của chính nó để dựng group.
+- **Điều kiện vào (Mac, AC4).** M-APP chỉ xin group (`direct/start`) khi đủ mọi điều kiện: phiên chạy qua Bluetooth
+  (không có phiên LAN); có một lần truyền bulk đang chờ theo chiều nào cũng được (0.4.7; điện thoại báo phần của nó bằng
+  `direct/want`); `link.direct_wifi` bật; đã cấp quyền Vị trí; Wi-Fi đang bật và không nối mạng nào trong ít nhất
+  `DIRECT_WIFI_IDLE_MIN`; lần quét gần nhất không thấy mạng nào trong danh sách mạng đã biết của Mac; không có lần thử
+  Wi-Fi Direct nào thất bại trong `DIRECT_WIFI_RETRY_AFTER`. Mac đang nối bất kỳ mạng nào, kể cả mạng không có Internet,
+  không bao giờ vào group: việc truyền đi qua Bluetooth ở nền (bảng route của plan). Vì vậy việc vào group không bao giờ kéo Mac khỏi
+  một mạng khác.
+- **Điều kiện rời.** Mac rời group (`CWInterface.disassociate()`) và gửi `direct/stop` khi: không stream bulk nào có dữ
+  liệu trong `DIRECT_WIFI_LINGER`; group đã tồn tại `DIRECT_WIFI_MAX`; lần quét định kỳ mỗi `DIRECT_WIFI_SCAN_INTERVAL`
+  thấy một mạng đã biết (để macOS quay về mạng đó); xuất hiện phiên LAN; phiên Bluetooth kết thúc. macOS tự chuyển sang
+  mạng khác cũng tính là rời. A-SVC xóa group (`WifiP2pManager.removeGroup`) khi nhận `direct/stop`, theo cùng giới hạn
+  `DIRECT_WIFI_LINGER` và `DIRECT_WIFI_MAX` tự đếm phía nó, khi không client nào vào trong `DIRECT_WIFI_JOIN_TIMEOUT`, và
+  khi phiên điều khiển kết thúc.
+- **Xác thực trên group (AC8).** Biết passphrase thì một thiết bị vào được group nhưng không nói chuyện được với HandLive.
+  M-APP kết nối tới `host`:`port` trong `ack` bằng TLS ghim `peer_tls_sha256`, đúng như trong LAN (0.4.1), socket gắn
+  vào giao diện Wi-Fi; chứng chỉ không khớp → `TLS_PIN_MISMATCH`, rời group. Trên kết nối có địa chỉ cục bộ là địa chỉ
+  group owner, A-SVC chỉ nhận đường stream bulk `/v1/stream/bulk` (0.4.7), có bắt tay stream khóa bằng phiên điều khiển đang sống (0.6.3
+  bước 7); `/v1/ctl`, `/v1/pair` và mọi thứ khác trên địa chỉ đó → đóng 4400. Thiết bị trong group mà không có khóa
+  phiên thì không hoàn tất được bắt tay stream (4401).
+- **Không phải LAN.** Group không bao giờ là route của phiên: instance mDNS hay địa chỉ thấy trên giao diện của group
+  không phải ứng viên CONN-01 và không kích hoạt nâng cấp ở 0.11; phiên vẫn ở Bluetooth trong khi ảnh dùng group.
+- **Mạng đã lưu.** Sau khi rời, M-APP xóa mạng khỏi danh sách mạng ưu tiên của Mac khi CoreWLAN cho phép mà không hỏi
+  quyền quản trị; nếu không, mục đó ở lại, vô hại vì SSID đó không bao giờ được dùng lại (G7 chưa thử, xem yêu cầu đặc
+  biệt của CONN-06).
+
+### 0.4.7 Làn bulk (P7)
+
+Các lần truyền lớn (ảnh của CLIP-03, văn bản quá `CLIP_INLINE_MAX`, CLIP-04) giữ nguyên các message của CLIP-03
+(`clipboard/push` có `transfer`, `clipboard/chunk` 64 KiB, `clipboard/cancel` và `ack` của chúng); chỉ làn chở chúng thay
+đổi theo route. Mọi envelope khác, kể cả văn bản clipboard gửi thẳng, vẫn ở kênh điều khiển.
+
+- **Chọn làn** (bảng route của plan: LAN > Wi-Fi Direct > Bluetooth), quyết định lúc bắt đầu một lần truyền:
+
+| Tình huống | Làn bulk | Khóa |
+|---|---|---|
+| Phiên LAN | `/v1/ctl`, như hiện nay (CLIP-03: tối đa 4 chunk trong bộ đệm gửi) | Khóa phiên (0.6.3) |
+| Phiên Bluetooth, kích thước ≥ `BULK_DIRECT_MIN`, đủ điều kiện vào Wi-Fi Direct (0.4.6) | `wss://{host}:{port}/v1/stream/bulk` trên group (CONN-06) | Khóa theo kết nối (bên dưới) |
+| Phiên Bluetooth, các trường hợp còn lại, hoặc Wi-Fi Direct thất bại | Kênh `0x02` của link (0.4.5), chạy ở nền | Khóa phiên bên trong lớp mã hóa link |
+
+  Lần truyền từ `BULK_DIRECT_MIN` trở lên chờ Wi-Fi Direct tối đa `DIRECT_WIFI_JOIN_TIMEOUT`, group chưa lên thì bắt đầu
+  qua Bluetooth. Dưới mức đó Bluetooth nhanh hơn việc vào group (12.9 KB/s, G7 Lần 2: 128 KiB ≈ 10 s so với ngân sách
+  vào mạng 8 s). Không có giới hạn kích thước riêng cho Bluetooth: tới `CLIP_MAX_IMAGE` vẫn chạy ở nền (AC3 của plan).
+  Không có route nào → không gửi gì; CLIP-03 gửi lại clip mới nhất khi phiên bắt đầu (QC7).
+- **Khóa theo kết nối trên `/v1/stream/bulk`.** Bắt tay stream của 0.6.3 bước 7 với kênh `bulk` (`K_stream` từ phiên
+  điều khiển đang sống, `bulk/stream_hello` và `bulk/stream_welcome`), rồi `K_bulk` = HKDF-SHA256(ikm = `K_stream`
+  (96 byte), salt = `nonce_c` ‖ `nonce_s`, info = `"handlive/v1/bulk-conn"`, L = 64) → `k_c2s` (32) ‖ `k_s2c` (32). Mọi
+  envelope trên kết nối đó là envelope 0.5.1 mã hóa bằng các khóa này thay cho khóa phiên; tập chống trùng của 0.5.1
+  luật 2 tính riêng cho mỗi kết nối. Kết nối mới, kể cả trong cùng phiên, có nonce mới nên có khóa mới; `PRK` dài hạn
+  không bao giờ được dùng trực tiếp. Thiết bị trong group mà không có phiên đang sống thì không qua được `stream_hello`
+  (4401, AC8). Phiên điều khiển kết thúc thì kết nối bulk đóng theo.
+- **Lập lịch trên Bluetooth.** Mảnh điều khiển luôn đi trước (0.4.5 "Ưu tiên": điều khiển ngắn, điều khiển dài, rồi
+  bulk). Một mảnh bulk mang tối đa `BT_BULK_FRAGMENT_MAX` byte, nên vừa bản ghi 1 040 byte và chiếm sóng khoảng 80 ms
+  ở 12.9 KB/s; bên gửi giữ tối đa `BT_BULK_INFLIGHT` bản ghi điều khiển dài và bulk đã ghi vào stream L2CAP mà chưa đi
+  hết, nên một envelope điều khiển ngắn không bao giờ phải chờ sau nhiều hơn chừng đó. A7.4 đo điều này so với AC1 (≤ 200 ms khi đang truyền bulk).
+- **Wi-Fi Direct và điều khiển.** Kênh điều khiển không bao giờ chuyển sang group (0.4.6 "Không phải LAN"); bulk trên
+  group dùng đường sóng khác, nên không làm trễ envelope điều khiển trên Bluetooth.
+- **Đổi làn giữa chừng: làm lại từ đầu, không nối tiếp.** Khi làn của một lần truyền đang chạy mất đi hoặc có làn tốt
+  hơn (Wi-Fi Direct lên khi đang chạy trên Bluetooth; mất group, CONN-06 E7/E8; phiên LAN thay phiên Bluetooth), bên gửi
+  gửi `clipboard/cancel` `rerouted` trên làn cũ nếu còn gửi được, rồi truyền lại toàn bộ với `transfer_id` mới và cùng
+  `clip_id` trên làn mới, kể cả khi đã quá 120 s của QC7, miễn đó vẫn là clip mới nhất. Tối đa `BULK_MAX_RESTARTS` lần
+  làm lại cho mỗi clip, sau đó áp dụng CLIP-03 E8. Chỉ làm lại vì có làn tốt hơn khi còn hơn một nửa lần truyền.
+- **Thời hạn và tiến độ.** `CLIP_TRANSFER_IDLE_TIMEOUT` giữ nguyên trên mọi làn (bản ghi 1 040 byte với RTT Doze 3 s vẫn
+  tới trong hạn). Qua Bluetooth, tiến độ hiện cho các lần truyền từ `BULK_DIRECT_MIN` trở lên (CLIP-03 trường 2) kèm
+  dòng chữ ở CLIP-03 trường 10.
 
 ## 0.5 Khung tin
 
@@ -266,6 +565,8 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
 | `ik_dh` | X25519 | Như `ik_sig` | Như `ik_sig` |
 | Khóa TLS | ECDSA P-256 + chứng chỉ tự ký | Android: PKCS#12, mật khẩu bọc bởi Keystore | Lúc cài. Kho PKCS#12 hỏng hoặc mất mật khẩu → sinh lại khóa và chứng chỉ; mọi client thấy `TLS_PIN_MISMATCH` ở mọi instance → hiển thị "Cần ghép nối lại" (CONN-01 E2) |
 | `pairing_secret` | 32 byte ngẫu nhiên | Chỉ trong bộ nhớ Mac/iOS và trong QR | 120 s |
+| `K_bt_pdisc`, `K_bt_plink` | HKDF(`pairing_secret`), 0.4.5 | Chỉ trong bộ nhớ (Mac và Android) | Như `pairing_secret`; xóa cùng lúc |
+| `ISK`, `K_bt_pinlink`, `K_bt_pin` | CPace, rồi HKDF (0.4.5, PIN) | Chỉ trong bộ nhớ (Mac và Android) | Một kênh; xóa cùng PIN |
 | `PRK` | 32 byte | Android: cột `prk_enc` (Tink AEAD, khóa trong Keystore). Mac/iOS: Keychain, account = `pair_id` | Theo cặp ghép nối |
 | `K_push` | HKDF(`PRK`, info = `"handlive/v1/push"`) | Tính khi cần | Theo cặp |
 | `k_c2s`, `k_s2c` | 32 byte | Bộ nhớ | Theo kết nối; rekey sau 24 h hoặc 10 000 envelope mỗi chiều |
@@ -298,7 +599,10 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
     24 byte.
   - Relay: `ed25519-dalek`, `jsonwebtoken`, `ring`.
 - Bộ test vector liên nền tảng (Kotlin ↔ Swift ↔ Rust) cho: `device_id`, `PRK`, bắt tay phiên, mã
-  hóa envelope, khung HL. Chạy trong CI của cả ba phía.
+  hóa envelope, khung HL. Chạy trong CI của cả ba phía. CPace (`cpace.json`, Kotlin và Swift): vector
+  `CPACE-X25519-SHA512` của chính draft, rồi các trường hợp của HandLive (`n_s`, PIN, `ya`, `yb` cố định → `g`, `Ya`,
+  `Yb`, `K`, `ISK`, `K_bt_pinlink`, `K_bt_pin`), PIN có số 0 đầu, và các trường hợp âm (`Ya` bậc thấp, `K` toàn số 0,
+  PIN sai ở một bên).
 
 ### 0.6.2 Ghép nối
 
@@ -306,6 +610,10 @@ Bên nhận bỏ khung có `seq` ≤ `seq` lớn nhất đã nhận (chống ph�
   SHA-256(`device_id` nhỏ hơn ‖ `device_id` lớn hơn, dạng 16 byte), info = `"handlive/v1/pair"`, L =
   32).
 - Với PIN (dự phòng): thay `pairing_secret` bằng `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖ `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32); PIN là byte UTF-8 của đúng 6 chữ số (giữ số 0 đầu), Argon2 phiên bản 0x13, không có secret và dữ liệu phụ.
+- Qua Bluetooth bằng PIN (luồng C của PAIR-01): thay `pairing_secret` bằng `K_bt_pin` (0.4.5, từ CPace) thay vì
+  `K_pin` Argon2id; phần còn lại không đổi.
+- Qua Bluetooth (luồng B của PAIR-01, QR): `K_pa`, `PRK` và `attestation` tính đúng như trên; không có kết nối
+  TLS, nên client ghim `tls_sha256` được `mac` của offer bảo vệ, như khi đi qua relay.
 - Chuỗi đưa vào MAC, chữ ký hoặc hash (tên thiết bị…) là byte UTF-8 nguyên văn, không chuẩn hóa Unicode (NFC/NFD).
 - Bản chứng thực ghép nối (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
@@ -344,7 +652,7 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
    chuyển sau khi gửi xong; khóa cũ giữ thêm 30 s cho envelope đang bay.
 7. **Khóa kênh stream** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info =
    `"handlive/v1/stream/" ‖ <kênh> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth` (32) ‖ `k_c2s` (32) ‖
-   `k_s2c` (32). Tin đầu tiên trên kênh stream là envelope `camera` /`call_audio` op `stream_hello`
+   `k_s2c` (32). Tin đầu tiên trên kênh stream là envelope `camera` /`call_audio` /`bulk` op `stream_hello`
    `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖ `session_id` ‖
    `nonce_c`); S trả `stream_welcome` `{session_id, nonce, mac}` với `mac` = HMAC-SHA256(`k_auth`,
    `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — gắn cả hai nonce nên không phát
@@ -357,7 +665,7 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
    - HKDF không ghi salt thì salt rỗng; không ghi L thì L = 32 (vd. `K_auth`).
    - Salt của `PRK`: hai `device_id` so theo 16 byte, thứ tự byte không dấu.
    - `info` của `K_stream`: UTF-8 `"handlive/v1/stream/<kênh>/<session_id 36 ký tự chữ thường>"`,
-     `<kênh>` ∈ {`camera`, `call-audio` }. `K_stream` luôn dẫn từ `secret` của bắt tay đầu (epoch 0)
+     `<kênh>` ∈ {`camera`, `call-audio`, `bulk` } (`bulk` sau đó dẫn thêm khóa theo kết nối, 0.4.7). `K_stream` luôn dẫn từ `secret` của bắt tay đầu (epoch 0)
      trong suốt kết nối, kể cả sau rekey.
    - Rekey: shared = X25519(eph bên khởi tạo, eph bên nhận); salt = SHA-256(`nonce` bên khởi tạo ‖
      `nonce` bên nhận); 64 byte kết quả chia `k_c2s` ‖ `k_s2c` theo vai C/S (không theo bên khởi
@@ -397,7 +705,7 @@ C = Mac/iOS, S = Android. Hai envelope đầu có payload chưa mã hóa (0.5.1)
 
 `type` giữ đúng tập đã chốt (`clipboard | sms | call_event | call_audio | pair | ack | ping |
 capability`) và bổ sung `session`, `camera` cho bắt tay phiên và Phase 5, và `web` cho Duyệt web
-tiếp (Phase 6, README §5 C21).
+tiếp (Phase 6, README §5 C21), và `direct` cho kênh Wi-Fi Direct mở khi cần cùng `bulk` cho bắt tay stream của nó (Phase 7, 0.4.6, 0.4.7).
 
 | type | op | Chiều | Ack | Kênh | Chức năng |
 |------|----|-------|-----|------|-----------|
@@ -414,7 +722,7 @@ tiếp (Phase 6, README §5 C21).
 | `session` | `bye` | Hai chiều | — | `/v1/ctl` | CONN-02, PAIR-03 |
 | `capability` | `hello` | Hai chiều | — | `/v1/ctl` | CONN-01 |
 | `capability` | `update` | Hai chiều | — | `/v1/ctl` | SET-02 |
-| `ping` | `ping` | Hai chiều | Có | `/v1/ctl` qua relay | CONN-02 |
+| `ping` | `ping` | Hai chiều | Có | `/v1/ctl` qua relay hoặc Bluetooth | CONN-02 |
 | `clipboard` | `push` | Hai chiều | Có | `/v1/ctl` | CLIP-01…04 |
 | `clipboard` | `chunk` | Hai chiều | — | `/v1/ctl` | CLIP-03, CLIP-04 |
 | `clipboard` | `cancel` | Hai chiều | — | `/v1/ctl` | CLIP-03 |
@@ -442,8 +750,12 @@ tiếp (Phase 6, README §5 C21).
 | `camera` | `stats` | C→S | — | `/v1/ctl` | CAM-05 |
 | `camera` | `state` | S→C | — | `/v1/ctl` | CAM-02, CAM-05 |
 | `camera` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/camera` | CAM-02, CAM-04 |
+| `bulk` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/bulk` | 0.4.7, CLIP-03 |
 | `web` | `active` | Hai chiều (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, trang đang mở trong trình duyệt ở foreground của bên gửi; bản mới nhất thắng, gửi không chờ phản hồi như `call_event/state` |
 | `web` | `inactive` | Hai chiều (như `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, trang không còn mở ở foreground |
+| `direct` | `start` | C→S | Có (kèm dữ liệu) | `/v1/ctl` qua Bluetooth | CONN-06: nhờ điện thoại tạo group Wi-Fi Direct; `ack` mang `{ssid, passphrase, host, port}` |
+| `direct` | `stop` | Hai chiều | Có | `/v1/ctl` qua Bluetooth | CONN-06: `{reason}`, group không còn cần hoặc đã mất |
+| `direct` | `want` | S→C | — | `/v1/ctl` qua Bluetooth | CONN-06: `{bytes}`, điện thoại có bulk đang chờ gửi sang Mac |
 | `ack` | — | Hai chiều | — | Mọi kênh | Phản hồi |
 
 Quy tắc payload của `call_event/app_call` (đặc tả đầy đủ ở CALL-05 API 1): `{call_id, app: {package,
@@ -583,8 +895,8 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `PAIRING_CLOSED` | Ghép nối | Hết cửa sổ 120 s hoặc Mac đã làm mới QR | Quét QR mới (luồng PIN: lấy mã PIN mới) |
 | `PIN_INVALID` | Ghép nối | PIN sai (tối đa 3 lần) | Nhập lại; quá 3 lần Mac sinh PIN mới |
 | `AUTH_FAILED` | Phiên | HMAC hoặc chữ ký sai | Không thử lại tự động |
-| `PAIR_UNKNOWN` | Phiên | Không có cặp tương ứng | Trong LAN (TLS ghim tới điện thoại): xóa cặp cục bộ, yêu cầu ghép nối lại. Qua relay, trước khi xác thực: `Backoff`, không bao giờ hủy cặp (CONN-03 E9) |
-| `PAIR_REVOKED` | Phiên | Cặp đã bị thu hồi | Trong LAN: xóa cặp cục bộ. Qua relay, trước khi xác thực: `Backoff`, không bao giờ hủy cặp (CONN-03 E9) |
+| `PAIR_UNKNOWN` | Phiên | Không có cặp tương ứng | Trên route có `phoneAuthenticatedByTLS` (LAN, USB: TLS ghim tới điện thoại): xóa cặp cục bộ, yêu cầu ghép nối lại. Trên route khác (relay, Bluetooth), trước khi xác thực: `Backoff`, không bao giờ hủy cặp (0.11, CONN-03 E9, CONN-05 E5) |
+| `PAIR_REVOKED` | Phiên | Cặp đã bị thu hồi | Trên route có `phoneAuthenticatedByTLS`: xóa cặp cục bộ. Trên route khác, trước khi xác thực: `Backoff`, không bao giờ hủy cặp (0.11, CONN-03 E9, CONN-05 E5) |
 | `DECRYPT_FAILED` | Phiên | Không giải mã được envelope | Đóng phiên, kết nối lại |
 | `TLS_PIN_MISMATCH` | Phiên | Chứng chỉ không khớp ghim | Bỏ instance này, thử instance khác |
 | `CLIP_TOO_LARGE` | Clipboard | Vượt `max_text_bytes`/`max_image_bytes` | Báo người dùng |
@@ -614,11 +926,12 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | `CAM_DENIED_BY_USER` | Camera | Người dùng từ chối trên điện thoại | Dừng |
 | `CAM_ENCODER_UNSUPPORTED` | Camera | Không có bộ mã hóa H.264 phù hợp | Giảm độ phân giải hoặc dừng |
 | `CAM_THERMAL_LIMIT` | Camera | Máy quá nóng | Giảm chất lượng hoặc dừng |
-| `CAM_TRANSPORT_UNSUPPORTED` | Camera | Phiên `/v1/ctl` đang đi qua relay; camera chỉ chạy qua LAN hoặc USB | Hiển thị "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" |
+| `CAM_TRANSPORT_UNSUPPORTED` | Camera | Phiên `/v1/ctl` đang đi qua relay hoặc Bluetooth; camera chỉ chạy qua LAN hoặc USB | Hiển thị "Cần cùng mạng Wi-Fi hoặc cắm cáp USB" |
 | `USB_ADB_UNAUTHORIZED` | USB | Điện thoại chưa cho phép gỡ lỗi USB | Hướng dẫn chấp nhận hộp thoại RSA |
 | `USB_ADB_UNAVAILABLE` | USB | Chưa bật gỡ lỗi USB hoặc không có adb | Mở wizard (CAM-04) |
 | `MAC_EXTENSION_NOT_ACTIVE` | Camera | Camera Extension chưa được kích hoạt | Mở CAM-01 |
 | `MAC_MIC_DRIVER_MISSING` | Camera | Chưa cài driver micro ảo | Mở CAM-01 |
+| `DIRECT_WIFI_UNAVAILABLE` | Link | Điện thoại không tạo được group Wi-Fi Direct; `details.reason` ∈ {`wifi_off`, `location_off`, `p2p_unsupported`, `busy`, `error`} | Gửi qua Bluetooth ở nền; không gửi `direct/start` mới trước `DIRECT_WIFI_RETRY_AFTER` (CONN-06 E3) |
 
 ### 0.8.2 Mã lỗi relay (HTTP)
 
@@ -653,6 +966,14 @@ log, không hiển thị cho người dùng; giao diện chọn câu chữ theo 
 | 4426 | `UNSUPPORTED_VERSION` |
 | 4429 | `RATE_LIMITED` — trên `/v1/ctl`: quá 16 kết nối chưa bắt tay hoặc quá 4 kết nối từ một IP, hoặc IP bị chặn 5 phút (sai `mac`, hoặc lỗi trước bắt tay lặp lại, CONN-01 API 3, API 4); trên `/v1/pair`: quá 4 kết nối hoặc quá 2 kết nối từ một IP (PAIR-01 API 2) |
 | 4500 | `INTERNAL` |
+
+### 0.8.4 Mã lỗi kênh Bluetooth
+
+Kênh Bluetooth không có close code (0.4.5); lỗi trước xác thực duy nhất của nó là một bản ghi.
+
+| Mã | Ý nghĩa | Cách client xử lý |
+|----|---------|----------------|
+| `LINK_REJECTED` | Bản ghi `reject` trên kênh Bluetooth trước khi bắt tay bảo mật link xong: vượt giới hạn tiếp nhận, hết giờ, bộ lắng nghe đang chặn hoặc xác nhận khóa thất bại, không bao giờ nói là cái nào (0.4.5) | `Backoff` thường; không bao giờ hủy cặp, không bao giờ ngừng kết nối lại (0.11, CONN-05 E4) |
 
 ## 0.9 Mô hình dữ liệu
 
@@ -919,6 +1240,9 @@ SET-02 quản lý các khóa này.
 | `call_audio.phone_bt_address` | string | rỗng | Mac | Địa chỉ Bluetooth của điện thoại người dùng chọn cho HFP |
 | `feature.camera` | bool | `false` | Android, Mac | Bật sau CAM-01 |
 | `relay.enabled` | bool | `true` | Tất cả | Cho phép dùng relay khi ngoài LAN |
+| `link.bluetooth` | bool | `true` | Android, Mac | Kênh điều khiển Bluetooth (0.4.5, CONN-05); tắt → không quảng bá, không quét, phiên Bluetooth kết thúc |
+| `link.bt_enable_asked_at` | timestamp | rỗng | Android | Lần gần nhất tự xin bật Bluetooth (SET-01 API 10); lần sau chờ `BT_ENABLE_PROMPT_INTERVAL` |
+| `link.direct_wifi` | bool | `true` | Android, Mac | Kênh Wi-Fi Direct mở khi cần cho bulk (0.4.6, CONN-06); tắt → ảnh khi không có LAN chỉ đi Bluetooth |
 | `clip.auto_send` | bool | `true` | Android | Tự gửi khi sao chép (cần Accessibility, D4) |
 | `clip.a11y_consent_at` | timestamp | rỗng | Android | Thời điểm người dùng đồng ý công bố dùng Accessibility |
 | `clip.send_images` | bool | `true` | Tất cả | Đồng bộ ảnh |
@@ -949,7 +1273,7 @@ SET-02 quản lý các khóa này.
 |------|---------|---------|
 | `CTL_PORT` | 47800 (dự phòng 47801–47809) |  |
 | `PAIRING_WINDOW` | 120 s | Hạn QR/PIN và cửa sổ `/v1/pair` |
-| `PIN_MAX_ATTEMPTS` | 3 | Điện thoại gửi tối đa 3 `pair/offer` cho mỗi PIN; sau lần thứ ba không có `pair/done` thì cửa sổ đóng như "PIN hết hạn" (PAIR-01 A4) |
+| `PIN_MAX_ATTEMPTS` | 3 | Số lần thử thất bại cho mỗi cửa sổ PIN, đếm chung một lần cho LAN và Bluetooth: `pair/offer` không có `pair/done` cộng các kênh Bluetooth thất bại sau `cpace1`; tới lần thứ ba thì cửa sổ đóng như "PIN hết hạn" (PAIR-01 A4, C3) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `CTL_PREAUTH_LIMIT` | 16 kết nối chưa bắt tay, tối đa 4 mỗi IP | `/v1/ctl`; vượt → 4429 (CONN-01 API 3) |
 | `CTL_IP_BLOCK` | 10 lỗi trước bắt tay (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) trong 5 phút → chặn IP 5 phút; chỉ tính lỗi xảy ra trước khi một `session/hello` qua được kiểm tra `mac`, và một phiên thiết lập thành công xóa bộ đếm của địa chỉ đó | Bên cạnh quy tắc `AUTH_FAILED` (5/phút); bị chặn → 4429 (CONN-01 API 4) |
@@ -1018,13 +1342,38 @@ SET-02 quản lý các khóa này.
 | `WEB_PAGE_TTL` | 10 phút | Bên nhận quên trang sau chừng này không có `web/active` mới (WEB-02, WEB-04, WEB-05) |
 | `WEB_URL_MAX` | 8 KiB (UTF-8) | URL dài hơn không được gửi và bị bên nhận bỏ |
 | `WEB_TITLE_MAX` | 256 ký tự | Bên gửi cắt tiêu đề dài hơn; bên nhận bỏ tiêu đề dài hơn |
+| `BT_SERVICE_UUID` | `3b3a01f9-ab27-44a8-bb68-b9b11a488bdb` (128-bit, tự sinh) | `0xFEED` 16-bit của probe G7 chỉ dùng cho spike, bản thật không bao giờ được dùng: SIG đã cấp nó cho công ty khác (0.4.5) |
+| `BT_ADV_MAX_HINTS` | 2 | Giữ scan response ≤ 31 byte (0.4.5) |
+| `BT_HINT_PERIOD` | 15 phút (900 000 ms) | Hint, PSM và advertising set xoay cùng lúc; client kiểm các epoch từ e − 4 tới e + 4 |
+| `BT_PREAUTH_RECORD_MAX` | 64 byte | Bản ghi pre-auth lớn nhất (`rlen`) |
+| `BT_RECORD_MAX` | 4 112 byte | Bản ghi transport lớn nhất (`rlen`): 4 096 byte plaintext đã đệm + tag 16 byte; `rlen` hợp lệ chỉ có 272, 1 040 và 4 112 |
+| `BT_FRAGMENT_MAX` | 4 092 byte | `dlen` của một mảnh; cũng là cỡ envelope lớn nhất trên làn ngắn của kênh điều khiển (0.4.5) |
+| `BT_MESSAGE_MAX` | 256 KiB | Message của làn dài kênh điều khiển sau khi ráp, đúng giới hạn envelope của 0.5.1 luật 4 |
+| `BT_LINK_REKEY_RECORDS` | 65 536 bản ghi mỗi chiều | Noise `Rekey()` trên link |
+| `BT_LINK_LIMIT` / `BT_PREAUTH_LIMIT` | 4 link / 1 link | Tiếp nhận ở A-SVC (0.4.5) |
+| `BT_PREAUTH_TIMEOUT` | 7 s | Từ `challenge` tới bản ghi transport hợp lệ đầu tiên; hai lượt đi về ở RTT p95 Doze ≤ 3 s (sếp chốt 2026-10-28) = 6 s + 1 s biên độ |
+| `BT_AUTH_FAIL_BLOCK` | 5 `AUTH_FAILED` trong 1 phút → từ chối mọi kênh mới trong 1 phút | Đếm cho cả bộ lắng nghe Bluetooth (0.4.5) |
+| `BT_PING_INTERVAL` / `BT_IDLE_TIMEOUT` | 30 s / 45 s | Cùng giá trị với ping E2E qua relay và close code 4411 |
+| `BT_ENABLE_PROMPT_INTERVAL` | 24 h | Mỗi khoảng này tự xin bật Bluetooth tối đa một lần (AC7, SET-01 API 10) |
+| `BT_PIN_HINT` | `00 00 00 00` | Hint được quảng bá khi đang mở cửa sổ PIN qua Bluetooth (0.4.5 "Chế độ ghép đôi"); giống nhau cho mọi điện thoại |
+| `BT_PIN_LOCKOUT` | 5 phút | Sau khi cửa sổ PIN đóng vì đủ `PIN_MAX_ATTEMPTS` lần thất bại, điện thoại không mở cửa sổ PIN nào, trong LAN hay qua Bluetooth, trong chừng này (PAIR-01 E10) |
+| `DIRECT_WIFI_IDLE_MIN` | 30 s | Wi-Fi của Mac phải không nối mạng nào trong chừng này mới được vào group (AC4; bỏ qua lúc chuyển mạng ngắn) |
+| `DIRECT_WIFI_JOIN_TIMEOUT` | 8 s | Từ lúc gửi `direct/start` tới khi có kết nối TLS đã ghim trên group; chừa chỗ trong ngân sách AC3 (ảnh đầu ở X ≤ 10 s) |
+| `DIRECT_WIFI_LINGER` | 60 s | Chừng này không có dữ liệu bulk → rời và xóa group (giữ group cho các ảnh tiếp theo, AC3) |
+| `DIRECT_WIFI_MAX` | 10 phút | Thời gian sống dài nhất của một group; lần truyền sau mở group mới với thông tin vào mạng mới (AC4) |
+| `DIRECT_WIFI_SCAN_INTERVAL` | 30 s | Chu kỳ quét trên Mac khi đang ở group, để rời ngay khi thấy một mạng đã biết (AC4) |
+| `DIRECT_WIFI_RETRY_AFTER` | 5 phút | Trong chừng này không gửi `direct/start` mới sau một lần thử thất bại (`ack` lỗi, hết giờ vào mạng, lệch ghim) |
+| `BULK_DIRECT_MIN` | 128 KiB | Qua Bluetooth, lần truyền từ cỡ này trở lên chờ Wi-Fi Direct trước (0.4.7); khoảng 10 s ở tốc độ 12.9 KB/s của G7 |
+| `BT_BULK_FRAGMENT_MAX` | 1 020 byte | `dlen` của một mảnh trên làn dài kênh điều khiển (kênh `0x01`, `long` = 1) và của một mảnh bulk trên kênh `0x02` (vừa bản ghi 1 040 byte, chiếm sóng khoảng 80 ms) |
+| `BT_BULK_INFLIGHT` | 2 bản ghi | Tổng số bản ghi điều khiển dài và bulk đã ghi vào stream L2CAP mà chưa đi hết; giới hạn thời gian một envelope điều khiển ngắn phải chờ (AC1) |
+| `BULK_MAX_RESTARTS` | 2 | Số lần làm lại vì đổi làn cho mỗi clip (0.4.7); sau đó áp dụng CLIP-03 E8 |
 
 ## 0.11 Trạng thái kết nối của client (Mac/iOS)
 
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
-  Idle --> Discovering: có ≥1 cặp và có mạng
+  Idle --> Discovering: có ≥1 cặp và có mạng, hoặc Bluetooth bật và đã cấp quyền
   Discovering --> ConnectingLAN: thấy instance có hint khớp
   ConnectingLAN --> Handshaking: TLS OK và ghim khớp
   ConnectingLAN --> Discovering: TLS_PIN_MISMATCH (bỏ instance)
@@ -1032,9 +1381,13 @@ stateDiagram-v2
   Handshaking --> Backoff: lỗi hoặc 4408
   ConnectingLAN --> Backoff: lỗi mạng hoặc TLS (không phải lệch ghim)
   ConnectingLAN --> Idle: mọi instance của cặp lệch ghim (Cần ghép nối lại)
+  Discovering --> ConnectingBT: thấy quảng bá Bluetooth có hint khớp, không có ứng viên LAN
+  ConnectingBT --> Handshaking: bắt tay bảo mật link OK (0.4.5)
+  Idle --> Handshaking: ghép đôi qua Bluetooth xong bằng pair/done, link được giữ lại (0.4.5 Chế độ ghép đôi, PAIR-01 B4)
+  ConnectingBT --> Backoff: không mở được kênh, reject, BT_PREAUTH_TIMEOUT hoặc bắt tay bảo mật kênh thất bại (noise2, CONN-05 E3)
   ConnectingRelay --> Backoff: relay không tới được, 401 hoặc 404 sau khi đăng ký lại
   WaitingPeer --> Backoff: mất kết nối relay
-  Discovering --> Backoff: quá LAN_DISCOVERY_GRACE và relay.enabled = false
+  Discovering --> Backoff: quá LAN_DISCOVERY_GRACE, relay.enabled = false và không quét Bluetooth
   Discovering --> Idle: hủy cặp cuối cùng
   Backoff --> Idle: hủy cặp cuối cùng
   Discovering --> ConnectingRelay: quá LAN_DISCOVERY_GRACE và relay.enabled
@@ -1043,21 +1396,45 @@ stateDiagram-v2
   WaitingPeer --> Discovering: điện thoại xuất hiện trong LAN (instance mDNS có hint khớp)
   ConnectingRelay --> Handshaking: presence online
   Connected --> Backoff: mất kết nối
-  Connected --> ConnectingLAN: đang qua relay và thấy LAN (nâng cấp)
+  Connected --> ConnectingLAN: đang qua relay hoặc Bluetooth và thấy LAN (nâng cấp)
   Connected --> WaitingPeer: phiên qua relay kết thúc, liên kết relay vẫn còn (điện thoại đã rời, CONN-03 E8)
   Handshaking --> WaitingPeer: bắt tay qua relay kết thúc, liên kết relay vẫn còn (điện thoại đã rời)
-  Backoff --> Discovering: hết thời gian chờ, đổi mạng hoặc điện thoại xuất hiện lại trên mDNS
+  Backoff --> Discovering: hết thời gian chờ, đổi mạng hoặc điện thoại xuất hiện lại trên mDNS hoặc Bluetooth
   Connected --> Idle: hủy ghép nối
 ```
 
 Trạng thái hiển thị cho người dùng (PAIR-02): `Idle` /`Backoff` → "Mất kết nối"; `Discovering`
 /`Connecting*`/`Handshaking` → "Đang kết nối…"; `WaitingPeer` → "Điện thoại ngoại tuyến";
-`Connected` → "Đã kết nối qua Wi-Fi" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh
+`Connected` → "Đã kết nối qua Wi-Fi", "Đã kết nối qua Bluetooth" hoặc "Đã kết nối qua Internet" ("Đã kết nối qua USB" khi kênh
 camera đang dùng USB); mọi instance lệch ghim → "Cần ghép nối lại". Kèm tên thiết bị bên kia (dòng
 trạng thái, câu đọc màn hình của chỉ báo trạng thái): "Đã kết nối qua Wi-Fi với <tên>",
-"Đã kết nối qua Internet với <tên>", "Đã kết nối qua USB với <tên>".
+"Đã kết nối qua Bluetooth với <tên>", "Đã kết nối qua Internet với <tên>", "Đã kết nối qua USB với <tên>". Hai
+chuỗi Bluetooth là khóa catalog mới (S7.1).
 
-Từ mọi trạng thái: mất mạng → `Idle` (CONN-02 E1); hủy cặp cuối cùng → `Idle`. Qua relay, phiên hoặc bước bắt tay kết thúc trong khi liên kết `/v1/relay` vẫn còn nghĩa là điện thoại đã rời (CONN-03 E8): quay về `WaitingPeer`, không về `Backoff`; khi đang ở `WaitingPeer`, thấy instance mDNS có hint khớp thì quay về `Discovering` để mở phiên LAN. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); `4429 RATE_LIMITED` lùi theo lịch backoff thường. `session/error` `PAIR_UNKNOWN` hoặc `PAIR_REVOKED` nhận qua relay, trước khi bước bắt tay xác thực được điện thoại, dẫn đến `Backoff` và không bao giờ hủy cặp (CONN-03 E9); trong LAN (TLS ghim tới điện thoại) vẫn giữ ý nghĩa cũ (CONN-01 E4).
+**Route và thứ tự ưu tiên (P7).** Một phiên chạy trên một route: `lan` (cả `usb`, chỉ cho camera), `relay` hoặc
+`bluetooth` (chỉ Mac, 0.4.5). Ưu tiên: LAN > Bluetooth; Phase 7 không triển khai relay và code relay đứng cuối. Ở
+`Discovering`, client duyệt mDNS khi có mạng và quét `BT_SERVICE_UUID` khi Bluetooth bật, đã cấp quyền Bluetooth và
+`link.bluetooth` bật. Ứng viên LAN luôn được thử trước; ứng viên Bluetooth được nối ngay khi không có ứng viên LAN
+(AC2 tính từ lúc thấy điện thoại). Phiên qua Bluetooth được nâng cấp ngay khi xuất hiện instance mDNS có hint khớp:
+phiên LAN mới thay nó khi đã xác nhận khóa, nên người dùng không thấy khoảng đứt. Group Wi-Fi Direct ở 0.4.6 không bao giờ là
+route: nó chỉ mang stream bulk trong khi phiên vẫn ở Bluetooth.
+
+**Bắt đầu và mất kết nối.** Rời `Idle` cần ≥ 1 cặp và có mạng hoặc Bluetooth bật và đã cấp quyền. Mất mạng chỉ kết
+thúc phiên và lượt thử LAN, relay: phiên qua Bluetooth vẫn `Connected`; không có phiên thì client về `Discovering`
+khi còn dùng được Bluetooth, ngược lại về `Idle` (CONN-02 E1). Tắt Bluetooth, thu hồi quyền Bluetooth hoặc tắt
+`link.bluetooth` chỉ kết thúc phiên và lượt quét Bluetooth, theo cùng quy tắc theo chiều ngược lại. Hủy cặp cuối cùng
+→ `Idle`. iOS không có route Bluetooth nên các quy tắc này đọc như cũ.
+
+**Quy tắc trước xác thực theo route (AC8).** Mỗi route có thuộc tính `phoneAuthenticatedByTLS`: đúng với `lan` và
+`usb` (TLS ghim tới chứng chỉ của điện thoại), sai với `relay` và `bluetooth`. Trước khi bắt tay phiên xác thực được
+điện thoại (`mac` của `session/welcome` hợp lệ), trên route có thuộc tính sai: `session/error` `PAIR_UNKNOWN` hoặc
+`PAIR_REVOKED` → `Backoff`, không bao giờ hủy cặp và không bao giờ ngừng kết nối lại; `UNSUPPORTED_VERSION` hoặc
+`AUTH_FAILED` vẫn hiện thông báo (CONN-01 E3, E5) nhưng giữ lịch backoff thường thay vì dừng hay chờ 5 phút;
+`reject` (`LINK_REJECTED`) hoặc kênh bị đóng giữa bắt tay bảo mật link → `Backoff` thường. Trên route có thuộc tính
+đúng, CONN-01 E3–E5 giữ nguyên ý nghĩa. Việc thu hồi chỉ được thực hiện qua route có thuộc tính đúng hoặc qua bản
+tuyên bố có chữ ký (PAIR-03).
+
+Qua relay, phiên hoặc bước bắt tay kết thúc trong khi liên kết `/v1/relay` vẫn còn nghĩa là điện thoại đã rời (CONN-03 E8): quay về `WaitingPeer`, không về `Backoff`; khi đang ở `WaitingPeer`, thấy instance mDNS có hint khớp thì quay về `Discovering` để mở phiên LAN. Trong `Backoff`, thấy lại instance có hint khớp trên mDNS thì dừng chờ (trừ sau `AUTH_FAILED`); Thấy quảng bá Bluetooth có hint khớp cũng dừng chờ như vậy. `4429 RATE_LIMITED` lùi theo lịch backoff thường.
 
 ## 0.12 Bản địa hóa và catalog chuỗi giao diện
 

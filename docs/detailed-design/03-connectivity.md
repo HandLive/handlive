@@ -17,7 +17,7 @@ English | [Tiếng Việt](03-connectivity.vi.md)
 | Actors | Primary: System (M-APP / I-APP, A-SVC). The user acts indirectly (opening the app, turning on Wi-Fi, opening the lid) or clicks "Reconnect Now". |
 | Preconditions | 1. There is a valid pair (PAIR-01).<br>2. A-SVC is running as a foreground service.<br>3. Both devices are on the same LAN and the network allows mDNS multicast.<br>4. The client has been granted the local network permission (iOS 14+, macOS 15+) per SET-03. |
 | Postconditions | **Success:** state `Connected` (LAN); session keys ready; the peer's capability stored in `features_json`; `last_seen_at`, `last_host`, `last_port` updated; the effective features turned on; the Android foreground service notification reads "Connected to \<name>".<br>**Failure:** move to CONN-03 after `LAN_DISCOVERY_GRACE` (if the relay is on) or to `Backoff` (CONN-02). |
-| Exceptions | E1 — No instance with a matching hint within 10 s → CONN-03 (relay on) or keep browsing.<br>E2 — `TLS_PIN_MISMATCH`: drop this instance (it may be another device or an impostor) and try the next instance; if every instance of the pair fails the pin (the phone has regenerated its TLS key, 0.6.1) → stop trying and show "Needs to be paired again" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → report "Couldn't verify the phone", long 5-minute backoff, no continuous retries.<br>E4 — `PAIR_UNKNOWN` or `PAIR_REVOKED` (4403) on the LAN (pinned TLS to the phone) → clean up the pair per PAIR-03 flow B, ask to pair again. Over the relay the same codes only lead to `Backoff` (CONN-03 E9).<br>E5 — 4426 `UNSUPPORTED_VERSION` → prompt to update the app on the older device.<br>E6 — Handshake longer than 5 s (4408) → CONN-02 backoff.<br>E7 — The network isolates clients (guest Wi-Fi, mDNS blocked) → same as E1.<br>E8 — Local network permission denied → report it and open the SET-03 guidance. |
+| Exceptions | E1 — No instance with a matching hint within 10 s → CONN-03 (relay on) or keep browsing.<br>E2 — `TLS_PIN_MISMATCH`: drop this instance (it may be another device or an impostor) and try the next instance; if every instance of the pair fails the pin (the phone has regenerated its TLS key, 0.6.1) → stop trying and show "Needs to be paired again" (PAIR-02).<br>E3 — `session/error AUTH_FAILED` → report "Couldn't verify the phone", long 5-minute backoff, no continuous retries.<br>E4 — `PAIR_UNKNOWN` or `PAIR_REVOKED` (4403) before the phone is authenticated: on a route where `phoneAuthenticatedByTLS` is true (LAN, USB: pinned TLS to the phone) → clean up the pair per PAIR-03 flow B, ask to pair again. On a route where it is false (relay, Bluetooth) the same codes only lead to `Backoff` (0.11, CONN-03 E9, CONN-05 E5).<br>E5 — 4426 `UNSUPPORTED_VERSION` → prompt to update the app on the older device.<br>E6 — Handshake longer than 5 s (4408) → CONN-02 backoff.<br>E7 — The network isolates clients (guest Wi-Fi, mDNS blocked) → same as E1.<br>E8 — Local network permission denied → report it and open the SET-03 guidance. |
 | Special requirements | **Performance:** reconnect < 3 s when `last_host` is known (a project success metric); handshake ≤ 300 ms on the LAN.<br>**Security:** TLS 1.3 only; pin the certificate's SHA-256, no hostname check; the mDNS TXT contains no static identifier (0.4.1).<br>**Platform:** iOS/macOS declare `NSLocalNetworkUsageDescription` and `NSBonjourServices = ["_handlive._tcp"]`; Android runs A-SVC with type `connectedDevice` (permissions `FOREGROUND_SERVICE_CONNECTED_DEVICE` + `CHANGE_NETWORK_STATE`) with an ongoing notification.<br>**Feature independence:** capabilities decide each feature; a feature that lacks a permission does not block the other features. |
 
 ### 3.1.2 Screens
@@ -288,7 +288,7 @@ WHERE revoked_at IS NULL;
 | Actors | Primary: System (M-APP / I-APP, A-SVC). The user can click "Reconnect Now". |
 | Preconditions | There has been a session (`Connected`) before, or the client is in `Backoff`/`Discovering`. |
 | Postconditions | The session is kept or re-established; the displayed status matches reality within ≤ 1 s of detection; `sms_outbox` entries still `pending` are resent; SMS-01 and CALL-04 catch up. |
-| Exceptions | E1 — The network is completely lost: go to `Idle`, wait for `NWPathMonitor`/`NetworkCallback` to report a network, no useless backoff.<br>E2 — The Mac goes to sleep: send `session/bye {reason: shutdown}` if there is still time; on wake-up run CONN-01 immediately.<br>E3 — iOS goes to the background (`scenePhase` of the app becomes `.background`; `.inactive` is ignored): I-APP keeps the session for a short grace instead of closing at once. It starts a background task (`beginBackgroundTask`); iOS refuses it → `session/bye {reason: shutdown}` and close at once. Otherwise the session stays open (pings go on) until min(`IOS_BACKGROUND_GRACE`, the background time iOS still gives − 5 s), then `session/bye {reason: shutdown}`, close 1000 and end the task.<br>The grace is one holder of the session; a notification action (SMS-04 step B2, CALL-02 step B2) is another and keeps its own background task as today. I-APP sends `bye` and closes only when no holder is left and the app is not in the foreground. When iOS expires the grace task, the grace releases its hold and ends its task at once without waiting; an action still running keeps the session through its own task. An action after the session has closed connects as before (CONN-01 or CONN-03).<br>Closing and opening run one after the other on one queue (cancelling the timer, the timer firing, `bye`, close, CONN-01). Back in the foreground: the close has not started → cancel the timer, end the task, keep the session (no `bye`, no new CONN-01); `bye` already sent → wait until the close completes, then run CONN-01, so the client never holds two sessions of the same pair (no 4409 against itself).<br>The session drops during the grace → release the grace at once: cancel the timer, end the task, no `bye`, no reconnection in the background.<br>During the grace: an incoming SMS or call shows the notification the user would get through push (CONN-04), posted locally with no new text and with the same content rules as I-NSE (`sms.preview`, locked iPhone, SMS-02 field 2); a `clipboard/push` is written only if `UIPasteboard.changeCount` still equals its reference value, taken when the app went to the background and moved after each write or clear HandLive makes during the grace (CLIP-04 E2, CLIP-05); a successful write is remembered as HandLive's own, a failed write follows the existing error path (`ack` as today).<br>After the grace, while suspended, messages arrive through push (CONN-04).<br>E4 — Rekey without an `ack` within 10 s → close the session, reconnect (a new handshake generates new keys).<br>E5 — `DECRYPT_FAILED` → close 4400, reconnect.<br>E6 — The operating system stops A-SVC (OEM background killing) → the client sees the connection drop; A-SVC `START_STICKY` restarts by itself; SET-01 has already requested the battery optimization exemption.<br>E7 — Closed with 4409 (replaced by a new connection of the same client; over the relay: `session/bye {reason: replaced}`, API 4) → do not reconnect from the old session. |
+| Exceptions | E1 — The network is completely lost: LAN and relay sessions end; go to `Idle`, wait for `NWPathMonitor`/`NetworkCallback` to report a network, no useless backoff. On the Mac with Bluetooth usable, a Bluetooth session stays and the client keeps looking over Bluetooth instead of going to `Idle` (0.11, CONN-05).<br>E2 — The Mac goes to sleep: send `session/bye {reason: shutdown}` if there is still time; on wake-up run CONN-01 immediately.<br>E3 — iOS goes to the background (`scenePhase` of the app becomes `.background`; `.inactive` is ignored): I-APP keeps the session for a short grace instead of closing at once. It starts a background task (`beginBackgroundTask`); iOS refuses it → `session/bye {reason: shutdown}` and close at once. Otherwise the session stays open (pings go on) until min(`IOS_BACKGROUND_GRACE`, the background time iOS still gives − 5 s), then `session/bye {reason: shutdown}`, close 1000 and end the task.<br>The grace is one holder of the session; a notification action (SMS-04 step B2, CALL-02 step B2) is another and keeps its own background task as today. I-APP sends `bye` and closes only when no holder is left and the app is not in the foreground. When iOS expires the grace task, the grace releases its hold and ends its task at once without waiting; an action still running keeps the session through its own task. An action after the session has closed connects as before (CONN-01 or CONN-03).<br>Closing and opening run one after the other on one queue (cancelling the timer, the timer firing, `bye`, close, CONN-01). Back in the foreground: the close has not started → cancel the timer, end the task, keep the session (no `bye`, no new CONN-01); `bye` already sent → wait until the close completes, then run CONN-01, so the client never holds two sessions of the same pair (no 4409 against itself).<br>The session drops during the grace → release the grace at once: cancel the timer, end the task, no `bye`, no reconnection in the background.<br>During the grace: an incoming SMS or call shows the notification the user would get through push (CONN-04), posted locally with no new text and with the same content rules as I-NSE (`sms.preview`, locked iPhone, SMS-02 field 2); a `clipboard/push` is written only if `UIPasteboard.changeCount` still equals its reference value, taken when the app went to the background and moved after each write or clear HandLive makes during the grace (CLIP-04 E2, CLIP-05); a successful write is remembered as HandLive's own, a failed write follows the existing error path (`ack` as today).<br>After the grace, while suspended, messages arrive through push (CONN-04).<br>E4 — Rekey without an `ack` within 10 s → close the session, reconnect (a new handshake generates new keys).<br>E5 — `DECRYPT_FAILED` → close 4400, reconnect.<br>E6 — The operating system stops A-SVC (OEM background killing) → the client sees the connection drop; A-SVC `START_STICKY` restarts by itself; SET-01 has already requested the battery optimization exemption.<br>E7 — Closed with 4409 (replaced by a new connection of the same client; over the relay: `session/bye {reason: replaced}`, API 4) → do not reconnect from the old session. |
 | Special requirements | **Performance:** reconnect < 3 s after the network returns; detect a lost connection in ≤ 25 s (15 s ping + 10 s waiting for the pong).<br>**Battery:** the client pings actively, Android only answers with pongs and closes connections that have been silent for more than 45 s; Android does not keep the relay connection when idle for more than 5 minutes.<br>**Backoff:** 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %, back to the start once a session has stayed connected for 30 s (`RECONNECT_BACKOFF`, 0.10). |
 
 ### 3.2.2 Screens
@@ -454,7 +454,7 @@ SELECT stream, cursor FROM sync_cursor WHERE pair_id = :pair_id;
 | Actors | Primary: System (M-APP / I-APP, A-SVC, R-API, R-KV, R-DB). |
 | Preconditions | 1. There is a valid pair, already registered with the relay or registrable right away (PAIR-01 API 8). 2. `relay.enabled = true` on both devices. 3. Internet access. |
 | Postconditions | **Success:** an E2E session through the relay, status "Connected over the internet"; the data features work as on the LAN (except the camera and call audio — they need proximity).<br>**Phone offline:** state `WaitingPeer` ("Phone offline"), a wake push has been sent. |
-| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin, on any device (Android included) → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` or `PAIR_REVOKED` over the relay, before the handshake authenticated the phone → `Backoff`, never unpair: anyone on the relay path could forge it. A revocation is acted on only through a signed `pair_revoked` (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) or the LAN (CONN-01 E4). A pre-authentication `UNSUPPORTED_VERSION` or `AUTH_FAILED` over the relay still shows its message (CONN-01 E3, E5) but keeps the normal backoff schedule instead of stopping or waiting 5 minutes, so a forged error cannot leave the client idle. |
+| Exceptions | E1 — The relay does not respond or returns 5xx → backoff (CONN-02).<br>E2 — 401 `SIGNATURE_INVALID` or 404 `DEVICE_NOT_FOUND` → register the device again, then retry once.<br>E3 — 410 `DEVICE_REVOKED` → report "This device was removed from the internet service", turn the relay off until the user turns it back on (new registration).<br>E4 — `relay.error NOT_PAIRED` when sending → call `GET /v1/pairs`: revoked → PAIR-03 flow B; not registered → `POST /v1/pairs`, then retry.<br>E5 — The phone does not come online within 60 s of the push → stay in `WaitingPeer`; do not push again more than once per 5 minutes.<br>E6 — 429 `RATE_LIMITED` → wait for `Retry-After`; field 4: "Too many requests. Trying again in {duration}." (`{duration}` = the remaining `Retry-After` wait, formatted by the system).<br>E7 — The relay certificate does not match the pin, on any device (Android included) → do not connect; field 4: "The server's certificate isn't trusted, so HandLive didn't connect over the internet."<br>E8 — `relay.error NOT_CONNECTED` (the peer just left) → back to `WaitingPeer`.<br>E9 — `session/error` `PAIR_UNKNOWN` or `PAIR_REVOKED` over the relay, before the handshake authenticated the phone → `Backoff`, never unpair: the relay route has `phoneAuthenticatedByTLS` = false (0.11), since anyone on the relay path could forge it. A revocation is acted on only through a signed `pair_revoked` (PAIR-03 API 4), `GET /v1/pairs` (PAIR-02) or a route where `phoneAuthenticatedByTLS` is true (CONN-01 E4). A pre-authentication `UNSUPPORTED_VERSION` or `AUTH_FAILED` over the relay still shows its message (CONN-01 E3, E5) but keeps the normal backoff schedule instead of stopping or waiting 5 minutes, so a forged error cannot leave the client idle. The same route rule covers Bluetooth (CONN-05 E5). |
 | Special requirements | **Security:** the relay only sees the wrapper (`to`/`from`, `type`, size, time); it has no E2E key; 15-minute JWT; pinned SPKI of ISRG Root X1/X2 + a backup key.<br>**Resources:** at most 2 MiB/s per pair and direction; envelope ≤ 256 KiB.<br>**Reference performance:** SMS and call notifications through the relay ≤ 1 s when both sides are online.<br>**Operations:** the relay is stateless; presence and routing between instances go through Redis; statistics only per `device_hash`. |
 
 ### 3.3.2 Screens
@@ -977,4 +977,473 @@ LIMIT 20;
 
 -- [Design] Android: clean up pushes that were sent or have expired
 DELETE FROM push_outbox WHERE id = :id OR expires_at <= :now;
+```
+
+---
+
+## 3.5 CONN-05 — Connect over Bluetooth when there is no shared LAN
+
+### 3.5.1 General information
+
+| Item | Content |
+|-----|----------|
+| Name | CONN-05 — Connect over Bluetooth when there is no shared LAN |
+| Description | When the Mac and paired phone are near but share no LAN (offline or different networks), M-APP finds the BLE advertisement, opens an L2CAP channel, runs the link-security handshake (0.4.5), then the session handshake (0.6.3) and capability exchange. The control lane (clipboard, SMS, call info, `ping`) works as on the LAN; the session upgrades to LAN when found (0.11).<br>Runs whenever in `Discovering` with Bluetooth usable (0.11): app launch, wake-up, network lost, Bluetooth toggle, each CONN-02 retry. Mac only; iOS unchanged. Offline first pairing: PAIR-01 flow B. Images (bulk lane): 0.4.7. Images over Wi-Fi Direct: CONN-06. Bluetooth prompts and off request: SET-01, SET-03. |
+| Actors | Primary: System (M-APP, A-SVC). The user acts indirectly (turns Bluetooth on, opens the lid, brings the phone closer). |
+| Preconditions | 1. There is a valid pair (PAIR-01).<br>2. A-SVC runs as a foreground service of type `connectedDevice`.<br>3. Bluetooth is on on both devices; Android 12+ has Nearby devices granted; the Mac has Bluetooth access.<br>4. `link.bluetooth` is on on both devices. |
+| Postconditions | **Success:** state `Connected` on route `bluetooth`; status "Connected via Bluetooth to \<name>"; the peer's capability stored and the effective features on; `last_seen_at` updated (`last_host`, `last_port` untouched); A-SVC no longer advertises this pair's hint while the session lives.<br>**Failure:** `Backoff` (CONN-02), the scan goes on. |
+| Exceptions | E1 — Bluetooth off, Bluetooth access missing or `link.bluetooth` off on the Mac → no scan; without a network the client stays `Idle` and the status line says that Bluetooth is off (wording: SET-03 field 18; the Android request to turn Bluetooth on: SET-01 API 10).<br>E2 — The phone is not seen (out of range, Bluetooth off on the phone, A-SVC stopped) → keep scanning in `Discovering`; no timeout of its own.<br>E3 — `noise2` fails its tag check (a device that copies the advertisement but has no `PRK`) → close the channel, `Backoff`; when several advertisers carry the hint, the next attempt tries another one.<br>E4 — `reject` (`LINK_REJECTED`), or the channel closes during the link-security handshake → `Backoff` on the normal schedule, never unpair (0.11).<br>E5 — `session/error` `PAIR_UNKNOWN`, `PAIR_REVOKED`, `UNSUPPORTED_VERSION` or `AUTH_FAILED` before the phone is authenticated → route rule of 0.11 (`phoneAuthenticatedByTLS` = false): `Backoff`, never unpair, never stop reconnecting; the version and verification messages are still shown (CONN-01 E3, E5).<br>E6 — Bluetooth turned off on the phone, or the phone out of range, during a session → the Mac sees the disconnect (`didDisconnectPeripheral`) → `Backoff`, then `Discovering` once the advertisement is seen again (AC2).<br>E7 — Bluetooth turned back on on the phone → A-SVC rebuilds the L2CAP server and the advertiser on `STATE_ON` (API 6); without this the phone stays invisible until the app restarts.<br>E8 — Malformed record, `rlen` out of bounds, unknown `chan`, a message over `BT_MESSAGE_MAX` or a record that does not decrypt → close the link without an answer; the client counts it as a connection loss (`Backoff`).<br>E9 — No record received for `BT_IDLE_TIMEOUT` → close the link, reconnect.<br>E10 — The LAN appears during a Bluetooth session → upgrade per 0.11; the Bluetooth session receives `session/bye {reason: replaced}` once the LAN session has confirmed its keys.<br>E11 — The network is lost during a Bluetooth session → the session is not affected (0.11). |
+| Special requirements | **Performance** (targets backed by gate G7, `plans/20260925-implementation/reports/phase-07-spike-g7.md`; one-way latency is estimated as RTT/2, the G7 method):<br>1. Text envelope one way, p95 ≤ 200 ms on an idle established link (AC1). G7 Lần 2: p50/p95 91.72/133.97 ms.<br>2. The same ≤ 200 ms while a bulk transfer runs on the link (AC1). G7 missed it with one FIFO stream (p95 4,769.3 ms in Lần 2, 7,768.4 ms in Lần 1), so the control-before-bulk scheduler of 0.4.5 is mandatory; measured in A7.4.<br>3. Phone in Doze, screen off: the link stays up and the accepted latency is `ping` RTT p95 ≤ 3 s (one way ≤ 1.5 s; owner decision of 2026-10-28). G7 Lần 5b: 29/29 pings, 0 `bt_lost` over 15 minutes of forced Doze, RTT p50/p95 232.4/1,328.7 ms. No connection-priority tuning: an L2CAP CoC without GATT has no public API for it (G7 "Yêu cầu phát hiện cho sản phẩm", item 4); a minimal GATT server only to request priority is not built unless T7.1 misses this target.<br>4. Reconnect ≤ 3 s from Bluetooth turned back on on the phone, or the phone seen again, to `Connected` (AC2). G7 Lần 4 (Bluetooth on → L2CAP channel open, without the two handshakes): p50 2,793 ms, max 10,583 ms, n = 3, so the margin is thin and T7.1 measures it again with more rounds.<br>5. Loss detection: the Mac reports `bt_lost` about 0.7 s after Bluetooth turns off on the phone (G7 Lần 3; 67 and 42 ms in Lần 4 rounds 1 and 2).<br>6. Throughput, for information: 12.9 KB/s (G7 Lần 2): enough for the control lane only; images use the bulk lane (0.4.7).<br>**Security:** AC8 — no pre-authentication message over Bluetooth changes pair state, removes a pair or stops reconnecting (0.11, E4, E5). AC9 — nothing static on the air: no name, `pair_id`, `device_id`, key or `pr` in the advertisement; hints rotate every `BT_HINT_PERIOD` together with the PSM and the advertising set; the link-security layer hides every envelope field and padding hides `type` (0.4.5). Every length is checked before allocation (0.4.5). Admission per 0.4.5.<br>**Platform:** Android: API 29+ (L2CAP CoC), `BLUETOOTH_ADVERTISE` and `BLUETOOTH_CONNECT` (Android 12+), A-SVC registers `BluetoothAdapter.ACTION_STATE_CHANGED`. Mac: CoreBluetooth, `NSBluetoothAlwaysUsageDescription`; never starts OS pairing. |
+
+### 3.5.2 Screens
+
+N/A — no approved wireframe yet.
+
+### 3.5.3 Component details
+
+| # | Field | Data type | Input/Output | Initial value | Description |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Status icon (Mac menu bar) | enum{connected\| connecting\| peer_offline\| disconnected} | Output | `connecting` | From 0.11; a Bluetooth session shows `connected` |
+| 2 | Status line | string | Output | "Connecting…" | "Connected via Bluetooth to \<phone name>" (catalog key added in S7.1) |
+| 3 | Route of the session | enum{lan\| relay\| bluetooth\| usb} | Output | Empty | Internal; decides the status wording and the pre-authentication rule (`phoneAuthenticatedByTLS`, 0.11) |
+| 4 | Bluetooth unavailable message | string | Output | Empty | Per E1; wording and button: SET-03 field 18 |
+| 5 | Foreground service notification (Android) | string | Output | "Waiting for a connection" | Unchanged: "Connected to \<client name>" whatever the route |
+
+### 3.5.4 Business flow
+
+```mermaid
+flowchart TB
+  subgraph ND["User"]
+    U1["(1) Devices near each other, Bluetooth on, lid open"]
+    U10["(10) See Connected via Bluetooth"]
+  end
+  subgraph HT["System"]
+    S2["(2) A-SVC advertises rotating hints and the PSM"]
+    S3["(3) M-APP scans BT_SERVICE_UUID and matches a hint"]
+    D4{"(4) LAN candidate found?"}
+    S5["(5) Open the L2CAP channel to the PSM"]
+    S6["(6) challenge, noise1, noise2"]
+    D7{"(7) Link-security handshake OK?"}
+    S8["(8) session/hello and session/welcome inside the link"]
+    S9["(9) capability/hello, save the state, start the syncs"]
+    X1(["Backoff (CONN-02), scan goes on"])
+    X2(["CONN-01 on the LAN"])
+  end
+  U1 --> S2 --> S3 --> D4
+  D4 -- "Yes" --> X2
+  D4 -- "No" --> S5 --> S6 --> D7
+  D7 -- "Yes" --> S8 --> S9 --> U10
+  D7 -- "No (E3, E4)" --> X1
+  S8 -- "session/error (E5)" --> X1
+```
+
+| Step | Actor | Component | Description | Exceptions / Notes |
+|------|----------|-----------|-------|--------------------|
+| 1 | User | — | Brings the devices near each other, turns Bluetooth on, opens the Mac's lid. | The flow also runs by itself from 0.11 and CONN-02. |
+| 2 | System | A-SVC | Advertises per 0.4.5: the hints of the pairs without a live session, the current PSM; hint, PSM and advertising set rotate every `BT_HINT_PERIOD`. | E7. |
+| 3 | System | M-APP | Scans with the `BT_SERVICE_UUID` filter, reads the service data, computes the hints of the epochs e − 4 to e + 4 with `K_bt_disc`; an advertisement with `ver` = `0x01` and a matching hint is a candidate. | E1, E2. |
+| 4 | System | M-APP | Priority LAN > Bluetooth: a LAN candidate (CONN-01 step 3) is tried first; otherwise the Bluetooth candidate is connected at once. |  |
+| 5 | System | M-APP → A-SVC | Connects to the peripheral and opens the L2CAP channel to the advertised PSM; A-SVC applies the admission rules (0.4.5). | Over a cap → `reject` (E4). |
+| 6 | System | Both sides | Link-security handshake, 0.4.5 steps 1–5. | E3, E4. |
+| 7 | System | Both sides | Handshake result: M-APP verified `noise2`, A-SVC decrypted the first transport record. | E3, E4. |
+| 8 | System | Both sides | Session handshake (0.6.3) on control channel `0x01`, exactly as CONN-01 steps 6–8; A-SVC also checks that `pair_id` is the pair bound to the link. | E5. |
+| 9 | System | Both sides | `capability/hello`, effective features, `last_seen_at`; state `Connected` on route `bluetooth`; the syncs start as in CONN-01 step 10. A-SVC drops this pair's hint from the advertisement (stops advertising when no pair is left). | E6, E8–E11. |
+| 10 | User | M-APP | Sees "Connected via Bluetooth" on the Mac and the usual notification on Android. |  |
+
+### 3.5.5 API/service specification
+
+**List of calls**
+
+| # | API/service | Channel | Direction | Used in steps |
+|---|-------------|------|-------|-------------|
+| 1 | BLE advertising `BluetoothLeAdvertiser.startAdvertisingSet` | BLE advertising | Android | 2 |
+| 2 | L2CAP server `BluetoothAdapter.listenUsingInsecureL2capChannel` | L2CAP | Android | 2, 5 |
+| 3 | BLE scan `CBCentralManager.scanForPeripherals` | BLE advertising | Mac | 3 |
+| 4 | Open the channel `CBPeripheral.openL2CAPChannel` | L2CAP | C→S | 5 |
+| 5 | Link-security handshake (records `challenge`, `noise1`, `noise2`, `reject`) | L2CAP | Both ways | 6, 7 |
+| 6 | Bluetooth state `ACTION_STATE_CHANGED` / `centralManagerDidUpdateState` | System | Both sides | E1, E6, E7 |
+| 7 | Control envelopes over the link | Link channel `0x01` | Both ways | 8, 9 |
+
+#### API 1 — BLE advertising (Android)
+
+- **URL:** N/A (BLE advertising channels)
+- **Method:** `BluetoothLeAdvertiser.startAdvertisingSet(parameters, advertiseData, null, null, null, callback)`
+- **Request:**
+
+| Property | Value | Description |
+|-----------|---------|-------|
+| `setLegacyMode` | `true` | 31-byte legacy advertising, seen by every central |
+| `setConnectable` | `true` |  |
+| `setScannable` | `true` | The scan response carries the service data |
+| `setInterval` | `INTERVAL_LOW` | The G7 probe setting behind the AC2 numbers |
+| `setTxPowerLevel` | `TX_POWER_HIGH` | As in the G7 probe |
+| Service UUID | `BT_SERVICE_UUID` | 128-bit, in the advertisement; service data in the scan response |
+| Service data | `ver` ‖ `psm` ‖ `hints` | 0.4.5 |
+| `setIncludeDeviceName`, `setIncludeTxPowerLevel` | `false` | No name, no TX power field |
+
+- **Response:** `AdvertisingSetCallback.onAdvertisingSetStarted(set, txPower, status)`; `status` ≠
+  `ADVERTISE_SUCCESS` → logic 3.
+- **Example** (two pairs, PSM `0x0085`, `U×16` = `BT_SERVICE_UUID` little-endian): advertisement `02 01 06` ·
+  `11 07 U×16` (21 bytes); scan response `1c 21 U×16 01 85 00 1a 2b 3c 4d 77 e0 aa 19` (29 bytes).
+- **Business logic:**
+  1. Restart the set when the pair set, a live session, the `BT_HINT_PERIOD` epoch or the QR pairing window (open or
+     closed, PAIR-01 B1) changes, at most once per
+     second (changes batched).
+  2. At each restart: stop the set, close the server socket (accepted links stay), open a new server socket (API 2),
+     start a new set with its PSM.
+  3. Start failure → retry after 5 s, 30 s, then every 5 minutes, as mDNS (CONN-01 API 1).
+     `ADVERTISE_FAILED_DATA_TOO_LARGE` is a programming error: the S7.1 vectors include the largest advertisement.
+  4. No pair needs Bluetooth and no QR pairing window is open, `link.bluetooth` off or Bluetooth off → stop the set.
+
+#### API 2 — L2CAP server (Android)
+
+- **URL:** N/A (LE dynamic PSM)
+- **Method:** `BluetoothAdapter.listenUsingInsecureL2capChannel()` → `BluetoothServerSocket`; `getPsm()` gives the PSM
+  advertised in API 1; `accept()` on A-SVC's own thread.
+- **Request:** none.
+- **Response:** one `BluetoothSocket` per accepted channel.
+- **Example:** PSM `0x0085` (133), in the advertisement as `85 00`.
+- **Business logic:**
+  1. Each accepted socket goes through the admission of 0.4.5 first, then the link-security handshake (API 5); a
+     confirmed link becomes a `BluetoothPeerSocket` served by the same `/v1/ctl` session logic as LAN and relay peers.
+  2. Closing the server socket at a rotation never closes accepted sockets.
+  3. `accept()` failing because Bluetooth went off ends the loop; API 6 restarts it.
+
+#### API 3 — BLE scan (Mac)
+
+- **URL:** N/A (BLE advertising channels)
+- **Method:** `CBCentralManager.scanForPeripherals(withServices: [CBUUID(BT_SERVICE_UUID)], options: nil)`, as in the
+  G7 probe.
+- **Request:** the service filter only.
+- **Response:** `centralManager(_:didDiscover:advertisementData:rssi:)`; the service data is
+  `advertisementData[CBAdvertisementDataServiceDataKey][CBUUID(BT_SERVICE_UUID)]`.
+- **Example:** service data `01 85 00 1a 2b 3c 4d 77 e0 aa 19` → `ver` 1, PSM 133, two hints.
+- **Business logic:**
+  1. The service data comes from the scan response, which CoreBluetooth merges into `advertisementData`; G7 used no
+     scan response, so M7.1 checks this first on the S25 + Mac. Ignore service data shorter than 3 bytes, with `ver` ≠ `0x01`, or whose length minus 3 is not a multiple of 4.
+  2. Scan while the client is in `Discovering` or `Backoff` and Bluetooth is usable; stop while `Connected` on any
+     route (the LAN upgrade comes from mDNS).
+  3. Several advertisers with the same matching hint (a cloned advertisement) → try them one after the other; only
+     the real phone passes `noise2` (E3).
+
+#### API 4 — Opening the L2CAP channel (Mac)
+
+- **URL:** N/A
+- **Method:** `CBCentralManager.connect(peripheral, options: nil)`, then
+  `CBPeripheral.openL2CAPChannel(psm)` → `peripheral(_:didOpen:error:)` with a `CBL2CAPChannel`.
+- **Request:** the PSM read in API 3.
+- **Response:** `CBL2CAPChannel.inputStream` / `outputStream`, read and written as link records (0.4.5).
+- **Example:** `openL2CAPChannel(0x0085)`.
+- **Business logic:**
+  1. Connect and open must finish within `BT_PREAUTH_TIMEOUT`; otherwise `cancelPeripheralConnection` and
+     `Backoff`.
+  2. The channel never starts OS pairing: no encrypted GATT characteristic is read.
+  3. `didDisconnectPeripheral` during a session → E6.
+
+#### API 5 — Link-security handshake
+
+- **URL:** N/A (records on the L2CAP channel)
+- **Method:** records `challenge` (S→C), `noise1` (C→S), `noise2` (S→C), `reject` (S→C), then the first transport
+  record from C (0.4.5).
+- **Request (`noise1`):** `rlen` = `0x0031` ‖ `0x02` ‖ `e` (32) ‖ tag (16).
+- **Response:** `noise2` (`rlen` = `0x0031` ‖ `0x03` ‖ `e` ‖ tag) or `reject` (`rlen` = `0x0001` ‖ `0x7F`).
+- **Example:** `00 21 01` ‖ 32 random bytes (`challenge`); the S7.1 vectors give full transcripts.
+- **Business logic:**
+  1. Steps 1–6 of the link-security handshake in 0.4.5; A-SVC tries the psk of every unrevoked pair (Query).
+  2. Failures count toward `BT_AUTH_FAIL_BLOCK` as defined in 0.4.5.
+  3. `reject` and a closed channel look the same to the client: E4.
+
+#### API 6 — Bluetooth state
+
+- **URL:** N/A
+- **Method:** Android: a receiver for `BluetoothAdapter.ACTION_STATE_CHANGED` registered by A-SVC for its whole life;
+  Mac: `centralManagerDidUpdateState(_:)`.
+- **Request:** `EXTRA_STATE` (Android); `CBManager.state` (Mac).
+- **Response:** N/A.
+- **Example:** `STATE_TURNING_OFF` → `STATE_OFF` → `STATE_ON`.
+- **Business logic:**
+  1. Android `STATE_TURNING_OFF` or `STATE_OFF`: close every link (the peers see a loss), stop the advertising set.
+  2. Android `STATE_ON`: open a new server socket (new PSM) and start a new advertising set, exactly as when A-SVC
+     starts. G7 found the probe silent after a real off/on cycle until it did this (Lần 3).
+  3. Mac `.poweredOn`: scan per API 3 when the client is in `Discovering` or `Backoff`. `.poweredOff`,
+     `.unauthorized`: end the Bluetooth session and the scan, then follow 0.11.
+
+#### API 7 — Control envelopes over the link
+
+- **URL:** N/A (control channel `0x01` of the link)
+- **Method:** the JSON envelopes of 0.5.1, one per message, fragmented per 0.4.5.
+- **Request:** as on `/v1/ctl`: `session/hello` (CONN-01 API 4), then every envelope of 0.7.1 that uses `/v1/ctl`.
+- **Response:** as on `/v1/ctl`: `session/welcome` or `session/error` (CONN-01 API 5, 6), `ack`.
+- **Example:** see CONN-01 API 4.
+- **Business logic:**
+  1. No WebSocket ping exists on the link: the client sends `ping/ping` every `BT_PING_INTERVAL` without other
+     traffic (CONN-02 API 2).
+  2. The session ends with `session/bye` under the rules of a relayed session (CONN-02 API 4), then the channel
+     closes.
+  3. `camera/start` over Bluetooth gets `CAM_TRANSPORT_UNSUPPORTED`, as over the relay.
+  4. Bulk content and channel `0x02`: 0.4.7 (CLIP-03 messages, fragments of at most `BT_BULK_FRAGMENT_MAX`).
+
+#### Query
+
+```sql
+-- [Design] Android, API 1: pairs whose Bluetooth hints may be advertised (live sessions are filtered in memory)
+SELECT pair_id, prk_enc, last_seen_at
+FROM paired_device
+WHERE revoked_at IS NULL
+ORDER BY last_seen_at DESC;
+
+-- [Design] Android, API 5: candidate psks for noise1
+SELECT pair_id, prk_enc
+FROM paired_device
+WHERE revoked_at IS NULL;
+
+-- [Design] Mac, API 3: pairs whose hints are matched
+SELECT pair_id, peer_device_id, peer_name
+FROM paired_device
+WHERE revoked_at IS NULL;
+
+-- [Design] Both sides, step 9
+UPDATE paired_device
+SET last_seen_at = :now, features_json = :features_json
+WHERE pair_id = :pair_id;
+```
+
+---
+
+## 3.6 CONN-06 — Open a Wi-Fi Direct link for images when there is no shared LAN
+
+### 3.6.1 General information
+
+| Item | Content |
+|-----|----------|
+| Name | CONN-06 — Open a Wi-Fi Direct link for images when there is no shared LAN |
+| Description | While the session runs over Bluetooth (CONN-05) and an image or other bulk transfer is waiting, the Mac asks the phone over the encrypted control lane to create a Wi-Fi Direct group, joins it as a plain Wi-Fi client, connects with the pinned TLS of the LAN, and leaves as soon as the transfers are done (0.4.6). The control lane stays on Bluetooth. Mac only; iOS unchanged. Bulk lane, per-connection keys and restarts: 0.4.7. |
+| Actors | Primary: System (M-APP, A-SVC). The user acts indirectly (copies an image on one device). |
+| Preconditions | 1. `Connected` on route `bluetooth` (CONN-05); no LAN session.<br>2. A bulk transfer is waiting (0.4.7) in either direction.<br>3. Both devices have `link.direct_wifi` on.<br>4. Android: Wi-Fi on, Nearby devices granted (Android 13+) or Location granted with location services on (Android 10–12) (SET-01).<br>5. Mac: Location access granted (SET-03); Wi-Fi powered on and unassociated for ≥ `DIRECT_WIFI_IDLE_MIN`; the last scan shows no known network. |
+| Postconditions | **Success:** the Mac is on the group with a pinned TLS connection to A-SVC; the bulk streams of 0.4.7 run on it; after `DIRECT_WIFI_LINGER` without bulk data, or at `DIRECT_WIFI_MAX`, the Mac leaves, the phone removes the group and both wipe the credentials; the Mac's Wi-Fi is back to unassociated.<br>**Failure:** no group remains; the transfer goes over Bluetooth in the background; no new attempt before `DIRECT_WIFI_RETRY_AFTER`. In every case neither device leaves or changes the network it was on (AC4). |
+| Exceptions | E1 — An entry rule does not hold (the Mac is on a network, a known network is visible, Wi-Fi off, Location missing, `link.direct_wifi` off) → no `direct/start`; Bluetooth in the background.<br>E2 — `ack` with `PERMISSION_MISSING` (Nearby devices or Location missing on the phone) → Bluetooth in the background; A-SVC posts the permission suggestion notification (SET-01 field 17, E14); retry after `DIRECT_WIFI_RETRY_AFTER`.<br>E3 — `ack` with `DIRECT_WIFI_UNAVAILABLE` (`wifi_off`, `location_off`, `p2p_unsupported`, `busy`, `error`) → Bluetooth in the background, retry after `DIRECT_WIFI_RETRY_AFTER`; HandLive never turns Wi-Fi or location services on.<br>E4 — `ack` with `FEATURE_DISABLED` (`link.direct_wifi` off on the phone) or `UNSUPPORTED_TYPE` (an older phone) → no more `direct/start` in this session.<br>E5 — The SSID is not found, `associate` fails or the pinned TLS connection is not up within `DIRECT_WIFI_JOIN_TIMEOUT` → `direct/stop {reason: join_failed}`, disassociate, Bluetooth in the background, retry after `DIRECT_WIFI_RETRY_AFTER`.<br>E6 — The certificate on the group does not match `peer_tls_sha256` (`TLS_PIN_MISMATCH`: another device answers at that address) → close, leave, `direct/stop {reason: join_failed}`; the pair is not touched (AC8).<br>E7 — macOS moves to another network by itself, or a periodic scan shows a known network → leave at once (AC4), `direct/stop {reason: known_network}`; unfinished transfers continue over Bluetooth (0.4.7).<br>E8 — The phone's group disappears (Wi-Fi turned off on the phone, the OS removed it) → A-SVC sends `direct/stop {reason: group_lost}`; the Mac sees the association drop and goes back to Bluetooth.<br>E9 — A LAN session appears → leave the group, `direct/stop {reason: lan}`; bulk moves to the LAN.<br>E10 — The Bluetooth session ends → both sides end the group (the stream keys belong to that session).<br>E11 — A device without the session keys joins the group and connects to A-SVC → `/v1/ctl`, `/v1/pair` and unknown paths are closed with 4400, a failed stream handshake with 4401 (0.4.6). |
+| Special requirements | **Performance:** AC3 — 5 MB image in X: the first ≤ 10 s, joining included (`DIRECT_WIFI_JOIN_TIMEOUT` 8 s leaves about 2 s for the transfer); the next ones ≤ 2 s while the group is open (`DIRECT_WIFI_LINGER`).<br>**Battery:** the group exists only while a transfer is waiting or running, at most `DIRECT_WIFI_MAX`; no group without a reason (AC4).<br>**Security:** credentials new for every group, 144-bit passphrase, sent only inside the E2E control lane, never advertised or logged; pinned TLS and session-keyed stream handshake on the group; the group never becomes a session route (AC8, 0.4.6).<br>**Network invariant (AC4):** the Mac joins only while unassociated and with no known network visible, so it never loses another network; the phone keeps its own Wi-Fi (STA + P2P).<br>**Not yet measured (A7.5/M7.5 check first on the S25 + Mac; G7 did not test Wi-Fi Direct, spike report "Brief items", item 7):** the Mac joining the S25 group from the notarized app with Location granted; join time against `DIRECT_WIFI_JOIN_TIMEOUT` and AC3; reading "associated or idle" and SSIDs on macOS 27 and macOS 13 or 14; whether macOS keeps the joined SSID in its preferred networks and whether the app can remove it without an administrator prompt; STA + P2P concurrency on the S25 while the phone is on its own Wi-Fi; the group owner address the S25 hands out (not always `192.168.49.1`, research section 2). |
+
+### 3.6.2 Screens
+
+N/A — no approved wireframe yet.
+
+### 3.6.3 Component details
+
+| # | Field | Data type | Input/Output | Initial value | Description |
+|---|--------|--------------|--------------|------------------|-------|
+| 1 | Bulk path | enum{lan\| direct_wifi\| bluetooth} | Output | Empty | Internal; chosen per the plan routing table (LAN > Wi-Fi Direct > Bluetooth); no text of its own |
+| 2 | Transfer status (Mac) | string | Output | Empty | Unchanged CLIP-03 wording; no Wi-Fi Direct text, the user does not need to know the path |
+| 3 | Wi-Fi Direct credentials | object{ssid, passphrase, host, port} | Input (Mac), Output (Android) | Empty | Memory only, wiped when the group ends; never logged |
+| 4 | Status line (Mac) | string | Output | "Connected via Bluetooth to \<phone name>" | Unchanged while on the group: the session route is still `bluetooth` (0.4.6) |
+
+### 3.6.4 Business flow
+
+```mermaid
+flowchart TB
+  subgraph ND["User"]
+    U1["(1) Copy an image on one device"]
+    U11["(11) The image arrives on the other device"]
+  end
+  subgraph HT["System"]
+    S2["(2) Bulk transfer waiting on a Bluetooth session, the phone sends direct/want for its own"]
+    D3{"(3) Mac entry rules hold?"}
+    S4["(4) Mac sends direct/start over the control lane"]
+    D5{"(5) Phone can create the group?"}
+    S6["(6) Phone creates the group with new credentials, ack with ssid, passphrase, host, port"]
+    S7["(7) Mac scans for the SSID and joins"]
+    D8{"(8) Pinned TLS up within DIRECT_WIFI_JOIN_TIMEOUT?"}
+    S9["(9) Bulk streams on the group (0.4.7)"]
+    S10["(10) Exit rule hit: leave, direct/stop, remove the group, wipe credentials"]
+    X1(["Bluetooth in the background"])
+  end
+  U1 --> S2 --> D3
+  D3 -- "No (E1)" --> X1
+  D3 -- "Yes" --> S4 --> D5
+  D5 -- "No (E2, E3, E4)" --> X1
+  D5 -- "Yes" --> S6 --> S7 --> D8
+  D8 -- "No (E5, E6)" --> X1
+  D8 -- "Yes" --> S9 --> U11
+  S9 --> S10
+  S10 -- "Transfers left (E7 to E10)" --> X1
+```
+
+| Step | Actor | Component | Description | Exceptions / Notes |
+|------|----------|-----------|-------|--------------------|
+| 1 | User | — | Copies an image (CLIP-03) on the phone or on the Mac while the two share no LAN. | Any other bulk transfer of 0.4.7 starts the same way. |
+| 2 | System | M-APP, A-SVC | The transfer is queued on the bulk lane (0.4.7). A transfer waiting on the phone → A-SVC sends `direct/want {bytes}` (API 3), at most once per waiting transfer. | Until a faster path exists, the transfer may start over Bluetooth in the background (0.4.7). |
+| 3 | System | M-APP | Checks the entry rules of 0.4.6 with API 7: Bluetooth session, no LAN session, `link.direct_wifi`, Location granted, Wi-Fi on and unassociated for ≥ `DIRECT_WIFI_IDLE_MIN`, no known network in the last scan, no failure within `DIRECT_WIFI_RETRY_AFTER`. | Any rule fails → E1. |
+| 4 | System | M-APP → A-SVC | Sends `direct/start` (API 1) and starts `DIRECT_WIFI_JOIN_TIMEOUT`. |  |
+| 5 | System | A-SVC | Checks `link.direct_wifi`, the permissions of SET-01 (API 2 table), Wi-Fi on, location services on (Android 10–12). | E2, E3, E4. |
+| 6 | System | A-SVC | Generates `ssid` and `passphrase` (0.4.6), calls `createGroup` (API 4), reads the group owner address from `WifiP2pInfo.groupOwnerAddress` and answers the `ack` with `{ssid, passphrase, host, port}`. Starts its own `DIRECT_WIFI_JOIN_TIMEOUT`, `DIRECT_WIFI_LINGER` and `DIRECT_WIFI_MAX` counters. | `createGroup` fails → `DIRECT_WIFI_UNAVAILABLE` (E3). |
+| 7 | System | M-APP | Scans for the received SSID and associates with the passphrase (API 5). | E5. |
+| 8 | System | M-APP → A-SVC | Opens TLS to `host`:`port` on the Wi-Fi interface and checks the pin (API 6); success within `DIRECT_WIFI_JOIN_TIMEOUT` means joined. | E5, E6. |
+| 9 | System | Both sides | The bulk streams of 0.4.7 run over the group; further images reuse it while it is open. A-SVC accepts only the bulk stream path on the group owner address. | E11. |
+| 10 | System | Both sides | An exit rule of 0.4.6 holds (linger, max, known network, LAN, Bluetooth lost): the Mac disassociates and removes the saved network when it can (API 5), sends `direct/stop` (API 2); A-SVC calls `removeGroup`; both wipe the credentials. | E7–E10. |
+| 11 | User | M-APP / A-UI | The image is available on the other device (CLIP-03). |  |
+
+### 3.6.5 API/service specification
+
+**List of calls**
+
+| # | API/service | Channel | Direction | Used in steps |
+|---|-------------|------|-------|-------------|
+| 1 | `WS direct/start` | Link channel `0x01` (Bluetooth) | C→S | 4, 5, 6 |
+| 2 | `WS direct/stop` | Link channel `0x01` (Bluetooth) | Both ways | 10, E5–E10 |
+| 3 | `WS direct/want` | Link channel `0x01` (Bluetooth) | S→C | 2 |
+| 4 | Wi-Fi Direct group `WifiP2pManager.createGroup` / `removeGroup` | Local (Android) | — | 6, 10 |
+| 5 | Join and leave with CoreWLAN `CWInterface.scanForNetworks` / `associate` / `disassociate` | Wi-Fi (Mac) | — | 7, 10 |
+| 6 | Pinned TLS connection on the group | TCP/TLS on the group | C→S | 8, 9 |
+| 7 | Mac Wi-Fi state: `CWWiFiClient` events, `NWPathMonitor(requiredInterfaceType: .wifi)` | Local (Mac) | — | 3, 9, E7 |
+
+#### API 1 — `WS direct/start`
+
+- **URL:** N/A (control channel `0x01` of the Bluetooth link, 0.4.5)
+- **Method:** `WS direct/start` (C→S), encrypted envelope (0.5.1); the response is an `ack` with data.
+- **Request (`data`):**
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `reason` | enum{bulk} | Yes | Why a group is needed; only `bulk` in this version |
+
+- **Response (`ack.data`):**
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `ssid` | string(32) | Yes | `"DIRECT-"` ‖ 10 random characters from `[A-Za-z0-9]` (0.4.6) |
+| `passphrase` | string(24) | Yes | base64url without padding of 18 random bytes |
+| `host` | string | Yes | The group owner's IPv4 address (`WifiP2pInfo.groupOwnerAddress`), dotted decimal |
+| `port` | int32 | Yes | The port A-SVC listens on (`CTL_PORT` or the fallback in use) |
+
+  Errors: `PERMISSION_MISSING` (`details.permission`), `DIRECT_WIFI_UNAVAILABLE` (`details.reason`), `FEATURE_DISABLED`,
+  `RATE_LIMITED` (a group already exists for another pair).
+- **Example:**
+
+```json
+{"op":"start","data":{"reason":"bulk"}}
+{"re":"0192f3c1-7c1e-7a55-9d0b-3f4c2a1b9e10","ok":true,"data":{"ssid":"DIRECT-q7Lm2Xc9Ta","passphrase":"3vQ8kN0pR2sT4uW6xY8zA1bC","host":"192.168.49.1","port":47800}}
+```
+
+- **Business logic:**
+  1. Accepted only on a Bluetooth session; over a LAN session → `BAD_REQUEST` (bulk uses the LAN).
+  2. One group at a time on the phone: a `direct/start` while this pair's group exists returns the same credentials;
+     for another pair → `RATE_LIMITED` with `details.retry_after_ms` = the time left on that group.
+  3. The `ack` is sent only after `onGroupInfoAvailable` reports the group with the requested SSID, so the Mac never
+     scans before the group exists.
+  4. The `ack` payload is personal data in the sense of 0.5.1 rule 5: never logged, not even its size.
+
+#### API 2 — `WS direct/stop`
+
+- **URL:** N/A (control channel `0x01` of the Bluetooth link)
+- **Method:** `WS direct/stop` (both ways), encrypted envelope; answered with an `ack` without data.
+- **Request (`data`):**
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `reason` | enum{idle\| max\| known_network\| lan\| join_failed\| group_lost} | Yes | `idle` after `DIRECT_WIFI_LINGER`, `max` at `DIRECT_WIFI_MAX`, others per E5–E9 |
+
+- **Response:** `ack` (`ok: true`).
+- **Example:** `{"op":"stop","data":{"reason":"idle"}}`
+- **Business logic:**
+  1. Idempotent: a `stop` for a group that no longer exists is acknowledged with `ok: true`.
+  2. The sender has already left (Mac) or removed the group (phone) before sending; the receiver does the same
+     without waiting for anything else.
+  3. `join_failed` starts `DIRECT_WIFI_RETRY_AFTER` on the Mac; the other reasons do not.
+
+#### API 3 — `WS direct/want`
+
+- **URL:** N/A (control channel `0x01` of the Bluetooth link)
+- **Method:** `WS direct/want` (S→C), encrypted event, no `ack`.
+- **Request (`data`):**
+
+| Field | Type | Required | Description |
+|--------|------|----------|-------|
+| `bytes` | int64 | Yes | Total size of the bulk waiting on the phone, for the Mac's decision only |
+
+- **Response:** N/A; the Mac answers, when the entry rules hold, with `direct/start` (API 1).
+- **Example:** `{"op":"want","data":{"bytes":5242880}}`
+- **Business logic:**
+  1. Sent once per waiting transfer, and not while this pair's group exists.
+  2. The Mac decides alone (AC4 depends on the Mac's Wi-Fi state); the phone never creates a group without
+     `direct/start`.
+
+#### API 4 — Wi-Fi Direct group (Android)
+
+- **URL:** N/A
+- **Method:** `WifiP2pManager.initialize(context, looper, listener)` → `Channel`;
+  `createGroup(channel, config, actionListener)`; `requestGroupInfo(channel, listener)` and
+  `requestConnectionInfo(channel, listener)`; `removeGroup(channel, actionListener)`; broadcast
+  `WIFI_P2P_CONNECTION_CHANGED_ACTION`.
+- **Request:** `WifiP2pConfig.Builder().setNetworkName(ssid).setPassphrase(passphrase)
+  .setGroupOperatingBand(GROUP_OWNER_BAND_AUTO)`, plus `setPccModeConnectionType(PCC_MODE_CONNECTION_TYPE_LEGACY_OR_R2)`
+  on API 36+.
+- **Response:** `ActionListener.onSuccess()` or `onFailure(reason)` with `P2P_UNSUPPORTED`, `BUSY` or `ERROR`;
+  `WifiP2pGroup.getNetworkName()`, `WifiP2pInfo.groupOwnerAddress`; the client list in `WifiP2pGroup.getClientList()`.
+- **Example:** `onFailure(BUSY)` → `ack` `DIRECT_WIFI_UNAVAILABLE` `{reason: "busy"}`.
+- **Business logic:**
+  1. `P2P_UNSUPPORTED` → `p2p_unsupported`; `BUSY` → `busy`; `ERROR` → `error`; Wi-Fi off
+     (`WifiManager.isWifiEnabled() = false`) → `wifi_off` without calling `createGroup`; Android 10–12 with location
+     services off → `location_off`.
+  2. A group left by an earlier crash (`requestGroupInfo` returns one) is removed before creating a new one.
+  3. No client in `getClientList()` within `DIRECT_WIFI_JOIN_TIMEOUT` after the `ack` → `removeGroup`, `direct/stop
+     {reason: join_failed}`.
+  4. The group disappearing while needed (connection-changed broadcast) → `direct/stop {reason: group_lost}` (E8).
+  5. A-SVC keeps listening on every interface (0.4.1); on a connection whose local address is the group owner address
+     it serves only the bulk stream path `/v1/stream/bulk` (0.4.6, 0.4.7).
+
+#### API 5 — Join and leave the group (Mac)
+
+- **URL:** N/A
+- **Method:** `CWWiFiClient.shared().interface()`; `scanForNetworks(withSSID: Data(ssid.utf8))`;
+  `associate(to: network, password: passphrase)`; `disassociate()`; saved-network removal through
+  `CWMutableConfiguration` (`networkProfiles`) and `commitConfiguration(_:authorization:)` only when it needs no
+  administrator prompt.
+- **Request:** the `ssid` and `passphrase` of API 1.
+- **Response:** a `CWNetwork` set; `associate` throws a `CWErr` on failure.
+- **Example:** scan returns one network `DIRECT-q7Lm2Xc9Ta` → `associate` succeeds → `interface.ssid()` =
+  `"DIRECT-q7Lm2Xc9Ta"`.
+- **Business logic:**
+  1. Needs Location access: without it CoreWLAN returns networks with no SSID (research section 2), so the entry rules
+     already require it.
+  2. Never `networksetup` with the passphrase on its command line (plan G7 pass criterion).
+  3. Scan up to two times within `DIRECT_WIFI_JOIN_TIMEOUT`; several networks with the same SSID → try the strongest
+     first; the pinned TLS of API 6 tells the real phone apart.
+  4. Leaving: `disassociate()`; macOS then joins a known network by itself when one is in range.
+
+#### API 6 — Pinned TLS connection on the group
+
+- **URL:** `wss://{host}:{port}/v1/stream/bulk`
+- **Method:** TLS 1.3 with the certificate pinned to `peer_tls_sha256` and no hostname check, as on the LAN (0.4.1);
+  `NWParameters.requiredInterface` = the Wi-Fi interface that joined the group.
+- **Request:** `bulk/stream_hello` (0.6.3 step 7, channel `bulk`), keyed by the live Bluetooth control session; then the per-connection keys `K_bulk` (0.4.7).
+- **Response:** `bulk/stream_welcome`; a pin mismatch → `TLS_PIN_MISMATCH` before any byte is sent.
+- **Example:** `wss://192.168.49.1:47800/…` with the pinned certificate SHA-256 of PAIR-01.
+- **Business logic:**
+  1. The first successful TLS handshake on the group ends `DIRECT_WIFI_JOIN_TIMEOUT` (step 8).
+  2. Pin mismatch → E6; the Mac never sends data to an unpinned endpoint.
+  3. The connection is never used for `/v1/ctl`: the session stays on Bluetooth (0.4.6 "Not a LAN").
+
+#### API 7 — Mac Wi-Fi state
+
+- **URL:** N/A
+- **Method:** `CWWiFiClient.shared().delegate` with `startMonitoringEvent(with: .ssidDidChange)` and `.linkDidChange`;
+  `CWInterface.powerOn()`, `ssid()`; `CWConfiguration.networkProfiles` for the known networks; `NWPathMonitor` on the
+  Wi-Fi interface.
+- **Request:** none.
+- **Response:** events and the current values.
+- **Example:** `ssid()` nil and no satisfied Wi-Fi path for 30 s → unassociated for `DIRECT_WIFI_IDLE_MIN`.
+- **Business logic:**
+  1. "Unassociated since" restarts at every association; a scan whose results contain any SSID of `networkProfiles`
+     means "a known network is visible".
+  2. While on the group: scan every `DIRECT_WIFI_SCAN_INTERVAL`; a known network → E7.
+  3. `ssidDidChange` to anything but the group's SSID while on the group → E7.
+
+#### Query
+
+No database access. Settings read: `link.direct_wifi` (0.9.5) on both sides.
+
+```text
+# [Design] Mac UserDefaults and Android DataStore
+defaults.bool(forKey: "link.direct_wifi")                                 # M-APP, step 3
+prefs[booleanPreferencesKey("link.direct_wifi")] ?: true                  # A-SVC, step 5
 ```
