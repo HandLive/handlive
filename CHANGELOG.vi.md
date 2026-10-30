@@ -47,7 +47,7 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 ### Specs
 
 Đã thiết kế trong bản cập nhật spec Phase 7 (00-common-specs.md 0.4.6/0.4.7, 01-setup-settings.md) nhưng chưa code trên
-nền tảng nào — để lại cho bản phát hành sau:
+nền tảng nào — đây là phần còn lại của Phase 7 (SP3 làn bulk, SP4 Wi-Fi Direct) vẫn phải làm, để lại cho topic sau:
 
 - **Wi-Fi Direct** (A7.5 / M7.5): SSID và passphrase sinh ngẫu nhiên mỗi nhóm, socket Mac ràng buộc chỉ với interface
   P2P, và prompt Location Android 10–12 mà nó cần. Chưa có code Android hay Apple nào cho phần này.
