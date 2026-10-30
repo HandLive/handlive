@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; Phase 7 (Bluetooth offline connectivity) released in `v0.2.0` (2026-10-30), BLE L2CAP pairing/control channel on `main` (Wi-Fi Direct and relay bulk dropped from this phase's scope); latest tagged release `v0.2.0` (2026-10-30); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
+## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; Phase 7 (Bluetooth offline connectivity) in progress — SP1 (BLE L2CAP control channel) and SP2 (BLE pairing) released in `v0.2.0` (2026-10-30) on `main`; SP3 (per-connection bulk lane, `K_bulk`) and SP4 (Wi-Fi Direct) are specced but not yet implemented, open for a later topic; only bulk-over-relay is out of scope (dropped 2026-10-28); latest tagged release `v0.2.0` (2026-10-30); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,

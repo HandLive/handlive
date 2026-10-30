@@ -67,7 +67,7 @@ Phases ship in order, each as a usable slice. One exception (owner, 2026-09-28):
 | **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision, 2026-10-12) · G4 closed: only macOS 27 is available, so calls stay notification + answer/decline/end, no audio |
 | **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs a paid Apple Developer team |
 | **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Chrome and Samsung Internet measured; browser go/no-go pending |
-| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Released in `v0.2.0`** (2026-10-30) · Bluetooth offline pairing (QR flow B, PIN flow C via CPace-X25519-SHA512) shipped on `main`; Wi-Fi Direct and relay bulk specced but dropped from this phase's scope |
+| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **In progress** · SP1+SP2 (Bluetooth control channel; QR flow B, PIN flow C via CPace-X25519-SHA512) **released in `v0.2.0`** (2026-10-30) on `main`; SP3 (per-connection bulk lane, `K_bulk`) and SP4 (Wi-Fi Direct) are specced but not yet implemented; only bulk-over-relay is dropped from scope |
 | **G0** Vectors | Shared cross-platform crypto test vectors | **Done** |
 | **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) · App Store Connect screenshots recaptured at native 1320×2868 (2026-10-12) |
 | **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) · Play Console screenshots recaptured at 1080×1920 (2026-10-12) |

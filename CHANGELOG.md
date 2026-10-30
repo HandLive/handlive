@@ -85,7 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Specs
 
 Designed in the Phase 7 detailed-design update (00-common-specs.md 0.4.6/0.4.7, 01-setup-settings.md) but not implemented
-on either platform yet — tracked for a later release:
+on either platform yet — this is the rest of Phase 7's scope (SP3 the bulk lane, SP4 Wi-Fi Direct) still to be done, open for a later topic:
 
 - **Wi-Fi Direct** (A7.5 / M7.5): randomly-generated SSID and passphrase per group, the Mac socket bound to the P2P
   interface only, and the Android 10–12 Location prompt it needs. No Android or Apple code exists for this today.
