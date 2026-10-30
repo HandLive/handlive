@@ -1,14 +1,14 @@
 #!/bin/zsh
 # Chuan bi ghep doi SP1: go sach ban cu, build va cai ban debug len S25 va Mac,
-# giu Wi-Fi bat de ghep qua LAN (luong A).
+# tat Wi-Fi, ghep qua Bluetooth.
 # Chay NGOAI sandbox qua nut run cua sep (S25 cam qua USB):
 #   zsh handlive/tools/measure-sp1-prep.sh
 #
-# Sau script thoat thanh cong, sxep ghep doi S25 voi Mac qua Wi-Fi 1 lan (quét QR hoac nhap PIN, ~1 phut),
+# Sau script thoat thanh cong, sxep tat Wi-Fi ca hai may, bat Bluetooth, roi ghep doi S25 voi Mac 1 lan (quét QR hoac nhap PIN, ~1 phut),
 # roi team tu chay phien 1 do qua measure-sp1-auto.sh.
 #
 # Go sach app + du lieu Android cu va ban HandLive.app cu tren Mac truoc khi cai,
-# de dam bao cai sach. Khong tac dong Wi-Fi, khong ghi log, khong la hang xin quyen (pm grant).
+# de dam bao cai sach. Khong tac dong Wi-Fi, khong ghi log.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -110,4 +110,4 @@ echo "== 9. Mo app tren Mac =="
 open "$MAC_APP_PATH" || fail "mo HandLive.app that bai (sandbox chan 'open'; chay script nay ngoai sandbox)"
 
 echo
-echo "SAN SANG: ghep doi S25 voi Mac qua Wi-Fi (luong A) — quét QR hoac nhap PIN tren S25"
+echo "SAN SANG: tat Wi-Fi ca hai may, bat Bluetooth, mo man ghep doi tren Mac roi quet QR (hoac nhap PIN) tren S25 — ghep qua Bluetooth"
