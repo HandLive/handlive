@@ -3,12 +3,12 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; Phase 7 (Bluetooth offline connectivity) started 2026-10-28, BLE L2CAP pairing/control channel on `main`, release `v0.2.0` pending the owner's tag (Wi-Fi Direct and relay bulk dropped from this phase's scope); latest tagged release `v0.1.1` (2026-10-22); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
+## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; Phase 7 (Bluetooth offline connectivity) released in `v0.2.0` (2026-10-30), BLE L2CAP pairing/control channel on `main` (Wi-Fi Direct and relay bulk dropped from this phase's scope); latest tagged release `v0.2.0` (2026-10-30); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
 Apple `Tools/WebSpike`. Coordinated public betas: **`v0.1.0-beta.1`**, **`v0.1.0-beta.2`** (2026-10-04, the first with installable files) and **`v0.1.0-beta.3`** (2026-10-07) on hub/android/apple/shared/relay
-(not a store release), then **`v0.1.1`** (2026-10-22), the first tag without a pre-release suffix (still not a store release; Google Play readiness on Android, paid-team identifiers on iOS). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
+(not a store release), then **`v0.1.1`** (2026-10-22), the first tag without a pre-release suffix (still not a store release; Google Play readiness on Android, paid-team identifiers on iOS), then **`v0.2.0`** (2026-10-30), Phase 7 Bluetooth offline pairing (still not a store release). Live progress board: hub `README.md` / `README.vi.md` (Roadmap and progress). Still
 required before 1.0: gates **G1** (device matrix, TalkBack/VoiceOver) and **G2** (Play Console), Phase 2/3 checks
 on a real relay / APNs / FCM, and spike gates **G5** (paid Apple Developer team), **G6** (browser go/no-go). Owner
 decision 2026-09-28: Phases 5 and 6 proceed before Phase 4. Owner decision 2026-10-12 stops Phase 4 itself and
@@ -61,7 +61,7 @@ project owner in Vietnamese with diacritics.
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
-**Workspace tips to treat as current `main`** (ahead of tag `v0.1.1`; release `v0.2.0` pending the owner's tag, Phase 7 Bluetooth offline connectivity): shared `5cbe4aa`, relay `17f367b` (unchanged since `v0.1.1`), android `ed8e41f`, apple `7d3ce0b`, hub `main` tip. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
+**Workspace tips to treat as current `main`:** tagged `v0.2.0` (2026-10-30) at hub `a9c7193`, shared `6e44aa1`, android `cd4527a`, apple `36f8cc8`, relay `17f367b` (unchanged since `v0.1.1`). Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
 
 ### In progress / blocked (owner or gate)
 
@@ -95,10 +95,12 @@ project owner in Vietnamese with diacritics.
    logs nothing for the bench) and keep HandLive's Notification access on. Then the Mac
    must show "Telegram Call"; swiping Telegram's in-call notification must keep the Mac panel in-call with End hidden,
    and hanging up must close it. Then run `call_latency.py` on a real app call for T3.3.
-9. **Next release:** follow `docs/deployment-guide.md` (Cutting a release) and the 0.1.1 scan report: security scan of
-   everything since the last tag first, then versions, changelogs, website link and badge, tags (hub and shared first).
-   Open from the 0.1.1 scan: wrap the iOS UI-test seams (`-HLUITest*` launch arguments) and their `/tmp` debug writes
-   in `#if DEBUG`, fix the `project.yml` comment that calls `HandLiveiOSUITests` uncommitted.
+9. **Next release:** follow `docs/deployment-guide.md` (Cutting a release) and the 0.2.0 scan report
+   (`reports/security-scan-0.2.0-2026-10-30.md`): security scan of everything since the last tag first, then versions,
+   changelogs, website link and badge, tags (hub and shared first). The 0.2.0 scan found nothing: 0 critical, 0 high,
+   0 medium, 0 low. Still open, carried over from the 0.1.1 scan (untouched by Phase 7): wrap the iOS UI-test seams
+   (`-HLUITest*` launch arguments) and their `/tmp` debug writes in `#if DEBUG`, fix the `project.yml` comment that
+   calls `HandLiveiOSUITests` uncommitted (it is tracked in git).
 10. **Open follow-ups** (no gate): `ManualClock` review debt, apple #5 being merged (`waitForSleepers` ignores
    cancellation; test helpers' `clock:`/`timer:` swapped); keep `-parallel-testing-enabled NO` (parallel saves ~0 s);
    measure the app-call label on Android 11–14 to know whether the launcher query matters there. The e2e `setup` check of

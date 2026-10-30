@@ -1,18 +1,18 @@
 #!/bin/zsh
-# Chay NGOAI sandbox qua nut run cua sep (S25 cam qua USB, Mac nay la may do), khong co nguoi ngoi theo doi:
+# Chạy NGOÀI sandbox qua nút run của sếp (S25 cắm qua USB, Mac này là máy đo), không có người ngồi theo dõi:
 #   zsh handlive/tools/measure-sp1-auto.sh --session 1|2|3 [adb_serial]
 #
-# Lam tron mot phien cua runbook handlive/plans/20260925-implementation/reports/phase-07-sp1-measure.md ma
-# khong can thao tac tay: goi measure-sp1.sh nen de build/mo app + ghi log HLBENCH, cho link len Bluetooth,
-# tu lam cac buoc copy/toggle/doze cua phien, roi dung ghi log va chay clip_latency.py/reconnect_time.py.
-# Sandbox cua agent chan moi ket noi adb (xem #3717-#3720), nen toan bo khoi nay phai chay qua nut run.
+# Làm trọn một phiên của runbook handlive/plans/20260925-implementation/reports/phase-07-sp1-measure.md mà
+# không cần thao tác tay: gọi measure-sp1.sh nền để build/mở app + ghi log HLBENCH, chờ link lên Bluetooth,
+# tự làm các bước copy/toggle/doze của phiên, rồi dừng ghi log và chạy clip_latency.py/reconnect_time.py.
+# Sandbox của agent chặn mọi kết nối adb (xem #3717-#3720), nên toàn bộ khối này phải chạy qua nút run.
 #
-#   --session 1: phien day du (khong --log-only) — build + cai lai APK/app macOS tu dau.
-#   --session 2|3: dung lai APK/app macOS cua lan --session 1 gan nhat (them --log-only vao measure-sp1.sh).
+#   --session 1: phiên đầy đủ (không --log-only) — build + cài lại APK/app macOS từ đầu.
+#   --session 2|3: dùng lại APK/app macOS của lần --session 1 gần nhất (thêm --log-only vào measure-sp1.sh).
 #
-# Chieu S25->Mac tu dong hoa bang broadcast cua app "Clipper" (ca.zgrs.clipper, trick quen thuoc de set
-# clipboard Android qua adb ma khong can UI — Android chan ClipboardManager tu background tu Android 10).
-# Khong co app do tren S25 thi buoc nay tu bo qua va in ro, chi con chieu Mac->S25 (pbcopy) nhu runbook cho phep.
+# Chiều S25->Mac tự động hóa bằng broadcast của app "Clipper" (ca.zgrs.clipper, trick quen thuộc để set
+# clipboard Android qua adb mà không cần UI — Android chặn ClipboardManager từ background từ Android 10).
+# Không có app đó trên S25 thì bước này tự bỏ qua và in rõ, chỉ còn chiều Mac->S25 (pbcopy) như runbook cho phép.
 set -uo pipefail
 zmodload zsh/datetime
 
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     -*)
-      echo "LOI: khong biet tuy chon: $1" >&2
+      echo "LỖI: không biết tùy chọn: $1" >&2
       exit 2
       ;;
     *)
@@ -43,7 +43,7 @@ done
 case "$SESSION" in
   1|2|3) ;;
   *)
-    echo "Dung: zsh $0 --session 1|2|3 [adb_serial]" >&2
+    echo "Dùng: zsh $0 --session 1|2|3 [adb_serial]" >&2
     exit 2
     ;;
 esac
@@ -58,10 +58,10 @@ mkdir -p "$LOG_DIR"
 TS="$(date +%Y%m%d-%H%M%S)"
 : "${TMPDIR:=/tmp}"
 
-[ -f "$MEASURE_SH" ] || { echo "LOI: khong thay $MEASURE_SH" >&2; exit 1; }
-command -v adb >/dev/null || { echo "LOI: khong thay adb trong PATH" >&2; exit 1; }
-command -v osascript >/dev/null || { echo "LOI: khong thay osascript trong PATH" >&2; exit 1; }
-command -v pbcopy >/dev/null || { echo "LOI: khong thay pbcopy trong PATH" >&2; exit 1; }
+[ -f "$MEASURE_SH" ] || { echo "LỖI: không thấy $MEASURE_SH" >&2; exit 1; }
+command -v adb >/dev/null || { echo "LỖI: không thấy adb trong PATH" >&2; exit 1; }
+command -v osascript >/dev/null || { echo "LỖI: không thấy osascript trong PATH" >&2; exit 1; }
+command -v pbcopy >/dev/null || { echo "LỖI: không thấy pbcopy trong PATH" >&2; exit 1; }
 
 typeset -a ADB_ARGS
 if [ -n "$SERIAL" ]; then
@@ -75,13 +75,13 @@ MEASURE_PID=""
 LOGGING_STOPPED=0
 
 fail() {
-  echo "LOI: $1" >&2
+  echo "LỖI: $1" >&2
   if [ -n "$ANDROID_LOG" ] && [ -f "$ANDROID_LOG" ]; then
-    echo "--- 20 dong cuoi $ANDROID_LOG ---" >&2
+    echo "--- 20 dòng cuối $ANDROID_LOG ---" >&2
     tail -n 20 "$ANDROID_LOG" >&2
   fi
   if [ -n "$MAC_LOG" ] && [ -f "$MAC_LOG" ]; then
-    echo "--- 20 dong cuoi $MAC_LOG ---" >&2
+    echo "--- 20 dòng cuối $MAC_LOG ---" >&2
     tail -n 20 "$MAC_LOG" >&2
   fi
   exit 1
@@ -89,7 +89,7 @@ fail() {
 
 cleanup() {
   echo
-  echo "== Don dep: dung ghi log (neu con) va khoi phuc S25 =="
+  echo "== Dọn dẹp: dừng ghi log (nếu còn) và khôi phục S25 =="
   if [ -n "$MEASURE_PID" ] && [ "$LOGGING_STOPPED" -eq 0 ]; then
     kill -INT "$MEASURE_PID" 2>/dev/null || true
     wait "$MEASURE_PID" 2>/dev/null || true
@@ -115,11 +115,11 @@ wait_for_connected() {
   return 1
 }
 
-# Trick "Clipper" (ca.zgrs.clipper): `am broadcast -a clipper.set -e text VALUE` set duoc clipboard Android tu
-# adb ma khong can UI. `am broadcast` luon tra "result=0" du co receiver nhan hay khong (khong co cach phan
-# biet qua ma ket qua), nen kiem truoc bang pm list packages (goi 1 lan trong session 1, bien CLIPPER_INSTALLED
-# duoi day): khong cai app nay thi bo qua ngay, co cai thi gui broadcast va coi la thanh cong (khong co cach
-# nao xac nhan sau hon tu phia adb).
+# Trick "Clipper" (ca.zgrs.clipper): `am broadcast -a clipper.set -e text VALUE` set được clipboard Android từ
+# adb mà không cần UI. `am broadcast` luôn trả "result=0" dù có receiver nhận hay không (không có cách phân
+# biệt qua mã kết quả), nên kiểm trước bằng pm list packages (gọi 1 lần trong session 1, biến CLIPPER_INSTALLED
+# dưới đây): không cài app này thì bỏ qua ngay, có cài thì gửi broadcast và coi là thành công (không có cách
+# nào xác nhận sau hơn từ phía adb).
 CLIPPER_INSTALLED=0
 
 android_copy_text() {
@@ -128,8 +128,8 @@ android_copy_text() {
   adb "${ADB_ARGS[@]}" shell am broadcast -a clipper.set -e text "$text" >/dev/null 2>&1
 }
 
-# Tao mot anh ~5 MB (BMP ghi tay bang python3 stdlib roi doi sang PNG bang sips, khong can PIL) de dua len
-# pasteboard Mac bang osascript — khong dung noi dung chep tu dau khac vi khong co file anh san co dung kich co.
+# Tạo một ảnh ~5 MB (BMP ghi tay bằng python3 stdlib rồi đổi sang PNG bằng sips, không cần PIL) để đưa lên
+# pasteboard Mac bằng osascript — không dùng nội dung chép từ đâu khác vì không có file ảnh sẵn có đúng kích cỡ.
 make_bench_image() {
   local out_bmp="$1" out_png="$2"
   python3 - "$out_bmp" <<'PYEOF'
@@ -138,7 +138,7 @@ import struct
 import sys
 
 path = sys.argv[1]
-width, height = 1700, 1024  # 24-bit BMP, hang khong can padding (1700*3=5100 chia het cho 4) -> khoang 5.2 MB.
+width, height = 1700, 1024  # 24-bit BMP, hàng không cần padding (1700*3=5100 chia hết cho 4) -> khoảng 5.2 MB.
 row_bytes = width * 3
 pixel_data_size = row_bytes * height
 file_size = 54 + pixel_data_size
@@ -161,9 +161,9 @@ set_mac_image_clipboard() {
 echo "== 1. adb devices =="
 adb devices
 
-echo "== 2. Tat Wi-Fi + du lieu di dong tren S25 (Mac van bat Wi-Fi) =="
-adb "${ADB_ARGS[@]}" shell svc wifi disable || fail "svc wifi disable that bai"
-adb "${ADB_ARGS[@]}" shell svc data disable || fail "svc data disable that bai"
+echo "== 2. Tắt Wi-Fi + dữ liệu di động trên S25 (Mac vẫn bật Wi-Fi) =="
+adb "${ADB_ARGS[@]}" shell svc wifi disable || fail "svc wifi disable thất bại"
+adb "${ADB_ARGS[@]}" shell svc data disable || fail "svc data disable thất bại"
 
 typeset -a MEASURE_ARGS
 if [ "$SESSION" != "1" ]; then
@@ -174,16 +174,16 @@ if [ -n "$SERIAL" ]; then
 fi
 
 MEASURE_OUT="$LOG_DIR/sp1-auto-session${SESSION}-$TS-measure.out"
-echo "== 3. Chay measure-sp1.sh nen (session $SESSION, args: ${MEASURE_ARGS[*]:-<khong>}) =="
+echo "== 3. Chạy measure-sp1.sh nền (session $SESSION, args: ${MEASURE_ARGS[*]:-<không>}) =="
 zsh "$MEASURE_SH" "${MEASURE_ARGS[@]}" > "$MEASURE_OUT" 2>&1 &
 MEASURE_PID=$!
-echo "measure-sp1.sh PID=$MEASURE_PID, output day du tai: $MEASURE_OUT"
+echo "measure-sp1.sh PID=$MEASURE_PID, output đầy đủ tại: $MEASURE_OUT"
 
-echo "== 4. Doi measure-sp1.sh in duong dan log (toi da 600s, co build app) =="
+echo "== 4. Đợi measure-sp1.sh in đường dẫn log (tối đa 600s, có build app) =="
 waited=0
 while [ "$waited" -lt 600 ]; do
   if ! kill -0 "$MEASURE_PID" 2>/dev/null; then
-    fail "measure-sp1.sh da thoat truoc khi in duong dan log, xem $MEASURE_OUT"
+    fail "measure-sp1.sh đã thoát trước khi in đường dẫn log, xem $MEASURE_OUT"
   fi
   ANDROID_LOG="$(grep -m1 '^Android: ' "$MEASURE_OUT" 2>/dev/null | sed 's/^Android: //')"
   MAC_LOG="$(grep -m1 '^Mac:' "$MEASURE_OUT" 2>/dev/null | sed -E 's/^Mac:[[:space:]]*//')"
@@ -194,30 +194,30 @@ while [ "$waited" -lt 600 ]; do
   sleep 2
   waited=$((waited + 2))
 done
-[ -n "$ANDROID_LOG" ] && [ -n "$MAC_LOG" ] || fail "qua 600s khong thay measure-sp1.sh in duong dan log, xem $MEASURE_OUT"
+[ -n "$ANDROID_LOG" ] && [ -n "$MAC_LOG" ] || fail "quá 600s không thấy measure-sp1.sh in đường dẫn log, xem $MEASURE_OUT"
 echo "Android log: $ANDROID_LOG"
 echo "Mac log:     $MAC_LOG"
 [ -n "$MAC_APP_PATH" ] && echo "App macOS:   $MAC_APP_PATH"
 
-echo "== 5. Cho link len Bluetooth (toi da 120s) =="
-wait_for_connected 120 || fail "qua 120s khong thay 'to=Connected channel=bluetooth' trong $MAC_LOG"
-echo "Da thay Bluetooth Connected."
+echo "== 5. Chờ link lên Bluetooth (tối đa 120s) =="
+wait_for_connected 120 || fail "quá 120s không thấy 'to=Connected channel=bluetooth' trong $MAC_LOG"
+echo "Đã thấy Bluetooth Connected."
 
 case "$SESSION" in
   1)
-    echo "== 6. AC1 idle: 30 lan copy text, doi chieu, cach 3-4s =="
+    echo "== 6. AC1 idle: 30 lần copy text, đối chiều, cách 3-4s =="
     ANDROID_COPY_OK=0
     if adb "${ADB_ARGS[@]}" shell pm list packages ca.zgrs.clipper 2>/dev/null | grep -q 'package:ca\.zgrs\.clipper'; then
       CLIPPER_INSTALLED=1
       ANDROID_COPY_OK=1
     else
-      echo "CANH BAO: khong thay app Clipper (ca.zgrs.clipper) tren S25 — khong co cach set clipboard Android" \
-           "tu adb ma khong co UI, bo qua chieu S25->Mac, chi copy chieu Mac->S25 ca 30 lan." >&2
+      echo "CẢNH BÁO: không thấy app Clipper (ca.zgrs.clipper) trên S25 — không có cách set clipboard Android" \
+           "từ adb mà không có UI, bỏ qua chiều S25->Mac, chỉ copy chiều Mac->S25 cả 30 lần." >&2
     fi
     for (( i = 1; i <= 30; i++ )); do
       if [ "$ANDROID_COPY_OK" -eq 1 ] && (( i % 2 == 0 )); then
         if ! android_copy_text "sp1 auto s25->mac $i $(epoch_ms)"; then
-          echo "CANH BAO: lan $i copy tu S25 that bai, bo qua lan nay" >&2
+          echo "CẢNH BÁO: lần $i copy từ S25 thất bại, bỏ qua lần này" >&2
         fi
       else
         print -n -- "sp1 auto mac->s25 $i $(epoch_ms)" | pbcopy
@@ -225,49 +225,49 @@ case "$SESSION" in
       sleep $(( 3 + (RANDOM % 2) ))
     done
 
-    echo "== 7. 5 vong tat/bat Bluetooth tren S25, moi vong cho Connected lai (toi da 30s) =="
+    echo "== 7. 5 vòng tắt/bật Bluetooth trên S25, mỗi vòng chờ Connected lại (tối đa 30s) =="
     for (( round = 1; round <= 5; round++ )); do
-      echo "-- vong $round/5: tat bluetooth_manager --"
+      echo "-- vòng $round/5: tắt bluetooth_manager --"
       adb "${ADB_ARGS[@]}" shell cmd bluetooth_manager disable || true
       sleep 2
-      echo "-- vong $round/5: bat lai bluetooth_manager --"
+      echo "-- vòng $round/5: bật lại bluetooth_manager --"
       adb "${ADB_ARGS[@]}" shell cmd bluetooth_manager enable || true
       if ! wait_for_connected 30; then
-        echo "CANH BAO: vong $round khong thay Connected lai trong 30s" >&2
+        echo "CẢNH BÁO: vòng $round không thấy Connected lại trong 30s" >&2
       fi
     done
 
-    echo "== 8. Scan response: khoa man hinh S25, cho 60s, Cmd-Q + mo lai app Mac =="
+    echo "== 8. Scan response: khóa màn hình S25, chờ 60s, Cmd-Q + mở lại app Mac =="
     BT_ACCEPT_BEFORE="$(grep -c 'ev=bt_accept' "$ANDROID_LOG" 2>/dev/null || true)"
     : "${BT_ACCEPT_BEFORE:=0}"
     adb "${ADB_ARGS[@]}" shell input keyevent KEYCODE_SLEEP || true
     sleep 60
-    osascript -e 'quit app "HandLive"' || echo "CANH BAO: osascript quit app HandLive that bai" >&2
+    osascript -e 'quit app "HandLive"' || echo "CẢNH BÁO: osascript quit app HandLive thất bại" >&2
     if [ -n "$MAC_APP_PATH" ]; then
-      open "$MAC_APP_PATH" || echo "CANH BAO: mo lai app Mac that bai" >&2
+      open "$MAC_APP_PATH" || echo "CẢNH BÁO: mở lại app Mac thất bại" >&2
     else
-      echo "CANH BAO: khong doc duoc duong dan app macOS tu $MEASURE_OUT, bo qua mo lai app" >&2
+      echo "CẢNH BÁO: không đọc được đường dẫn app macOS từ $MEASURE_OUT, bỏ qua mở lại app" >&2
     fi
     sleep 5
     adb "${ADB_ARGS[@]}" shell input keyevent KEYCODE_WAKEUP || true
-    wait_for_connected 30 || echo "CANH BAO: sau buoc scan-response khong thay Connected lai trong 30s" >&2
+    wait_for_connected 30 || echo "CẢNH BÁO: sau bước scan-response không thấy Connected lại trong 30s" >&2
     BT_ACCEPT_AFTER="$(grep -c 'ev=bt_accept' "$ANDROID_LOG" 2>/dev/null || true)"
     : "${BT_ACCEPT_AFTER:=0}"
-    echo "bt_accept truoc=$BT_ACCEPT_BEFORE sau=$BT_ACCEPT_AFTER"
+    echo "bt_accept trước=$BT_ACCEPT_BEFORE sau=$BT_ACCEPT_AFTER"
     if [ "$BT_ACCEPT_AFTER" -le "$BT_ACCEPT_BEFORE" ]; then
-      echo "CANH BAO: bt_accept khong tang sau buoc scan-response (xem 00-common-specs.md 0.4.5)" >&2
+      echo "CẢNH BÁO: bt_accept không tăng sau bước scan-response (xem 00-common-specs.md 0.4.5)" >&2
     fi
     ;;
 
   2)
-    echo "== 6. AC1 duoi tai: anh ~5MB len pasteboard Mac, xen 10 lan copy text =="
+    echo "== 6. AC1 dưới tải: ảnh ~5MB lên pasteboard Mac, xen 10 lần copy text =="
     IMG_BMP="$TMPDIR/handlive-sp1-bench-$TS.bmp"
     IMG_PNG="$TMPDIR/handlive-sp1-bench-$TS.png"
-    make_bench_image "$IMG_BMP" "$IMG_PNG" || fail "tao anh bench that bai"
+    make_bench_image "$IMG_BMP" "$IMG_PNG" || fail "tạo ảnh bench thất bại"
     rm -f "$IMG_BMP"
     for (( i = 1; i <= 10; i++ )); do
       if (( i == 1 || i % 3 == 0 )); then
-        set_mac_image_clipboard "$IMG_PNG" || echo "CANH BAO: set anh len pasteboard Mac that bai (lan $i)" >&2
+        set_mac_image_clipboard "$IMG_PNG" || echo "CẢNH BÁO: set ảnh lên pasteboard Mac thất bại (lần $i)" >&2
         sleep 1
       fi
       print -n -- "sp1 auto load mac->s25 $i $(epoch_ms)" | pbcopy
@@ -277,25 +277,25 @@ case "$SESSION" in
     ;;
 
   3)
-    echo "== 6. Doze: ep S25 vao Doze =="
+    echo "== 6. Doze: ép S25 vào Doze =="
     adb "${ADB_ARGS[@]}" shell dumpsys battery unplug || true
     adb "${ADB_ARGS[@]}" shell input keyevent KEYCODE_SLEEP || true
     adb "${ADB_ARGS[@]}" shell dumpsys deviceidle force-idle || true
 
-    echo "== 7. 30 lan copy text Mac->S25, cach 30s, man hinh S25 khong dong vao =="
+    echo "== 7. 30 lần copy text Mac->S25, cách 30s, màn hình S25 không đụng vào =="
     for (( i = 1; i <= 30; i++ )); do
       print -n -- "sp1 auto doze mac->s25 $i $(epoch_ms)" | pbcopy
       sleep 30
     done
 
-    echo "== 8. Khoi phuc S25 sau Doze =="
+    echo "== 8. Khôi phục S25 sau Doze =="
     adb "${ADB_ARGS[@]}" shell dumpsys deviceidle unforce || true
     adb "${ADB_ARGS[@]}" shell dumpsys battery reset || true
     adb "${ADB_ARGS[@]}" shell input keyevent KEYCODE_WAKEUP || true
     ;;
 esac
 
-echo "== 9. Dung ghi log =="
+echo "== 9. Dừng ghi log =="
 kill -INT "$MEASURE_PID" 2>/dev/null || true
 wait "$MEASURE_PID" 2>/dev/null || true
 LOGGING_STOPPED=1
@@ -303,14 +303,14 @@ LOGGING_STOPPED=1
 echo "Android log: $ANDROID_LOG"
 echo "Mac log:     $MAC_LOG"
 
-command -v python3 >/dev/null || fail "khong thay python3 trong PATH"
+command -v python3 >/dev/null || fail "không thấy python3 trong PATH"
 
 echo "== 10. clip_latency.py (AC1) =="
 python3 "$SHARED_DIR/tools/bench/clip_latency.py" "$ANDROID_LOG" "$MAC_LOG" --json \
-  || echo "CANH BAO: clip_latency.py tra ma loi khac 0" >&2
+  || echo "CẢNH BÁO: clip_latency.py trả mã lỗi khác 0" >&2
 
 echo "== 11. reconnect_time.py (AC2) =="
 python3 "$SHARED_DIR/tools/bench/reconnect_time.py" "$MAC_LOG" "$ANDROID_LOG" --json \
-  || echo "CANH BAO: reconnect_time.py tra ma loi khac 0" >&2
+  || echo "CẢNH BÁO: reconnect_time.py trả mã lỗi khác 0" >&2
 
 echo "Xong session $SESSION."

@@ -8,13 +8,13 @@ English | [Tiếng Việt](README.vi.md)
 
 [![ci-docs](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.1-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.1)
+[![Release](https://img.shields.io/badge/release-v0.2.0-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.2.0)
 
 HandLive connects Android devices with macOS, iOS, and iPadOS. It syncs your clipboard, bridges SMS conversations, and delivers call notifications with action controls—without cloud lock-in. End-to-end encryption is always on, and the entire project is open source under Apache-2.0.
 
 ## Get the beta
 
-Download the latest release [`v0.1.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.1) (2026-10-22):
+Download the latest release [`v0.2.0`](https://github.com/HandLive/handlive/releases/tag/v0.2.0) (2026-10-30):
 - **macOS:** Ad-hoc signed DMG (choose *Open Anyway* on first run).
 - **Android:** Signed `foss` APK. Its application id is new (`com.handlive.android`): remove a beta install first, then pair again.
 - **iOS / iPadOS:** Unsigned IPA for sideloading. A beta install updated to this build must pair again (new App Group).
@@ -67,7 +67,7 @@ Phases ship in order, each as a usable slice. One exception (owner, 2026-09-28):
 | **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision, 2026-10-12) · G4 closed: only macOS 27 is available, so calls stay notification + answer/decline/end, no audio |
 | **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs a paid Apple Developer team |
 | **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Chrome and Samsung Internet measured; browser go/no-go pending |
-| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Started** (owner decision, 2026-10-28), no wait on G4/G5/G6 · spike G7 done; Bluetooth L2CAP pairing and control channel on `main`, Wi-Fi Direct and relay bulk dropped from this phase's scope |
+| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Released in `v0.2.0`** (2026-10-30) · Bluetooth offline pairing (QR flow B, PIN flow C via CPace-X25519-SHA512) shipped on `main`; Wi-Fi Direct and relay bulk specced but dropped from this phase's scope |
 | **G0** Vectors | Shared cross-platform crypto test vectors | **Done** |
 | **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) · App Store Connect screenshots recaptured at native 1320×2868 (2026-10-12) |
 | **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) · Play Console screenshots recaptured at 1080×1920 (2026-10-12) |

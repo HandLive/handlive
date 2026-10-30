@@ -1,22 +1,22 @@
 #!/bin/zsh
-# Chay NGOAI sandbox, voi S25 cam qua USB (adb) va may Mac nay la may do:
+# Chạy NGOÀI sandbox, với S25 cắm qua USB (adb) và máy Mac này là máy đo:
 #   zsh handlive/tools/measure-sp1.sh [--log-only] [adb_serial]
 #
-# Chuan bi SP1 (kenh dieu khien Bluetooth) de do AC1/AC2 tren may that, theo
+# Chuẩn bị SP1 (kênh điều khiển Bluetooth) để đo AC1/AC2 trên máy thật, theo
 # handlive/plans/20260925-implementation/reports/phase-07-sp1-measure.md:
-#   1. Build APK debug (:app:assembleDebug), cai len S25 qua adb, cap quyen
-#      BLUETOOTH_ADVERTISE/BLUETOOTH_CONNECT (chua co man xin quyen), mo app.
-#   2. Build app macOS (xcodegen generate + xcodebuild, scheme HandLive, cau hinh Debug) va mo app.
-#   3. Goi logcat (Android) va `log stream` (Mac) loc dong HLBENCH vao
-#      handlive/.build-logs/sp1-<timestamp>-android.log va sp1-<timestamp>-mac.log.
+#   1. Build APK debug (:app:assembleDebug), cài lên S25 qua adb, cấp quyền
+#      BLUETOOTH_ADVERTISE/BLUETOOTH_CONNECT (chưa có màn xin quyền), mở app.
+#   2. Build app macOS (xcodegen generate + xcodebuild, scheme HandLive, cấu hình Debug) và mở app.
+#   3. Gọi logcat (Android) và `log stream` (Mac) lọc dòng HLBENCH vào
+#      handlive/.build-logs/sp1-<timestamp>-android.log và sp1-<timestamp>-mac.log.
 #
-# --log-only: bo qua build+cai APK va bo qua xcodegen+xcodebuild; dung lai APK/app macOS cua lan
-# chay full gan nhat (danh cho phien 2/3 cua runbook, do lai nhanh khong phai build lai). Van cap
-# quyen Bluetooth (idempotent) va mo lai app o hai may. That bai ngay voi thong bao ro neu chua
-# chay full it nhat mot lan (chua co .app macOS de mo).
+# --log-only: bỏ qua build+cài APK và bỏ qua xcodegen+xcodebuild; dùng lại APK/app macOS của lần
+# chạy full gần nhất (dành cho phiên 2/3 của runbook, đo lại nhanh không phải build lại). Vẫn cấp
+# quyền Bluetooth (idempotent) và mở lại app ở hai máy. Thất bại ngay với thông báo rõ nếu chưa
+# chạy full ít nhất một lần (chưa có .app macOS để mở).
 #
-# Dung tay: lam cac buoc do trong runbook (phase-07-sp1-measure.md), roi Ctrl-C de dung ghi log.
-# Khong dung mang ngoai; chi dung JAVA_HOME/ANDROID_HOME nhu verify-phase7.sh.
+# Dùng tay: làm các bước đo trong runbook (phase-07-sp1-measure.md), rồi Ctrl-C để dừng ghi log.
+# Không dùng mạng ngoài; chỉ dùng JAVA_HOME/ANDROID_HOME như verify-phase7.sh.
 set -uo pipefail
 
 LOG_ONLY=0
@@ -24,7 +24,7 @@ SERIAL=""
 for arg in "$@"; do
   case "$arg" in
     --log-only) LOG_ONLY=1 ;;
-    -*) echo "LOI: khong biet tuy chon: $arg" >&2; exit 2 ;;
+    -*) echo "LỖI: không biết tùy chọn: $arg" >&2; exit 2 ;;
     *) SERIAL="$arg" ;;
   esac
 done
@@ -49,52 +49,52 @@ if [ -n "$SERIAL" ]; then
 fi
 
 fail() {
-  echo "LOI: $1" >&2
+  echo "LỖI: $1" >&2
   exit 1
 }
 
-command -v adb >/dev/null || fail "khong thay adb (Android platform-tools) trong PATH"
-command -v xcodebuild >/dev/null || fail "khong thay xcodebuild trong PATH"
+command -v adb >/dev/null || fail "không thấy adb (Android platform-tools) trong PATH"
+command -v xcodebuild >/dev/null || fail "không thấy xcodebuild trong PATH"
 
-adb "${ADB_ARGS[@]}" get-state >/dev/null 2>&1 || fail "khong thay thiet bi Android qua adb (cam S25, bat USB debugging)"
+adb "${ADB_ARGS[@]}" get-state >/dev/null 2>&1 || fail "không thấy thiết bị Android qua adb (cắm S25, bật USB debugging)"
 
 if [ "$LOG_ONLY" -eq 0 ]; then
-  echo "== 1. Build + cai APK debug len S25 =="
+  echo "== 1. Build + cài APK debug lên S25 =="
   : "${JAVA_HOME:=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}"
   : "${ANDROID_HOME:=/opt/homebrew/share/android-commandlinetools}"
   export JAVA_HOME ANDROID_HOME
 
   GRADLEW="$ANDROID_DIR/gradlew"
-  [ -f "$GRADLEW" ] || fail "khong thay $GRADLEW"
+  [ -f "$GRADLEW" ] || fail "không thấy $GRADLEW"
 
   env JAVA_HOME="$JAVA_HOME" ANDROID_HOME="$ANDROID_HOME" "$GRADLEW" -p "$ANDROID_DIR" ":app:assembleFossDebug" \
-    || fail "gradlew :app:assembleFossDebug that bai"
+    || fail "gradlew :app:assembleFossDebug thất bại"
 
   APK_PATH="$(find "$ANDROID_DIR/app/build/outputs/apk/foss/debug" -name '*.apk' -print -quit 2>/dev/null)"
-  [ -n "$APK_PATH" ] || fail "khong tim thay APK debug duoi $ANDROID_DIR/app/build/outputs/apk/foss/debug"
+  [ -n "$APK_PATH" ] || fail "không tìm thấy APK debug dưới $ANDROID_DIR/app/build/outputs/apk/foss/debug"
   echo "APK: $APK_PATH"
 
-  adb "${ADB_ARGS[@]}" install -r "$APK_PATH" || fail "adb install that bai"
+  adb "${ADB_ARGS[@]}" install -r "$APK_PATH" || fail "adb install thất bại"
 else
-  echo "== 1. --log-only: bo qua build + cai APK (dung lai ban da cai tu lan chay full) =="
+  echo "== 1. --log-only: bỏ qua build + cài APK (dùng lại bản đã cài từ lần chạy full) =="
 fi
 
-echo "== 2. Cap quyen Bluetooth (chua co man xin quyen trong app) =="
+echo "== 2. Cấp quyền Bluetooth (chưa có màn xin quyền trong app) =="
 adb "${ADB_ARGS[@]}" shell pm grant "$APP_ID" android.permission.BLUETOOTH_ADVERTISE \
-  || echo "  CANH BAO: pm grant BLUETOOTH_ADVERTISE that bai (co the da cap san)"
+  || echo "  CẢNH BÁO: pm grant BLUETOOTH_ADVERTISE thất bại (có thể đã cấp sẵn)"
 adb "${ADB_ARGS[@]}" shell pm grant "$APP_ID" android.permission.BLUETOOTH_CONNECT \
-  || echo "  CANH BAO: pm grant BLUETOOTH_CONNECT that bai (co the da cap san)"
+  || echo "  CẢNH BÁO: pm grant BLUETOOTH_CONNECT thất bại (có thể đã cấp sẵn)"
 
-echo "== 3. Mo app tren S25 =="
-adb "${ADB_ARGS[@]}" shell am start -n "$MAIN_ACTIVITY" || fail "adb shell am start that bai"
+echo "== 3. Mở app trên S25 =="
+adb "${ADB_ARGS[@]}" shell am start -n "$MAIN_ACTIVITY" || fail "adb shell am start thất bại"
 
 DERIVED_DATA="$APPLE_DIR/.build-logs/sp1-derived-data"
 
 echo
 if [ "$LOG_ONLY" -eq 0 ]; then
   echo "== 4. Build app macOS (debug) =="
-  command -v xcodegen >/dev/null || fail "khong thay xcodegen trong PATH (brew install xcodegen)"
-  (cd "$APPLE_DIR" && xcodegen generate) || fail "xcodegen generate that bai"
+  command -v xcodegen >/dev/null || fail "không thấy xcodegen trong PATH (brew install xcodegen)"
+  (cd "$APPLE_DIR" && xcodegen generate) || fail "xcodegen generate thất bại"
 
   mkdir -p "$APPLE_DIR/.build-logs"
   xcodebuild build \
@@ -104,28 +104,28 @@ if [ "$LOG_ONLY" -eq 0 ]; then
     -destination "platform=macOS" \
     -derivedDataPath "$DERIVED_DATA" \
     CODE_SIGNING_ALLOWED=NO \
-    || fail "xcodebuild build HandLive (macOS) that bai"
+    || fail "xcodebuild build HandLive (macOS) thất bại"
 else
-  echo "== 4. --log-only: bo qua xcodegen + xcodebuild (dung lai ban da build tu lan chay full) =="
+  echo "== 4. --log-only: bỏ qua xcodegen + xcodebuild (dùng lại bản đã build từ lần chạy full) =="
 fi
 
 MAC_APP_PATH="$(find "$DERIVED_DATA/Build/Products/Debug" -maxdepth 1 -name 'HandLive.app' -print -quit 2>/dev/null)"
 if [ -z "$MAC_APP_PATH" ]; then
   if [ "$LOG_ONLY" -eq 1 ]; then
-    fail "khong thay HandLive.app duoi $DERIVED_DATA/Build/Products/Debug — chay mot lan khong co --log-only truoc"
+    fail "không thấy HandLive.app dưới $DERIVED_DATA/Build/Products/Debug — chạy một lần không có --log-only trước"
   fi
-  fail "khong tim thay HandLive.app duoi $DERIVED_DATA/Build/Products/Debug"
+  fail "không tìm thấy HandLive.app dưới $DERIVED_DATA/Build/Products/Debug"
 fi
 echo "App macOS: $MAC_APP_PATH"
 
-echo "Ky ad-hoc de khong can provisioning profile"
-codesign --force --deep --sign - "$MAC_APP_PATH" || fail "codesign ad-hoc that bai"
+echo "Ký ad-hoc để không cần provisioning profile"
+codesign --force --deep --sign - "$MAC_APP_PATH" || fail "codesign ad-hoc thất bại"
 
-echo "== 5. Mo app tren Mac =="
-open "$MAC_APP_PATH" || fail "mo HandLive.app that bai (sandbox chan 'open'; chay script nay ngoai sandbox)"
+echo "== 5. Mở app trên Mac =="
+open "$MAC_APP_PATH" || fail "mở HandLive.app thất bại (sandbox chặn 'open'; chạy script này ngoài sandbox)"
 
 echo
-echo "== 6. Ghi log HLBENCH (Ctrl-C de dung) =="
+echo "== 6. Ghi log HLBENCH (Ctrl-C để dừng) =="
 echo "Android: $ANDROID_LOG"
 echo "Mac:     $MAC_LOG"
 
@@ -140,12 +140,12 @@ stop() {
   kill "$android_pid" "$mac_pid" 2>/dev/null || true
   wait 2>/dev/null || true
   echo
-  echo "Da dung ghi log."
-  echo "  Android: $(grep -c 'HLBENCH/1 ' "$ANDROID_LOG" 2>/dev/null || echo 0) dong, tai $ANDROID_LOG"
-  echo "  Mac:     $(grep -c 'HLBENCH/1 ' "$MAC_LOG" 2>/dev/null || echo 0) dong, tai $MAC_LOG"
-  echo "Doc ket qua theo handlive/plans/20260925-implementation/reports/phase-07-sp1-measure.md"
+  echo "Đã dừng ghi log."
+  echo "  Android: $(grep -c 'HLBENCH/1 ' "$ANDROID_LOG" 2>/dev/null || echo 0) dòng, tại $ANDROID_LOG"
+  echo "  Mac:     $(grep -c 'HLBENCH/1 ' "$MAC_LOG" 2>/dev/null || echo 0) dòng, tại $MAC_LOG"
+  echo "Đọc kết quả theo handlive/plans/20260925-implementation/reports/phase-07-sp1-measure.md"
 }
 trap stop INT TERM
 
-echo "Lam cac buoc do trong runbook (phase-07-sp1-measure.md), roi an Ctrl-C de dung ghi log."
+echo "Làm các bước đo trong runbook (phase-07-sp1-measure.md), rồi ấn Ctrl-C để dừng ghi log."
 wait
