@@ -61,7 +61,7 @@ project owner in Vietnamese with diacritics.
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
-**Workspace tips to treat as current `main`** (ahead of tag `v0.1.1`; release `v0.2.0` pending the owner's tag, Phase 7 Bluetooth offline connectivity): shared `259217d`, relay `17f367b` (unchanged since `v0.1.1`), android `3900d8b`, apple `28bf435`, hub `main` tip. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
+**Workspace tips to treat as current `main`** (ahead of tag `v0.1.1`; release `v0.2.0` pending the owner's tag, Phase 7 Bluetooth offline connectivity): shared `5cbe4aa`, relay `17f367b` (unchanged since `v0.1.1`), android `ed8e41f`, apple `7d3ce0b`, hub `main` tip. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
 
 ### In progress / blocked (owner or gate)
 
