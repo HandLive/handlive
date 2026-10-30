@@ -6,6 +6,96 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-10-30
+
+### Added
+
+- **Offline connectivity (Phase 7):** when both devices are near each other without a network, they connect over Bluetooth
+  L2CAP. The control channel (clipboard text, SMS and call notifications) carries message frames over a link-security layer
+  (Noise-style handshake keyed by the shared pairing secret). No relay deployment in this release; scenario Y (phone on
+  mobile data, Mac on another Wi-Fi) also uses Bluetooth when the two are near. First pairing over Bluetooth: QR scan brings
+  up the credential, then the phone advertises a proof and waits for the Mac to establish the link, then the user can
+  confirm the pairing value or enter a PIN over Bluetooth through CPace (constant-time password-authenticated key exchange,
+  X25519, SHA-512).
+
+- Bluetooth advertisement with a 128-bit service UUID and rotating hint (0.4.5 `BT_SERVICE_UUID`, `BT_HINT_PERIOD`,
+  service data format frozen by test vectors in `shared/test-vectors/`); link-security handshake (Noise prologue,
+  `challenge`, `noise1`, `noise2`) with frame codec (channel IDs, `more` flag, short and long control lanes, record
+  length bounds); Bluetooth admission policy (link cap, pre-auth connection cap, authentication failure block) on both
+  platforms (A-SVC advertiser on Android, CoreBluetooth central and peripheral on macOS).
+
+- CPace password-authenticated key exchange for offline PIN pairing over Bluetooth (SP2, `CPACE-X25519-SHA512`): the shared
+  secret is derived from the PIN at both ends without a third party; online guessing is limited to one attempt per channel,
+  with a global per-PIN counter (three failures per PIN, then lockout); the spec and test vectors (cpace.json, Android
+  Kotlin and macOS Swift implementations with constant-time arithmetic in `core/crypto` or `HLCrypto`).
+
+- **State machine update (0.11):** the Mac's connection manager now starts connecting when Bluetooth is authorized and on,
+  even without a network (new condition in the state machine); network loss ends LAN or relay sessions only, not Bluetooth
+  (so scenario X stays connected). Routes are prioritized: LAN > Bluetooth (on the Mac), and all pre-auth errors (PAIR_UNKNOWN,
+  PAIR_REVOKED, UNSUPPORTED_VERSION, AUTH_FAILED) are checked for TLS certification (`phoneAuthenticatedByTLS`), so only
+  the pinned-TLS LAN route can unpair, remove pairs, or stop reconnecting (AC8).
+
+- **Pre-auth admission and Bluetooth bans (0.4.5, 0.5):** every pre-auth frame on Bluetooth is checked against a device-global
+  nonce challenge (issued once per connection attempt) and a link-key confirmation after the handshake. Failed confirmations
+  increment a counter; after `BT_AUTH_FAIL_BLOCK` consecutive failures, the pre-auth channel is blocked for `BT_AUTH_FAIL_TIMEOUT`,
+  preventing slot hogging and replay attacks.
+
+- **Bluetooth prompts (AC7):** Android 12+ — decision logic for the one-time "Nearby devices" prompt (SET-01) and a
+  re-ask interval for enabling Bluetooth when there is no LAN; macOS — the system Bluetooth permission dialog
+  (`NSBluetoothAlwaysUsageDescription`) before scanning starts (SET-03). iOS prompts inherited from the existing Mac
+  integration.
+
+- **Hub and shared assets for Phase 7:** detailed design spec updates (00-common-specs.md, 01-setup-settings.md, 02-pairing.md,
+  03-connectivity.md, 04-clipboard.md, all en and vi); test vectors for link-security, frame codec, advertisement and CPace;
+  new UI strings for the "Connected via Bluetooth" label and the Mac Bluetooth permission prompt text.
+
+### Changed
+
+- Device label in the connection status: "Connected via Bluetooth" appears on both Android and Mac when the active route is
+  Bluetooth (`core/design`'s `HLConnectionStatus` + `ui/devices` for Android, `HLMacUI`/`HLiOSUI` for Apple).
+
+- Android foreground service `connectedDevice` (A-SVC): now advertises the Bluetooth service UUID and rotates the hint with the
+  shared secret, independent of the LAN server; the existing `ControlServer.serveRelayPeer` pattern is extended to `serveBluetoothPeer`
+  for `SessionTransport.BLUETOOTH`.
+
+- macOS and iOS connection manager: `ConnectionManager` now routes to `.bluetooth` alongside `.relay`, with upgrades from Bluetooth
+  to LAN when a network appears; `ControlSession` enforces the pre-auth rule `phoneAuthenticatedByTLS` (originally only checking
+  `route == .relay`).
+
+### Fixed
+
+- ~~Relay routes kept in the code but not deployed; the `relay` constant and existing relay code paths are left untouched~~ (no
+  changes here; relay is intact for future gates G4, G5, G6 or if scenario Y demands it in a later phase).
+
+### Security
+
+- Offline pairing (PAIR-01 flow B and C): no pre-shared public key (QR-encoded `pr`) is required; the proof is an HMAC of the
+  pairing secret, and every pairing frame on a secured Bluetooth link is MAC'd with the link key before a slot is granted (D7.1).
+  PIN guessing is limited by the per-PIN counter (3 attempts, then lockout), and the CPace exchange runs at each attempt with the
+  PIN as the shared secret, so no stable state is exposed to a passive sniffer (AC9, `K_bt_pin` never leaves the channel).
+
+- Bluetooth link-security (D7.1 0.4.5): an unbonded L2CAP CoC link is encrypted with a Noise-style handshake keyed by the shared
+  pairing secret (`K_bt_disc` and `K_bt_link`, derived once per link and rotated at an interval); link-layer encryption is
+  assumed to be absent (no bond), so frame-level encryption is mandatory. The prologue is bound to the peer's rotating hint and
+  the sender's discovery key, so a replayed or cloned advertiser cannot form a valid handshake (AC9).
+
+- Pre-auth errors (CONN-01 E4, CONN-03 E9): forged PAIR_UNKNOWN, PAIR_REVOKED, UNSUPPORTED_VERSION or AUTH_FAILED on Bluetooth
+  cannot unpair, remove a pair, or stop reconnecting — only the pinned-TLS LAN route is exempt from this rule (AC8).
+
+### Specs
+
+Designed in the Phase 7 detailed-design update (00-common-specs.md 0.4.6/0.4.7, 01-setup-settings.md) but not implemented
+on either platform yet — tracked for a later release:
+
+- **Wi-Fi Direct** (A7.5 / M7.5): randomly-generated SSID and passphrase per group, the Mac socket bound to the P2P
+  interface only, and the Android 10–12 Location prompt it needs. No Android or Apple code exists for this today.
+- **Per-connection bulk stream keys** (`K_bulk` and nonces, A7.4 / M7.4): a bulk transfer (images via CLIP-03) with its own
+  handshake and encryption keys per stream. Android's `core/transport` reserves channel `0x02` and the chunk/priority
+  scheduler for this lane, but nothing encrypts or sends bulk content through it yet; there is no Apple code at all.
+- **Bluetooth status UI beyond the connected label:** the Mac "Bluetooth off" / "Bluetooth denied" status lines, their
+  settings button, the Bluetooth permission-primer screens and the Settings feature-card label all exist as strings in
+  `handlive-shared/strings/ui-strings.json`, but no Android or Apple view calls them yet.
+
 ## [0.1.1] — 2026-10-22
 
 ### Added
