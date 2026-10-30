@@ -8,13 +8,13 @@
 
 [![ci-docs](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/HandLive/handlive/actions/workflows/ci-docs.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.1-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.1.1)
+[![Release](https://img.shields.io/badge/release-v0.2.0-orange.svg)](https://github.com/HandLive/handlive/releases/tag/v0.2.0)
 
 HandLive kết nối điện thoại Android với các thiết bị macOS, iOS và iPadOS. Ứng dụng đồng bộ bảng nhớ tạm, chuyển tiếp tin nhắn SMS và hiển thị thông báo cuộc gọi kèm nút thao tác—hoàn toàn không phụ thuộc vào đám mây. Mã hóa đầu cuối luôn bật, và toàn bộ dự án là mã nguồn mở theo giấy phép Apache-2.0.
 
 ## Tải bản beta
 
-Tải bản phát hành mới nhất [`v0.1.1`](https://github.com/HandLive/handlive/releases/tag/v0.1.1) (22/10/2026):
+Tải bản phát hành mới nhất [`v0.2.0`](https://github.com/HandLive/handlive/releases/tag/v0.2.0) (30/10/2026):
 - **macOS:** Tệp DMG ký ad-hoc (chọn *Open Anyway* trong lần mở đầu tiên).
 - **Android:** Tệp APK `foss` đã ký. Mã ứng dụng đã đổi (`com.handlive.android`): gỡ bản beta cũ trước, rồi ghép đôi lại.
 - **iOS / iPadOS:** Tệp IPA chưa ký để sideload. Bản beta cập nhật lên bản này phải ghép đôi lại (App Group mới).
@@ -67,7 +67,7 @@ HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoạ
 | **4** Âm thanh cuộc gọi | Bluetooth HFP/SCO và dự phòng Opus | **Dừng** (quyết định của chủ dự án, 12/10/2026) · G4 đóng: chỉ có macOS 27, cuộc gọi chỉ còn thông báo và nút nghe/từ chối/kết thúc, không âm thanh |
 | **5** Camera / mic ảo | CMIOExtension và AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
 | **6** Duyệt web tiếp | Chuyển tiếp URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome và Samsung Internet; còn go/no-go trình duyệt |
-| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đã bắt đầu** (quyết định chủ dự án, 28/10/2026), không chờ G4/G5/G6 · spike G7 xong; ghép đôi và kênh điều khiển qua Bluetooth L2CAP đã lên `main`, Wi-Fi Direct và bulk qua relay bị cắt khỏi phạm vi phase này |
+| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đã phát hành ở `v0.2.0`** (30/10/2026) · ghép đôi Bluetooth offline (luồng B QR, luồng C PIN qua CPace-X25519-SHA512) đã lên `main`; Wi-Fi Direct và bulk qua relay đã có đặc tả nhưng bị cắt khỏi phạm vi phase này |
 | **G0** Vector mã hóa | Vector kiểm thử mã hóa dùng chung giữa các nền tảng | **Xong** |
 | **G1** Máy thật | Kiểm thực tế ma trận máy thật Phase 1 | **Mở** (trước 1.0) · ảnh App Store Connect đã chụp lại ở kích thước gốc 1320×2868 (12/10/2026) |
 | **G2** Play Console | Tờ khai quyền SMS và nhật ký cuộc gọi | **Mở** (trước 1.0; phương án B: F-Droid/APK) · ảnh Play Console đã chụp lại ở 1080×1920 (12/10/2026) |
