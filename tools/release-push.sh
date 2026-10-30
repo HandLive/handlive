@@ -85,4 +85,4 @@ while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
 done
 
 echo
-echo "XONG."
+echo "XONG. Merge tung PR tren GitHub bang 'Create a merge commit', roi chay: zsh handlive/tools/release-tag.sh <tag>"

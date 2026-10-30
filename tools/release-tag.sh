@@ -5,16 +5,19 @@
 #
 # Voi tag <tag> (dang vN.N.N):
 #   1. git fetch origin cho tung repo
-#   2. neu main local la ancestor cua origin/main (PR da merge, lich su khong bi viet lai):
-#      git merge --ff-only origin/main de cap nhat main local, roi kiem lai local == origin/main
+#   2. neu main local khac origin/main: noi dung cay (tree) cua hai ben phai giong het nhau,
+#      khac la dung (origin/main co thu chua kiem, hoac main local co commit chua vao PR).
+#      Cay giong nhau thi dua main local ve origin/main:
+#        - main local la ancestor (merge commit): git merge --ff-only origin/main
+#        - lich su bi viet lai (rebase/squash, SHA moi): git reset --soft origin/main
+#          (cay giong het nen index va working tree khong doi; commit cu van con trong reflog)
 #   3. kiem tra phan loi cua tag khop versionName (Android) va MARKETING_VERSION (Apple, ca 3 target)
 #   4. git tag <tag> roi git push origin <tag>, theo thu tu hub -> shared -> android -> apple
 # Dung ngay khi mot buoc loi (khong tiep tuc repo sau, khong tag nhung repo con lai).
 #
-# QUAN TRONG: tren GitHub phai merge PR bang "Create a merge commit" hoac "Rebase and merge".
-# KHONG dung "Squash and merge" — squash viet lai lich su thanh 1 commit moi, main local se
-# khong con la ancestor cua origin/main nua va buoc 2 se fail dung nhu thiet ke (khong co cach
-# nao --ff-only ma khong mat commit).
+# Merge PR tren GitHub nen dung "Create a merge commit" (giu nguyen SHA cua commit da kiem).
+# "Rebase and merge" va "Squash and merge" deu tao SHA moi; script van chay duoc nho buoc so
+# cay o tren, nhung commit tren GitHub se khong trung SHA voi commit da review.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -105,17 +108,21 @@ while [ "$i" -le "${#REPO_NAMES[@]}" ]; do
   local_sha="$(cd "$repo_path" && git rev-parse main)"
   remote_sha="$(cd "$repo_path" && git rev-parse origin/main)"
   if [ "$local_sha" != "$remote_sha" ]; then
+    (cd "$repo_path" && git diff --quiet main origin/main) \
+      || fail "$name: noi dung main local khac origin/main — PR chua merge, origin/main co commit khac, hoac main local co commit chua vao PR"
     if (cd "$repo_path" && git merge-base --is-ancestor main origin/main); then
       echo "+ git merge --ff-only origin/main"
       (cd "$repo_path" && git merge --ff-only origin/main) \
         || fail "$name: git merge --ff-only origin/main that bai"
-      local_sha="$(cd "$repo_path" && git rev-parse main)"
     else
-      fail "$name: main local co commit chua co tren origin/main, hoac PR vua merge bang squash/rebase lam doi lich su — merge PR bang 'Create a merge commit' hoac 'Rebase and merge' (khong squash), roi chay lai"
+      echo "+ git reset --soft origin/main  (PR merge bang rebase/squash, cay giong het)"
+      (cd "$repo_path" && git reset --soft origin/main) \
+        || fail "$name: git reset --soft origin/main that bai"
     fi
+    local_sha="$(cd "$repo_path" && git rev-parse main)"
   fi
   [ "$local_sha" = "$remote_sha" ] \
-    || fail "$name: main local ($local_sha) khac origin/main ($remote_sha) sau khi merge --ff-only"
+    || fail "$name: main local ($local_sha) khac origin/main ($remote_sha) sau khi dong bo"
   echo "$name: main khop origin/main ($local_sha)"
 
   if (cd "$repo_path" && git rev-parse "$TAG" >/dev/null 2>&1); then
