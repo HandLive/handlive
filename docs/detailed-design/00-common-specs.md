@@ -121,6 +121,7 @@ through TXT.
 | `/v1/ctl` | Control channel: every app envelope | Session handshake (0.6.3) | P1 |
 | `/v1/stream/call-audio` | Opus/WS call audio — fallback path (AUDIO-04) | Key derived from the ctl session | P4 |
 | `/v1/stream/camera` | Camera/microphone stream (separate channel) | Key derived from the ctl session | P5 |
+| `/v1/stream/bulk` | Bulk transfers on the Wi-Fi Direct group only (0.4.7) | Per-connection keys derived from the ctl session | P7 |
 
 - Each pair has only **one** `/v1/ctl` connection at a time. A new connection that authenticates
   successfully replaces the old one (closed with code 4409).
@@ -166,7 +167,7 @@ through TXT.
     of the destination one and forwards the HL frame unchanged.
   - The only exception is the pairing rendezvous (`rv_msg`, PAIR-01 API 7): there the relay reads
     `env.type` and decodes the unencrypted `pair` payload to block a `pair/hello` with
-    `mode = "pin"`, because PIN pairing is LAN-only.
+    `mode = "pin"`, because PIN pairing never goes through the relay (LAN, or Bluetooth with CPace).
 
 ### 0.4.4 Push (P2)
 
@@ -175,6 +176,317 @@ through TXT.
   `{"t":"wake","p":"<pair_id>","r":"<reason>"}`.
 - **iOS (APNs):** `alert` push, `mutable-content: 1`, `apns-priority: 10`. The default displayed content is generic and is sent as a `loc-key` (a catalog key of the `push` group, 0.12.4) so the iPhone translates it itself; the `hl` field carries the envelope encrypted with `K_push` for I-NSE to decrypt and replace the content. `hl` is standard base64 with padding of the UTF-8 envelope JSON, the same string as `env_b64` of `POST /v1/push` (CONN-04 API 2), ≤ 3,000 characters of base64. Total payload ≤ 4 KB.
 - The Mac does not register for push; when it wakes up, M-APP reconnects and syncs from its cursors.
+
+### 0.4.5 Bluetooth link: BLE L2CAP CoC (P7)
+
+The control channel when the phone and the Mac have no shared LAN (Phase 7, near each other). The
+bearer was chosen by gate G7 ([spike report](../../plans/20260925-implementation/reports/phase-07-spike-g7.md),
+"Kết luận bearer"). Mac only; iOS unchanged. Flow and exceptions: CONN-05. Offline first pairing over BLE: "Pairing mode" below and PAIR-01 flows B (QR) and C (PIN). Bulk lane (images): 0.4.7. Wi-Fi Direct: 0.4.6.
+
+- **Roles.** A-SVC is the peripheral: it advertises (below) and listens with
+  `BluetoothAdapter.listenUsingInsecureL2capChannel()` (dynamic LE PSM, no bond, no GATT server). M-APP is the
+  central: `CBCentralManager` scans, `CBPeripheral.openL2CAPChannel(_:)` opens the channel; neither side ever starts
+  OS pairing. An unbonded L2CAP CoC has no link-layer encryption (G7, "Brief items", item 5), so the link-security
+  layer below is mandatory: nothing else crosses the air before it completes.
+- **Keys** (per pair, computed when needed, same storage rules as `K_push`):
+  `K_bt_disc` = HKDF(`PRK`, info = `"handlive/v1/bt-discovery"`); `K_bt_link` = HKDF(`PRK`, info =
+  `"handlive/v1/bt-link"`). Neither reuses `K_disc` or `K_auth`.
+- **Pairing keys** (per QR, only in memory for the life of the QR, `PAIRING_WINDOW`): `K_bt_pdisc` =
+  HKDF-SHA256(ikm = `pairing_secret`, salt = empty, info = `"handlive/v1/bt-pair-disc"`, L = 32); `K_bt_plink` =
+  HKDF-SHA256(ikm = `pairing_secret`, salt = empty, info = `"handlive/v1/bt-pair-link"`, L = 32). The PIN has its own
+  Bluetooth keys, derived from a CPace exchange ("Pairing mode", PIN).
+
+#### Advertisement
+
+Legacy connectable advertising (`BluetoothLeAdvertiser.startAdvertisingSet`, legacy mode, interval `INTERVAL_LOW`,
+TX power `TX_POWER_HIGH` — G7 probe settings), scannable, no device name, no TX power field. `BT_SERVICE_UUID` is a
+self-generated 128-bit UUID. Since 128-bit UUID and service data do not fit in 31 bytes (G7 found
+`ADVERTISE_FAILED_DATA_TOO_LARGE`, "Yêu cầu phát hiện cho sản phẩm", item 2), the advertisement carries the UUID and
+scan response carries service data, each ≤ 31 bytes.
+
+| AD structure | Bytes | Content |
+|---|---|---|
+| Flags (advertisement) | 3 | Added by the stack for a connectable set |
+| Complete list of 128-bit service UUIDs (advertisement) | 18 | `BT_SERVICE_UUID` (the Mac scans with this filter); advertisement total 21 |
+| Service data, 128-bit UUID (scan response) | 18 + 3 + 4 × n | `BT_SERVICE_UUID` ‖ the service data below |
+| **Scan response total** | ≤ 29 | n ≤ 2 (`BT_ADV_MAX_HINTS`) |
+
+Service data (after the UUID):
+
+| Offset | Length | Field | Description |
+|---|---|---|---|
+| 0 | 1 | `ver` | `0x01` |
+| 1 | 2 | `psm` | The current L2CAP PSM, uint16 little-endian |
+| 3 | 4 × n | `hints` | One hint per pair, n = 0…`BT_ADV_MAX_HINTS`; hint = the first 4 bytes of HMAC-SHA256(`K_bt_disc`, `"HLBTDISC1"` ‖ int64 BE `floor(now_ms / BT_HINT_PERIOD)`) |
+
+- A-SVC advertises while `link.bluetooth` is on, Bluetooth is on, Nearby devices is granted (Android 12+) and at
+  least one unrevoked pair has no live session on any route; the hints are those pairs', most recent `last_seen_at`
+  first, at most `BT_ADV_MAX_HINTS`. No such pair and no open QR pairing window → no advertising ("Pairing mode").
+- **Rotation:** at every `BT_HINT_PERIOD` boundary A-SVC stops the advertising set, closes the server socket
+  (existing links stay open), opens a new one (new PSM) and starts a new advertising set. Hint, PSM and advertising
+  set change together; restarting the set is the app's only lever on the radio address (T7.1 BLE sniff checks for
+  address change, AC9).
+- The client compares the hints for the epochs from `e − 4` to `e + 4` (e = the current epoch: clock skew up to an
+  hour, as on the LAN). An advertisement with `ver` ≠ `0x01` or with no matching hint is ignored.
+
+#### Link records
+
+Every byte on the L2CAP channel belongs to a record: `rlen` (uint16 BE) ‖ `rlen` bytes. The reader checks `rlen`
+**before allocating**: a pre-auth record over `BT_PREAUTH_RECORD_MAX`, a transport record whose `rlen` is not 272,
+1,040 or 4,112 (`BT_RECORD_MAX`), or a record kind that is not expected at this point → close the channel at once, no answer (the
+G7 probes read a 4-byte length without a bound, finding of the pentester in review #165, "Yêu cầu phát hiện cho
+sản phẩm", item 3).
+
+Pre-auth records, plaintext, first byte = kind:
+
+| Kind | Name | Direction | Body | Size |
+|---|---|---|---|---|
+| `0x01` | `challenge` | S→C | `n_s`: 32 random bytes, new for every channel | 33 |
+| `0x02` | `noise1` | C→S | Noise message 1: `e` (32) ‖ encrypted empty payload (16) | 49 |
+| `0x03` | `noise2` | S→C | Noise message 2: `e` (32) ‖ encrypted empty payload (16) | 49 |
+| `0x04` | `cpace1` | C→S | `Ya` (32), PIN pairing only ("Pairing mode") | 33 |
+| `0x05` | `cpace2` | S→C | `Yb` (32), PIN pairing only | 33 |
+| `0x7F` | `reject` | S→C | Empty; means `LINK_REJECTED` (0.8.4) | 1 |
+
+#### Link-security handshake
+
+Pattern `Noise_NNpsk0_25519_ChaChaPoly_SHA256` (Noise rev. 34), psk = `K_bt_link` of the pair, prologue =
+`"HLBT1"` ‖ `n_s`. C = M-APP (initiator), S = A-SVC (responder).
+
+1. The channel opens; S sends `challenge` at once and starts `BT_PREAUTH_TIMEOUT`.
+2. C sends `noise1` with the psk of the pair whose hint it matched.
+3. S tries the psk of each unrevoked pair in turn (the advertisement carries no `pair_id`) until the payload tag of
+   message 1 verifies. The prologue binds `n_s`, so a recorded `noise1` never verifies on a new channel. No pair
+   verifies → key-confirmation failure.
+4. S sends `noise2`; C verifies its payload tag (failure → C closes the channel, CONN-05 E3). Both sides `Split()`
+   into one CipherState per direction; the link is now bound to that pair.
+5. S treats the link as confirmed only when C's first transport record decrypts; a failure there is also a
+   key-confirmation failure.
+6. The E2E session handshake (0.6.3) then runs inside the link on the control channel, unchanged. Its
+   `session/hello` must name the same `pair_id` as the psk that verified; otherwise S answers `AUTH_FAILED`
+   (`session/error`) and closes the link.
+
+Any failure before step 5 completes → S sends `reject` when it can and closes the channel. `reject` is the only
+pre-auth error on the air: it does not say whether the cause was the admission cap, a timeout, a block or a failed key
+confirmation.
+
+#### Transport records and channels
+
+After step 4 every record is a Noise transport message: ciphertext of the padded plaintext + 16-byte tag, nonce =
+the 64-bit counter of that direction, empty associated data. Each side calls Noise `Rekey()` on its sending
+CipherState after every `BT_LINK_REKEY_RECORDS` records, and the receiver mirrors it on the same count (no
+message). Plaintext:
+
+| Offset | Length | Field | Description |
+|---|---|---|---|
+| 0 | 1 | `chan` | `0x01` control, `0x02` bulk (content: 0.4.7); any other value → close the link |
+| 1 | 1 | `flags` | bit0 `more`: further fragments of the same message follow; bit1 `long`: the fragment belongs to the long lane of the control channel (channel `0x01` only, below); other bits 0 |
+| 2 | 2 | `dlen` | uint16 BE, length of `data`, ≤ `BT_FRAGMENT_MAX` |
+| 4 | `dlen` | `data` | A fragment of one message |
+| 4 + `dlen` | rest | padding | Zero bytes up to the smallest of 256, 1,024 or 4,096 bytes that holds the frame |
+
+- **Control channel** (`0x01`): one message = one JSON envelope (0.5.1) as UTF-8, exactly what a WS text frame
+  carries on `/v1/ctl`. Envelope rules (0.5.1) are unchanged. An envelope may reach 256 KiB (0.5.1 rule 4), about
+  20 s of air time at 12.9 KB/s, so the channel has two lanes, told apart by `long`:
+  - *Short lane* (`long` = 0): an envelope of at most `BT_FRAGMENT_MAX` bytes, always one fragment. `more` = 1 with
+    `long` = 0 → close the link.
+  - *Long lane* (`long` = 1): any envelope up to `BT_MESSAGE_MAX`, in fragments of at most `BT_BULK_FRAGMENT_MAX`
+    bytes, one message at a time per direction. The sender puts there every envelope longer than `BT_FRAGMENT_MAX`,
+    every `session` envelope (`rekey`, `bye`…), and a short envelope of the same `type` as a long message still
+    queued or in flight. The receiver reassembles this lane only and closes the link when a long-lane fragment has
+    `dlen` over `BT_BULK_FRAGMENT_MAX` or a message passes `BT_MESSAGE_MAX` before its last fragment.
+  - *Order.* Each lane keeps the sender's order, and the receiver handles an envelope as soon as it is complete. A
+    short envelope may thus overtake a long one of another `type` (a clipboard text never waits 20 s behind an SMS
+    batch); envelopes of one `type` and all `session` envelopes keep the order in which they were sent.
+- **Priority:** the sender keeps three queues and at each fragment boundary sends from the first non-empty one:
+  short control, then long control, then bulk. At most `BT_BULK_INFLIGHT` long-control and bulk records together
+  may be written to the L2CAP stream and not yet drained, so a short envelope waits at most behind that many
+  1,040-byte records (about 160 ms) and the record on the air. Long control goes before bulk without fairness: long
+  envelopes are rare over Bluetooth, since images travel on the bulk lane (0.4.7). The G7 probe used a single FIFO
+  stream and missed AC1 during a bulk transfer (one-way p95 4,769–7,768 ms, spike report runs "Lần 1" and "Lần 2"),
+  hence this rule.
+- **Padding** hides the envelope `type` behind three sizes (AC9); `id` and `ts` travel only inside the ciphertext. A
+  long envelope, like bulk, shows as a run of 1,040-byte records: its size is visible to within about 1 KiB, its `type` is
+  not.
+- **Keepalive:** every `BT_PING_INTERVAL` without other traffic the client sends `ping/ping` (CONN-02 API 2); a side
+  that receives no record for `BT_IDLE_TIMEOUT` closes the link.
+- **No close codes:** a link has no equivalent of the WS close codes (0.8.3). A side ends an established session
+  with an encrypted `session/bye`, as for a relayed session (CONN-02 API 4), then closes the channel; before the
+  session handshake succeeds it uses `session/error` (CONN-01 API 6) followed by the close. A channel closed
+  without `session/bye` counts as a connection loss.
+
+#### Admission (A-SVC)
+
+- At most `BT_LINK_LIMIT` L2CAP links at once, of which at most `BT_PREAUTH_LIMIT` before step 5. A channel over
+  either cap gets `reject` and is closed.
+- A link that has not completed step 5 within `BT_PREAUTH_TIMEOUT` gets `reject`; a confirmed link without a valid
+  `session/hello` (on a pairing link: `pair/hello`, "Pairing mode") within `HANDSHAKE_TIMEOUT` is closed.
+- BLE gives no client address to count by, so failures are counted for the whole Bluetooth listener: every
+  key-confirmation failure (steps 3 and 5) and every `session/hello` rejected with `AUTH_FAILED` counts as one
+  `AUTH_FAILED`; `BT_AUTH_FAIL_BLOCK` of them within a minute → the listener answers every new channel with
+  `reject` for a minute. The LAN counters (`CTL_PREAUTH_LIMIT`, `CTL_IP_BLOCK`) do not see Bluetooth links.
+- One session per pair across all routes (0.4.1): a new session that confirms its keys replaces the old one,
+  whatever the route; over Bluetooth the replaced side receives `session/bye {reason: replaced}`.
+
+#### Pairing mode (PAIR-01 flows B and C)
+
+First pairing when the phone and the Mac share no LAN: QR (flow B; the QR format does not change) or PIN (flow C,
+CPace, last bullet).
+
+- **Advertising.** While A-SVC holds an open QR pairing window (PAIR-01 step 6) and Bluetooth is usable (on, Nearby
+  devices granted on Android 12+, `link.bluetooth` on), it restarts the advertising set (new server socket, new PSM)
+  with `pr_bt` as the first hint, followed by at most `BT_ADV_MAX_HINTS` − 1 pair hints under the rule above.
+  `pr_bt` = the first 4 bytes of HMAC-SHA256(`K_bt_pdisc`, `"HLBTPAIR1"`). The format is unchanged, so an observer
+  cannot tell pairing mode from normal advertising; `pr_bt` changes with every QR and is never derived from `pk`, so
+  it links no two pairings (AC9). When the window closes, A-SVC restarts the set without `pr_bt`.
+- **Client.** M-APP in PAIR-01 step 7 also scans with the `BT_SERVICE_UUID` filter and treats an advertisement whose
+  hints contain its own `pr_bt` as a candidate. A LAN candidate wins; a Bluetooth candidate is connected at once when
+  there is no LAN candidate. Several advertisers with the same `pr_bt` (a copied advertisement) are tried one after
+  the other until the 20 s of PAIR-01 step 7 run out.
+- **Link-security handshake.** Steps 1–5 above, unchanged, with psk = `K_bt_plink`. While the window is open, S
+  tries `K_bt_plink` first, then the psk of each unrevoked pair. A link whose `noise1` verified with `K_bt_plink` is
+  a **pairing link**: the first frame of a pairing is thus authenticated with a key from `pairing_secret` before the
+  pre-auth slot turns into a confirmed link.
+- **Pairing link.** Within `HANDSHAKE_TIMEOUT` after step 5, C sends `pair/hello` with `mode = "qr"` on control
+  channel `0x01`; PAIR-01 API 2–6 then run as envelopes on that channel (payload unencrypted as on `/v1/pair`, inside
+  the link encryption). Any other envelope `type` on a pairing link, or a `pair` envelope on a pair's link → close the
+  link without an answer. A pairing link that sent a valid `pair/hello` holds the window: S stops trying `K_bt_plink`,
+  so a second claimant fails key confirmation and gets `reject` (one client per window, PAIR-01 API 2 logic 4).
+- **After `pair/done`.** The link is kept and becomes the control link of the new pair: the next envelope from C must
+  be `session/hello` with the `pair_id` created on this link (step 6 above), within `HANDSHAKE_TIMEOUT`; otherwise
+  `session/error` `AUTH_FAILED` and close. `pair/error`, or a link closed before `pair/done`, ends the pairing:
+  nothing is stored (PAIR-01 postconditions).
+- **PIN (PAIR-01 flow C, owner decision 2026-10-28).** The 6-digit PIN pairs over Bluetooth through CPace, so it
+  never crosses the air in any form and one recorded exchange cannot be checked offline:
+  - *Advertising.* While A-SVC holds an open PIN window (PAIR-01 A4) and Bluetooth is usable, it restarts the
+    advertising set with `BT_PIN_HINT` as the first hint (then at most `BT_ADV_MAX_HINTS` − 1 pair hints). The marker
+    is the same for every phone in PIN mode and only says "a phone is in PIN pairing mode now", like TXT `pm = 1` on
+    the LAN; it carries nothing about the device, the PIN or a pair (AC9). When the window closes the set restarts
+    without it. M-APP in step A2 treats every advertisement carrying `BT_PIN_HINT` as a candidate.
+  - *CPace.* After `challenge`, C sends `cpace1` instead of `noise1`; S accepts it only while a PIN window is open
+    (otherwise the channel is closed without an answer). Suite `CPACE-X25519-SHA512` of draft-irtf-cfrg-cpace
+    (initiator-responder), revision pinned by the S7.1 vectors (`shared/test-vectors/cpace.json`, field `draft`):
+    PRS = the UTF-8 bytes of the six digits; CI = `"HLBTPIN1"`; sid = `n_s` (32 bytes, new for every channel); ADa =
+    ADb = empty. C: generator `g` = `calculate_generator(SHA-512, PRS, CI, sid)` (Elligator2 map of RFC 9380),
+    random scalar `ya`, `Ya` = X25519(`ya`, `g`) → `cpace1`. S: same `g`, `yb`, `Yb` → `cpace2`; `K` =
+    X25519(`yb`, `Ya`). C: `K` = X25519(`ya`, `Yb`). An all-zero `K` → close without answer. `ISK` (64 bytes) per the
+    draft from `sid`, `K`, `Ya`, `Yb`.
+  - *Keys from ISK* (memory only, wiped with the PIN): `K_bt_pinlink` = HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info =
+    `"handlive/v1/bt-pin-link"`, L = 32), the Noise psk of steps 2–5 above (same prologue); `K_bt_pin` =
+    HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-pair"`, L = 32), which replaces `K_pin` in
+    PAIR-01 steps 9–11 (0.6.2). The link that passes `noise1` with `K_bt_pinlink` is a **PIN pairing link**: the
+    "Pairing link" and "After `pair/done`" rules above apply, with `pair/hello` `mode = "pin"`. `mode = "qr"` on a PIN
+    pairing link, or `mode = "pin"` on a QR pairing link → `pair/error` `AUTH_FAILED` and close.
+  - *Online guessing only.* A wrong PIN on either side makes the `noise1` tag fail at S (or `noise2` at C): one
+    attempt. A man in the middle gets exactly one PIN guess per channel and a passive listener none. The phone keeps
+    **one counter per PIN window, shared by both transports**: every `pair/offer` on the LAN that ends without
+    `pair/done` and every Bluetooth channel that fails after `cpace1` add one; at `PIN_MAX_ATTEMPTS` in total it
+    closes the window as "PIN expired" (PAIR-01 E2) and refuses any new PIN window, on the LAN or over Bluetooth, for
+    `BT_PIN_LOCKOUT` (PAIR-01 E10). The Mac keeps the same single counter per PIN (`PIN_INVALID` on the LAN plus
+    failed Bluetooth channels) and generates a new PIN at `PIN_MAX_ATTEMPTS` (E7). With 10^6 PINs and 3 attempts per
+    PIN, one PIN window is guessed with probability 3 × 10^-6.
+  - *Timing.* One round trip more than the QR link (`cpace1`/`cpace2`); the phone is in the user's hand while the PIN
+    is typed, so Doze does not apply and `BT_PREAUTH_TIMEOUT` is unchanged.
+- **Admission.** Pairing links share `BT_LINK_LIMIT`, `BT_PREAUTH_LIMIT`, `BT_PREAUTH_TIMEOUT` and
+  `BT_AUTH_FAIL_BLOCK` with pair links. A device without `pairing_secret` (flow B) or the PIN (flow C) can hold
+  the single pre-auth slot for at most `BT_PREAUTH_TIMEOUT` per channel and never claims the window; its failures
+  count toward `BT_AUTH_FAIL_BLOCK`, which can block a real pairing for a minute (accepted risk, plan risk 12: the
+  user retries or pairs on the LAN).
+- **AC8.** A pairing link never touches an existing pair: the pair store changes only at PAIR-01 step 11, after the
+  `mac` checks keyed by `pairing_secret`; `reject` and a closed channel only fail this attempt.
+
+### 0.4.6 Wi-Fi Direct link for bulk (P7)
+
+A fast path for images when the phone and the Mac share no LAN (scenario X), opened only on demand and closed as soon
+as it is not needed. It carries only bulk stream connections; the control channel stays on the Bluetooth link
+(0.4.5). Mac only; iOS/iPadOS have no Bluetooth route and no Wi-Fi Direct. Flow and exceptions: CONN-06. Bulk content,
+per-connection keys and scheduling: 0.4.7.
+
+- **Topology (decision).** A-SVC creates an autonomous Wi-Fi Direct group (`WifiP2pManager.createGroup` with a
+  `WifiP2pConfig`, API 29+) and is its group owner; M-APP joins it as a plain WPA2 client with CoreWLAN. Reasons
+  ([research 2026-10-01](../../plans/20260925-implementation/reports/research-direct-wifi-link-2026-10-01.md),
+  sections 3 and 5): macOS has no Wi-Fi Direct or Wi-Fi Aware API (F2), so the Mac can only join a network; a
+  third-party app cannot turn the phone's hotspot on; `LocalOnlyHotspot` imposes a random SSID and passphrase and fails
+  on some OEM builds; a Wi-Fi Direct group lets the app set its own SSID and passphrase (API 29+) and keeps the phone's
+  own Wi-Fi association (STA + P2P).
+- **Credentials.** A-SVC generates new ones for every group and never reuses them:
+  `ssid` = `"DIRECT-"` ‖ 10 random characters from `[A-Za-z0-9]` (17 bytes; Android requires the `DIRECT-xy` prefix,
+  here the `xy` are random too, so the name says nothing about HandLive or the pair); `passphrase` = base64url without
+  padding of 18 random bytes (24 characters, 144 bits; WPA2 needs 8–63). They travel only in the `ack` of
+  `direct/start`, an E2E envelope inside the Bluetooth link: never advertised, never logged, kept only in memory and
+  wiped when the group stops. A new group means new credentials, so there is no rotation schedule: a group lives at
+  most `DIRECT_WIFI_MAX`.
+- **Group settings.** `WifiP2pConfig.Builder().setNetworkName(ssid).setPassphrase(passphrase)
+  .setGroupOperatingBand(WifiP2pConfig.GROUP_OWNER_BAND_AUTO)`; on API 36+ also
+  `setPccModeConnectionType(WifiP2pConfig.PCC_MODE_CONNECTION_TYPE_LEGACY_OR_R2)` (the Mac is a legacy client, F4).
+  A-SVC never toggles Wi-Fi and never leaves its own network for the group.
+- **Entry rules (Mac, AC4).** M-APP asks for a group (`direct/start`) only when all hold: the session runs over
+  Bluetooth (no LAN session); a bulk transfer is waiting in either direction (0.4.7; the phone signals its own with
+  `direct/want`); `link.direct_wifi` is on; Location access is granted; Wi-Fi is powered on and has not been associated
+  with any network for at least `DIRECT_WIFI_IDLE_MIN`; the last scan shows no network from the Mac's known networks;
+  no Wi-Fi Direct attempt failed within `DIRECT_WIFI_RETRY_AFTER`. A Mac associated with any network, even one without
+  Internet, never joins: the transfer goes over Bluetooth in the background (plan routing table). So joining the group
+  never takes the Mac off another network.
+- **Exit rules.** The Mac leaves the group (`CWInterface.disassociate()`) and sends `direct/stop` when: no bulk stream
+  has carried data for `DIRECT_WIFI_LINGER`; the group has existed for `DIRECT_WIFI_MAX`; a scan every
+  `DIRECT_WIFI_SCAN_INTERVAL` shows a known network (so macOS can go back to it); a LAN session appears; the Bluetooth
+  session ends. macOS moving to another network by itself counts as leaving. A-SVC removes the group
+  (`WifiP2pManager.removeGroup`) on `direct/stop`, on the same `DIRECT_WIFI_LINGER` and `DIRECT_WIFI_MAX` limits counted on
+  its side, when no client has joined within `DIRECT_WIFI_JOIN_TIMEOUT`, and when the control session ends.
+- **Authentication on the group (AC8).** Knowing the passphrase lets a device join the group, not talk to HandLive.
+  M-APP connects to `host`:`port` from the `ack` with TLS pinned to `peer_tls_sha256`, exactly as on the LAN (0.4.1),
+  with its socket bound to the Wi-Fi interface; a certificate that does not match → `TLS_PIN_MISMATCH`, leave the group.
+  On a connection whose local address is the group owner address, A-SVC accepts only the bulk stream path `/v1/stream/bulk` (0.4.7),
+  whose stream handshake is keyed by the live control session (0.6.3 step 7); `/v1/ctl`, `/v1/pair` and anything else
+  on that address → close 4400. A device on the group without the session keys cannot finish a stream handshake (4401).
+- **Not a LAN.** The group is never a session route: an mDNS instance or address seen on the group's interface is not a
+  CONN-01 candidate and does not trigger the 0.11 upgrade; the session stays on Bluetooth while images use the group.
+- **Saved network.** After leaving, M-APP removes the network from the Mac's preferred networks when CoreWLAN allows
+  it without an administrator prompt; otherwise the entry stays, harmless because that SSID is never used again
+  (G7 did not test it, CONN-06 special requirements).
+
+### 0.4.7 Bulk lane (P7)
+
+Large transfers (CLIP-03 images, text over `CLIP_INLINE_MAX`, CLIP-04) keep the CLIP-03 messages unchanged
+(`clipboard/push` with `transfer`, 64 KiB `clipboard/chunk`, `clipboard/cancel` and their `ack`); only the lane that
+carries them depends on the route. Every other envelope, including inline clipboard text, stays on the control channel.
+
+- **Lane choice** (plan routing table: LAN > Wi-Fi Direct > Bluetooth), decided when a transfer starts:
+
+| Situation | Bulk lane | Keys |
+|---|---|---|
+| LAN session | `/v1/ctl`, as today (CLIP-03: at most 4 chunks in the send buffer) | Session keys (0.6.3) |
+| Bluetooth session, size ≥ `BULK_DIRECT_MIN`, Wi-Fi Direct entry rules hold (0.4.6) | `wss://{host}:{port}/v1/stream/bulk` on the group (CONN-06) | Per-connection keys (below) |
+| Bluetooth session, otherwise, or Wi-Fi Direct failed | Link channel `0x02` (0.4.5), in the background | Session keys inside the link encryption |
+
+  A transfer of at least `BULK_DIRECT_MIN` waits for Wi-Fi Direct up to `DIRECT_WIFI_JOIN_TIMEOUT`, then starts on
+  Bluetooth if the group is not up. Below that size Bluetooth is faster than joining (12.9 KB/s, G7 Lần 2: 128 KiB ≈
+  10 s against an 8 s join budget). There is no Bluetooth-specific size cap: up to `CLIP_MAX_IMAGE` runs in the
+  background (plan AC3). No route at all → nothing is sent; CLIP-03 replays the latest clip when a session starts
+  (QC7).
+- **Per-connection keys on `/v1/stream/bulk`.** The stream handshake of 0.6.3 step 7 with channel `bulk`
+  (`K_stream` from the live control session, `bulk/stream_hello` and `bulk/stream_welcome`), then
+  `K_bulk` = HKDF-SHA256(ikm = `K_stream` (96 bytes), salt = `nonce_c` ‖ `nonce_s`, info = `"handlive/v1/bulk-conn"`,
+  L = 64) → `k_c2s` (32) ‖ `k_s2c` (32). Every envelope on that connection is a 0.5.1 envelope encrypted with these
+  keys instead of the session keys; the 0.5.1 rule 2 duplicate set is kept per connection. A new connection, even in
+  the same session, gets new nonces and so new keys; the long-term `PRK` is never used directly. A device on the
+  group without the live session cannot pass `stream_hello` (4401, AC8). The control session ending closes the bulk
+  connection.
+- **Bluetooth scheduling.** Control fragments always go first (0.4.5 "Priority": short control, long control, then
+  bulk). A bulk fragment carries at most `BT_BULK_FRAGMENT_MAX` bytes, so it fits the 1,040-byte record and holds the
+  radio about 80 ms at 12.9 KB/s; the sender keeps at most `BT_BULK_INFLIGHT` long-control and bulk records written to
+  the L2CAP stream and not yet drained, so a short control envelope never waits behind more than that. A7.4 measures this against AC1 (≤ 200 ms during bulk).
+- **Wi-Fi Direct and control.** The control channel never moves to the group (0.4.6 "Not a LAN"); bulk on the group
+  uses a different radio path, so it cannot delay control envelopes on Bluetooth.
+- **Changing lane mid-transfer: restart, no resume.** When the lane of a running transfer goes away or a better one
+  appears (Wi-Fi Direct up while it runs on Bluetooth; the group lost, CONN-06 E7/E8; a LAN session replacing the
+  Bluetooth one), the sender sends `clipboard/cancel` `rerouted` on the old lane if it still can, and restarts the whole
+  transfer with a new `transfer_id` and the same `clip_id` on the new lane, even past the 120 s of QC7, as long as it
+  is still the latest clip. At most `BULK_MAX_RESTARTS` restarts per clip, then CLIP-03 E8 applies. A restart because
+  a better lane appeared happens only if more than half of the transfer is left.
+- **Timeouts and progress.** `CLIP_TRANSFER_IDLE_TIMEOUT` is unchanged on every lane (a 1,040-byte record at a Doze
+  RTT of 3 s still arrives well within it). Over Bluetooth, progress is shown for transfers of at least
+  `BULK_DIRECT_MIN` (CLIP-03 field 2) with the line of CLIP-03 field 10.
 
 ## 0.5 Message frames
 
@@ -270,6 +582,8 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
 | `ik_dh` | X25519 | Like `ik_sig` | Like `ik_sig` |
 | TLS key | ECDSA P-256 + self-signed certificate | Android: PKCS#12, password wrapped by the Keystore | At install time. A corrupted PKCS#12 store or a lost password → regenerate the key and certificate; every client sees `TLS_PIN_MISMATCH` on every instance → shows "Needs to be paired again" (CONN-01 E2) |
 | `pairing_secret` | 32 random bytes | Only in Mac/iOS memory and in the QR | 120 s |
+| `K_bt_pdisc`, `K_bt_plink` | HKDF(`pairing_secret`), 0.4.5 | Memory only (Mac and Android) | Like `pairing_secret`; wiped with it |
+| `ISK`, `K_bt_pinlink`, `K_bt_pin` | CPace, then HKDF (0.4.5, PIN) | Memory only (Mac and Android) | One channel; wiped with the PIN |
 | `PRK` | 32 bytes | Android: column `prk_enc` (Tink AEAD, key in the Keystore). Mac/iOS: Keychain, account = `pair_id` | Per pair |
 | `K_push` | HKDF(`PRK`, info = `"handlive/v1/push"`) | Computed when needed | Per pair |
 | `k_c2s`, `k_s2c` | 32 bytes | Memory | Per connection; rekey after 24 h or 10,000 envelopes in each direction |
@@ -302,7 +616,10 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
     `0x00000000` ‖ the last 8 bytes of the 24-byte nonce.
   - Relay: `ed25519-dalek`, `jsonwebtoken`, `ring`.
 - A cross-platform test vector suite (Kotlin ↔ Swift ↔ Rust) covers: `device_id`, `PRK`, the session
-  handshake, envelope encryption, the HL frame. It runs in the CI of all three sides.
+  handshake, envelope encryption, the HL frame. It runs in the CI of all three sides. CPace (`cpace.json`, Kotlin and
+  Swift): the draft's own `CPACE-X25519-SHA512` vectors, then HandLive cases (fixed `n_s`, PIN, `ya`, `yb` → `g`, `Ya`,
+  `Yb`, `K`, `ISK`, `K_bt_pinlink`, `K_bt_pin`), PINs with leading zeros, and negative cases (a low-order `Ya`, an
+  all-zero `K`, a wrong PIN on one side).
 
 ### 0.6.2 Pairing
 
@@ -310,6 +627,10 @@ The receiver drops frames whose `seq` ≤ the largest `seq` received so far (rep
   SHA-256(smaller `device_id` ‖ larger `device_id`, as 16 bytes), info = `"handlive/v1/pair"`, L =
   32).
 - With a PIN (fallback): replace `pairing_secret` with `K_pin` = Argon2id(PIN, salt = `nonce_c` ‖ `nonce_s`, t = 3, m = 64 MiB, p = 4, L = 32); the PIN is the UTF-8 bytes of exactly six digits (leading zeros kept), Argon2 version 0x13, no secret and no associated data.
+- Over Bluetooth with a PIN (PAIR-01 flow C): replace `pairing_secret` with `K_bt_pin` (0.4.5, from CPace) instead of
+  the Argon2id `K_pin`; the rest is unchanged.
+- Over Bluetooth (PAIR-01 flow B, QR): `K_pa`, `PRK` and `attestation` are computed exactly as above; there is
+  no TLS connection, so the client pins the `tls_sha256` protected by the offer's `mac`, as through the relay.
 - Strings fed into a MAC, a signature or a hash (device names…) are their UTF-8 bytes as they are, without Unicode normalization (NFC/NFD).
 - Pairing attestation (`attestation`): `"HLPAIR1"` ‖ `pair_id` (16) ‖ `device_id` Android(16) ‖
   `device_id` client(16) ‖ `ik_sig_pub` Android(32) ‖ `ik_sig_pub` client(32) ‖ `created_at` (int64
@@ -349,7 +670,7 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
    sent it; the old keys are kept for another 30 s for envelopes in flight.
 7. **Stream channel keys** (`/v1/stream/*`): `K_stream` = HKDF(`secret`, info =
    `"handlive/v1/stream/" ‖ <channel> ‖ "/" ‖ <session_id>`, L = 96) → `k_auth` (32) ‖ `k_c2s` (32) ‖
-   `k_s2c` (32). The first message on a stream channel is a `camera` /`call_audio` envelope, op
+   `k_s2c` (32). The first message on a stream channel is a `camera` /`call_audio` /`bulk` envelope, op
    `stream_hello` `{session_id, nonce, mac}` with `mac` = HMAC-SHA256(`k_auth`, `"HLSTREAM1|"` ‖
    `session_id` ‖ `nonce_c`); S answers `stream_welcome` `{session_id, nonce, mac}` with `mac` =
    HMAC-SHA256(`k_auth`, `"HLSTREAM1|welcome|"` ‖ `session_id` ‖ `nonce_c` ‖ `nonce_s`) — it binds
@@ -362,7 +683,7 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
    - An HKDF without a stated salt uses an empty salt; without a stated L, L = 32 (e.g. `K_auth`).
    - Salt of `PRK`: the two `device_id`s are compared as 16 bytes, in unsigned byte order.
    - `info` of `K_stream`: UTF-8 `"handlive/v1/stream/<channel>/<session_id, 36 lowercase characters>"`,
-     `<channel>` ∈ {`camera`, `call-audio` }. `K_stream` is always derived from the `secret` of the
+     `<channel>` ∈ {`camera`, `call-audio`, `bulk` } (`bulk` then derives per-connection keys, 0.4.7). `K_stream` is always derived from the `secret` of the
      first handshake (epoch 0) for the whole connection, even after a rekey.
    - Rekey: shared = X25519(initiator eph, responder eph); salt = SHA-256(initiator `nonce` ‖
      responder `nonce`); the 64 resulting bytes are split into `k_c2s` ‖ `k_s2c` by the C/S role (not
@@ -404,7 +725,7 @@ C = Mac/iOS, S = Android. The first two envelopes have an unencrypted payload (0
 
 `type` keeps exactly the agreed set (`clipboard | sms | call_event | call_audio | pair | ack | ping |
 capability`) and adds `session`, `camera` for the session handshake and Phase 5, and `web` for
-Continue Browsing (Phase 6, README §5 C21).
+Continue Browsing (Phase 6, README §5 C21), and `direct` for the on-demand Wi-Fi Direct link and `bulk` for its stream handshake (Phase 7, 0.4.6, 0.4.7).
 
 | type | op | Direction | Ack | Channel | Function |
 |------|----|-------|-----|------|-----------|
@@ -421,7 +742,7 @@ Continue Browsing (Phase 6, README §5 C21).
 | `session` | `bye` | Both ways | — | `/v1/ctl` | CONN-02, PAIR-03 |
 | `capability` | `hello` | Both ways | — | `/v1/ctl` | CONN-01 |
 | `capability` | `update` | Both ways | — | `/v1/ctl` | SET-02 |
-| `ping` | `ping` | Both ways | Yes | `/v1/ctl` via relay | CONN-02 |
+| `ping` | `ping` | Both ways | Yes | `/v1/ctl` via relay or Bluetooth | CONN-02 |
 | `clipboard` | `push` | Both ways | Yes | `/v1/ctl` | CLIP-01…04 |
 | `clipboard` | `chunk` | Both ways | — | `/v1/ctl` | CLIP-03, CLIP-04 |
 | `clipboard` | `cancel` | Both ways | — | `/v1/ctl` | CLIP-03 |
@@ -449,8 +770,12 @@ Continue Browsing (Phase 6, README §5 C21).
 | `camera` | `stats` | C→S | — | `/v1/ctl` | CAM-05 |
 | `camera` | `state` | S→C | — | `/v1/ctl` | CAM-02, CAM-05 |
 | `camera` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/camera` | CAM-02, CAM-04 |
+| `bulk` | `stream_hello` / `stream_welcome` | C→S / S→C | — | `/v1/stream/bulk` | 0.4.7, CLIP-03 |
 | `web` | `active` | Both ways (Android → Mac, iPhone/iPad; Mac → Android) | — | `/v1/ctl` | WEB-01…05: `{page_id, url, title?, browser, observed_at}`, the page open in the sender's foreground browser; latest wins, fire-and-forget like `call_event/state` |
 | `web` | `inactive` | Both ways (as `active`) | — | `/v1/ctl` | WEB-01…05: `{page_id}`, the page is no longer open in the foreground |
+| `direct` | `start` | C→S | Yes (with data) | `/v1/ctl` over Bluetooth | CONN-06: ask the phone to create a Wi-Fi Direct group; the `ack` carries `{ssid, passphrase, host, port}` |
+| `direct` | `stop` | Both ways | Yes | `/v1/ctl` over Bluetooth | CONN-06: `{reason}`, the group is no longer needed or is gone |
+| `direct` | `want` | S→C | — | `/v1/ctl` over Bluetooth | CONN-06: `{bytes}`, the phone has bulk waiting for the Mac |
 | `ack` | — | Both ways | — | Every channel | Response |
 
 Payload rules of `call_event/app_call` (full specification in CALL-05 API 1): `{call_id, app: {package,
@@ -593,8 +918,8 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `PAIRING_CLOSED` | Pairing | The 120 s window has ended or the Mac has refreshed the QR | Scan the new QR (PIN flow: get a new PIN) |
 | `PIN_INVALID` | Pairing | Wrong PIN (at most 3 attempts) | Enter it again; after 3 attempts the Mac generates a new PIN |
 | `AUTH_FAILED` | Session | Wrong HMAC or signature | No automatic retry |
-| `PAIR_UNKNOWN` | Session | No matching pair | On the LAN (pinned TLS to the phone): delete the local pair, ask to pair again. Over the relay, before authentication: `Backoff`, never unpair (CONN-03 E9) |
-| `PAIR_REVOKED` | Session | The pair has been revoked | On the LAN: delete the local pair. Over the relay, before authentication: `Backoff`, never unpair (CONN-03 E9) |
+| `PAIR_UNKNOWN` | Session | No matching pair | On a route with `phoneAuthenticatedByTLS` (LAN, USB: pinned TLS to the phone): delete the local pair, ask to pair again. On any other route (relay, Bluetooth), before authentication: `Backoff`, never unpair (0.11, CONN-03 E9, CONN-05 E5) |
+| `PAIR_REVOKED` | Session | The pair has been revoked | On a route with `phoneAuthenticatedByTLS`: delete the local pair. On any other route, before authentication: `Backoff`, never unpair (0.11, CONN-03 E9, CONN-05 E5) |
 | `DECRYPT_FAILED` | Session | The envelope cannot be decrypted | Close the session, reconnect |
 | `TLS_PIN_MISMATCH` | Session | The certificate does not match the pin | Drop this instance, try another instance |
 | `CLIP_TOO_LARGE` | Clipboard | Exceeds `max_text_bytes`/`max_image_bytes` | Tell the user |
@@ -624,11 +949,12 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | `CAM_DENIED_BY_USER` | Camera | The user declined on the phone | Stop |
 | `CAM_ENCODER_UNSUPPORTED` | Camera | No suitable H.264 encoder | Lower the resolution or stop |
 | `CAM_THERMAL_LIMIT` | Camera | The phone is too hot | Lower the quality or stop |
-| `CAM_TRANSPORT_UNSUPPORTED` | Camera | The `/v1/ctl` session runs over the relay; the camera only works over LAN or USB | Show "Requires the same Wi-Fi network or a USB cable" |
+| `CAM_TRANSPORT_UNSUPPORTED` | Camera | The `/v1/ctl` session runs over the relay or Bluetooth; the camera only works over LAN or USB | Show "Requires the same Wi-Fi network or a USB cable" |
 | `USB_ADB_UNAUTHORIZED` | USB | The phone has not allowed USB debugging | Guide the user to accept the RSA dialog |
 | `USB_ADB_UNAVAILABLE` | USB | USB debugging is off or adb is missing | Open the wizard (CAM-04) |
 | `MAC_EXTENSION_NOT_ACTIVE` | Camera | The Camera Extension has not been activated | Open CAM-01 |
 | `MAC_MIC_DRIVER_MISSING` | Camera | The virtual microphone driver is not installed | Open CAM-01 |
+| `DIRECT_WIFI_UNAVAILABLE` | Link | The phone cannot create the Wi-Fi Direct group; `details.reason` ∈ {`wifi_off`, `location_off`, `p2p_unsupported`, `busy`, `error`} | Send over Bluetooth in the background; no new `direct/start` before `DIRECT_WIFI_RETRY_AFTER` (CONN-06 E3) |
 
 ### 0.8.2 Relay error codes (HTTP)
 
@@ -663,6 +989,14 @@ string for logs, never shown to the user; the UI picks its wording by code throu
 | 4426 | `UNSUPPORTED_VERSION` |
 | 4429 | `RATE_LIMITED` — on `/v1/ctl`: more than 16 connections without a handshake or more than 4 from one IP, or the IP is blocked for 5 minutes (wrong `mac`, or repeated pre-handshake failures, CONN-01 API 3, API 4); on `/v1/pair`: more than 4 connections or more than 2 from one IP (PAIR-01 API 2) |
 | 4500 | `INTERNAL` |
+
+### 0.8.4 Bluetooth link code
+
+A Bluetooth link has no close codes (0.4.5); its only pre-authentication error is one record.
+
+| Code | Meaning | Client handling |
+|----|---------|----------------|
+| `LINK_REJECTED` | `reject` record on a Bluetooth link before the link-security handshake completed: admission cap, timeout, listener block or failed key confirmation, never saying which (0.4.5) | Normal `Backoff`; never unpair, never stop reconnecting (0.11, CONN-05 E4) |
 
 ## 0.9 Data model
 
@@ -929,6 +1263,9 @@ SET-02 function manages these keys.
 | `call_audio.phone_bt_address` | string | empty | Mac | Bluetooth address of the phone the user chose for HFP |
 | `feature.camera` | bool | `false` | Android, Mac | Turned on after CAM-01 |
 | `relay.enabled` | bool | `true` | All | Allow using the relay outside the LAN |
+| `link.bluetooth` | bool | `true` | Android, Mac | Bluetooth control link (0.4.5, CONN-05); off → no advertising, no scan, the Bluetooth session ends |
+| `link.bt_enable_asked_at` | timestamp | empty | Android | Last automatic request to turn Bluetooth on (SET-01 API 10); the next one waits `BT_ENABLE_PROMPT_INTERVAL` |
+| `link.direct_wifi` | bool | `true` | Android, Mac | On-demand Wi-Fi Direct link for bulk (0.4.6, CONN-06); off → images without a LAN go over Bluetooth only |
 | `clip.auto_send` | bool | `true` | Android | Send automatically on copy (requires Accessibility, D4) |
 | `clip.a11y_consent_at` | timestamp | empty | Android | When the user accepted the Accessibility disclosure |
 | `clip.send_images` | bool | `true` | All | Sync images |
@@ -959,7 +1296,7 @@ SET-02 function manages these keys.
 |------|---------|---------|
 | `CTL_PORT` | 47800 (fallback 47801–47809) |  |
 | `PAIRING_WINDOW` | 120 s | QR/PIN validity and the `/v1/pair` window |
-| `PIN_MAX_ATTEMPTS` | 3 | The phone sends at most 3 `pair/offer` per PIN; after the third without `pair/done` the window closes as "PIN expired" (PAIR-01 A4) |
+| `PIN_MAX_ATTEMPTS` | 3 | Failed attempts per PIN window, counted once across the LAN and Bluetooth: `pair/offer` without `pair/done` plus Bluetooth channels failed after `cpace1`; at the third the window closes as "PIN expired" (PAIR-01 A4, C3) |
 | `HANDSHAKE_TIMEOUT` | 5 s |  |
 | `CTL_PREAUTH_LIMIT` | 16 connections without a handshake, at most 4 per IP | `/v1/ctl`; over the cap → 4429 (CONN-01 API 3) |
 | `CTL_IP_BLOCK` | 10 pre-handshake failures (4408, `PAIR_UNKNOWN`, `BAD_REQUEST`) within 5 minutes → IP blocked for 5 minutes; only failures before a `session/hello` passed its `mac` check count, and an established session clears the address's count | Next to the `AUTH_FAILED` rule (5/minute); blocked → 4429 (CONN-01 API 4) |
@@ -1028,13 +1365,38 @@ SET-02 function manages these keys.
 | `WEB_PAGE_TTL` | 10 minutes | The receiver forgets a page after this long without a new `web/active` (WEB-02, WEB-04, WEB-05) |
 | `WEB_URL_MAX` | 8 KiB (UTF-8) | Longer URLs are not sent and are dropped by the receiver |
 | `WEB_TITLE_MAX` | 256 characters | The sender cuts longer titles; the receiver drops a longer one |
+| `BT_SERVICE_UUID` | `3b3a01f9-ab27-44a8-bb68-b9b11a488bdb` (128-bit, self-generated) | The 16-bit `0xFEED` of the G7 probe is for the spike only and must never be used by a product build: the SIG assigned it to another company (0.4.5) |
+| `BT_ADV_MAX_HINTS` | 2 | Keeps the scan response ≤ 31 bytes (0.4.5) |
+| `BT_HINT_PERIOD` | 15 minutes (900,000 ms) | Hint, PSM and advertising set rotate together; the client checks the epochs e − 4 to e + 4 |
+| `BT_PREAUTH_RECORD_MAX` | 64 bytes | Largest pre-auth record (`rlen`) |
+| `BT_RECORD_MAX` | 4,112 bytes | Largest transport record (`rlen`): 4,096 bytes of padded plaintext + 16-byte tag; the only valid `rlen` values are 272, 1,040 and 4,112 |
+| `BT_FRAGMENT_MAX` | 4,092 bytes | `dlen` of one fragment; also the largest envelope on the short control lane (0.4.5) |
+| `BT_MESSAGE_MAX` | 256 KiB | Reassembled message of the long control lane, the envelope limit of 0.5.1 rule 4 |
+| `BT_LINK_REKEY_RECORDS` | 65,536 records per direction | Noise `Rekey()` on the link |
+| `BT_LINK_LIMIT` / `BT_PREAUTH_LIMIT` | 4 links / 1 link | A-SVC admission (0.4.5) |
+| `BT_PREAUTH_TIMEOUT` | 7 s | From `challenge` to the first valid transport record; 2 round trips at Doze RTT p95 ≤ 3 s (owner decision 2026-10-28) = 6 s + 1 s margin |
+| `BT_AUTH_FAIL_BLOCK` | 5 `AUTH_FAILED` within 1 minute → every new channel rejected for 1 minute | Counted for the whole Bluetooth listener (0.4.5) |
+| `BT_PING_INTERVAL` / `BT_IDLE_TIMEOUT` | 30 s / 45 s | Same values as the relay E2E ping and close code 4411 |
+| `BT_ENABLE_PROMPT_INTERVAL` | 24 h | At most one automatic request to turn Bluetooth on per interval (AC7, SET-01 API 10) |
+| `BT_PIN_HINT` | `00 00 00 00` | Hint advertised while a Bluetooth PIN window is open (0.4.5 "Pairing mode"); the same for every phone |
+| `BT_PIN_LOCKOUT` | 5 min | After a PIN window closed by `PIN_MAX_ATTEMPTS` failures, the phone opens no PIN window, on the LAN or over Bluetooth, for this long (PAIR-01 E10) |
+| `DIRECT_WIFI_IDLE_MIN` | 30 s | The Mac's Wi-Fi must have been unassociated this long before it may join a group (AC4; skips short roams) |
+| `DIRECT_WIFI_JOIN_TIMEOUT` | 8 s | From `direct/start` sent to the pinned TLS connection on the group; leaves room in the AC3 budget (first image in X ≤ 10 s) |
+| `DIRECT_WIFI_LINGER` | 60 s | No bulk data for this long → leave and remove the group (keeps it open for the next images, AC3) |
+| `DIRECT_WIFI_MAX` | 10 min | Longest life of one group; the next transfer opens a new group with new credentials (AC4) |
+| `DIRECT_WIFI_SCAN_INTERVAL` | 30 s | Scan period on the Mac while on the group, to leave as soon as a known network is visible (AC4) |
+| `DIRECT_WIFI_RETRY_AFTER` | 5 min | No new `direct/start` for this long after a failed attempt (error `ack`, join timeout, pin mismatch) |
+| `BULK_DIRECT_MIN` | 128 KiB | Over Bluetooth, transfers this large or larger wait for Wi-Fi Direct first (0.4.7); about 10 s at the G7 rate of 12.9 KB/s |
+| `BT_BULK_FRAGMENT_MAX` | 1,020 bytes | `dlen` of a fragment on the long control lane (channel `0x01`, `long` = 1) and of a bulk fragment on channel `0x02` (fits the 1,040-byte record, about 80 ms of air time) |
+| `BT_BULK_INFLIGHT` | 2 records | Long-control and bulk records together written to the L2CAP stream and not yet drained; bounds how long a short control envelope waits (AC1) |
+| `BULK_MAX_RESTARTS` | 2 | Lane-change restarts per clip (0.4.7); after that CLIP-03 E8 |
 
 ## 0.11 Client connection states (Mac/iOS)
 
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
-  Idle --> Discovering: ≥1 pair and a network
+  Idle --> Discovering: ≥1 pair and a network, or Bluetooth on and granted
   Discovering --> ConnectingLAN: found an instance with a matching hint
   ConnectingLAN --> Handshaking: TLS OK and the pin matches
   ConnectingLAN --> Discovering: TLS_PIN_MISMATCH (drop the instance)
@@ -1042,9 +1404,13 @@ stateDiagram-v2
   Handshaking --> Backoff: error or 4408
   ConnectingLAN --> Backoff: network or TLS error (not a pin mismatch)
   ConnectingLAN --> Idle: every instance of the pair fails the pin (Needs to be paired again)
+  Discovering --> ConnectingBT: Bluetooth advertisement with a matching hint, no LAN candidate
+  ConnectingBT --> Handshaking: link-security handshake OK (0.4.5)
+  Idle --> Handshaking: Bluetooth pairing ends with pair/done, the link is kept (0.4.5 Pairing mode, PAIR-01 B4)
+  ConnectingBT --> Backoff: channel not opened, reject, BT_PREAUTH_TIMEOUT or link-security handshake fails (noise2, CONN-05 E3)
   ConnectingRelay --> Backoff: relay unreachable, 401 or 404 after re-registering
   WaitingPeer --> Backoff: relay connection lost
-  Discovering --> Backoff: past LAN_DISCOVERY_GRACE and relay.enabled = false
+  Discovering --> Backoff: past LAN_DISCOVERY_GRACE, relay.enabled = false and no Bluetooth scan
   Discovering --> Idle: last pair unpaired
   Backoff --> Idle: last pair unpaired
   Discovering --> ConnectingRelay: past LAN_DISCOVERY_GRACE and relay.enabled
@@ -1053,21 +1419,46 @@ stateDiagram-v2
   WaitingPeer --> Discovering: the phone appears on the LAN (hint-matching mDNS instance)
   ConnectingRelay --> Handshaking: presence online
   Connected --> Backoff: connection lost
-  Connected --> ConnectingLAN: on the relay and the LAN is found (upgrade)
+  Connected --> ConnectingLAN: on the relay or Bluetooth and the LAN is found (upgrade)
   Connected --> WaitingPeer: relayed session ends, relay link still up (the phone left, CONN-03 E8)
   Handshaking --> WaitingPeer: relayed handshake ends, relay link still up (the phone left)
-  Backoff --> Discovering: wait is over, the network changed or the phone reappeared on mDNS
+  Backoff --> Discovering: wait is over, the network changed or the phone reappeared on mDNS or Bluetooth
   Connected --> Idle: unpaired
 ```
 
 Status shown to the user (PAIR-02): `Idle` /`Backoff` → "Disconnected"; `Discovering`
 /`Connecting*`/`Handshaking` → "Connecting…"; `WaitingPeer` → "Phone offline";
-`Connected` → "Connected via Wi-Fi" or "Connected over the internet" ("Connected via USB" while the
+`Connected` → "Connected via Wi-Fi", "Connected via Bluetooth" or "Connected over the internet" ("Connected via USB" while the
 camera channel uses USB); every instance fails the pin → "Needs to be paired again". With the peer's
 name (status line, screen-reader text of the status indicator): "Connected via Wi-Fi to \<name>",
-"Connected over the internet to \<name>", "Connected via USB to \<name>".
+"Connected via Bluetooth to \<name>", "Connected over the internet to \<name>", "Connected via USB to \<name>". The two
+Bluetooth strings are new catalog keys (S7.1).
 
-From any state: losing the network → `Idle` (CONN-02 E1); removing the last pair → `Idle`. Over the relay, a session or handshake that ends while the `/v1/relay` link stays up means the phone left (CONN-03 E8): back to `WaitingPeer`, not `Backoff`; while in `WaitingPeer`, a hint-matching mDNS instance leads back to `Discovering` for a LAN session. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); `4429 RATE_LIMITED` backs off on the normal schedule. A `session/error` `PAIR_UNKNOWN` or `PAIR_REVOKED` received over the relay, before the handshake authenticated the phone, leads to `Backoff` and never to unpairing (CONN-03 E9); over the LAN (pinned TLS to the phone) it keeps its meaning (CONN-01 E4).
+**Routes and priority (P7).** A session runs over one route: `lan` (`usb` too, for the camera only), `relay` or
+`bluetooth` (Mac only, 0.4.5). Priority: LAN > Bluetooth; the relay is not deployed in Phase 7 and its code stays
+last. In `Discovering` the client browses mDNS while it has a network and scans for `BT_SERVICE_UUID` while Bluetooth
+is on, Bluetooth access is granted and `link.bluetooth` is on. A LAN candidate is always tried first; a Bluetooth
+candidate is connected at once when there is no LAN candidate (AC2 counts from the moment the phone is seen). A
+session over Bluetooth is upgraded as soon as a hint-matching mDNS instance appears: the new LAN session replaces it
+once its keys are confirmed, so the user never sees a gap. The Wi-Fi Direct group of 0.4.6 is never a route: it only carries
+bulk streams while the session stays on Bluetooth.
+
+**Start and loss.** Leaving `Idle` needs ≥ 1 pair and either a network or Bluetooth on and granted. Losing the network
+ends only LAN and relay sessions and attempts: a session over Bluetooth stays `Connected`; without a session the
+client goes to `Discovering` when Bluetooth can still be used, otherwise to `Idle` (CONN-02 E1). Bluetooth turned off,
+its access withdrawn or `link.bluetooth` turned off ends only the Bluetooth session and scan, with the same rule the
+other way round. Removing the last pair → `Idle`. On iOS there is no Bluetooth route, so these rules read as before.
+
+**Pre-authentication rule by route (AC8).** Every route has the property `phoneAuthenticatedByTLS`: true for `lan`
+and `usb` (TLS pinned to the phone's certificate), false for `relay` and `bluetooth`. Before the session handshake has
+authenticated the phone (valid `mac` of `session/welcome`), on a route where it is false: `session/error`
+`PAIR_UNKNOWN` or `PAIR_REVOKED` → `Backoff`, never unpair and never stop reconnecting; `UNSUPPORTED_VERSION` or
+`AUTH_FAILED` still shows its message (CONN-01 E3, E5) but keeps the normal backoff schedule instead of stopping or
+waiting 5 minutes; `reject` (`LINK_REJECTED`) or a channel closed during the link-security handshake → normal
+`Backoff`. On a route where it is true, CONN-01 E3–E5 keep their meaning. A revocation is acted on only over a route
+where it is true or through a signed statement (PAIR-03).
+
+Over the relay, a session or handshake that ends while the `/v1/relay` link stays up means the phone left (CONN-03 E8): back to `WaitingPeer`, not `Backoff`; while in `WaitingPeer`, a hint-matching mDNS instance leads back to `Discovering` for a LAN session. In `Backoff`, seeing a hint-matching instance on mDNS again ends the wait (except after `AUTH_FAILED`); A hint-matching Bluetooth advertisement ends the wait the same way. `4429 RATE_LIMITED` backs off on the normal schedule.
 
 ## 0.12 Localization and the UI string catalog
 

@@ -67,7 +67,7 @@ HandLive xây lần lượt. Mỗi phase là một phần dùng được. Ngoạ
 | **4** Âm thanh cuộc gọi | Bluetooth HFP/SCO và dự phòng Opus | **Dừng** (quyết định của chủ dự án, 12/10/2026) · G4 đóng: chỉ có macOS 27, cuộc gọi chỉ còn thông báo và nút nghe/từ chối/kết thúc, không âm thanh |
 | **5** Camera / mic ảo | CMIOExtension và AudioServerPlugin | **Spike trên `main`** (`CameraSpike`) · G5 cần Apple Developer trả phí |
 | **6** Duyệt web tiếp | Chuyển tiếp URL đang mở giữa các thiết bị | **Spike trên `main`** · đã đo Chrome và Samsung Internet; còn go/no-go trình duyệt |
-| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đề xuất** (01/10/2026) · bắt đầu sau G5 và G6 (G4 đã đóng 12/10/2026) bằng spike G7 |
+| **7** Kết nối mọi nơi | Tự kết nối khi không chung mạng Wi-Fi | **Đã bắt đầu** (quyết định chủ dự án, 28/10/2026), không chờ G4/G5/G6 · spike G7 xong; ghép đôi và kênh điều khiển qua Bluetooth L2CAP đã lên `main`, Wi-Fi Direct và bulk qua relay bị cắt khỏi phạm vi phase này |
 | **G0** Vector mã hóa | Vector kiểm thử mã hóa dùng chung giữa các nền tảng | **Xong** |
 | **G1** Máy thật | Kiểm thực tế ma trận máy thật Phase 1 | **Mở** (trước 1.0) · ảnh App Store Connect đã chụp lại ở kích thước gốc 1320×2868 (12/10/2026) |
 | **G2** Play Console | Tờ khai quyền SMS và nhật ký cuộc gọi | **Mở** (trước 1.0; phương án B: F-Droid/APK) · ảnh Play Console đã chụp lại ở 1080×1920 (12/10/2026) |

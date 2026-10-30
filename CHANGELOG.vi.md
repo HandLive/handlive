@@ -6,6 +6,58 @@ Các thay đổi đáng chú ý của kho hub HandLive (tài liệu và kế ho�
 
 ## [Unreleased]
 
+## [0.2.0] — 30/10/2026
+
+### Thêm mới
+
+- **Kết nối khi không mạng (Phase 7):** khi cả hai thiết bị ở gần nhau mà không có mạng, chúng tự kết nối qua BLE L2CAP. Kênh điều khiển (sao chép bảng nhớ tạm, SMS và thông báo cuộc gọi) chở frame thông điệp qua một lớp bảo mật link (bắt tay Noise-style dùng secret chia sẻ từ ghép đôi). Phiên bản này không deploy relay; kịch bản Y (điện thoại dùng dữ liệu di động, Mac ở Wi-Fi khác) cũng dùng Bluetooth khi hai máy gần nhau. Ghép đôi lần đầu qua Bluetooth: quét QR mang thông tin xác thực, rồi điện thoại quảng bá bằng chứng và chờ Mac nối liên kết, rồi người dùng có thể xác nhận giá trị ghép đôi hoặc nhập PIN qua Bluetooth bằng CPace (trao đổi khóa xác thực mật khẩu hằng số, X25519, SHA-512).
+
+- Quảng bá Bluetooth với UUID dịch vụ 128-bit và hint xoay vòng (0.4.5 `BT_SERVICE_UUID`, `BT_HINT_PERIOD`, định dạng dữ liệu dịch vụ chốt bằng vector kiểm tra trong `shared/test-vectors/`); bắt tay bảo mật link (Noise prologue, `challenge`, `noise1`, `noise2`) với codec frame (ID kênh, cờ `more`, kênh điều khiển ngắn và dài, giới hạn độ dài bản ghi); chính sách admission Bluetooth (giới hạn link, giới hạn kết nối pre-auth, khóa lỗi xác thực) trên cả hai nền tảng (advertiser A-SVC trên Android, central và peripheral CoreBluetooth trên macOS).
+
+- CPace trao đổi khóa xác thực mật khẩu cho ghép đôi PIN offline qua Bluetooth (SP2, `CPACE-X25519-SHA512`): secret chia sẻ suy dẫn từ PIN ở cả hai đầu mà không cần bên thứ ba; phỏng đoán online chỉ được một lần mỗi kênh, với bộ đếm toàn cầu mỗi PIN (ba lần thất bại mỗi PIN, rồi khóa); spec và vector kiểm tra (cpace.json, cài đặt Kotlin Android và Swift macOS với số học hằng số trong `core/crypto` hoặc `HLCrypto`).
+
+- **Cập nhật máy trạng thái (0.11):** trình quản lý kết nối của Mac giờ bắt đầu kết nối khi Bluetooth được phép và bật, thậm chí khi không có mạng (điều kiện mới trong máy trạng thái); mất mạng chỉ kết thúc phiên LAN hoặc relay, không phải Bluetooth (nên kịch bản X vẫn kết nối). Route được ưu tiên: LAN > Bluetooth (trên Mac), và mọi lỗi pre-auth (PAIR_UNKNOWN, PAIR_REVOKED, UNSUPPORTED_VERSION, AUTH_FAILED) được kiểm tra chứng chỉ TLS (`phoneAuthenticatedByTLS`), nên chỉ route LAN có TLS ghim mới có thể hủy ghép đôi, gỡ cặp, hay dừng nối lại (AC8).
+
+- **Admission pre-auth và cấm Bluetooth (0.4.5, 0.5):** mọi frame pre-auth trên Bluetooth được kiểm tra với nonce challenge toàn cầu thiết bị (cấp một lần mỗi lần thử kết nối) và xác nhận khóa link sau bắt tay. Xác nhận thất bại tăng bộ đếm; sau `BT_AUTH_FAIL_BLOCK` lần thất bại liên tiếp, kênh pre-auth bị khóa trong `BT_AUTH_FAIL_TIMEOUT`, ngăn slot hogging và tấn công replay.
+
+- **Prompt Bluetooth (AC7):** Android 12+ — logic quyết định cho prompt "Thiết bị gần đó" một lần (SET-01) và chu kỳ hỏi lại bật Bluetooth khi không có LAN; macOS — hộp thoại quyền Bluetooth của hệ thống (`NSBluetoothAlwaysUsageDescription`) trước khi quét (SET-03). Prompt iOS thừa kế từ tích hợp Mac hiện tại.
+
+- **Tài sản hub và shared cho Phase 7:** cập nhật spec thiết kế chi tiết (00-common-specs.md, 01-setup-settings.md, 02-pairing.md, 03-connectivity.md, 04-clipboard.md, cả en và vi); vector kiểm tra cho bảo mật link, codec frame, quảng bá và CPace; chuỗi UI mới cho nhãn "Đã kết nối qua Bluetooth" và chữ prompt quyền Bluetooth trên Mac.
+
+### Thay đổi
+
+- Nhãn thiết bị trong trạng thái kết nối: "Đã kết nối qua Bluetooth" hiện trên cả Android và Mac khi route hoạt động là Bluetooth (`HLConnectionStatus` trong `core/design` + `ui/devices` cho Android, `HLMacUI`/`HLiOSUI` cho Apple).
+
+- Dịch vụ foreground Android `connectedDevice` (A-SVC): giờ quảng bá UUID dịch vụ Bluetooth và xoay vòng hint với secret chia sẻ, độc lập với server LAN; mẫu `ControlServer.serveRelayPeer` hiện có được mở rộng sang `serveBluetoothPeer` cho `SessionTransport.BLUETOOTH`.
+
+- Trình quản lý kết nối macOS và iOS: `ConnectionManager` giờ định tuyến sang `.bluetooth` bên cạnh `.relay`, với nâng cấp từ Bluetooth lên LAN khi mạng xuất hiện; `ControlSession` thực thi quy tắc pre-auth `phoneAuthenticatedByTLS` (ban đầu chỉ kiểm tra `route == .relay`).
+
+### Fixed
+
+- ~~Route relay giữ trong code nhưng không deploy; constant `relay` và route code relay hiện tại giữ nguyên~~ (không có thay đổi ở đây; relay toàn vẹn cho gate G4, G5, G6 sau hoặc nếu kịch bản Y đòi hỏi trong phase sau).
+
+### Security
+
+- Ghép đôi offline (PAIR-01 luồng B và C): không cần khóa công khai được chia sẻ trước (mã hóa `pr` trong QR); bằng chứng là HMAC của secret ghép đôi, và mọi frame ghép đôi trên liên kết Bluetooth bảo mật được MAC với khóa link trước khi cấp slot (D7.1). Phỏng đoán PIN bị giới hạn bằng bộ đếm mỗi PIN (3 lần, rồi khóa), và trao đổi CPace chạy ở mỗi lần thử với PIN là secret chia sẻ, nên không có state ổn định nào lộ ra cho sniffer bị động (AC9, `K_bt_pin` không bao giờ rời kênh).
+
+- Bảo mật link Bluetooth (D7.1 0.4.5): liên kết L2CAP CoC chưa bond được mã hóa bằng bắt tay Noise-style khóa từ secret ghép đôi chia sẻ (`K_bt_disc` và `K_bt_link`, suy dẫn một lần mỗi link và xoay vòng ở khoảng thời gian); mã hóa tầng link giả định vắng mặt (không bond), nên mã hóa tầng frame là bắt buộc. Prologue được ràng buộc với hint xoay vòng của peer và khóa khám phá của người gửi, nên advertiser bị replay hoặc nhái không thể hình thành bắt tay hợp lệ (AC9).
+
+- Lỗi pre-auth (CONN-01 E4, CONN-03 E9): PAIR_UNKNOWN, PAIR_REVOKED, UNSUPPORTED_VERSION hoặc AUTH_FAILED giả trên Bluetooth không thể hủy ghép đôi, gỡ cặp, hay dừng nối lại — chỉ route LAN có TLS ghim được miễn trừ quy tắc này (AC8).
+
+### Specs
+
+Đã thiết kế trong bản cập nhật spec Phase 7 (00-common-specs.md 0.4.6/0.4.7, 01-setup-settings.md) nhưng chưa code trên
+nền tảng nào — để lại cho bản phát hành sau:
+
+- **Wi-Fi Direct** (A7.5 / M7.5): SSID và passphrase sinh ngẫu nhiên mỗi nhóm, socket Mac ràng buộc chỉ với interface
+  P2P, và prompt Location Android 10–12 mà nó cần. Chưa có code Android hay Apple nào cho phần này.
+- **Khóa stream bulk trên mỗi kết nối** (`K_bulk` và nonce, A7.4 / M7.4): truyền bulk (ảnh qua CLIP-03) với bắt tay và
+  khóa mã hóa riêng cho mỗi stream. `core/transport` của Android đã dành sẵn kênh `0x02` và bộ lập lịch chunk/ưu tiên
+  cho làn này, nhưng chưa có gì mã hóa hay gửi nội dung bulk qua đó; bên Apple chưa có code nào.
+- **UI Bluetooth ngoài nhãn đã kết nối:** dòng trạng thái "Bluetooth tắt" / "Bluetooth bị từ chối" trên Mac, nút cài
+  đặt của nó, màn hình prompt quyền Bluetooth và nhãn feature-card trong Settings đều đã có chuỗi trong
+  `handlive-shared/strings/ui-strings.json`, nhưng chưa màn hình Android hay Apple nào gọi tới.
+
 ## [0.1.1] — 22/10/2026
 
 ### Thêm mới

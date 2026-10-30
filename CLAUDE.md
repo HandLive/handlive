@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this
 repository.
 
-## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; latest release `v0.1.1` (2026-10-22); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
+## Project status: Phase 0–3 on `main`; Phase 5–6 spikes on `main`; Phase 7 (Bluetooth offline connectivity) started 2026-10-28, BLE L2CAP pairing/control channel on `main`, release `v0.2.0` pending the owner's tag (Wi-Fi Direct and relay bulk dropped from this phase's scope); latest tagged release `v0.1.1` (2026-10-22); G1/G2/G5/G6 open; G4 closed (Phase 4 stopped, owner decision 2026-10-12)
 
 Phase 0–3 product code is on `main` (clipboard, SMS, iOS shell, Rust relay, call metadata/control). Phase 4–6
 **spike probes** are also on `main` (merged 2026-09-30): `HFPSpike`, `CameraSpike`, Android `tools/web-spike`,
@@ -61,7 +61,7 @@ project owner in Vietnamese with diacritics.
 
 **Commit identity:** always `Hồ Xuân Dũng <me@hxd.vn>` (GitHub `xuandung38`). Never `dunghx1@viettel.com.vn` or any Viettel email in author/committer/`Signed-off-by`. Use `env -u CURSOR_AGENT git commit` so Cursor does not inject Co-authored-by trailers.
 
-**Workspace tips to treat as current `main`** (tag `v0.1.1`, 2026-10-22): shared `56b4c93`, relay `17f367b`, android `8e4022a`, apple `098996c`, hub at the `v0.1.1` tag. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
+**Workspace tips to treat as current `main`** (ahead of tag `v0.1.1`; release `v0.2.0` pending the owner's tag, Phase 7 Bluetooth offline connectivity): shared `5cbe4aa`, relay `17f367b` (unchanged since `v0.1.1`), android `ed8e41f`, apple `7d3ce0b`, hub `main` tip. Confirm with `tools/workspace.sh status` before coding. **Local JDK:** Gradle needs `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in a non-login shell, else `gradlew` prints "Unable to locate a Java Runtime" and a piped command still exits 0.
 
 ### In progress / blocked (owner or gate)
 

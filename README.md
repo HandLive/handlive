@@ -67,7 +67,7 @@ Phases ship in order, each as a usable slice. One exception (owner, 2026-09-28):
 | **4** Call audio | Bluetooth HFP/SCO and Opus fallback | **Stopped** (owner decision, 2026-10-12) · G4 closed: only macOS 27 is available, so calls stay notification + answer/decline/end, no audio |
 | **5** Virtual camera / mic | CMIOExtension and AudioServerPlugin | **Spike on `main`** (`CameraSpike`) · G5 needs a paid Apple Developer team |
 | **6** Continue Browsing | Foreground URL handover across devices | **Spike on `main`** · Chrome and Samsung Internet measured; browser go/no-go pending |
-| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Proposed** (2026-10-01) · starts after G5 and G6 (G4 closed 2026-10-12) with spike G7 |
+| **7** Connect anywhere | Auto link without a shared Wi-Fi network | **Started** (owner decision, 2026-10-28), no wait on G4/G5/G6 · spike G7 done; Bluetooth L2CAP pairing and control channel on `main`, Wi-Fi Direct and relay bulk dropped from this phase's scope |
 | **G0** Vectors | Shared cross-platform crypto test vectors | **Done** |
 | **G1** Real devices | Real-device Phase 1 matrix validation | **Open** (before 1.0) · App Store Connect screenshots recaptured at native 1320×2868 (2026-10-12) |
 | **G2** Play Console | SMS and call log permissions declaration | **Open** (before 1.0; Plan B: F-Droid/APK) · Play Console screenshots recaptured at 1080×1920 (2026-10-12) |

@@ -12,12 +12,12 @@
 | Mục | Nội dung |
 |-----|----------|
 | Tên | PAIR-01 — Ghép nối thiết bị bằng mã QR (dự phòng: PIN) |
-| Mô tả | Thiết lập quan hệ tin cậy giữa điện thoại Android và một Mac/iPhone/iPad: trao đổi khóa định danh, sinh khóa gốc của cặp `PRK`, ghim chứng chỉ TLS của điện thoại, lưu bản chứng thực có chữ ký của cả hai bên.<br>Mac/iOS hiển thị QR, Android quét.<br>Khi không quét được QR thì dùng PIN 6 số (chỉ trong LAN).<br>Từ P2, nếu hai thiết bị không thấy nhau trong LAN, bước trao đổi đi qua điểm hẹn trên relay (chỉ với QR). |
+| Mô tả | Thiết lập quan hệ tin cậy giữa điện thoại Android và một Mac/iPhone/iPad: trao đổi khóa định danh, sinh khóa gốc của cặp `PRK`, ghim chứng chỉ TLS của điện thoại, lưu bản chứng thực có chữ ký của cả hai bên.<br>Mac/iOS hiển thị QR, Android quét.<br>Khi không quét được QR thì dùng PIN 6 số (trong LAN, hoặc từ P7 qua Bluetooth bằng CPace, luồng C).<br>Từ P2, nếu hai thiết bị không thấy nhau trong LAN, bước trao đổi đi qua điểm hẹn trên relay (chỉ với QR).<br>Từ P7, Mac và điện thoại không chung LAN, kể cả khi không có mạng nào, chạy cùng bước trao đổi đó qua một link Bluetooth (luồng B với QR, luồng C với PIN, 0.4.5 "Chế độ ghép đôi"); link sau đó được giữ cho phiên đầu tiên. |
 | Tác nhân | Chính: Người dùng (sở hữu cả hai thiết bị). Hệ thống: A-UI, A-SVC, M-APP hoặc I-APP, R-API và R-KV (điểm hẹn, đăng ký cặp). |
-| Điều kiện trước | 1.<br>Android đã hoàn tất SET-01 (có quyền camera để quét QR) và A-SVC đang chạy.<br>2.<br>Mac/iOS đã hoàn tất SET-03 (quyền mạng cục bộ).<br>3.<br>Hai thiết bị cùng LAN; hoặc (từ P2) cả hai có Internet và `relay.enabled = true`.<br>4.<br>Mac/iOS chưa có cặp hiệu lực nào.<br>5.<br>Android có ít hơn 8 cặp hiệu lực. |
-| Điều kiện sau | **Thành công:** hai bên có bản ghi `paired_device` cùng `pair_id`; `PRK` nằm trong kho khóa; Mac/iOS ghim `peer_tls_sha256`; cặp được đăng ký lên relay nếu relay bật (hoặc đánh dấu chờ đăng ký); CONN-01 tự chạy.<br>**Thất bại:** không bên nào lưu gì; `pairing_secret` hoặc PIN bị hủy khỏi bộ nhớ. |
-| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone." Ở luồng PIN (A3–A4), cửa sổ đã đóng sau 120 s mà chưa ghép được, hoặc `pair/offer` thứ ba của PIN này kết thúc mà không có `pair/done` (A4): Android báo "Mã PIN đã hết hạn. Lấy mã PIN mới trên Mac hoặc iPhone rồi thử lại."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID`); quá 3 lần thì Mac/iOS sinh PIN mới và điện thoại đóng cửa sổ (E2).<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN. |
-| Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), tối đa 3 `pair/offer` cho mỗi PIN do điện thoại tự đếm (A4) và chỉ cho phép trong LAN. Rủi ro còn lại: một `pair/offer` mang HMAC khóa bằng `K_pin`, nên kẻ tấn công lấy được một offer vẫn có thể thử 10^6 PIN ngoại tuyến (Argon2id làm mỗi lần thử tốn kém, không phải bất khả). Cách khắc phục lâu dài là PAKE (CPace) cho đường PIN — quyết định còn mở, chưa thuộc thiết kế hiện tại.<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
+| Điều kiện trước | 1.<br>Android đã hoàn tất SET-01 (có quyền camera để quét QR) và A-SVC đang chạy.<br>2.<br>Mac/iOS đã hoàn tất SET-03 (quyền mạng cục bộ).<br>3.<br>Hai thiết bị cùng LAN; hoặc (từ P2) cả hai có Internet và `relay.enabled = true`; hoặc (từ P7, chỉ Mac) cả hai bật Bluetooth, Android 12+ đã cấp Nearby devices, Mac đã có quyền Bluetooth và `link.bluetooth` bật ở cả hai.<br>4.<br>Mac/iOS chưa có cặp hiệu lực nào.<br>5.<br>Android có ít hơn 8 cặp hiệu lực. |
+| Điều kiện sau | **Thành công:** hai bên có bản ghi `paired_device` cùng `pair_id`; `PRK` nằm trong kho khóa; Mac/iOS ghim `peer_tls_sha256`; cặp được đăng ký lên relay nếu relay bật (hoặc đánh dấu chờ đăng ký); CONN-01 tự chạy. Qua Bluetooth: `last_host`, `last_port` để trống, việc đăng ký relay chờ có mạng (E8), và client đi thẳng vào bắt tay phiên trên link được giữ lại (B4, CONN-05 bước 8) thay vì CONN-01.<br>**Thất bại:** không bên nào lưu gì; `pairing_secret` hoặc PIN bị hủy khỏi bộ nhớ. |
+| Ngoại lệ | E1 — QR không phải của HandLive hoặc sai định dạng (`QR_INVALID`): Android báo "Mã QR này không phải của HandLive."<br>E2 — QR đã hết hạn vì Mac/iOS đã làm mới (`PAIRING_CLOSED`): Android báo "Mã QR đã đổi. Quét mã mới trên Mac hoặc iPhone." Ở luồng PIN (A3–A4), cửa sổ đã đóng sau 120 s mà chưa ghép được, hoặc `pair/offer` thứ ba của PIN này kết thúc mà không có `pair/done` (A4), hoặc qua Bluetooth kênh thứ ba thất bại sau `cpace1` (C3): Android báo "Mã PIN đã hết hạn. Lấy mã PIN mới trên Mac hoặc iPhone rồi thử lại."<br>E3 — Không tìm thấy nhau trong 20 s và relay không khả dụng: Mac/iOS báo "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại." Mac đã quét Bluetooth trong bước 7 (B2) thì báo câu khác: "Không tìm thấy điện thoại. Để hai máy ở gần nhau và bật Bluetooth, hoặc cho hai máy cùng mạng Wi-Fi, rồi thử lại." (khóa `pairing.error_not_found_offline`).<br>E4 — HMAC, chữ ký hoặc ràng buộc TLS sai, có thể đang bị tấn công xen giữa (`AUTH_FAILED`).<br>E5 — Người dùng bấm Hủy trên Android.<br>E6 — Android đã đủ 8 cặp: Android báo "Điện thoại đã ghép đủ 8 thiết bị. Hủy ghép nối một thiết bị rồi thử lại."<br>E7 — PIN sai (`PIN_INVALID` trong LAN; qua Bluetooth là một kênh thất bại sau `cpace1`, C3); quá 3 lần thì Mac/iOS sinh PIN mới và điện thoại đóng cửa sổ (E2).<br>E8 — Đăng ký cặp lên relay lỗi: cặp vẫn dùng được trong LAN, `relay_registered = 0`, thử lại nền (API 8 logic 6).<br>E9 — Quyền camera bị từ chối: Android báo "Không dùng được camera. Dùng mã PIN để ghép nối." và chuyển sang PIN.<br>E10 — Khóa tạm PIN: cửa sổ PIN đóng vì đủ `PIN_MAX_ATTEMPTS` lần thất bại (E2) làm điện thoại từ chối mọi cửa sổ PIN mới, trong LAN và qua Bluetooth, trong `BT_PIN_LOCKOUT`. Xác nhận PIN trong thời gian đó thì hiện "Nhập sai mã PIN quá nhiều lần. Chờ 5 phút, hoặc quét mã QR." (khóa `pairing.error_pin_locked`); luồng QR vẫn dùng được. Luật cũ "PIN chỉ dùng được khi cùng Wi-Fi" và chuỗi `pairing.error_pin_needs_wifi` bị bỏ (sếp quyết định ngày 2026-10-28: PIN ghép qua Bluetooth bằng CPace).<br>E11 — Qua Bluetooth, kênh không mở được, nhận `reject` (`LINK_REJECTED`), `noise2` sai (gói quảng bá bị chép) hoặc kênh đóng trước `pair/done`: Mac thử máy phát kế tiếp có cùng `pr_bt` trong khi còn 20 s của bước 7; hết giờ thì E3. Link bị đóng sau `pair/hello` kết thúc lần ghép đôi với câu "Không ghép nối được. Thử lại." Không lưu gì, không đụng tới cặp nào đã có (AC8).<br>E12 — Không dùng được Bluetooth để ghép: Android từ chối Nearby devices (SET-01 E12) hoặc Mac bị từ chối quyền Bluetooth (SET-03 E8) → bỏ qua luồng B và C, việc ghép cần LAN hoặc relay; Bluetooth trên điện thoại đang tắt khi cửa sổ mở và không nối mạng Wi-Fi nào → màn hình ghép nối hiện trường 11 và A-UI có thể xin bật Bluetooth (SET-01 API 10). |
+| Yêu cầu đặc biệt | **Bảo mật:** `pairing_secret` 256 bit, chỉ sống 120 s, không bao giờ rời thiết bị ngoài QR, không ghi log; so sánh HMAC hằng thời gian; relay không nhìn thấy `pairing_secret` và không được dùng cho PIN.<br>PIN là đường dự phòng: kẻ tấn công chủ động nằm giữa đúng lúc ghép có thể dò PIN ngoại tuyến — giảm thiểu bằng Argon2id (t=3, m=64 MiB, p=4), tối đa `PIN_MAX_ATTEMPTS` lần thử thất bại cho mỗi cửa sổ PIN do điện thoại tự đếm (A4) và không bao giờ qua relay. Rủi ro còn lại: một `pair/offer` mang HMAC khóa bằng `K_pin`, nên kẻ tấn công lấy được một offer vẫn có thể thử 10^6 PIN ngoại tuyến (Argon2id làm mỗi lần thử tốn kém, không phải bất khả). Qua Bluetooth, PIN đi qua CPace (luồng C) nên không kiểm được ngoại tuyến; dùng CPace cho cả LAN chưa thuộc thiết kế này.<br>**Bảo mật qua Bluetooth (luồng B):** gói quảng bá chỉ mang `pr_bt`, một HMAC khóa từ `pairing_secret` đổi theo từng QR, không bao giờ mang `pr`, `pk`, tên hay `device_id` (AC9); mọi envelope `pair` đi bên trong lớp mã hóa link, nên tên, khóa và `device_id` không bao giờ lộ trên sóng; frame đầu tiên được xác thực bằng `K_bt_plink` trước khi suất pre-auth trở thành link; không message trước xác thực nào đổi trạng thái cặp (AC8).<br>**Bảo mật của PIN qua Bluetooth (luồng C):** PIN chỉ đi vào CPace (`CPACE-X25519-SHA512`, 0.4.5 "Chế độ ghép đôi"), nên cả PIN lẫn bất kỳ giá trị nào để kẻ nghe lén thử PIN đều không đi qua sóng; kẻ đứng giữa được một lần đoán mỗi kênh, 3 lần mỗi PIN (`PIN_MAX_ATTEMPTS`, cả hai bên cùng đếm), nên xác suất đoán trúng một cửa sổ PIN là 3 × 10^-6, và `BT_PIN_LOCKOUT` chặn việc mở cửa sổ liên tục; mỗi PIN chỉ dùng một lần và sống tối đa `PAIRING_WINDOW`; gói quảng bá ở chế độ PIN chỉ mang `BT_PIN_HINT`, giống nhau cho mọi điện thoại (AC9).<br>**Hiệu năng:** từ lúc quét tới "Đã ghép nối" ≤ 5 s trong LAN, ≤ 8 s qua relay, ≤ 15 s qua Bluetooth khi cả hai máy không có mạng, với QR tính từ lúc quét và với PIN tính từ lúc xác nhận trên điện thoại (AC6).<br>**Chưa đo (A7.2/M7.2 kiểm đầu tiên trên S25 + Mac):** G7 chưa từng ghép đôi qua BLE; bản thân AC6; advertising set khởi động lại khi cửa sổ mở (PSM mới) có được Mac quét thấy trong vài giây không; service data trong scan response (cũng là CONN-05 API 3 logic 1); hộp thoại Nearby devices và camera liền nhau trước khi quét (SET-01 bước 10); hộp thoại Bluetooth của một app thanh menu (`LSUIElement`, SET-03 B1); luồng C: cả Tink lẫn CryptoKit đều không có CPace hay ánh xạ Elligator2, nên hai thứ này tự viết trên Kotlin và Swift và chỉ được kiểm bằng vector S7.1 (`cpace.json`); thời gian bắt tay CPace + Noise (thêm một lượt đi về so với luồng B) so với AC6; giả định điện thoại không ở Doze khi đang nhập PIN.<br>**Khả dụng:** QR đủ tương phản ở cả giao diện sáng và tối; hướng dẫn đọc được bằng VoiceOver/TalkBack; nhận diện QR chạy hoàn toàn trên máy (ML Kit bản đóng gói). |
 
 ### 2.1.2 Màn hình
 
@@ -36,7 +36,8 @@ N/A — chưa có wireframe được duyệt.
 | 7 | Số lần nhập PIN còn lại | int32 | Output | 3 | Hiển thị trên Android sau lần nhập sai: "Còn {count} lần thử" |
 | 8 | Trạng thái ghép nối | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Hiển thị trên cả hai thiết bị |
 | 9 | Tên điện thoại | string(64) | Output | `Settings.Global.DEVICE_NAME` | Hiển thị trên Mac/iOS khi ghép xong |
-| 10 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E9; lỗi không có câu riêng (mất kết nối, lỗi nội bộ): "Không ghép nối được. Thử lại." |
+| 10 | Thông báo lỗi | string | Output | Rỗng | Nội dung theo E1–E12; lỗi không có câu riêng (mất kết nối, lỗi nội bộ): "Không ghép nối được. Thử lại." |
+| 11 | Gợi ý Bluetooth đang tắt (Android) | string + action | Output / Input | Ẩn | Hiện trên màn hình ghép nối khi cửa sổ đang mở, Bluetooth tắt, đã cấp Nearby devices và không nối mạng Wi-Fi nào: "Bluetooth đang tắt. Bật Bluetooth để ghép nối khi không có Wi-Fi." (khóa `pairing.bluetooth_off`) kèm nút "Bật Bluetooth" (khóa `common.turn_on_bluetooth`), nút này gửi `ACTION_REQUEST_ENABLE` (SET-01 API 10; người dùng tự bấm thì không tính vào `BT_ENABLE_PROMPT_INTERVAL`) |
 
 ### 2.1.4 Luồng nghiệp vụ
 
@@ -46,12 +47,20 @@ flowchart TB
     U1["(1) Chọn Thêm điện thoại trên Mac/iOS"]
     U3["(3) Mở Ghép nối trên Android, quét QR"]
     U5["(5) Xác nhận ghép nối"]
+    UA3["(A3) Nhập PIN trên Android và xác nhận"]
     U12["(12) Thấy Đã ghép nối trên hai thiết bị"]
   end
   subgraph HT["Hệ thống"]
     S2["(2) Sinh pairing_secret, hiển thị QR 120 s"]
     D4{"(4) QR hợp lệ và còn chỗ?"}
     S6["(6) Android mở cửa sổ ghép nối, quảng bá TXT pr"]
+    B1["(B1) Android quảng bá thêm pr_bt qua BLE khi dùng được Bluetooth"]
+    B2["(B2) Mac quét thêm BLE tìm pr_bt bên cạnh mDNS"]
+    B3["(B3) Mở kênh L2CAP, bắt tay bảo mật link với K_bt_plink"]
+    B4["(B4) Giữ link, bắt tay phiên trên chính link đó"]
+    C1["(C1) Android quảng bá BT_PIN_HINT qua BLE khi dùng được Bluetooth"]
+    C2["(C2) Mac quét BLE tìm BT_PIN_HINT bên cạnh mDNS pm = 1"]
+    C3["(C3) CPace bằng PIN, rồi bắt tay bảo mật link với K_bt_pinlink"]
     D7{"(7) Tìm thấy nhau trong 20 s?"}
     S8["(8) Mở /v1/pair (LAN) hoặc điểm hẹn relay"]
     S9["(9) pair/hello và pair/offer"]
@@ -62,11 +71,16 @@ flowchart TB
   U1 --> S2 --> U3 --> D4
   D4 -- "Có" --> U5
   D4 -- "Không (E1, E2, E6)" --> X1
-  U5 -- "Đồng ý" --> S6 --> D7
+  U5 -- "Đồng ý" --> S6 --> B1 --> B2 --> D7
   U5 -- "Hủy (E5)" --> X1
   D7 -- "LAN hoặc relay" --> S8 --> S9 --> D10
+  D7 -- "Chỉ có Bluetooth (E11)" --> B3 --> S9
+  U1 -- "Dùng PIN (A1)" --> UA3 --> C1 --> C2 --> D7
+  D7 -- "PIN, chỉ có Bluetooth (E7, E11)" --> C3 --> S9
+  UA3 -- "Đang bị khóa tạm (E10)" --> X1
   D7 -- "Không (E3)" --> X1
   D10 -- "Đúng" --> S11 --> U12
+  S11 -- "Qua Bluetooth" --> B4 --> U12
   D10 -- "Sai (E4)" --> X1
 ```
 
@@ -78,16 +92,24 @@ flowchart TB
 | 4 | Hệ thống | A-UI | Kiểm scheme `handlive`, host `pair`, `v = 1`, `pk` và `ps` giải mã đủ 32 byte, `d` ≤ 64 ký tự, `rv` (nếu có) đủ 16 byte. Đếm cặp hiệu lực < 8. | Sai định dạng → E1. Đủ 8 cặp → E6. |
 | 5 | Người dùng | A-UI | Chọn "Ghép nối" hoặc "Hủy" ở hộp thoại "Ghép nối với \<d>?". | "Hủy" → E5. |
 | 6 | Hệ thống | A-SVC | Mở cửa sổ ghép nối 120 s: nhận kết nối `/v1/pair`; đăng ký lại dịch vụ mDNS với TXT `pr` = 8 hex đầu (chữ thường) của SHA-256 trên 32 byte `pk` đã giải b64u. Nếu có `rv`: kết nối relay, gửi `rv_join`. |  |
-| 7 | Hệ thống | M-APP / I-APP | Chờ tối đa 20 s: thấy instance có `pr` khớp → đi LAN; nhận `rv_joined` với `peer_present = true` → đi relay. LAN được ưu tiên nếu cả hai cùng có. | Không có đường nào → E3. |
+| 7 | Hệ thống | M-APP / I-APP | Chờ tối đa 20 s: thấy instance có `pr` khớp → đi LAN; nhận `rv_joined` với `peer_present = true` → đi relay; (Mac, P7) thấy gói quảng bá mang `pr_bt` mà không có ứng viên LAN → đi Bluetooth (B3). LAN được ưu tiên nếu cả hai cùng có; P7 không triển khai relay. | Không có đường nào → E3. |
 | 8 | Hệ thống | M-APP / I-APP | LAN: mở `wss://<ip>:<port>/v1/pair`, chấp nhận chứng chỉ tự ký nhưng ghi lại SHA-256 chứng chỉ thấy được. Relay: gói envelope `pair` trong `rv_msg`. |  |
 | 9 | Hệ thống | M-APP ↔ A-SVC | Client gửi `pair/hello`. Android kiểm `ik_dh_pub` trùng `pk` trong QR, sinh `nonce_s`, tính `K_pa`, trả `pair/offer` có `mac`. | `ik_dh_pub` khác `pk` → `pair/error AUTH_FAILED` (E4). |
 | 10 | Hệ thống | M-APP / I-APP | Kiểm `mac` của offer; kiểm `device_id` Android = UUIDv8(SHA-256(`ik_sig_pub`)); trong LAN kiểm `tls_sha256` = chứng chỉ của kết nối hiện tại. | Sai → gửi `pair/error AUTH_FAILED`, đóng, báo "Ghép nối không an toàn, thử lại" (E4). |
 | 11 | Hệ thống | M-APP ↔ A-SVC, R-API | Client tính `PRK`, sinh `pair_id`, `created_at`, bản chứng thực, ký `sig_c`, gửi `pair/confirm`.<br>Android kiểm `mac`, `prk_check`, `device_id` và `sig_c`; ký `sig_s`; lưu `paired_device`; trả `pair/done`.<br>Client kiểm `sig_s`, `prk_check`; lưu `paired_device`, `PRK` vào Keychain, ghim chứng chỉ.<br>Cả hai hủy secret; Android đóng `/v1/pair`, bỏ TXT `pr`, thêm hint của cặp mới vào TXT `h`.<br>Nếu relay bật, mỗi bên gọi `POST /v1/pairs` (idempotent). | Relay lỗi → E8, thử lại nền khi có mạng. |
 | 12 | Người dùng | A-UI, M-APP / I-APP | Thấy "Đã ghép nối với <tên>" trên cả hai thiết bị; client chuyển sang CONN-01. |  |
-| A1 | Người dùng | M-APP / I-APP | Luồng PIN: chọn "Không quét được? Dùng mã PIN". | Chỉ LAN. |
-| A2 | Hệ thống | M-APP / I-APP | Sinh PIN 6 số (CSPRNG, phân bố đều), hiển thị 120 s; duyệt mDNS tìm instance có `pm = 1`. |  |
+| B1 | Hệ thống | A-SVC | Luồng B (P7). Khi cửa sổ ở bước 6 đang mở và dùng được Bluetooth, A-SVC tính `K_bt_pdisc`, `K_bt_plink` từ `ps` vừa quét rồi khởi động lại advertising set với `pr_bt` đứng đầu (0.4.5 "Chế độ ghép đôi", CONN-05 API 1). Bluetooth tắt và không nối mạng Wi-Fi nào → trường 11 và SET-01 API 10. | Từ chối Nearby devices → không quảng bá (E12). |
+| B2 | Hệ thống | M-APP | Chỉ Mac, dùng được Bluetooth: từ bước 2, tính cùng hai khóa đó từ `pairing_secret` của mình (tính lại mỗi lần làm mới QR) và quét với bộ lọc `BT_SERVICE_UUID` (CONN-05 API 3); gói quảng bá có `pr_bt` trong danh sách hint là một ứng viên. iOS/iPadOS bỏ qua luồng B. | Bị từ chối quyền Bluetooth → chỉ còn LAN và relay (E12). |
+| B3 | Hệ thống | M-APP ↔ A-SVC | Kết nối và mở kênh L2CAP (CONN-05 API 4), rồi bắt tay bảo mật link của 0.4.5 với psk = `K_bt_plink` (API 10). Bước 9–11 tiếp theo dưới dạng envelope `pair` trên kênh điều khiển `0x01` (API 11); ở bước 10 không có kết nối TLS để so, nên client ghim `tls_sha256` của offer, như khi qua relay. | `reject`, `noise2` sai hoặc kênh bị đóng → ứng viên kế tiếp, rồi E3 (E11). |
+| B4 | Hệ thống | M-APP ↔ A-SVC | Sau `pair/done` hai bên giữ link (không đóng 1000): A-SVC coi đó là link điều khiển của cặp mới, ngừng quảng bá chế độ ghép đôi và xóa khóa ghép đôi; M-APP lưu cặp rồi chuyển `Handshaking` (0.11) với `session/hello` cho `pair_id` mới trên cùng link (CONN-05 bước 8). Ghép đôi vẫn thành công dù phiên này lỗi: khi đó client theo CONN-05 từ `Backoff`. | Đăng ký relay (API 8) chờ có mạng (E8). |
+| A1 | Người dùng | M-APP / I-APP | Luồng PIN: chọn "Không quét được? Dùng mã PIN". | Trong LAN, hoặc qua Bluetooth bằng CPace (luồng C). |
+| A2 | Hệ thống | M-APP / I-APP | Sinh PIN 6 số (CSPRNG, phân bố đều), hiển thị 120 s; duyệt mDNS tìm instance có `pm = 1`; Mac dùng được Bluetooth thì quét thêm BLE (C2). |  |
 | A3 | Người dùng | A-UI | Chọn "Nhập mã PIN", nhập 6 số, xác nhận ghép nối. |  |
-| A4 | Hệ thống | A-SVC | Khi PIN đã được xác nhận mới mở cửa sổ ghép nối với TXT `pm = 1` (không mở sớm hơn). Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11.<br>Điện thoại tự đếm các `pair/offer` của mình: tối đa 3 cho mỗi PIN (`PIN_MAX_ATTEMPTS`), bất kể client báo `attempts_left` bao nhiêu. Khi offer thứ ba kết thúc mà không có `pair/done` (`PIN_INVALID`, ngắt kết nối, hết giờ), cửa sổ đóng như "PIN hết hạn" (E2) và người dùng tạo PIN mới. | Sau `PIN_INVALID`, cửa sổ vẫn mở và ô PIN hiện lại: client kết nối trước khi PIN mới được xác nhận sẽ chờ PIN (chưa có `pair/offer`), ô PIN vẫn nhập được; "Đang ghép nối…" (`verifying`) bắt đầu khi PIN được xác nhận. |
+| A4 | Hệ thống | A-SVC | Khi PIN đã được xác nhận mới mở cửa sổ ghép nối với TXT `pm = 1` (không mở sớm hơn), và qua Bluetooth quảng bá `BT_PIN_HINT` (C1); trong `BT_PIN_LOCKOUT` thì không mở cửa sổ nào (E10). Client kết nối `/v1/pair`, gửi `pair/hello` với `mode = "pin"`. Hai bên dùng `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) thay cho `pairing_secret` ở bước 9–11.<br>Điện thoại giữ một bộ đếm thất bại cho mỗi cửa sổ PIN, dùng chung với Bluetooth (C3): mỗi `pair/offer` của nó kết thúc mà không có `pair/done` (`PIN_INVALID`, ngắt kết nối, hết giờ) cộng một, bất kể client báo `attempts_left` bao nhiêu. Khi bộ đếm tới `PIN_MAX_ATTEMPTS` (3, tính chung LAN và Bluetooth), cửa sổ đóng như "PIN hết hạn" (E2) và người dùng tạo PIN mới. | Sau `PIN_INVALID`, cửa sổ vẫn mở và ô PIN hiện lại: client kết nối trước khi PIN mới được xác nhận sẽ chờ PIN (chưa có `pair/offer`), ô PIN vẫn nhập được; "Đang ghép nối…" (`verifying`) bắt đầu khi PIN được xác nhận. |
+| C1 | Hệ thống | A-SVC | Luồng C (P7, sếp quyết định ngày 2026-10-28). Khi cửa sổ PIN của A4 đang mở và dùng được Bluetooth, A-SVC khởi động lại advertising set với `BT_PIN_HINT` đứng đầu (0.4.5 "Chế độ ghép đôi", PIN) và nhận `cpace1` trên kênh mới. | Từ chối Nearby devices → không quảng bá (E12). |
+| C2 | Hệ thống | M-APP | Chỉ Mac, dùng được Bluetooth: trong A2 quét với bộ lọc `BT_SERVICE_UUID`; khi LAN không có instance `pm = 1`, gói quảng bá mang `BT_PIN_HINT` là một ứng viên (có cả hai thì LAN được ưu tiên). Nhiều điện thoại ở chế độ PIN → thử lần lượt trong 20 s của bước 7. iOS/iPadOS bỏ qua luồng C. | Bị từ chối quyền Bluetooth → chỉ LAN (E12). |
+| C3 | Hệ thống | M-APP ↔ A-SVC | Mở kênh L2CAP, nhận `challenge`, chạy CPace bằng PIN (`cpace1`, `cpace2`) và bắt tay bảo mật link với `K_bt_pinlink` (API 12). Sau đó bước 9–11 dưới dạng envelope `pair` trên kênh điều khiển `0x01` với `mode = "pin"` và `K_bt_pin` thay cho `K_pin` (không dùng Argon2id); `tls_sha256` được ghim như ở B3. Hai bên tính một kênh thất bại sau `cpace1` là một lần sai PIN trên cùng bộ đếm với các lần thử trong LAN ở A4/A5: tổng của cả hai đường truyền không bao giờ vượt `PIN_MAX_ATTEMPTS` cho mỗi PIN, nên một cửa sổ PIN chỉ cho 3 lần đoán (3 × 10^-6), không phải 3 lần cho mỗi đường. | PIN sai → E7, rồi E2 và E10; `reject`, điện thoại khác hoặc kênh bị đóng → ứng viên kế tiếp, rồi E3 (E11). |
+| C4 | Hệ thống | M-APP ↔ A-SVC | Như B4: link được giữ cho bắt tay phiên của cặp mới; PIN, `ISK`, `K_bt_pinlink` và `K_bt_pin` bị xóa. |  |
 | A5 | Hệ thống | M-APP / I-APP | Kiểm `mac` của offer bằng PIN của mình. Sai → `pair/error PIN_INVALID` kèm số lần còn lại; lần thứ 3 sai → hủy PIN, sinh PIN mới (E7). Đúng → tiếp bước 10–12. |  |
 
 ### 2.1.5 Đặc tả API/service
@@ -105,6 +127,9 @@ flowchart TB
 | 7 | Relay `rv_join` / `rv_joined` / `rv_msg` | `wss://{RELAY_HOST}/v1/relay` (text) | Thiết bị ↔ R-API | 2, 6, 7, 8 |
 | 8 | `POST /v1/pairs` | REST relay | Thiết bị → R-API | 11 |
 | 9 | Dịch vụ hệ điều hành: `NsdManager.registerService`, `NWBrowser`, ML Kit `BarcodeScanning`, `CIFilter.qrCodeGenerator`, Keychain `SecItemAdd` | Cục bộ | — | 2, 3, 6, 7, 11 |
+| 10 | Link ghép đôi Bluetooth: quảng bá chế độ ghép đôi, quét, kênh L2CAP và bắt tay bảo mật link với `K_bt_plink` | BLE, L2CAP | Client ↔ Android | B1, B2, B3 |
+| 11 | Envelope `pair` qua link Bluetooth | Kênh `0x01` của link | Hai chiều | B3, C3, 9–11, B4 |
+| 12 | Link ghép đôi PIN qua Bluetooth: quảng bá `BT_PIN_HINT`, bản ghi `cpace1` / `cpace2`, bắt tay bảo mật link với `K_bt_pinlink` | BLE, L2CAP | Client ↔ Android | C1, C2, C3 |
 
 Chuỗi xác thực dùng chung trong các API dưới đây:
 - `K_pa` = HKDF-SHA256(ikm = `pairing_secret` (hoặc `K_pin`), salt = `nonce_c` ‖ `nonce_s`, info =
@@ -166,7 +191,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 - **Logic nghiệp vụ:**
   1. Chỉ nhận khi cửa sổ ghép nối đang mở; ngoài cửa sổ → `pair/error PAIRING_CLOSED` và đóng.
   2. `mode = qr`: `ik_dh_pub` phải trùng `pk` đã quét, sai → `AUTH_FAILED`. `mode = pin`: chỉ nhận
-     khi cửa sổ mở ở chế độ PIN và kết nối đến từ LAN (không qua relay).
+     khi cửa sổ mở ở chế độ PIN và kết nối đến từ LAN hoặc từ một link ghép đôi PIN qua Bluetooth (API 12),
+     không bao giờ qua relay; trên link ghép đôi QR `mode = pin` → `AUTH_FAILED` (API 11).
   3. Kiểm `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); sai → `AUTH_FAILED`.
   4. Một cửa sổ ghép nối chỉ phục vụ một client: kết nối thứ hai trong cùng cửa sổ →
      `PAIRING_CLOSED`. Chỉ kết nối đó bị từ chối: cửa sổ, bộ đếm giờ và client đang giữ cửa
@@ -206,7 +232,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
   2. `tls_sha256` được bảo vệ bởi `mac`, nên kể cả qua relay (không có kênh TLS trực tiếp) client
      vẫn ghim đúng chứng chỉ thật của điện thoại.
   3. Client kiểm theo thứ tự: `mac` → `device_id` khớp `ik_sig_pub` → (LAN) `tls_sha256` trùng chứng
-     chỉ của kết nối hiện tại. Bất kỳ bước nào sai → `AUTH_FAILED`, không tiết lộ bước nào sai.
+     chỉ của kết nối hiện tại; qua relay và qua Bluetooth không có kết nối TLS, giá trị được `mac` bảo vệ
+     được ghim nguyên như vậy. Bất kỳ bước nào sai → `AUTH_FAILED`, không tiết lộ bước nào sai.
 
 #### API 4 — `WS pair/confirm`
 
@@ -250,7 +277,8 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
 | `prk_check` | b64u (32 byte) | Có | HMAC-SHA256(`PRK`, `"HL1\|prk-check-s\|"` ‖ `pair_id`) |
 | `mac` | b64u (32 byte) | Có | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) — `pair_id` 16 byte, `sig` 64 byte thô |
 
-- **Response:** N/A (kết thúc giao thức; client đóng kết nối với mã 1000).
+- **Response:** N/A (kết thúc giao thức; client đóng kết nối với mã 1000; qua Bluetooth link được giữ lại cho
+  bắt tay phiên, B4).
 - **Ví dụ:**
 
 ```json
@@ -315,7 +343,7 @@ Chuỗi xác thực dùng chung trong các API dưới đây:
   3. Relay chuyển nguyên `env` sang thành viên còn lại, không đọc nội dung; chỉ chấp nhận
      `env.type = "pair"`.
   4. Envelope `pair/hello` có `mode = "pin"` qua điểm hẹn bị relay chặn và Android cũng từ chối (PIN
-     chỉ trong LAN). Để chặn, relay đọc payload `pair` chưa mã hóa (giải b64). Đây là chỗ duy nhất
+     không bao giờ đi qua relay). Để chặn, relay đọc payload `pair` chưa mã hóa (giải b64). Đây là chỗ duy nhất
      relay xem bên trong envelope (0.4.3).
   5. `rv_msg` khi điểm hẹn không còn thành viên nào khác → `error NOT_CONNECTED`. `rv_msg` tới điểm hẹn
      mà người gửi không ở trong (chưa từng tham gia, hoặc đã hết hạn) → `error BAD_REQUEST`. Relay không phân
@@ -382,6 +410,82 @@ Content-Type: application/json
      hai nghĩa là đối phương chưa đăng ký → lần gọi kế tiếp cho cặp đó chờ 24 h. Mọi mã 4xx khác cũng
      chờ 24 h trước lần gọi kế tiếp.
 
+#### API 10 — Link ghép đôi Bluetooth
+
+- **URL:** N/A (kênh quảng bá BLE, rồi một kênh L2CAP tới PSM đã quảng bá)
+- **Method:** Android: `BluetoothLeAdvertiser.startAdvertisingSet` và `listenUsingInsecureL2capChannel` (CONN-05 API 1,
+  2); Mac: `scanForPeripherals`, `connect`, `openL2CAPChannel` (CONN-05 API 3, 4); sau đó các bản ghi `challenge`,
+  `noise1`, `noise2`, `reject` (0.4.5).
+- **Request:**
+
+| Mục | Giá trị | Mô tả |
+|------|-------|-------------|
+| `K_bt_pdisc` | HKDF-SHA256(ikm = `pairing_secret`, salt = rỗng, info = `"handlive/v1/bt-pair-disc"`, L = 32) | Cả hai bên; Android tính từ `ps` đã quét |
+| `K_bt_plink` | HKDF-SHA256(ikm = `pairing_secret`, salt = rỗng, info = `"handlive/v1/bt-pair-link"`, L = 32) | psk Noise của link ghép đôi |
+| `pr_bt` | 4 byte đầu của HMAC-SHA256(`K_bt_pdisc`, `"HLBTPAIR1"`) | Hint đầu tiên của service data khi cửa sổ đang mở |
+| `noise1` | `rlen` = `0x0031` ‖ `0x02` ‖ `e` (32) ‖ tag (16) | Mẫu `Noise_NNpsk0_25519_ChaChaPoly_SHA256`, psk = `K_bt_plink`, prologue = `"HLBT1"` ‖ `n_s` |
+
+- **Response:** `noise2` (`rlen` = `0x0031` ‖ `0x03` ‖ `e` ‖ tag) hoặc `reject` (`rlen` = `0x0001` ‖ `0x7F`).
+- **Example:** chưa có cặp nào, PSM `0x0091`, `pr_bt` = `5e 0c 9a 21`: scan response `18 21 U×16 01 91 00 5e 0c 9a 21`
+  (25 byte; `U×16` = `BT_SERVICE_UUID` little-endian); vector của S7.1 cho `K_bt_pdisc`, `K_bt_plink`, `pr_bt` và một
+  bản ghi đầy đủ với `ps` của ví dụ API 1.
+- **Business logic:**
+  1. A-SVC chỉ quảng bá `pr_bt` khi cửa sổ ở bước 6 đang mở; mở và đóng cửa sổ đều khởi động lại advertising set
+     với PSM mới (CONN-05 API 1 logic 1).
+  2. Khi cửa sổ đang mở, A-SVC thử `K_bt_plink` trước psk của các cặp; khi một link ghép đôi đã gửi `pair/hello`
+     hợp lệ thì thôi thử khóa này (mỗi cửa sổ một client).
+  3. Mac lần lượt thử mọi máy phát có `pr_bt` của mình (gói quảng bá bị chép sẽ sai `noise2`) cho tới khi bước 7
+     hết giờ.
+  4. Tiếp nhận, thời hạn và đếm lỗi theo 0.4.5; `reject` không nói nguyên nhân.
+
+#### API 11 — Envelope `pair` qua link Bluetooth
+
+- **URL:** N/A (kênh điều khiển `0x01` của link ghép đôi)
+- **Method:** các JSON envelope của API 2–6 (0.5.1, `type` = `pair`, payload không mã hóa kèm `mac`), mỗi message
+  một envelope, chia mảnh và đệm theo 0.4.5.
+- **Request:** `pair/hello` (`mode` = `qr`), rồi `pair/confirm`, như API 2 và 4.
+- **Response:** `pair/offer`, `pair/done` hoặc `pair/error`, như API 3, 5 và 6.
+- **Example:** envelope trong ví dụ của API 2, giữ nguyên, làm `data` của các mảnh trên kênh điều khiển.
+- **Business logic:**
+  1. `pair/hello` phải tới trong `HANDSHAKE_TIMEOUT` sau khi link được xác nhận; `mode` phải khớp loại link: `qr` trên
+     link ghép đôi QR (API 10), `pin` trên link ghép đôi PIN (API 12); nếu không, `pair/error` `AUTH_FAILED` rồi đóng.
+  2. Envelope nào khác `pair` trước `pair/done` → đóng link, không trả lời.
+  3. Sau `pair/done`, envelope tiếp theo từ client phải là `session/hello` mang `pair_id` mới (0.4.5 "Chế độ ghép
+     đôi"); từ đó A-SVC coi link là link của cặp đó.
+  4. Android lưu cặp ở bước 11 đúng như trong LAN (Query); lỗi sau đó được dọn bằng bước dọn của PAIR-03, như API 5
+     logic 1.
+
+#### API 12 — Link ghép đôi PIN qua Bluetooth (CPace)
+
+- **URL:** N/A (kênh quảng bá BLE, rồi một kênh L2CAP tới PSM đã quảng bá)
+- **Method:** quảng bá và kênh như API 10; sau đó các bản ghi `challenge` (S→C), `cpace1` (C→S), `cpace2` (S→C),
+  `noise1`, `noise2`, `reject` (0.4.5).
+- **Request:**
+
+| Mục | Giá trị | Mô tả |
+|------|-------|-------------|
+| Hint | `BT_PIN_HINT` (`00 00 00 00`) | Hint đầu tiên của service data khi cửa sổ PIN đang mở |
+| Bộ CPace | `CPACE-X25519-SHA512`, initiator-responder | draft-irtf-cfrg-cpace, bản draft cố định theo `shared/test-vectors/cpace.json` |
+| PRS / CI / sid / ADa / ADb | UTF-8 của sáu chữ số / `"HLBTPIN1"` / `n_s` của `challenge` / rỗng / rỗng | `n_s` gắn lần trao đổi vào kênh này, như prologue Noise |
+| `cpace1` | `rlen` = `0x0021` ‖ `0x04` ‖ `Ya` (32) | `Ya` = X25519(`ya`, `g`) |
+| `K_bt_pinlink` | HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-link"`, L = 32) | psk Noise; prologue `"HLBT1"` ‖ `n_s` |
+| `K_bt_pin` | HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-pair"`, L = 32) | Thay `K_pin` trong `K_pa` và `PRK` (0.6.2) |
+
+- **Response:** `cpace2` (`rlen` = `0x0021` ‖ `0x05` ‖ `Yb` (32)), rồi `noise2` như API 10, hoặc `reject`.
+- **Example:** PIN `042517` (PRS = `30 34 32 35 31 37`); `challenge` `00 21 01` ‖ `n_s`; `cpace1` `00 21 04` ‖ `Ya`;
+  `cpace2` `00 21 05` ‖ `Yb`; vector S7.1 cho `g`, `Ya`, `Yb`, `K`, `ISK` và cả hai khóa với `n_s`, `ya`, `yb` cố định.
+- **Business logic:**
+  1. A-SVC chỉ nhận `cpace1` khi đang mở cửa sổ PIN; nếu không thì đóng kênh, không trả lời. Nó không bao giờ trả lời
+     `noise1` khóa bằng `K_bt_pinlink` trước khi chính nó gửi `cpace2` trên cùng kênh.
+  2. `Ya` hoặc `Yb` làm `K` toàn số 0 (điểm bậc thấp) → đóng, không trả lời; tính là một lần thử thất bại.
+  3. Tag `noise1` sai sau `cpace1` → `reject`, một lần thử trên bộ đếm của điện thoại cho cửa sổ PIN này (bộ đếm dùng
+     chung với LAN, A4); tag `noise2` sai → Mac đóng kênh, một lần thử trên bộ đếm của Mac cho PIN này (dùng chung với
+     `PIN_INVALID` trong LAN, A5). Tới `PIN_MAX_ATTEMPTS` thì điện thoại đóng cửa sổ (E2) và bắt đầu
+     `BT_PIN_LOCKOUT` (E10); Mac sinh PIN mới (E7).
+  4. Mỗi cửa sổ PIN phục vụ một client: khi một link ghép đôi PIN đã gửi `pair/hello` hợp lệ, A-SVC không nhận thêm
+     `cpace1` nào cho cửa sổ đó.
+  5. Tiếp nhận, `BT_PREAUTH_TIMEOUT` và `BT_AUTH_FAIL_BLOCK` theo 0.4.5; `reject` không nói nguyên nhân.
+
 #### Query
 
 ```sql
@@ -412,6 +516,14 @@ INSERT INTO paired_device (pair_id, peer_device_id, peer_name, peer_model, peer_
 VALUES (:pair_id, :peer_device_id, :peer_name, :peer_model, :peer_ik_sig_pub,
         :peer_ik_dh_pub, :peer_tls_sha256, :attestation, :sig_self, :sig_peer,
         :last_host, :last_port, :created_at);
+
+-- [Thiết kế] Mac, bước 11 qua Bluetooth (B3): lưu cặp không có địa chỉ LAN
+INSERT INTO paired_device (pair_id, peer_device_id, peer_name, peer_model, peer_ik_sig_pub,
+                           peer_ik_dh_pub, peer_tls_sha256, attestation, sig_self, sig_peer,
+                           last_host, last_port, created_at)
+VALUES (:pair_id, :peer_device_id, :peer_name, :peer_model, :peer_ik_sig_pub,
+        :peer_ik_dh_pub, :peer_tls_sha256, :attestation, :sig_self, :sig_peer,
+        NULL, NULL, :created_at);
 
 -- [Thiết kế] Relay, API 8: lấy khóa công khai của hai thiết bị
 SELECT device_id, ik_sig_pub

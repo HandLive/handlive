@@ -12,12 +12,12 @@ English | [Tiếng Việt](02-pairing.vi.md)
 | Item | Content |
 |-----|----------|
 | Name | PAIR-01 — Pair devices with a QR code (fallback: PIN) |
-| Description | Establishes a trust relationship between the Android phone and a Mac/iPhone/iPad: exchange the identity keys, derive the pair root key `PRK`, pin the phone's TLS certificate and store an attestation signed by both sides.<br>Mac/iOS shows the QR code, Android scans it.<br>When the QR code can't be scanned, a 6-digit PIN is used (LAN only).<br>From P2, if the two devices can't see each other on the LAN, the exchange goes through a rendezvous on the relay (QR only). |
+| Description | Establishes a trust relationship between the Android phone and a Mac/iPhone/iPad: exchange the identity keys, derive the pair root key `PRK`, pin the phone's TLS certificate and store an attestation signed by both sides.<br>Mac/iOS shows the QR code, Android scans it.<br>When the QR code can't be scanned, a 6-digit PIN is used (on the LAN, or from P7 over Bluetooth with CPace, flow C).<br>From P2, if the two devices can't see each other on the LAN, the exchange goes through a rendezvous on the relay (QR only).<br>From P7, a Mac and a phone that share no LAN, even with no network at all, run the same exchange over a Bluetooth link (flow B with the QR, flow C with the PIN, 0.4.5 "Pairing mode"); the link is then kept for the first session. |
 | Actors | Primary: User (owns both devices). System: A-UI, A-SVC, M-APP or I-APP, R-API and R-KV (rendezvous, pair registration). |
-| Preconditions | 1.<br>Android has completed SET-01 (with the camera permission for scanning the QR code) and A-SVC is running.<br>2.<br>Mac/iOS has completed SET-03 (local network permission).<br>3.<br>Both devices are on the same LAN; or (from P2) both have internet access and `relay.enabled = true`.<br>4.<br>Mac/iOS has no active pair yet.<br>5.<br>Android has fewer than 8 active pairs. |
-| Postconditions | **Success:** both sides have a `paired_device` record with the same `pair_id`; `PRK` is in the key store; Mac/iOS pins `peer_tls_sha256`; the pair is registered with the relay if the relay is enabled (or marked as waiting for registration); CONN-01 starts automatically.<br>**Failure:** neither side stores anything; the `pairing_secret` or the PIN is wiped from memory. |
-| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone." In the PIN flow (A3–A4) the window closed after 120 s without a pair, or the third `pair/offer` for this PIN ended without `pair/done` (A4): Android shows "The PIN has expired. Get a new PIN on your Mac or iPhone and try again."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID`); after 3 failed attempts Mac/iOS generates a new PIN and the phone closes the window (E2).<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background (API 8 logic 6).<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN. |
-| Special requirements | **Security:** `pairing_secret` is 256 bits, lives only 120 s, never leaves the device except through the QR code and is never logged; HMAC comparison is constant-time; the relay never sees `pairing_secret` and is not used for the PIN.<br>The PIN is the fallback path: an active attacker in the middle at the exact moment of pairing could guess the PIN offline — mitigated by Argon2id (t=3, m=64 MiB, p=4), at most 3 `pair/offer` per PIN counted by the phone (A4) and allowing it on the LAN only. Remaining risk: a single `pair/offer` carries an HMAC keyed by `K_pin`, so an attacker who obtains one offer can still try the 10^6 PINs offline (Argon2id makes each guess costly, not impossible). The long-term fix is a PAKE (CPace) for the PIN path — an open decision, not part of the current design.<br>**Performance:** from scanning to "Paired" ≤ 5 s on the LAN, ≤ 8 s through the relay.<br>**Usability:** the QR code has enough contrast in both light and dark appearance; the instructions are readable with VoiceOver/TalkBack; QR recognition runs entirely on the device (bundled ML Kit). |
+| Preconditions | 1.<br>Android has completed SET-01 (with the camera permission for scanning the QR code) and A-SVC is running.<br>2.<br>Mac/iOS has completed SET-03 (local network permission).<br>3.<br>Both devices are on the same LAN; or (from P2) both have internet access and `relay.enabled = true`; or (from P7, Mac only) both have Bluetooth on, Android 12+ has Nearby devices granted, the Mac has Bluetooth access and `link.bluetooth` is on on both.<br>4.<br>Mac/iOS has no active pair yet.<br>5.<br>Android has fewer than 8 active pairs. |
+| Postconditions | **Success:** both sides have a `paired_device` record with the same `pair_id`; `PRK` is in the key store; Mac/iOS pins `peer_tls_sha256`; the pair is registered with the relay if the relay is enabled (or marked as waiting for registration); CONN-01 starts automatically. Over Bluetooth: `last_host`, `last_port` stay empty, the relay registration waits for a network (E8), and the client goes straight to the session handshake on the kept link (B4, CONN-05 step 8) instead of CONN-01.<br>**Failure:** neither side stores anything; the `pairing_secret` or the PIN is wiped from memory. |
+| Exceptions | E1 — The QR code is not a HandLive code or is malformed (`QR_INVALID`): Android shows "This QR code isn't a HandLive code."<br>E2 — The QR code has expired because Mac/iOS has refreshed it (`PAIRING_CLOSED`): Android shows "The QR code has changed. Scan the new code on your Mac or iPhone." In the PIN flow (A3–A4) the window closed after 120 s without a pair, or the third `pair/offer` for this PIN ended without `pair/done` (A4), or over Bluetooth the third channel that failed after `cpace1` (C3): Android shows "The PIN has expired. Get a new PIN on your Mac or iPhone and try again."<br>E3 — The devices don't find each other within 20 s and the relay is unavailable: Mac/iOS shows "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again." A Mac that scanned Bluetooth during step 7 (B2) shows instead "Couldn't find the phone. Keep both devices close with Bluetooth on, or put them on the same Wi-Fi network, then try again." (key `pairing.error_not_found_offline`).<br>E4 — Wrong HMAC, signature or TLS binding; possibly a man-in-the-middle attack (`AUTH_FAILED`).<br>E5 — The user taps Cancel on Android.<br>E6 — Android already has 8 pairs: Android shows "This phone is already paired with 8 devices. Unpair one and try again."<br>E7 — Wrong PIN (`PIN_INVALID` on the LAN; over Bluetooth a channel that fails after `cpace1`, C3); after 3 failed attempts Mac/iOS generates a new PIN and the phone closes the window (E2).<br>E8 — Registering the pair with the relay fails: the pair still works on the LAN, `relay_registered = 0`, retry in the background (API 8 logic 6).<br>E9 — Camera permission denied: Android shows "The camera isn't available. Use a PIN to pair." and switches to the PIN.<br>E10 — PIN lockout: a PIN window closed by `PIN_MAX_ATTEMPTS` failures (E2) makes the phone refuse any new PIN window, on the LAN and over Bluetooth, for `BT_PIN_LOCKOUT`. Confirming a PIN during that time shows "Too many wrong PIN attempts. Wait 5 minutes, or scan the QR code instead." (key `pairing.error_pin_locked`); the QR flows still work. The earlier rule "the PIN works only on the same Wi-Fi" and its string `pairing.error_pin_needs_wifi` are withdrawn (owner decision 2026-10-28: the PIN pairs over Bluetooth through CPace).<br>E11 — Over Bluetooth, the channel does not open, gets `reject` (`LINK_REJECTED`), fails `noise2` (a copied advertisement) or closes before `pair/done`: the Mac tries the next advertiser with the same `pr_bt` while the 20 s of step 7 last; then E3. A link closed after `pair/hello` ends the pairing with "Pairing didn't finish. Try again." Nothing is stored, no existing pair is touched (AC8).<br>E12 — Bluetooth not usable for pairing: Nearby devices denied on Android (SET-01 E12) or Bluetooth access denied on the Mac (SET-03 E8) → flows B and C are skipped and pairing needs the LAN or the relay; Bluetooth off on the phone while the window is open and no Wi-Fi network is connected → the pairing screen shows field 11 and A-UI may request Bluetooth on (SET-01 API 10). |
+| Special requirements | **Security:** `pairing_secret` is 256 bits, lives only 120 s, never leaves the device except through the QR code and is never logged; HMAC comparison is constant-time; the relay never sees `pairing_secret` and is not used for the PIN.<br>The PIN is the fallback path: an active attacker in the middle at the exact moment of pairing could guess the PIN offline — mitigated by Argon2id (t=3, m=64 MiB, p=4), at most `PIN_MAX_ATTEMPTS` failed attempts per PIN window counted by the phone (A4) and never through the relay. Remaining risk: a single `pair/offer` carries an HMAC keyed by `K_pin`, so an attacker who obtains one offer can still try the 10^6 PINs offline (Argon2id makes each guess costly, not impossible). Over Bluetooth the PIN goes through CPace instead (flow C) and cannot be checked offline; using CPace on the LAN too is not part of this design.<br>**Security over Bluetooth (flow B):** the advertisement carries only `pr_bt`, an HMAC keyed from `pairing_secret` that changes with every QR, never `pr`, `pk`, a name or a `device_id` (AC9); every `pair` envelope travels inside the link encryption, so names, keys and `device_id` never cross the air in the clear; the first frame is authenticated by `K_bt_plink` before the pre-auth slot becomes a link; no pre-authentication message changes pair state (AC8).<br>**Security of the PIN over Bluetooth (flow C):** the PIN goes only into CPace (`CPACE-X25519-SHA512`, 0.4.5 "Pairing mode"), so neither the PIN nor any value a listener could test it against crosses the air; a man in the middle gets one guess per channel, 3 per PIN (`PIN_MAX_ATTEMPTS`, counted on both sides), so one PIN window is guessed with probability 3 × 10^-6, and `BT_PIN_LOCKOUT` stops repeated windows; every PIN is single-use and lives at most `PAIRING_WINDOW`; the PIN-mode advertisement carries only `BT_PIN_HINT`, the same for every phone (AC9).<br>**Performance:** from scanning to "Paired" ≤ 5 s on the LAN, ≤ 8 s through the relay, ≤ 15 s over Bluetooth with both devices offline, for the QR from the scan and for the PIN from its confirmation on the phone (AC6).<br>**Not yet measured (A7.2/M7.2 check first on the S25 + Mac):** G7 never paired over BLE; AC6 itself; the advertising set restarted when the window opens (new PSM) being seen by the Mac's scan within a few seconds; the service data in the scan response (also CONN-05 API 3 logic 1); the Nearby devices and camera prompts back to back before scanning (SET-01 step 10); the Bluetooth prompt of a menu bar app (`LSUIElement`, SET-03 B1); flow C: neither Tink nor CryptoKit offers CPace or the Elligator2 map, so both are written in-house on Kotlin and Swift and checked only by the S7.1 vectors (`cpace.json`); the time of the CPace + Noise handshake (one round trip more than flow B) against AC6; the assumption that the phone is not in Doze while the PIN is typed.<br>**Usability:** the QR code has enough contrast in both light and dark appearance; the instructions are readable with VoiceOver/TalkBack; QR recognition runs entirely on the device (bundled ML Kit). |
 
 ### 2.1.2 Screens
 
@@ -36,7 +36,8 @@ N/A — no approved wireframe yet.
 | 7 | PIN attempts left | int32 | Output | 3 | Shown on Android after a wrong entry: "{count} attempts left" ("1 attempt left") |
 | 8 | Pairing status | enum{waiting_scan\| connecting\| verifying\| done\| failed} | Output | `waiting_scan` | Shown on both devices |
 | 9 | Phone name | string(64) | Output | `Settings.Global.DEVICE_NAME` | Shown on Mac/iOS when pairing completes |
-| 10 | Error message | string | Output | Empty | Text per E1–E9; failures without their own text (lost connection, internal error): "Pairing didn't finish. Try again." |
+| 10 | Error message | string | Output | Empty | Text per E1–E12; failures without their own text (lost connection, internal error): "Pairing didn't finish. Try again." |
+| 11 | Bluetooth-off hint (Android) | string + action | Output / Input | Hidden | Shown on the pairing screen while the window is open, Bluetooth is off, Nearby devices is granted and no Wi-Fi network is connected: "Bluetooth is off. Turn it on to pair without Wi-Fi." (key `pairing.bluetooth_off`) with the button "Turn On Bluetooth" (key `common.turn_on_bluetooth`), which sends `ACTION_REQUEST_ENABLE` (SET-01 API 10; a tap by the user does not count toward `BT_ENABLE_PROMPT_INTERVAL`) |
 
 ### 2.1.4 Business flow
 
@@ -46,12 +47,20 @@ flowchart TB
     U1["(1) Choose Add Phone on Mac/iOS"]
     U3["(3) Open Pair a Device on Android, scan the QR code"]
     U5["(5) Confirm pairing"]
+    UA3["(A3) Type the PIN on Android and confirm"]
     U12["(12) See Paired on both devices"]
   end
   subgraph HT["System"]
     S2["(2) Generate pairing_secret, show the QR code for 120 s"]
     D4{"(4) QR code valid and a pair slot left?"}
     S6["(6) Android opens the pairing window, advertises TXT pr"]
+    B1["(B1) Android also advertises pr_bt over BLE when Bluetooth is usable"]
+    B2["(B2) Mac also scans BLE for pr_bt beside mDNS"]
+    B3["(B3) Open the L2CAP channel, link-security handshake with K_bt_plink"]
+    B4["(B4) Keep the link, session handshake on it"]
+    C1["(C1) Android advertises BT_PIN_HINT over BLE when Bluetooth is usable"]
+    C2["(C2) Mac scans BLE for BT_PIN_HINT beside mDNS pm = 1"]
+    C3["(C3) CPace with the PIN, then link-security handshake with K_bt_pinlink"]
     D7{"(7) Found each other within 20 s?"}
     S8["(8) Open /v1/pair (LAN) or the relay rendezvous"]
     S9["(9) pair/hello and pair/offer"]
@@ -62,11 +71,16 @@ flowchart TB
   U1 --> S2 --> U3 --> D4
   D4 -- "Yes" --> U5
   D4 -- "No (E1, E2, E6)" --> X1
-  U5 -- "Accept" --> S6 --> D7
+  U5 -- "Accept" --> S6 --> B1 --> B2 --> D7
   U5 -- "Cancel (E5)" --> X1
   D7 -- "LAN or relay" --> S8 --> S9 --> D10
+  D7 -- "Bluetooth only (E11)" --> B3 --> S9
+  U1 -- "Use a PIN (A1)" --> UA3 --> C1 --> C2 --> D7
+  D7 -- "PIN, Bluetooth only (E7, E11)" --> C3 --> S9
+  UA3 -- "Locked out (E10)" --> X1
   D7 -- "No (E3)" --> X1
   D10 -- "Valid" --> S11 --> U12
+  S11 -- "Over Bluetooth" --> B4 --> U12
   D10 -- "Invalid (E4)" --> X1
 ```
 
@@ -78,16 +92,24 @@ flowchart TB
 | 4 | System | A-UI | Checks the scheme `handlive`, the host `pair`, `v = 1`, that `pk` and `ps` decode to exactly 32 bytes, `d` ≤ 64 characters and `rv` (if present) is exactly 16 bytes. Checks that active pairs < 8. | Malformed → E1. 8 pairs already → E6. |
 | 5 | User | A-UI | Chooses "Pair" or "Cancel" in the "Pair with \<d>?" dialog. | "Cancel" → E5. |
 | 6 | System | A-SVC | Opens a 120 s pairing window: accepts connections on `/v1/pair`; re-registers the mDNS service with TXT `pr` = the first 8 lowercase hex digits of SHA-256 over the 32 decoded bytes of `pk`. If `rv` is present: connect to the relay and send `rv_join`. |  |
-| 7 | System | M-APP / I-APP | Waits up to 20 s: an instance with a matching `pr` is found → go over the LAN; `rv_joined` arrives with `peer_present = true` → go through the relay. The LAN wins if both are available. | No path at all → E3. |
+| 7 | System | M-APP / I-APP | Waits up to 20 s: an instance with a matching `pr` is found → go over the LAN; `rv_joined` arrives with `peer_present = true` → go through the relay; (Mac, P7) an advertisement carrying `pr_bt` and no LAN candidate → go over Bluetooth (B3). The LAN wins if both are available; the relay is not deployed in P7. | No path at all → E3. |
 | 8 | System | M-APP / I-APP | LAN: open `wss://<ip>:<port>/v1/pair` and accept the self-signed certificate, but record the SHA-256 of the certificate seen. Relay: wrap the `pair` envelopes in `rv_msg`. |  |
 | 9 | System | M-APP ↔ A-SVC | The client sends `pair/hello`. Android checks that `ik_dh_pub` equals the `pk` from the QR code, generates `nonce_s`, computes `K_pa` and returns a `pair/offer` with a `mac`. | `ik_dh_pub` differs from `pk` → `pair/error AUTH_FAILED` (E4). |
 | 10 | System | M-APP / I-APP | Checks the offer's `mac`; checks that the Android `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); on the LAN checks that `tls_sha256` = the certificate of the current connection. | Mismatch → send `pair/error AUTH_FAILED`, close, show "Pairing isn't secure — try again" (E4). |
 | 11 | System | M-APP ↔ A-SVC, R-API | The client computes `PRK`, generates `pair_id`, `created_at` and the attestation, signs `sig_c` and sends `pair/confirm`.<br>Android checks `mac`, `prk_check`, `device_id` and `sig_c`; signs `sig_s`; stores `paired_device`; returns `pair/done`.<br>The client checks `sig_s`, `prk_check`; stores `paired_device`, puts `PRK` in the Keychain and pins the certificate.<br>Both sides discard the secret; Android closes `/v1/pair`, drops TXT `pr` and adds the new pair's hint to TXT `h`.<br>If the relay is enabled, each side calls `POST /v1/pairs` (idempotent). | Relay error → E8, retry in the background when a network is available. |
 | 12 | User | A-UI, M-APP / I-APP | Sees "Paired with \<name>" on both devices; the client moves on to CONN-01. |  |
-| A1 | User | M-APP / I-APP | PIN flow: chooses "Can't Scan? Use a PIN". | LAN only. |
-| A2 | System | M-APP / I-APP | Generates a 6-digit PIN (CSPRNG, uniformly distributed) and shows it for 120 s; browses mDNS for an instance with `pm = 1`. |  |
+| B1 | System | A-SVC | Flow B (P7). With the window of step 6 open and Bluetooth usable, A-SVC derives `K_bt_pdisc`, `K_bt_plink` from the scanned `ps` and restarts the advertising set with `pr_bt` first (0.4.5 "Pairing mode", CONN-05 API 1). Bluetooth off with no Wi-Fi network connected → field 11 and SET-01 API 10. | Nearby devices denied → no advertising (E12). |
+| B2 | System | M-APP | Mac only, Bluetooth usable: from step 2 on, derives the same two keys from its `pairing_secret` (again at every QR refresh) and scans with the `BT_SERVICE_UUID` filter (CONN-05 API 3); an advertisement whose hints contain `pr_bt` is a candidate. iOS/iPadOS skip flow B. | Bluetooth access denied → only the LAN and the relay (E12). |
+| B3 | System | M-APP ↔ A-SVC | Connects and opens the L2CAP channel (CONN-05 API 4), then the link-security handshake of 0.4.5 with psk = `K_bt_plink` (API 10). Steps 9–11 follow as `pair` envelopes on control channel `0x01` (API 11); in step 10 there is no TLS connection to compare, so the client pins the `tls_sha256` of the offer, as through the relay. | `reject`, `noise2` failure or a closed channel → next candidate, then E3 (E11). |
+| B4 | System | M-APP ↔ A-SVC | After `pair/done` both sides keep the link (no close 1000): A-SVC treats it as the control link of the new pair, stops pairing-mode advertising and wipes the pairing keys; M-APP stores the pair and goes to `Handshaking` (0.11) with `session/hello` for the new `pair_id` on the same link (CONN-05 step 8). The pairing has succeeded even if this session fails: the client then follows CONN-05 from `Backoff`. | Relay registration (API 8) waits for a network (E8). |
+| A1 | User | M-APP / I-APP | PIN flow: chooses "Can't Scan? Use a PIN". | On the LAN, or over Bluetooth with CPace (flow C). |
+| A2 | System | M-APP / I-APP | Generates a 6-digit PIN (CSPRNG, uniformly distributed) and shows it for 120 s; browses mDNS for an instance with `pm = 1`; a Mac with Bluetooth usable also scans BLE (C2). |  |
 | A3 | User | A-UI | Chooses "Enter PIN", types the 6 digits and confirms the pairing. |  |
-| A4 | System | A-SVC | Once the PIN is confirmed, opens the pairing window with TXT `pm = 1` (never earlier). The client connects to `/v1/pair` and sends `pair/hello` with `mode = "pin"`. Both sides use `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) instead of `pairing_secret` in steps 9–11.<br>The phone counts its own `pair/offer` messages: at most 3 per PIN (`PIN_MAX_ATTEMPTS`), whatever `attempts_left` the client reports. When the third offer ends without `pair/done` (`PIN_INVALID`, disconnect, timeout), the window closes as "PIN expired" (E2) and the user makes a new PIN. | After `PIN_INVALID` the window stays open and the PIN field comes back: a client that connects before the new PIN is confirmed waits for it (no `pair/offer` yet) and the PIN field stays editable; "Pairing…" (`verifying`) starts when the PIN is confirmed. |
+| A4 | System | A-SVC | Once the PIN is confirmed, opens the pairing window with TXT `pm = 1` (never earlier), and over Bluetooth advertises `BT_PIN_HINT` (C1); during `BT_PIN_LOCKOUT` it opens no window (E10). The client connects to `/v1/pair` and sends `pair/hello` with `mode = "pin"`. Both sides use `K_pin` = Argon2id(PIN, `nonce_c` ‖ `nonce_s`) instead of `pairing_secret` in steps 9–11.<br>The phone keeps one failure counter per PIN window, shared with Bluetooth (C3): each of its own `pair/offer` messages that ends without `pair/done` (`PIN_INVALID`, disconnect, timeout) adds one, whatever `attempts_left` the client reports. When the counter reaches `PIN_MAX_ATTEMPTS` (3, LAN and Bluetooth together), the window closes as "PIN expired" (E2) and the user makes a new PIN. | After `PIN_INVALID` the window stays open and the PIN field comes back: a client that connects before the new PIN is confirmed waits for it (no `pair/offer` yet) and the PIN field stays editable; "Pairing…" (`verifying`) starts when the PIN is confirmed. |
+| C1 | System | A-SVC | Flow C (P7, owner decision 2026-10-28). With the PIN window of A4 open and Bluetooth usable, A-SVC restarts the advertising set with `BT_PIN_HINT` first (0.4.5 "Pairing mode", PIN) and accepts `cpace1` on new channels. | Nearby devices denied → no advertising (E12). |
+| C2 | System | M-APP | Mac only, Bluetooth usable: during A2 scans with the `BT_SERVICE_UUID` filter; an advertisement carrying `BT_PIN_HINT` with no `pm = 1` instance on the LAN is a candidate (the LAN wins when both exist). Several phones in PIN mode → try them one after the other within the 20 s of step 7. iOS/iPadOS skip flow C. | Bluetooth access denied → LAN only (E12). |
+| C3 | System | M-APP ↔ A-SVC | Opens the L2CAP channel, receives `challenge`, runs CPace with the PIN (`cpace1`, `cpace2`) and the link-security handshake with `K_bt_pinlink` (API 12). Then steps 9–11 as `pair` envelopes on control channel `0x01` with `mode = "pin"` and `K_bt_pin` in place of `K_pin` (no Argon2id); `tls_sha256` is pinned as in B3. Both sides count a channel that fails after `cpace1` as one wrong PIN on the same counter as the LAN attempts of A4/A5: the total across both transports never exceeds `PIN_MAX_ATTEMPTS` per PIN, so one PIN window allows 3 guesses (3 × 10^-6), not 3 per transport. | Wrong PIN → E7, then E2 and E10; `reject`, another phone or a closed channel → next candidate, then E3 (E11). |
+| C4 | System | M-APP ↔ A-SVC | As B4: the link is kept for the session handshake of the new pair; the PIN, `ISK`, `K_bt_pinlink` and `K_bt_pin` are wiped. |  |
 | A5 | System | M-APP / I-APP | Checks the offer's `mac` with its own PIN. Wrong → `pair/error PIN_INVALID` with the number of attempts left; third failure → discard the PIN and generate a new one (E7). Correct → continue with steps 10–12. |  |
 
 ### 2.1.5 API/service specification
@@ -105,6 +127,9 @@ flowchart TB
 | 7 | Relay `rv_join` / `rv_joined` / `rv_msg` | `wss://{RELAY_HOST}/v1/relay` (text) | Device ↔ R-API | 2, 6, 7, 8 |
 | 8 | `POST /v1/pairs` | Relay REST | Device → R-API | 11 |
 | 9 | Operating system services: `NsdManager.registerService`, `NWBrowser`, ML Kit `BarcodeScanning`, `CIFilter.qrCodeGenerator`, Keychain `SecItemAdd` | Local | — | 2, 3, 6, 7, 11 |
+| 10 | Bluetooth pairing link: pairing-mode advertising, scan, L2CAP channel and link-security handshake with `K_bt_plink` | BLE, L2CAP | Client ↔ Android | B1, B2, B3 |
+| 11 | `pair` envelopes over the Bluetooth link | Link channel `0x01` | Both directions | B3, C3, 9–11, B4 |
+| 12 | Bluetooth PIN pairing link: `BT_PIN_HINT` advertising, records `cpace1` / `cpace2`, link-security handshake with `K_bt_pinlink` | BLE, L2CAP | Client ↔ Android | C1, C2, C3 |
 
 Authentication strings shared by the APIs below:
 - `K_pa` = HKDF-SHA256(ikm = `pairing_secret` (or `K_pin`), salt = `nonce_c` ‖ `nonce_s`, info =
@@ -170,8 +195,9 @@ Authentication strings shared by the APIs below:
   1. Accepted only while the pairing window is open; outside the window → `pair/error PAIRING_CLOSED`
      and close.
   2. `mode = qr`: `ik_dh_pub` must equal the scanned `pk`, otherwise → `AUTH_FAILED`. `mode = pin`:
-     accepted only when the window is open in PIN mode and the connection comes from the LAN (not
-     through the relay).
+     accepted only when the window is open in PIN mode and the connection comes from the LAN or from a
+     Bluetooth PIN pairing link (API 12), never through the relay; on a QR pairing link `mode = pin` →
+     `AUTH_FAILED` (API 11).
   3. Check `device_id` = UUIDv8(SHA-256(`ik_sig_pub`)); mismatch → `AUTH_FAILED`.
   4. A pairing window serves only one client: a second connection in the same window →
      `PAIRING_CLOSED`. Only that connection is refused: the window, its timer and the client
@@ -212,8 +238,9 @@ Authentication strings shared by the APIs below:
   2. `tls_sha256` is protected by `mac`, so even through the relay (where there is no direct TLS
      channel) the client pins the phone's real certificate.
   3. The client checks in this order: `mac` → `device_id` matches `ik_sig_pub` → (LAN) `tls_sha256`
-     equals the certificate of the current connection. Any failed check → `AUTH_FAILED`, without
-     revealing which check failed.
+     equals the certificate of the current connection; through the relay and over Bluetooth there is no
+     TLS connection and the `mac`-protected value is pinned as it is. Any failed check → `AUTH_FAILED`,
+     without revealing which check failed.
 
 #### API 4 — `WS pair/confirm`
 
@@ -258,7 +285,8 @@ Authentication strings shared by the APIs below:
 | `prk_check` | b64u (32 bytes) | Yes | HMAC-SHA256(`PRK`, `"HL1\|prk-check-s\|"` ‖ `pair_id`) |
 | `mac` | b64u (32 bytes) | Yes | HMAC-SHA256(`K_pa`, `"HL1\|done\|"` ‖ `pair_id` ‖ `sig`) — `pair_id` 16 bytes, `sig` 64 raw bytes |
 
-- **Response:** N/A (end of the protocol; the client closes the connection with code 1000).
+- **Response:** N/A (end of the protocol; the client closes the connection with code 1000; over Bluetooth the link
+  is kept for the session handshake, B4).
 - **Example:**
 
 ```json
@@ -325,7 +353,7 @@ Authentication strings shared by the APIs below:
   3. The relay forwards `env` unchanged to the other member without reading its content; it only
      accepts `env.type = "pair"`.
   4. A `pair/hello` envelope with `mode = "pin"` through the rendezvous is blocked by the relay and
-     also rejected by Android (the PIN is LAN-only). To block it the relay decodes the unencrypted
+     also rejected by Android (the PIN never goes through the relay). To block it the relay decodes the unencrypted
      `pair` payload: the only place where it looks inside an envelope (0.4.3).
   5. An `rv_msg` while no other member is in the rendezvous → `error NOT_CONNECTED`; an `rv_msg` for a
      rendezvous the sender is not in (never joined, or expired) → `error BAD_REQUEST`. An expired
@@ -393,6 +421,85 @@ Content-Type: application/json
      API 1) and repeats the call; a second 404 means the peer is not registered yet → the next call
      for that pair waits 24 h. Any other 4xx answer also waits 24 h before the next call.
 
+#### API 10 — Bluetooth pairing link
+
+- **URL:** N/A (BLE advertising channels, then an L2CAP channel to the advertised PSM)
+- **Method:** Android: `BluetoothLeAdvertiser.startAdvertisingSet` and `listenUsingInsecureL2capChannel` (CONN-05 API 1,
+  2); Mac: `scanForPeripherals`, `connect`, `openL2CAPChannel` (CONN-05 API 3, 4); then the records `challenge`,
+  `noise1`, `noise2`, `reject` (0.4.5).
+- **Request:**
+
+| Item | Value | Description |
+|------|-------|-------------|
+| `K_bt_pdisc` | HKDF-SHA256(ikm = `pairing_secret`, salt = empty, info = `"handlive/v1/bt-pair-disc"`, L = 32) | Both sides; Android from the scanned `ps` |
+| `K_bt_plink` | HKDF-SHA256(ikm = `pairing_secret`, salt = empty, info = `"handlive/v1/bt-pair-link"`, L = 32) | The Noise psk of the pairing link |
+| `pr_bt` | first 4 bytes of HMAC-SHA256(`K_bt_pdisc`, `"HLBTPAIR1"`) | First hint of the service data while the window is open |
+| `noise1` | `rlen` = `0x0031` ‖ `0x02` ‖ `e` (32) ‖ tag (16) | Pattern `Noise_NNpsk0_25519_ChaChaPoly_SHA256`, psk = `K_bt_plink`, prologue = `"HLBT1"` ‖ `n_s` |
+
+- **Response:** `noise2` (`rlen` = `0x0031` ‖ `0x03` ‖ `e` ‖ tag) or `reject` (`rlen` = `0x0001` ‖ `0x7F`).
+- **Example:** no pair yet, PSM `0x0091`, `pr_bt` = `5e 0c 9a 21`: scan response `18 21 U×16 01 91 00 5e 0c 9a 21`
+  (25 bytes; `U×16` = `BT_SERVICE_UUID` little-endian); the S7.1 vectors give `K_bt_pdisc`, `K_bt_plink`, `pr_bt` and
+  a full transcript for the `ps` of the API 1 example.
+- **Business logic:**
+  1. A-SVC advertises `pr_bt` only while the window of step 6 is open; opening and closing the window each restart
+     the advertising set with a new PSM (CONN-05 API 1 logic 1).
+  2. While the window is open A-SVC tries `K_bt_plink` before the pairs' psks; once a pairing link has sent a valid
+     `pair/hello` it stops trying it (one client per window).
+  3. The Mac tries every advertiser with its `pr_bt` in turn (a copied advertisement fails `noise2`) until step 7
+     times out.
+  4. Admission, timeouts and failure counting are those of 0.4.5; `reject` says nothing about the cause.
+
+#### API 11 — `pair` envelopes over the Bluetooth link
+
+- **URL:** N/A (control channel `0x01` of a pairing link)
+- **Method:** the JSON envelopes of API 2–6 (0.5.1, `type` = `pair`, unencrypted payload with its `mac`), one per
+  message, fragmented and padded per 0.4.5.
+- **Request:** `pair/hello` (`mode` = `qr`), then `pair/confirm`, as in API 2 and 4.
+- **Response:** `pair/offer`, `pair/done` or `pair/error`, as in API 3, 5 and 6.
+- **Example:** the envelope of the API 2 example, carried unchanged as the `data` of control-channel fragments.
+- **Business logic:**
+  1. `pair/hello` must arrive within `HANDSHAKE_TIMEOUT` after the link is confirmed; its `mode` must match the link:
+     `qr` on a QR pairing link (API 10), `pin` on a PIN pairing link (API 12); otherwise `pair/error` `AUTH_FAILED` and
+     close.
+  2. Any envelope other than `pair` before `pair/done` → close the link without an answer.
+  3. After `pair/done` the next envelope from the client must be `session/hello` naming the new `pair_id` (0.4.5
+     "Pairing mode"); A-SVC treats the link as that pair's link from then on.
+  4. Android stores the pair at step 11 exactly as on the LAN (Query); a failure afterwards is handled by PAIR-03
+     cleanup, as in API 5 logic 1.
+
+#### API 12 — Bluetooth PIN pairing link (CPace)
+
+- **URL:** N/A (BLE advertising channels, then an L2CAP channel to the advertised PSM)
+- **Method:** advertising and channel as in API 10; then the records `challenge` (S→C), `cpace1` (C→S), `cpace2`
+  (S→C), `noise1`, `noise2`, `reject` (0.4.5).
+- **Request:**
+
+| Item | Value | Description |
+|------|-------|-------------|
+| Hint | `BT_PIN_HINT` (`00 00 00 00`) | First hint of the service data while the PIN window is open |
+| CPace suite | `CPACE-X25519-SHA512`, initiator-responder | draft-irtf-cfrg-cpace, revision pinned by `shared/test-vectors/cpace.json` |
+| PRS / CI / sid / ADa / ADb | UTF-8 of the six digits / `"HLBTPIN1"` / `n_s` of `challenge` / empty / empty | `n_s` binds the exchange to this channel, as the Noise prologue does |
+| `cpace1` | `rlen` = `0x0021` ‖ `0x04` ‖ `Ya` (32) | `Ya` = X25519(`ya`, `g`) |
+| `K_bt_pinlink` | HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-link"`, L = 32) | Noise psk; prologue `"HLBT1"` ‖ `n_s` |
+| `K_bt_pin` | HKDF-SHA256(ikm = `ISK`, salt = `n_s`, info = `"handlive/v1/bt-pin-pair"`, L = 32) | Replaces `K_pin` in `K_pa` and `PRK` (0.6.2) |
+
+- **Response:** `cpace2` (`rlen` = `0x0021` ‖ `0x05` ‖ `Yb` (32)), then `noise2` as in API 10, or `reject`.
+- **Example:** PIN `042517` (PRS = `30 34 32 35 31 37`); `challenge` `00 21 01` ‖ `n_s`; `cpace1` `00 21 04` ‖ `Ya`;
+  `cpace2` `00 21 05` ‖ `Yb`; the S7.1 vectors give `g`, `Ya`, `Yb`, `K`, `ISK` and both keys for fixed `n_s`, `ya`,
+  `yb`.
+- **Business logic:**
+  1. A-SVC accepts `cpace1` only while a PIN window is open; otherwise it closes the channel without an answer. It
+     never answers `noise1` with `K_bt_pinlink` before its own `cpace2` on the same channel.
+  2. `Ya` or `Yb` that makes `K` all zero (a low-order point) → close without an answer; counted as a failed attempt.
+  3. A failed `noise1` tag after `cpace1` → `reject`, one attempt on the phone's counter for this PIN window
+     (the counter shared with the LAN, A4); a failed `noise2` tag → the Mac closes, one attempt on the Mac's counter
+     for this PIN (shared with `PIN_INVALID` on the LAN, A5). At `PIN_MAX_ATTEMPTS` the phone closes the window
+     (E2) and starts `BT_PIN_LOCKOUT` (E10); the Mac generates a new PIN (E7).
+  4. The PIN window serves one client: once a PIN pairing link has sent a valid `pair/hello`, A-SVC accepts no
+     further `cpace1` for that window.
+  5. Admission, `BT_PREAUTH_TIMEOUT` and `BT_AUTH_FAIL_BLOCK` are those of 0.4.5; `reject` says nothing about the
+     cause.
+
 #### Query
 
 ```sql
@@ -423,6 +530,14 @@ INSERT INTO paired_device (pair_id, peer_device_id, peer_name, peer_model, peer_
 VALUES (:pair_id, :peer_device_id, :peer_name, :peer_model, :peer_ik_sig_pub,
         :peer_ik_dh_pub, :peer_tls_sha256, :attestation, :sig_self, :sig_peer,
         :last_host, :last_port, :created_at);
+
+-- [Design] Mac, step 11 over Bluetooth (B3): store the pair without a LAN address
+INSERT INTO paired_device (pair_id, peer_device_id, peer_name, peer_model, peer_ik_sig_pub,
+                           peer_ik_dh_pub, peer_tls_sha256, attestation, sig_self, sig_peer,
+                           last_host, last_port, created_at)
+VALUES (:pair_id, :peer_device_id, :peer_name, :peer_model, :peer_ik_sig_pub,
+        :peer_ik_dh_pub, :peer_tls_sha256, :attestation, :sig_self, :sig_peer,
+        NULL, NULL, :created_at);
 
 -- [Design] Relay, API 8: get the public keys of the two devices
 SELECT device_id, ik_sig_pub
