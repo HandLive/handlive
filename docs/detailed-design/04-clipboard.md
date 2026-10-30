@@ -1064,7 +1064,8 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
   3. Each chunk is a complete envelope (about 87 KiB after base64), subject to `DEDUP_WINDOW` and
      counted toward `REKEY_AFTER`; through the relay it is subject to `RELAY_RATE_LIMIT`.
   4. The sender reads chunks from the file or from the normalized buffer and keeps at most 4 chunks
-     waiting in the send buffer; other envelopes are sent in between the chunks.
+     waiting in the send buffer (on the Bluetooth link, `BT_BULK_QUEUED` instead, 0.4.7 bulk rule 4); other
+     envelopes are sent in between the chunks.
   5. Chunk data is never logged.
 
 #### API 5 — `WS clipboard/cancel`

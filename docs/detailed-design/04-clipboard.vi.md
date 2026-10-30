@@ -1061,8 +1061,8 @@ Envelope = {"v":1,"type":"clipboard","id":"0192f3f1-2c40-7c21-9d32-e43f54a65b76"
      (đã hủy, đã xong) → bỏ im lặng; sai thứ tự → `ack` lỗi `BAD_REQUEST` cho `push`, xóa tệp tạm.
   3. Mỗi khối là một envelope đầy đủ (khoảng 87 KiB sau base64), chịu `DEDUP_WINDOW`, được đếm vào
      `REKEY_AFTER`; qua relay chịu `RELAY_RATE_LIMIT`.
-  4. Bên gửi đọc khối từ tệp hoặc bộ đệm đã chuẩn hóa, giữ tối đa 4 khối chờ trong bộ đệm gửi;
-     envelope khác được gửi xen giữa các khối.
+  4. Bên gửi đọc khối từ tệp hoặc bộ đệm đã chuẩn hóa, giữ tối đa 4 khối chờ trong bộ đệm gửi
+     (trên link Bluetooth thay bằng `BT_BULK_QUEUED`, luật bulk 4 của 0.4.7); envelope khác được gửi xen giữa các khối.
   5. Không log dữ liệu khối.
 
 #### API 5 — `WS clipboard/cancel`
