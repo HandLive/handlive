@@ -273,7 +273,7 @@ Sau bước 4, mọi bản ghi là một Noise transport message: ciphertext c�
 | Offset | Độ dài | Trường | Mô tả |
 |---|---|---|---|
 | 0 | 1 | `chan` | `0x01` điều khiển, `0x02` bulk (nội dung: 0.4.7); giá trị khác → đóng link |
-| 1 | 1 | `flags` | bit0 `more`: còn mảnh tiếp theo của cùng message; bit1 `long`: mảnh thuộc làn dài của kênh điều khiển (chỉ kênh `0x01`, xem dưới); các bit khác bằng 0 |
+| 1 | 1 | `flags` | bit0 `more`: còn mảnh tiếp theo của cùng message; bit1 `long`: mảnh thuộc làn dài của kênh điều khiển (chỉ kênh `0x01`, xem dưới; `long` = 1 trên kênh `0x02` → đóng link, luật bulk 5 của 0.4.7); các bit khác bằng 0 |
 | 2 | 2 | `dlen` | uint16 BE, độ dài `data`, ≤ `BT_FRAGMENT_MAX` |
 | 4 | `dlen` | `data` | Một mảnh của một message |
 | 4 + `dlen` | phần còn lại | đệm | Byte 0, đệm tới cỡ nhỏ nhất trong 256, 1 024 hoặc 4 096 byte đủ chứa frame |
@@ -472,6 +472,110 @@ Các lần truyền lớn (ảnh của CLIP-03, văn bản quá `CLIP_INLINE_MAX
 - **Thời hạn và tiến độ.** `CLIP_TRANSFER_IDLE_TIMEOUT` giữ nguyên trên mọi làn (bản ghi 1 040 byte với RTT Doze 3 s vẫn
   tới trong hạn). Qua Bluetooth, tiến độ hiện cho các lần truyền từ `BULK_DIRECT_MIN` trở lên (CLIP-03 trường 2) kèm
   dòng chữ ở CLIP-03 trường 10.
+
+#### Làn bulk trên link Bluetooth (kênh `0x02`)
+
+Các luật dưới đây được đánh số để test trích dẫn được ("luật bulk N của 0.4.7"). Chúng áp dụng cho phiên Bluetooth.
+Phiên LAN hoặc relay chỉ có một làn (`/v1/ctl`) và tham số làn bị bỏ qua. `/v1/stream/bulk` trên Wi-Fi Direct nằm
+ngoài các luật này.
+
+1. **Thứ gì đi làn bulk.** Đúng các envelope của một lần truyền CLIP-03, cả hai chiều:
+   - `clipboard/push` có `transfer`;
+   - mọi `clipboard/chunk`;
+   - `clipboard/cancel`, `reason` nào cũng vậy, từ bên nào cũng vậy;
+   - `ack` của một `push` có `transfer`: `applied`, `ignored` (`cancelled`, `conflict`…) hoặc lỗi
+     (`CLIP_CHECKSUM_MISMATCH`, `BAD_REQUEST`, `INTERNAL`…);
+   - `clipboard/conflict` đi sau một `ack` như thế (CLIP-01 API 6), để nó không vượt được `ack` đó.
+
+   Mọi envelope khác ở lại kênh điều khiển `0x01`: `clipboard/push` gửi thẳng và `ack` của nó, `clipboard/conflict`
+   sau một push gửi thẳng, `session/*`, `ping/*` và mọi `type` khác.
+2. **Bên gửi chọn làn; transport không bao giờ đoán.** Push gửi thẳng và push có `transfer` cùng `type` =
+   `clipboard`, mọi phản hồi đều có `type` = `ack`, nên không đọc được làn từ envelope. Module dựng envelope (bộ máy
+   clipboard) truyền làn vào mọi đường gửi; mặc định là điều khiển. Android (`core/transport`, `feature/connection`):
+
+   ```kotlin
+   // core/transport
+   enum class EnvelopeLane { CONTROL, BULK }
+
+   /** A session socket with a separate bulk lane (the Bluetooth link); other sockets carry both lanes as text. */
+   interface BulkLaneSocket {
+       /** Queues [envelope] on channel 0x02; suspends while bulk rule 4 holds the queue full. */
+       suspend fun sendBulk(envelope: String)
+   }
+
+   // EncryptedEnvelopeChannel
+   suspend fun send(type: String, plaintext: ByteArray, id: String = ids.next(),
+                    lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+   // ControlSession
+   suspend fun send(type: MessageType, plaintext: ByteArray, id: String? = null,
+                    lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+
+   // feature/connection
+   fun interface EnvelopeSender {
+       suspend fun send(type: MessageType, plaintext: ByteArray, id: String, lane: EnvelopeLane)
+   }
+   // PeerSession
+   suspend fun send(type: MessageType, plaintext: ByteArray, lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+   suspend fun request(type: MessageType, plaintext: ByteArray,
+                       timeout: Duration = TransportConstants.REQUEST_TIMEOUT,
+                       lane: EnvelopeLane = EnvelopeLane.CONTROL,
+                       afterSend: suspend (String) -> Unit = {}): Ack
+   suspend fun sendAck(ack: Ack, lane: EnvelopeLane = EnvelopeLane.CONTROL)
+   suspend fun sendError(re: String, code: ErrorCode, message: String,
+                         lane: EnvelopeLane = EnvelopeLane.CONTROL)
+   ```
+
+   `EncryptedEnvelopeChannel` ghi envelope `BULK` bằng `sendBulk` khi socket của nó là `BulkLaneSocket`
+   (`BluetoothPeerSocket`), còn lại ghi thành `Frame.Text` như envelope điều khiển. macOS (`HLTransport`):
+
+   ```swift
+   public enum EnvelopeLane: Sendable, Equatable { case control, bulk }
+
+   public enum ChannelMessage: Sendable, Equatable {
+       case text(String)
+       case binary(Data)
+       /// An envelope (0.5.1) on the bulk lane (0.4.7). Send only: a channel without a separate bulk lane sends it
+       /// as a text frame; `receive()` never returns it.
+       case bulkText(String)
+   }
+
+   // ControlSession
+   public func send<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                lane: EnvelopeLane = .control) async throws
+   public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                       id: String = HLUUID.v7(),
+                                                       lane: EnvelopeLane = .control) async throws -> PendingAck
+   public func sendBinary(_ type: MessageType, plaintext: Data, lane: EnvelopeLane = .control) async throws
+   public func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane = .control) async throws
+   func transmit(_ envelope: Envelope, lane: EnvelopeLane = .control) async throws
+   ```
+
+   `transmit` gửi `.bulkText` cho `.bulk` và `.text` cho `.control`. `ack` được giữ lại để trả lời bản trùng (0.5.1
+   luật 2) được gửi lại trên đúng làn của lần gửi đầu.
+3. **Ghi lên link.** Socket Bluetooth đưa envelope bulk (UTF-8, đúng các byte của WS text frame trên `/v1/ctl`) vào
+   hàng đợi bulk của bộ lập lịch 0.4.5, thành các mảnh trên kênh `0x02` với `long` = 0, `more` = 1 ở mọi mảnh trừ mảnh
+   cuối, và `dlen` ≤ `BT_BULK_FRAGMENT_MAX`. Mỗi chiều chỉ một message bulk tại một thời điểm: mảnh của nó không bao
+   giờ xen với mảnh của message bulk khác; mảnh điều khiển được chen vào giữa (0.4.5 "Ưu tiên").
+4. **Chặn ngược.** Lệnh gửi bulk (`sendBulk` trên Android; `send(.bulkText)` trên macOS) không trả về khi đã có
+   `BT_BULK_QUEUED` envelope bulk trong hàng đợi mà chưa ghi hết. Trên Bluetooth, luật này thay cho "tối đa 4 chunk
+   trong bộ đệm gửi" của CLIP-03. Envelope được mã hóa bằng khóa phiên lúc vào hàng đợi, mà khóa cũ chỉ được giữ 30 s
+   sau rekey (0.6.3 bước 6): 4 envelope chunk (khoảng 350 KiB, 27 s ở 12.9 KB/s) có thể sống lâu hơn khóa cũ, 2 envelope
+   chỉ mất khoảng 14 s.
+5. **Đọc từ link.** Bên nhận ráp kênh `0x02` trong bộ đệm riêng (không dùng chung với làn điều khiển dài) và đóng link
+   không trả lời (CONN-05 E8) khi một mảnh `0x02` có `long` = 1, một mảnh `0x02` có `dlen` vượt `BT_BULK_FRAGMENT_MAX`,
+   hoặc một message bulk vượt `BT_MESSAGE_MAX` trước mảnh cuối. `chan` khác `0x01` và `0x02` vẫn làm đóng link (0.4.5).
+6. **Đưa lên trên.** Message bulk đủ mảnh được đưa lên phiên dưới dạng envelope text, giống message điều khiển đủ
+   mảnh: trên Android là `Frame.Text` vào cùng đường xử lý `/v1/ctl`, trên macOS là `ChannelMessage.text`. Nó đi qua
+   cùng bước giải mã, cùng `DEDUP_WINDOW` và cùng bộ điều phối như kênh điều khiển. UTF-8 hỏng hoặc envelope không hợp
+   lệ được xử lý y như cùng các byte đó trong một WS text frame trên `/v1/ctl`. Bên nhận không kiểm tra envelope đến từ
+   làn nào; luật 1 chỉ ràng buộc bên gửi. Trên macOS, `ChannelMessage.binary` vẫn là HL frame của 0.5.2 và không bao giờ
+   đi trên link Bluetooth: `BluetoothChannel.send(.binary)` ném lỗi.
+7. **Thứ tự.** Mỗi kênh giữ đúng thứ tự bên gửi; giữa hai kênh không có thứ tự. Mọi envelope của một lần truyền đi
+   trên `0x02`, nên chúng đến đúng thứ tự (CLIP-03 API 4 luật 2 vẫn đúng). Envelope điều khiển có thể vượt envelope
+   bulk: `push` gửi thẳng của một clip mới hơn có thể đến trước `cancel` `superseded` của lần truyền cũ, và CLIP-03
+   API 3 luật 2 đã lo trường hợp này (`push` mới thay lần truyền cũ).
+8. **Link kết thúc.** Message bulk đang ráp dở khi link đóng bị bỏ, các envelope bulk còn trong hàng đợi của bên gửi
+   cũng vậy. Lần truyền khi đó theo CLIP-03 E8, hoặc E11 khi phiên LAN thay phiên Bluetooth.
 
 ## 0.5 Khung tin
 
@@ -1366,6 +1470,7 @@ SET-02 quản lý các khóa này.
 | `BULK_DIRECT_MIN` | 128 KiB | Qua Bluetooth, lần truyền từ cỡ này trở lên chờ Wi-Fi Direct trước (0.4.7); khoảng 10 s ở tốc độ 12.9 KB/s của G7 |
 | `BT_BULK_FRAGMENT_MAX` | 1 020 byte | `dlen` của một mảnh trên làn dài kênh điều khiển (kênh `0x01`, `long` = 1) và của một mảnh bulk trên kênh `0x02` (vừa bản ghi 1 040 byte, chiếm sóng khoảng 80 ms) |
 | `BT_BULK_INFLIGHT` | 2 bản ghi | Tổng số bản ghi điều khiển dài và bulk đã ghi vào stream L2CAP mà chưa đi hết; giới hạn thời gian một envelope điều khiển ngắn phải chờ (AC1) |
+| `BT_BULK_QUEUED` | 2 envelope | Số envelope bulk trong hàng đợi của link Bluetooth mà chưa ghi hết; quá số đó thì lệnh gửi bulk chờ (luật bulk 4 của 0.4.7). Giữ một chunk đang chờ nằm trong 30 s khóa cũ còn sống sau rekey |
 | `BULK_MAX_RESTARTS` | 2 | Số lần làm lại vì đổi làn cho mỗi clip (0.4.7); sau đó áp dụng CLIP-03 E8 |
 
 ## 0.11 Trạng thái kết nối của client (Mac/iOS)

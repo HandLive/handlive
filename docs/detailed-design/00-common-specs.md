@@ -280,7 +280,7 @@ message). Plaintext:
 | Offset | Length | Field | Description |
 |---|---|---|---|
 | 0 | 1 | `chan` | `0x01` control, `0x02` bulk (content: 0.4.7); any other value → close the link |
-| 1 | 1 | `flags` | bit0 `more`: further fragments of the same message follow; bit1 `long`: the fragment belongs to the long lane of the control channel (channel `0x01` only, below); other bits 0 |
+| 1 | 1 | `flags` | bit0 `more`: further fragments of the same message follow; bit1 `long`: the fragment belongs to the long lane of the control channel (channel `0x01` only, below; `long` = 1 on channel `0x02` → close the link, 0.4.7 bulk rule 5); other bits 0 |
 | 2 | 2 | `dlen` | uint16 BE, length of `data`, ≤ `BT_FRAGMENT_MAX` |
 | 4 | `dlen` | `data` | A fragment of one message |
 | 4 + `dlen` | rest | padding | Zero bytes up to the smallest of 256, 1,024 or 4,096 bytes that holds the frame |
@@ -487,6 +487,114 @@ carries them depends on the route. Every other envelope, including inline clipbo
 - **Timeouts and progress.** `CLIP_TRANSFER_IDLE_TIMEOUT` is unchanged on every lane (a 1,040-byte record at a Doze
   RTT of 3 s still arrives well within it). Over Bluetooth, progress is shown for transfers of at least
   `BULK_DIRECT_MIN` (CLIP-03 field 2) with the line of CLIP-03 field 10.
+
+#### Bulk lane on the Bluetooth link (channel `0x02`)
+
+The rules below are numbered so that tests can cite them ("0.4.7 bulk rule N"). They apply to a Bluetooth session.
+On a LAN or relay session there is a single lane (`/v1/ctl`) and the lane argument is ignored. `/v1/stream/bulk` on
+Wi-Fi Direct is outside these rules.
+
+1. **What goes on the bulk lane.** Exactly the envelopes of one CLIP-03 transfer, in both directions:
+   - `clipboard/push` with `transfer`;
+   - every `clipboard/chunk`;
+   - `clipboard/cancel`, any `reason`, from either side;
+   - the `ack` of a `push` with `transfer`: `applied`, `ignored` (`cancelled`, `conflict`…) or an error
+     (`CLIP_CHECKSUM_MISMATCH`, `BAD_REQUEST`, `INTERNAL`…);
+   - the `clipboard/conflict` that follows such an `ack` (CLIP-01 API 6), so it cannot overtake that `ack`.
+
+   Every other envelope stays on control channel `0x01`: an inline `clipboard/push` and its `ack`, the
+   `clipboard/conflict` after an inline push, `session/*`, `ping/*` and every other `type`.
+2. **The sender picks the lane; the transport never guesses.** An inline push and a transfer push share `type` =
+   `clipboard`, and every response has `type` = `ack`, so the lane cannot be read from the envelope. The module that
+   builds the envelope (the clipboard engine) passes the lane on every send path; the default is control.
+   Android (`core/transport`, `feature/connection`):
+
+   ```kotlin
+   // core/transport
+   enum class EnvelopeLane { CONTROL, BULK }
+
+   /** A session socket with a separate bulk lane (the Bluetooth link); other sockets carry both lanes as text. */
+   interface BulkLaneSocket {
+       /** Queues [envelope] on channel 0x02; suspends while bulk rule 4 holds the queue full. */
+       suspend fun sendBulk(envelope: String)
+   }
+
+   // EncryptedEnvelopeChannel
+   suspend fun send(type: String, plaintext: ByteArray, id: String = ids.next(),
+                    lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+   // ControlSession
+   suspend fun send(type: MessageType, plaintext: ByteArray, id: String? = null,
+                    lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+
+   // feature/connection
+   fun interface EnvelopeSender {
+       suspend fun send(type: MessageType, plaintext: ByteArray, id: String, lane: EnvelopeLane)
+   }
+   // PeerSession
+   suspend fun send(type: MessageType, plaintext: ByteArray, lane: EnvelopeLane = EnvelopeLane.CONTROL): String
+   suspend fun request(type: MessageType, plaintext: ByteArray,
+                       timeout: Duration = TransportConstants.REQUEST_TIMEOUT,
+                       lane: EnvelopeLane = EnvelopeLane.CONTROL,
+                       afterSend: suspend (String) -> Unit = {}): Ack
+   suspend fun sendAck(ack: Ack, lane: EnvelopeLane = EnvelopeLane.CONTROL)
+   suspend fun sendError(re: String, code: ErrorCode, message: String,
+                         lane: EnvelopeLane = EnvelopeLane.CONTROL)
+   ```
+
+   `EncryptedEnvelopeChannel` writes a `BULK` envelope with `sendBulk` when its socket is a `BulkLaneSocket`
+   (`BluetoothPeerSocket`), otherwise as `Frame.Text` like a control envelope. macOS (`HLTransport`):
+
+   ```swift
+   public enum EnvelopeLane: Sendable, Equatable { case control, bulk }
+
+   public enum ChannelMessage: Sendable, Equatable {
+       case text(String)
+       case binary(Data)
+       /// An envelope (0.5.1) on the bulk lane (0.4.7). Send only: a channel without a separate bulk lane sends it
+       /// as a text frame; `receive()` never returns it.
+       case bulkText(String)
+   }
+
+   // ControlSession
+   public func send<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                lane: EnvelopeLane = .control) async throws
+   public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                       id: String = HLUUID.v7(),
+                                                       lane: EnvelopeLane = .control) async throws -> PendingAck
+   public func sendBinary(_ type: MessageType, plaintext: Data, lane: EnvelopeLane = .control) async throws
+   public func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane = .control) async throws
+   func transmit(_ envelope: Envelope, lane: EnvelopeLane = .control) async throws
+   ```
+
+   `transmit` sends `.bulkText` for `.bulk` and `.text` for `.control`. An `ack` kept to answer duplicates (0.5.1
+   rule 2) is resent on the lane it was first sent on.
+3. **Writing on the link.** The Bluetooth socket puts a bulk envelope (UTF-8, the same bytes as the WS text frame on
+   `/v1/ctl`) in the bulk queue of the 0.4.5 scheduler, as fragments on channel `0x02` with `long` = 0, `more` = 1
+   on every fragment except the last, and `dlen` ≤ `BT_BULK_FRAGMENT_MAX`. One bulk message at a time per direction:
+   its fragments are never interleaved with those of another bulk message; control fragments may go between them
+   (0.4.5 "Priority").
+4. **Backpressure.** The bulk send call (`sendBulk` on Android; `send(.bulkText)` on macOS) does not return while
+   `BT_BULK_QUEUED` bulk envelopes are already queued and not fully written. On Bluetooth this replaces the CLIP-03
+   "at most 4 chunks in the send buffer". An envelope is sealed with the session keys when it is queued, and the old
+   keys are kept only 30 s after a rekey (0.6.3 step 6): 4 chunk envelopes (about 350 KiB, 27 s at 12.9 KB/s) could
+   outlive them, 2 take about 14 s.
+5. **Reading on the link.** The receiver reassembles channel `0x02` in a buffer of its own (not the long control
+   lane's) and closes the link without an answer (CONN-05 E8) when a `0x02` fragment has `long` = 1, a `0x02`
+   fragment has `dlen` over `BT_BULK_FRAGMENT_MAX`, or a bulk message passes `BT_MESSAGE_MAX` before its last
+   fragment. A `chan` other than `0x01` and `0x02` still closes the link (0.4.5).
+6. **Handing up.** A complete bulk message goes to the session as envelope text, like a complete control message:
+   on Android as `Frame.Text` into the same `/v1/ctl` pipeline, on macOS as `ChannelMessage.text`. It goes through the
+   same decryption, the same `DEDUP_WINDOW` and the same dispatcher as the control channel. Invalid UTF-8 or an
+   invalid envelope is handled exactly like the same bytes in a WS text frame on `/v1/ctl`. The receiver does not
+   check which lane an envelope came on; rule 1 binds the sender only. On macOS `ChannelMessage.binary` stays the HL
+   frame of 0.5.2 and never travels on the Bluetooth link: `BluetoothChannel.send(.binary)` throws.
+7. **Order.** Each channel keeps the sender's order; there is no order between channels. Every envelope of one
+   transfer travels on `0x02`, so they arrive in order (CLIP-03 API 4 rule 2 still holds). A control envelope may
+   overtake a bulk one: an inline `push` of a newer clip can arrive before the `cancel` `superseded` of the older
+   transfer, and CLIP-03 API 3 rule 2 already covers it (the new `push` replaces the old transfer).
+8. **End of the link.** A bulk message still being reassembled when the link closes is dropped, and so are the
+   sender's queued bulk envelopes. The transfer then follows CLIP-03 E8, or E11 when a LAN session replaces the
+   Bluetooth one.
 
 ## 0.5 Message frames
 
@@ -1389,6 +1497,7 @@ SET-02 function manages these keys.
 | `BULK_DIRECT_MIN` | 128 KiB | Over Bluetooth, transfers this large or larger wait for Wi-Fi Direct first (0.4.7); about 10 s at the G7 rate of 12.9 KB/s |
 | `BT_BULK_FRAGMENT_MAX` | 1,020 bytes | `dlen` of a fragment on the long control lane (channel `0x01`, `long` = 1) and of a bulk fragment on channel `0x02` (fits the 1,040-byte record, about 80 ms of air time) |
 | `BT_BULK_INFLIGHT` | 2 records | Long-control and bulk records together written to the L2CAP stream and not yet drained; bounds how long a short control envelope waits (AC1) |
+| `BT_BULK_QUEUED` | 2 envelopes | Bulk envelopes queued on the Bluetooth link and not fully written; the bulk send waits beyond that (0.4.7 bulk rule 4). Keeps a queued chunk within the 30 s the old keys live after a rekey |
 | `BULK_MAX_RESTARTS` | 2 | Lane-change restarts per clip (0.4.7); after that CLIP-03 E8 |
 
 ## 0.11 Client connection states (Mac/iOS)
